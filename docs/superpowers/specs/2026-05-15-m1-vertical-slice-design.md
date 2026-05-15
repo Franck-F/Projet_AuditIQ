@@ -209,3 +209,30 @@ Logs structlog JSON, **jamais de PII** : on consigne formes et compteurs
 - Isolation par org vérifiée par test : un utilisateur ne voit aucune donnée d'une
   autre organisation.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test` (web) et `pytest`, `ruff`, `mypy` (api) verts.
+
+## 12. Provisioning Supabase (acté 2026-05-15)
+
+Projet Supabase fourni : ref `jiwexpgcfhnsugouzzvg`
+(`https://jiwexpgcfhnsugouzzvg.supabase.co`).
+
+**Correction importante** : ce monorepo est en **pnpm** (`pnpm-workspace.yaml`).
+Ne PAS exécuter `npm install` (créerait un `package-lock.json` et casserait le
+workspace). De plus `@supabase/supabase-js` et `@supabase/ssr` sont **déjà déclarés**
+dans `apps/web/package.json` — l'étape « install packages » est couverte par
+`pnpm install`. Les commandes `npx shadcn@latest add @supabase/...` et
+`npx skills add supabase/agent-skills` relèvent de la phase d'exécution, pas du plan.
+
+**Variables d'environnement** :
+- Web (`apps/web/.env.local`, gitignoré, créé) : `NEXT_PUBLIC_SUPABASE_URL` +
+  clé publishable. Note : l'utilisateur a nommé la variable
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` alors que `.env.example` utilise
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` — le plan devra réconcilier ce nommage
+  (clé publishable = remplaçante de l'anon key dans le nouveau schéma Supabase).
+- La clé publishable est **publique par conception** (préfixe `NEXT_PUBLIC_`),
+  aucun risque à l'avoir côté client ; elle reste hors git via `.gitignore`.
+
+**Secrets encore manquants pour la slice API** (à fournir avant l'étape 4 de §10) :
+`SUPABASE_JWT_SECRET` ou URL JWKS, `SUPABASE_SERVICE_ROLE_KEY`,
+`SUPABASE_DB_URL` (chaîne `postgresql+asyncpg://...`), `GEMINI_API_KEY`.
+Sans eux : l'auth web et le moteur M1 pur (§5, étape 3, sans I/O) avancent ;
+la persistance, le storage et l'interprétation Gemini sont bloqués.
