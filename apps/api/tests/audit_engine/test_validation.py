@@ -81,3 +81,11 @@ def test_privileged_value_absent():
     with pytest.raises(DatasetValidationError) as e:
         run_m1(df, cfg)
     assert e.value.field == "privileged_value"
+
+
+def test_empty_after_dropna_has_field_none():
+    df = pd.DataFrame({"genre": [None, None], "decision": [None, None]})
+    with pytest.raises(DatasetValidationError) as e:
+        run_m1(df, CFG)
+    assert e.value.field is None
+    assert "Aucune ligne exploitable" in e.value.message
