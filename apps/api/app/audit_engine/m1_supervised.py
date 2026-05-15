@@ -143,12 +143,12 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     ]
 
     return M1Result(
-        groups=group_stats,
+        groups=tuple(group_stats),
         reference_value=reference,
         disparate_impact=round(overall_di, _ROUND),
         demographic_parity_diff=round(dpd, _ROUND),
         worst_group=worst_group,
         verdict=verdict,
         risk_score=score,
-        warnings=warnings,
+        warnings=tuple(warnings),
     )

@@ -131,9 +131,12 @@ def test_result_is_frozen_and_defaults_warnings():
         demographic_parity_diff=0.14, worst_group="Femmes", verdict="fail",
         risk_score=55,
     )
-    assert res.warnings == []
+    assert res.warnings == ()
     with pytest.raises(FrozenInstanceError):
         res.verdict = "pass"  # type: ignore[misc]
+    assert isinstance(res.groups, tuple)
+    with pytest.raises(AttributeError):
+        res.groups.append(g)  # type: ignore[attr-defined]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -164,7 +167,7 @@ Create `apps/api/app/audit_engine/types.py`:
 ```python
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -190,14 +193,18 @@ class GroupStat:
 
 @dataclass(frozen=True)
 class M1Result:
-    groups: list[GroupStat]
+    groups: tuple[GroupStat, ...]
     reference_value: str
     disparate_impact: float
     demographic_parity_diff: float
     worst_group: str
     verdict: str
     risk_score: int
-    warnings: list[str] = field(default_factory=list)
+    warnings: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "groups", tuple(self.groups))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -495,7 +502,7 @@ def test_recruitment_case_is_fail(recruitment_df):
     assert r.demographic_parity_diff == 0.14
     assert r.verdict == "fail"
     assert r.risk_score == 55
-    assert r.warnings == []
+    assert r.warnings == ()
     g = _by_value(r)
     assert g["Femmes"].selection_rate == 0.36
     assert g["Femmes"].n == 200
@@ -697,14 +704,14 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     ]
 
     return M1Result(
-        groups=group_stats,
+        groups=tuple(group_stats),
         reference_value=reference,
         disparate_impact=round(overall_di, _ROUND),
         demographic_parity_diff=round(dpd, _ROUND),
         worst_group=worst_group,
         verdict=verdict,
         risk_score=score,
-        warnings=warnings,
+        warnings=tuple(warnings),
     )
 ```
 
@@ -869,8 +876,11 @@ def test_public_surface():
     }.issubset(set(ae.__all__))
     # importable directly from the package root
     assert ae.run_m1 is not None
-    assert ae.M1Config(  # constructible
-        protected_attribute="g", decision_column="d", favorable_value="o"
+    assert (
+        ae.M1Config(  # constructible
+            protected_attribute="g", decision_column="d", favorable_value="o"
+        )
+        is not None
     )
 ```
 
