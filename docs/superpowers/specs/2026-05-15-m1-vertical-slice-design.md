@@ -105,11 +105,18 @@ favorable_value, privileged_value? }`.
 - **Disparate Impact** par groupe = `sr(g) / sr(ref)` ; on remonte le pire (min) + la table par groupe ;
 - **Demographic Parity difference** = `max(sr) − min(sr)`.
 
-**Verdict** (seuils constants v1, surchargeables par org plus tard) :
-`DI ≥ 0.80 → pass` · `0.60 ≤ DI < 0.80 → warn` · `DI < 0.60 → fail`.
+**Verdict** (seuils constants v1, fondés sur la règle des 4/5 — standard
+adverse impact ; surchargeables par org plus tard) :
+- `fail` : `DI < 0.80` — règle des 4/5 non respectée (impact disproportionné) ;
+- `warn` : `0.80 ≤ DI < 0.90` — règle respectée mais marge faible, **ou** un
+  groupe a `n < 30` (échantillon peu concluant) alors que le DI seul donnerait `pass` ;
+- `pass` : `DI ≥ 0.90` — aucun indice d'impact disproportionné.
 
-**risk_score** : mapping déterministe documenté à partir du pire DI et du déséquilibre
-des effectifs → entier 0–100 (alimente la jauge dashboard).
+Le cas recrutement (DI ≈ 0.72) tombe donc en `fail`, cohérent avec §4 et §11.
+
+**risk_score** : mapping déterministe piecewise calé sur les bandes de verdict
+(croissant quand le DI baisse) + petit bonus de déséquilibre des effectifs →
+entier 0–100 (alimente la jauge). Formule exacte figée dans le plan.
 
 **Sortie** : dataclass typée `M1Result{ groups:[{value,n,selection_rate}],
 reference_value, disparate_impact, demographic_parity_diff, worst_group, verdict,
@@ -118,7 +125,7 @@ risk_score, warnings[] }`. **Aucun I/O, aucun LLM.**
 **Fixtures de test** (TDD, écrites avant l'implémentation) :
 - cas recrutement type mocks (DI ≈ 0.72, verdict fail) ;
 - cas parfaitement équitable (DI = 1.0, verdict pass) ;
-- cas limite warn (DI ≈ 0.70) ;
+- cas limite warn (DI ≈ 0.85, dans la bande [0.80, 0.90[) ;
 - dégénérés : un seul groupe (erreur), décision non binaire (erreur),
   groupe minuscule n < 5 (erreur), n < 30 (warning).
 
