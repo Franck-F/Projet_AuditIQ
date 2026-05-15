@@ -231,8 +231,17 @@ dans `apps/web/package.json` — l'étape « install packages » est couverte pa
 - La clé publishable est **publique par conception** (préfixe `NEXT_PUBLIC_`),
   aucun risque à l'avoir côté client ; elle reste hors git via `.gitignore`.
 
-**Secrets encore manquants pour la slice API** (à fournir avant l'étape 4 de §10) :
-`SUPABASE_JWT_SECRET` ou URL JWKS, `SUPABASE_SERVICE_ROLE_KEY`,
-`SUPABASE_DB_URL` (chaîne `postgresql+asyncpg://...`), `GEMINI_API_KEY`.
-Sans eux : l'auth web et le moteur M1 pur (§5, étape 3, sans I/O) avancent ;
-la persistance, le storage et l'interprétation Gemini sont bloqués.
+**Vérification JWT (acté)** : l'API vérifie les JWT via le **JWKS public**
+`https://jiwexpgcfhnsugouzzvg.supabase.co/auth/v1/.well-known/jwks.json`
+(déductible de `SUPABASE_URL`, **aucun secret requis**), avec `PyJWT[crypto]`
+(`PyJWKClient`, cache + refresh). Prérequis projet : clés de signature
+**asymétriques** activées (page Dashboard → Project Settings → JWT Keys).
+`SUPABASE_JWT_SECRET` n'est nécessaire **que** comme fallback HS256 si le projet
+reste en legacy shared secret — chemin non retenu par défaut.
+
+**Secrets encore manquants pour la slice API** (à fournir avant l'étape 5 de §10,
+persistance/storage/LLM) : `SUPABASE_DB_URL` (`postgresql+asyncpg://...`,
+**fourni** par l'utilisateur dans `apps/api/.env`), `SUPABASE_SERVICE_ROLE_KEY`
+(ops Storage), `GEMINI_API_KEY` (interprétation).
+Sans eux : l'auth web, la vérif JWT API (JWKS public) et le moteur M1 pur
+(§5, étape 3, sans I/O) avancent ; la persistance, le storage et Gemini sont bloqués.
