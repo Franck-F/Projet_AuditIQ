@@ -20,7 +20,7 @@ def test_recruitment_case_is_fail(recruitment_df):
     assert r.demographic_parity_diff == 0.14
     assert r.verdict == "fail"
     assert r.risk_score == 55
-    assert r.warnings == []
+    assert r.warnings == ()
     g = _by_value(r)
     assert g["Femmes"].selection_rate == 0.36
     assert g["Femmes"].n == 200

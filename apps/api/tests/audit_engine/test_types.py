@@ -40,6 +40,9 @@ def test_result_is_frozen_and_defaults_warnings():
         demographic_parity_diff=0.14, worst_group="Femmes", verdict="fail",
         risk_score=55,
     )
-    assert res.warnings == []
+    assert res.warnings == ()
     with pytest.raises(FrozenInstanceError):
         res.verdict = "pass"  # type: ignore[misc]
+    assert isinstance(res.groups, tuple)
+    with pytest.raises(AttributeError):
+        res.groups.append(g)  # type: ignore[attr-defined]

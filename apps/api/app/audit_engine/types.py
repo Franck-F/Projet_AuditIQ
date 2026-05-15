@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -26,11 +26,15 @@ class GroupStat:
 
 @dataclass(frozen=True)
 class M1Result:
-    groups: list[GroupStat]
+    groups: tuple[GroupStat, ...]
     reference_value: str
     disparate_impact: float
     demographic_parity_diff: float
     worst_group: str
     verdict: str
     risk_score: int
-    warnings: list[str] = field(default_factory=list)
+    warnings: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "groups", tuple(self.groups))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
