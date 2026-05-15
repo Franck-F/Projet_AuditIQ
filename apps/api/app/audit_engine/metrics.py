@@ -24,7 +24,7 @@ def disparate_impacts(
     ref_rate = rates[reference]
     if ref_rate == 0.0:
         return (
-            {g: 1.0 for g in rates},
+            dict.fromkeys(rates, 1.0),
             [
                 f"Taux de sélection nul pour le groupe de référence "
                 f"« {reference} » — Disparate Impact non calculable, "
