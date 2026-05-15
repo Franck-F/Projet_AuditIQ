@@ -552,6 +552,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'app.audit_engine.m1_su
 Create `apps/api/app/audit_engine/m1_supervised.py`:
 
 ```python
+"""Pure M1 supervised fairness audit: run_m1(df, config) -> M1Result. No I/O."""
 from __future__ import annotations
 
 import pandas as pd
@@ -571,6 +572,23 @@ _ROUND = 4
 
 
 def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
+    """Run the M1 supervised fairness audit.
+
+    Pure: no I/O, no LLM. Validates the dataframe/config then computes
+    Disparate Impact (4/5 rule), Demographic Parity, per-group selection
+    rates, a verdict and a 0-100 risk score.
+
+    Value-comparison contract: the protected and decision columns are
+    compared as strings via ``astype(str)``. ``favorable_value`` and
+    ``privileged_value`` are matched using ``str(value)``. Callers must
+    therefore pass these in a form that equals ``str()`` of the column's
+    values (e.g. for a float column holding 1.0, pass "1.0", not 1).
+    Normalising numeric/boolean columns is the responsibility of the
+    caller / input layer, not this engine.
+
+    Raises:
+        DatasetValidationError: if the data or config cannot be audited.
+    """
     pa = config.protected_attribute
     dc = config.decision_column
 
@@ -589,7 +607,7 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     if clean.empty:
         raise DatasetValidationError(
             "Aucune ligne exploitable après suppression des valeurs manquantes.",
-            field="decision_column",
+            field=None,
         )
 
     pa_str = clean[pa].astype(str)
