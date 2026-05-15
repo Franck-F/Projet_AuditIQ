@@ -1,0 +1,12 @@
+node_modules
+.next
+.pnpm-store
+dist
+build
+out
+coverage
+pnpm-lock.yaml
+*.lock
+.venv
+__pycache__
+apps/api

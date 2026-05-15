@@ -1,0 +1,25 @@
+{
+  "name": "auditiq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AuditIQ — Plateforme SaaS d'audit de fairness IA pour PME FR/UE.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "pnpm --filter @auditiq/web dev",
+    "build": "pnpm --filter @auditiq/web build",
+    "lint": "pnpm -r --parallel lint",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r --parallel test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,json,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,md,json,css}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8"
+  }
+}
