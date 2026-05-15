@@ -26,6 +26,12 @@ def test_m1config_defaults_follow_4_5_rule():
     assert cfg.min_group_warn == 30
 
 
+def test_dataset_validation_error_field_defaults_to_none():
+    err = DatasetValidationError("message simple")
+    assert err.message == "message simple"
+    assert err.field is None
+
+
 def test_result_is_frozen_and_defaults_warnings():
     g = GroupStat(value="Femmes", n=200, favorable=72, selection_rate=0.36,
                   disparate_impact=0.72)
