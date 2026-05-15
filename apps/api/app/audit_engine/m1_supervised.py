@@ -114,6 +114,18 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
 
     rates = {g: selection_rate(favs[g], counts[g]) for g in groups}
     reference = pick_reference(rates, privileged)
+    if (
+        privileged is not None
+        and rates[reference] == 0.0
+        and any(r > 0.0 for r in rates.values())
+    ):
+        raise DatasetValidationError(
+            f"Le groupe privilégié « {reference} » a un taux de sélection "
+            f"nul alors que d'autres groupes ont des décisions favorables — "
+            f"Disparate Impact non calculable. Choisissez un autre groupe "
+            f"de référence.",
+            field="privileged_value",
+        )
     di_map, di_warnings = disparate_impacts(rates, reference)
     warnings.extend(di_warnings)
 

@@ -98,6 +98,9 @@ favorable_value, privileged_value? }`.
 - la décision est binaire (2 valeurs distinctes non nulles, ou mappable favorable/défavorable) ;
 - l'attribut protégé a ≥ 2 groupes ;
 - garde-fou effectifs : `warn` consigné si un groupe a n < 30 ; erreur si n < 5.
+- si `privileged_value` est fourni explicitement et que ce groupe a un taux
+  de sélection nul alors qu'un autre groupe a des décisions favorables :
+  erreur (Disparate Impact non calculable avec cette référence).
 
 **Calculs** :
 - `selection_rate(g) = P(decision = favorable | attr = g)` par groupe ;
