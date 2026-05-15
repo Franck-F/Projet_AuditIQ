@@ -131,9 +131,12 @@ def test_result_is_frozen_and_defaults_warnings():
         demographic_parity_diff=0.14, worst_group="Femmes", verdict="fail",
         risk_score=55,
     )
-    assert res.warnings == []
+    assert res.warnings == ()
     with pytest.raises(FrozenInstanceError):
         res.verdict = "pass"  # type: ignore[misc]
+    assert isinstance(res.groups, tuple)
+    with pytest.raises(AttributeError):
+        res.groups.append(g)  # type: ignore[attr-defined]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -164,7 +167,7 @@ Create `apps/api/app/audit_engine/types.py`:
 ```python
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -190,14 +193,18 @@ class GroupStat:
 
 @dataclass(frozen=True)
 class M1Result:
-    groups: list[GroupStat]
+    groups: tuple[GroupStat, ...]
     reference_value: str
     disparate_impact: float
     demographic_parity_diff: float
     worst_group: str
     verdict: str
     risk_score: int
-    warnings: list[str] = field(default_factory=list)
+    warnings: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "groups", tuple(self.groups))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -346,7 +353,7 @@ def disparate_impacts(
     ref_rate = rates[reference]
     if ref_rate == 0.0:
         return (
-            {g: 1.0 for g in rates},
+            dict.fromkeys(rates, 1.0),
             [
                 f"Taux de sélection nul pour le groupe de référence "
                 f"« {reference} » — Disparate Impact non calculable, "
@@ -495,7 +502,7 @@ def test_recruitment_case_is_fail(recruitment_df):
     assert r.demographic_parity_diff == 0.14
     assert r.verdict == "fail"
     assert r.risk_score == 55
-    assert r.warnings == []
+    assert r.warnings == ()
     g = _by_value(r)
     assert g["Femmes"].selection_rate == 0.36
     assert g["Femmes"].n == 200
@@ -552,6 +559,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'app.audit_engine.m1_su
 Create `apps/api/app/audit_engine/m1_supervised.py`:
 
 ```python
+"""Pure M1 supervised fairness audit: run_m1(df, config) -> M1Result. No I/O."""
 from __future__ import annotations
 
 import pandas as pd
@@ -571,6 +579,23 @@ _ROUND = 4
 
 
 def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
+    """Run the M1 supervised fairness audit.
+
+    Pure: no I/O, no LLM. Validates the dataframe/config then computes
+    Disparate Impact (4/5 rule), Demographic Parity, per-group selection
+    rates, a verdict and a 0-100 risk score.
+
+    Value-comparison contract: the protected and decision columns are
+    compared as strings via ``astype(str)``. ``favorable_value`` and
+    ``privileged_value`` are matched using ``str(value)``. Callers must
+    therefore pass these in a form that equals ``str()`` of the column's
+    values (e.g. for a float column holding 1.0, pass "1.0", not 1).
+    Normalising numeric/boolean columns is the responsibility of the
+    caller / input layer, not this engine.
+
+    Raises:
+        DatasetValidationError: if the data or config cannot be audited.
+    """
     pa = config.protected_attribute
     dc = config.decision_column
 
@@ -589,7 +614,7 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     if clean.empty:
         raise DatasetValidationError(
             "Aucune ligne exploitable après suppression des valeurs manquantes.",
-            field="decision_column",
+            field=None,
         )
 
     pa_str = clean[pa].astype(str)
@@ -650,6 +675,18 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
 
     rates = {g: selection_rate(favs[g], counts[g]) for g in groups}
     reference = pick_reference(rates, privileged)
+    if (
+        privileged is not None
+        and rates[reference] == 0.0
+        and any(r > 0.0 for r in rates.values())
+    ):
+        raise DatasetValidationError(
+            f"Le groupe privilégié « {reference} » a un taux de sélection "
+            f"nul alors que d'autres groupes ont des décisions favorables — "
+            f"Disparate Impact non calculable. Choisissez un autre groupe "
+            f"de référence.",
+            field="privileged_value",
+        )
     di_map, di_warnings = disparate_impacts(rates, reference)
     warnings.extend(di_warnings)
 
@@ -679,14 +716,14 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     ]
 
     return M1Result(
-        groups=group_stats,
+        groups=tuple(group_stats),
         reference_value=reference,
         disparate_impact=round(overall_di, _ROUND),
         demographic_parity_diff=round(dpd, _ROUND),
         worst_group=worst_group,
         verdict=verdict,
         risk_score=score,
-        warnings=warnings,
+        warnings=tuple(warnings),
     )
 ```
 
@@ -799,6 +836,23 @@ def test_privileged_value_absent():
     with pytest.raises(DatasetValidationError) as e:
         run_m1(df, cfg)
     assert e.value.field == "privileged_value"
+
+
+def test_explicit_privileged_group_with_zero_selection_rate_raises():
+    rec = (
+        [{"genre": "Privilegie", "decision": "non"}] * 30
+        + [{"genre": "Autre", "decision": "oui"}] * 20
+        + [{"genre": "Autre", "decision": "non"}] * 20
+    )
+    cfg = M1Config(
+        protected_attribute="genre",
+        decision_column="decision",
+        favorable_value="oui",
+        privileged_value="Privilegie",
+    )
+    with pytest.raises(DatasetValidationError) as e:
+        run_m1(_df(rec), cfg)
+    assert e.value.field == "privileged_value"
 ```
 
 - [ ] **Step 2: Run test to verify it fails or passes per case**
@@ -851,8 +905,11 @@ def test_public_surface():
     }.issubset(set(ae.__all__))
     # importable directly from the package root
     assert ae.run_m1 is not None
-    assert ae.M1Config(  # constructible
-        protected_attribute="g", decision_column="d", favorable_value="o"
+    assert (
+        ae.M1Config(  # constructible
+            protected_attribute="g", decision_column="d", favorable_value="o"
+        )
+        is not None
     )
 ```
 
