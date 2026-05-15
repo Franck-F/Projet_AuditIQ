@@ -675,6 +675,18 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
 
     rates = {g: selection_rate(favs[g], counts[g]) for g in groups}
     reference = pick_reference(rates, privileged)
+    if (
+        privileged is not None
+        and rates[reference] == 0.0
+        and any(r > 0.0 for r in rates.values())
+    ):
+        raise DatasetValidationError(
+            f"Le groupe privilégié « {reference} » a un taux de sélection "
+            f"nul alors que d'autres groupes ont des décisions favorables — "
+            f"Disparate Impact non calculable. Choisissez un autre groupe "
+            f"de référence.",
+            field="privileged_value",
+        )
     di_map, di_warnings = disparate_impacts(rates, reference)
     warnings.extend(di_warnings)
 
@@ -823,6 +835,23 @@ def test_privileged_value_absent():
     )
     with pytest.raises(DatasetValidationError) as e:
         run_m1(df, cfg)
+    assert e.value.field == "privileged_value"
+
+
+def test_explicit_privileged_group_with_zero_selection_rate_raises():
+    rec = (
+        [{"genre": "Privilegie", "decision": "non"}] * 30
+        + [{"genre": "Autre", "decision": "oui"}] * 20
+        + [{"genre": "Autre", "decision": "non"}] * 20
+    )
+    cfg = M1Config(
+        protected_attribute="genre",
+        decision_column="decision",
+        favorable_value="oui",
+        privileged_value="Privilegie",
+    )
+    with pytest.raises(DatasetValidationError) as e:
+        run_m1(_df(rec), cfg)
     assert e.value.field == "privileged_value"
 ```
 

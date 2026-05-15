@@ -89,3 +89,20 @@ def test_empty_after_dropna_has_field_none():
         run_m1(df, CFG)
     assert e.value.field is None
     assert "Aucune ligne exploitable" in e.value.message
+
+
+def test_explicit_privileged_group_with_zero_selection_rate_raises():
+    rec = (
+        [{"genre": "Privilegie", "decision": "non"}] * 30
+        + [{"genre": "Autre", "decision": "oui"}] * 20
+        + [{"genre": "Autre", "decision": "non"}] * 20
+    )
+    cfg = M1Config(
+        protected_attribute="genre",
+        decision_column="decision",
+        favorable_value="oui",
+        privileged_value="Privilegie",
+    )
+    with pytest.raises(DatasetValidationError) as e:
+        run_m1(_df(rec), cfg)
+    assert e.value.field == "privileged_value"
