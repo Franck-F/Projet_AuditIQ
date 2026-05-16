@@ -5,6 +5,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.audit_engine import DatasetValidationError
+
 
 class Problem(BaseModel):
     type: str = "about:blank"
@@ -81,6 +83,22 @@ def register_exception_handlers(app: FastAPI) -> None:
             status=422,
             detail="La requête est invalide.",
             fields=fields or None,
+        )
+        return JSONResponse(
+            status_code=422,
+            content=problem.model_dump(exclude_none=True),
+            media_type="application/problem+json",
+        )
+
+    @app.exception_handler(DatasetValidationError)
+    async def _engine_validation(
+        _: Request, exc: DatasetValidationError
+    ) -> JSONResponse:
+        problem = Problem(
+            title="Dataset Validation Error",
+            status=422,
+            detail=exc.message,
+            fields={exc.field: exc.message} if exc.field else None,
         )
         return JSONResponse(
             status_code=422,
