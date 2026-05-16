@@ -24,7 +24,7 @@ def make_engine(url: str) -> AsyncEngine:
 
 @lru_cache
 def _sessionmaker() -> async_sessionmaker[AsyncSession]:
-    engine = make_engine(get_settings().supabase_db_url)
+    engine = make_engine(get_settings().database_url)
     return async_sessionmaker(engine, expire_on_commit=False)
 
 

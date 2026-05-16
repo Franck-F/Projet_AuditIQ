@@ -7,7 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 import app.models  # noqa: F401  (registers tables on Base.metadata)
-from app.core.config import get_settings
+from app.core.config import get_settings, to_async_db_url
 from app.core.db import Base
 
 config = context.config
@@ -18,7 +18,9 @@ target_metadata = Base.metadata
 
 
 def _url() -> str:
-    return os.environ.get("SUPABASE_DB_URL") or get_settings().supabase_db_url
+    return to_async_db_url(
+        os.environ.get("SUPABASE_DB_URL") or get_settings().supabase_db_url
+    )
 
 
 def _do_run(connection: Connection) -> None:
