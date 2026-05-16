@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     api_log_level: str = "info"
     storage_bucket: str = "datasets"
     storage_bucket_reports: str = "reports"
+    pdf_service_url: str = ""
+    pdf_service_secret: SecretStr = SecretStr("")
     max_upload_mb: int = 10
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")

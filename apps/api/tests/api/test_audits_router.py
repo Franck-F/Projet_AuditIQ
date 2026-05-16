@@ -210,3 +210,39 @@ async def test_get_audit_report_unknown_is_404(client):
         headers={"Authorization": "Bearer x"},
     )
     assert r.status_code == 404
+
+
+async def test_get_audit_report_pdf(client, m1_done_audit_id, monkeypatch):
+    import httpx as _hx
+    import respx as _rx
+
+    monkeypatch.setenv("PDF_SERVICE_URL", "http://pdf:8080")
+    monkeypatch.setenv("PDF_SERVICE_SECRET", "shh")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    try:
+        with _rx.mock:
+            _rx.post("http://pdf:8080/render").mock(
+                return_value=_hx.Response(200, content=b"%PDF-1.7 ok")
+            )
+            r = await client.get(
+                f"/api/v1/audits/{m1_done_audit_id}/report.pdf",
+                headers={"Authorization": "Bearer x"},
+            )
+        assert r.status_code == 200, r.text
+        assert r.headers["content-type"] == "application/pdf"
+        assert "attachment" in r.headers["content-disposition"]
+        assert r.content[:4] == b"%PDF"
+    finally:
+        get_settings.cache_clear()
+
+
+async def test_get_audit_report_pdf_unknown_is_404(client):
+    import uuid as _u
+
+    r = await client.get(
+        f"/api/v1/audits/{_u.uuid4()}/report.pdf",
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 404

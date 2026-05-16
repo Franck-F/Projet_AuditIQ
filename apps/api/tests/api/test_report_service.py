@@ -2,7 +2,9 @@
 import io
 import uuid
 
+import httpx as _httpx
 import pytest
+import respx as _respx
 from openpyxl import load_workbook
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -81,3 +83,38 @@ async def test_get_or_build_excel_builds_then_caches(ctx):
             await session.execute(select(Report).where(Report.audit_id == audit_id))
         ).scalars().all()
         assert len(rows) == 1
+
+
+async def test_get_or_build_pdf_builds_then_caches(ctx, monkeypatch):
+    sm, org_id, audit_id = ctx
+    monkeypatch.setenv("PDF_SERVICE_URL", "http://pdf:8080")
+    monkeypatch.setenv("PDF_SERVICE_SECRET", "shh")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    store = MemoryStorage()
+    try:
+        with _respx.mock:
+            r = _respx.post("http://pdf:8080/render").mock(
+                return_value=_httpx.Response(200, content=b"%PDF-1.7 x")
+            )
+            async with sm() as session:
+                b1, name = await report_service.get_or_build_pdf(
+                    session, store, audit_id, org_id=org_id
+                )
+                assert name.endswith(".pdf")
+                assert b1 == b"%PDF-1.7 x"
+                rows = (
+                    await session.execute(
+                        select(Report).where(Report.audit_id == audit_id)
+                    )
+                ).scalars().all()
+                assert any(x.format == "pdf" for x in rows)
+            async with sm() as session:
+                b2, _n = await report_service.get_or_build_pdf(
+                    session, store, audit_id, org_id=org_id
+                )
+            assert b2 == b1
+            assert r.call_count == 1
+    finally:
+        get_settings.cache_clear()
