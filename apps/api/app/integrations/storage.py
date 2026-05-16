@@ -55,5 +55,5 @@ def get_storage() -> Storage:
     if s.api_env.lower() == "development" or not key:
         return MemoryStorage()
     return SupabaseStorage(
-        url=s.supabase_url, service_role_key=key, bucket=s.storage_bucket  # type: ignore[attr-defined]
+        url=s.supabase_url, service_role_key=key, bucket=s.storage_bucket
     )
