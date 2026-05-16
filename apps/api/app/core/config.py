@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")
-    gemini_model: str = "gemini-1.5-pro"
+    gemini_model: str = "gemini-2.5-flash"  # 1.5 models retired in 2025
     api_rate_limit_default: str = "60/minute"
 
     @property
