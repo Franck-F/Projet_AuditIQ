@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from app.core.config import Settings, get_settings
 
 
@@ -18,3 +21,20 @@ def test_env_override_and_derived_urls(monkeypatch):
 
 def test_get_settings_is_cached():
     assert get_settings() is get_settings()
+
+
+def test_non_dev_requires_secrets():
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, api_env="production")
+
+
+def test_non_dev_ok_when_secrets_present():
+    s = Settings(
+        _env_file=None,
+        api_env="production",
+        supabase_url="https://proj.supabase.co",
+        supabase_db_url="postgresql+asyncpg://u:p@h:5432/db",
+        supabase_service_role_key="svc-key",
+    )
+    assert s.api_env == "production"
+    assert s.supabase_service_role_key.get_secret_value() == "svc-key"

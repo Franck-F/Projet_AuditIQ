@@ -83,6 +83,9 @@ Create `apps/api/tests/api/__init__.py` as an empty (0-byte) file.
 Create `apps/api/tests/api/test_config.py`:
 
 ```python
+import pytest
+from pydantic import ValidationError
+
 from app.core.config import Settings, get_settings
 
 
@@ -103,6 +106,23 @@ def test_env_override_and_derived_urls(monkeypatch):
 
 def test_get_settings_is_cached():
     assert get_settings() is get_settings()
+
+
+def test_non_dev_requires_secrets():
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, api_env="production")
+
+
+def test_non_dev_ok_when_secrets_present():
+    s = Settings(
+        _env_file=None,
+        api_env="production",
+        supabase_url="https://proj.supabase.co",
+        supabase_db_url="postgresql+asyncpg://u:p@h:5432/db",
+        supabase_service_role_key="svc-key",
+    )
+    assert s.api_env == "production"
+    assert s.supabase_service_role_key.get_secret_value() == "svc-key"
 ```
 
 - [ ] **Step 5: Run test to verify it fails**
@@ -117,6 +137,7 @@ Create `apps/api/app/core/config.py`:
 ```python
 from functools import lru_cache
 
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -131,7 +152,7 @@ class Settings(BaseSettings):
     api_env: str = "development"
     supabase_url: str = "https://example.supabase.co"
     supabase_db_url: str = "sqlite+aiosqlite:///./auditiq_dev.db"
-    supabase_service_role_key: str = ""
+    supabase_service_role_key: SecretStr = SecretStr("")
     api_cors_origins: str = "http://localhost:3000"
     api_log_level: str = "info"
 
@@ -142,6 +163,24 @@ class Settings(BaseSettings):
     @property
     def jwks_url(self) -> str:
         return f"{self.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+
+    @model_validator(mode="after")
+    def _require_secrets_outside_dev(self) -> "Settings":
+        if self.api_env == "development":
+            return self
+        missing: list[str] = []
+        if not self.supabase_service_role_key.get_secret_value():
+            missing.append("SUPABASE_SERVICE_ROLE_KEY")
+        if not self.supabase_url or self.supabase_url == "https://example.supabase.co":
+            missing.append("SUPABASE_URL")
+        if self.supabase_db_url.startswith("sqlite"):
+            missing.append("SUPABASE_DB_URL")
+        if missing:
+            raise ValueError(
+                "Variables requises hors environnement de développement "
+                f"manquantes : {', '.join(missing)}"
+            )
+        return self
 
 
 @lru_cache
@@ -1330,6 +1369,13 @@ def test_missing_sub_raises_auth_error(keypair):
     )
     with pytest.raises(AuthError):
         verify_token(token, key=pub)
+
+
+def test_wrong_issuer_raises(keypair):
+    priv, pub = keypair
+    token = _token(priv, iss="https://evil.example/auth/v1")
+    with pytest.raises(AuthError):
+        verify_token(token, key=pub, issuer="https://proj.supabase.co/auth/v1")
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1370,13 +1416,14 @@ def resolve_signing_key(token: str, *, jwks_client: PyJWKClient | None = None) -
         raise AuthError("Jeton invalide (clé de signature introuvable).") from exc
 
 
-def verify_token(token: str, *, key: Any) -> dict[str, Any]:
+def verify_token(token: str, *, key: Any, issuer: str | None = None) -> dict[str, Any]:
     try:
         return jwt.decode(
             token,
             key,
             algorithms=_ALGORITHMS,
             audience=_AUDIENCE,
+            issuer=issuer,
             options={"require": ["exp", "sub"]},
         )
     except jwt.PyJWTError as exc:
@@ -1386,7 +1433,7 @@ def verify_token(token: str, *, key: Any) -> dict[str, Any]:
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/api/test_security.py -q`
-Expected: PASS (3 passed).
+Expected: PASS (5 passed).
 
 - [ ] **Step 5: Commit**
 
@@ -1497,6 +1544,7 @@ from fastapi import Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.errors import AuthError
 from app.core.security import resolve_signing_key, verify_token
@@ -1521,13 +1569,17 @@ async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
     return user
 
 
+def _issuer() -> str:
+    return f"{get_settings().supabase_url.rstrip('/')}/auth/v1"
+
+
 async def get_current_user(
     authorization: Annotated[str | None, Header()] = None,
     session: AsyncSession = Depends(get_session),
 ) -> CurrentUser:
     token = _bearer(authorization)
     key = resolve_signing_key(token)
-    claims = verify_token(token, key=key)
+    claims = verify_token(token, key=key, issuer=_issuer())
     sub = claims.get("sub")
     email = claims.get("email")
     if not sub or not email:
@@ -1595,7 +1647,7 @@ async def app_client(tmp_path, monkeypatch):
     monkeypatch.setattr(
         deps,
         "verify_token",
-        lambda token, *, key: {
+        lambda token, *, key, issuer=None: {
             "sub": "11111111-1111-1111-1111-111111111111",
             "email": "claire@acme.fr",
         },

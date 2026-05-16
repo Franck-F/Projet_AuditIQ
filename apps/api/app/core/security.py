@@ -26,13 +26,14 @@ def resolve_signing_key(token: str, *, jwks_client: PyJWKClient | None = None) -
         raise AuthError("Jeton invalide (clé de signature introuvable).") from exc
 
 
-def verify_token(token: str, *, key: Any) -> dict[str, Any]:
+def verify_token(token: str, *, key: Any, issuer: str | None = None) -> dict[str, Any]:
     try:
         return jwt.decode(
             token,
             key,
             algorithms=_ALGORITHMS,
             audience=_AUDIENCE,
+            issuer=issuer,
             options={"require": ["exp", "sub"]},
         )
     except jwt.PyJWTError as exc:

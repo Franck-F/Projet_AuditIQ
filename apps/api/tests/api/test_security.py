@@ -65,3 +65,10 @@ def test_missing_sub_raises_auth_error(keypair):
     )
     with pytest.raises(AuthError):
         verify_token(token, key=pub)
+
+
+def test_wrong_issuer_raises(keypair):
+    priv, pub = keypair
+    token = _token(priv, iss="https://evil.example/auth/v1")
+    with pytest.raises(AuthError):
+        verify_token(token, key=pub, issuer="https://proj.supabase.co/auth/v1")
