@@ -1,33 +1,47 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { type CookieOptions, createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 /**
  * Next 16 proxy (anciennement middleware).
  *
- * Phase 0 : gate désactivé tant que Supabase n'est pas configuré (NEXT_PUBLIC_SUPABASE_URL
- * absent). Permet de prévisualiser le dashboard mocké sans auth.
- *
- * Phase 1 / Task 12 : quand Supabase est câblé, redirige vers /connexion?next=…
- * si aucun cookie de session n'est présent.
+ * Gate les routes /app derrière une session Supabase vérifiée serveur
+ * (getUser, pas seulement la présence d'un cookie). Redirige vers
+ * /connexion?next=… si aucun utilisateur authentifié.
  */
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  if (!pathname.startsWith('/app')) return NextResponse.next();
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  '';
 
-  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  if (!supabaseConfigured) return NextResponse.next();
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-  const hasSessionCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
-
-  if (!hasSessionCookie) {
+export async function proxy(request: NextRequest) {
+  const response = NextResponse.next();
+  if (!request.nextUrl.pathname.startsWith('/app')) {
+    return response;
+  }
+  const supabase = createServerClient(URL, KEY, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (toSet: CookieToSet[]) => {
+        for (const { name, value, options } of toSet) {
+          response.cookies.set(name, value, options);
+        }
+      },
+    },
+  });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = '/connexion';
-    url.searchParams.set('next', pathname);
+    url.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
-
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
