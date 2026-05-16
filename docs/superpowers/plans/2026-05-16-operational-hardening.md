@@ -278,7 +278,7 @@ Create `apps/api/app/core/ratelimit.py`:
 ```python
 from __future__ import annotations
 
-from fastapi import Request
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
@@ -293,11 +293,12 @@ limiter = Limiter(
 )
 
 
-def rate_limit_handler(_: Request, exc: RateLimitExceeded) -> JSONResponse:
+def rate_limit_handler(_: Request, exc: Exception) -> Response:
+    detail = exc.detail if isinstance(exc, RateLimitExceeded) else "limite atteinte"
     problem = Problem(
         title="Too Many Requests",
         status=429,
-        detail=f"Limite de débit dépassée ({exc.detail}).",
+        detail=f"Limite de débit dépassée ({detail}).",
     )
     return JSONResponse(
         status_code=429,
