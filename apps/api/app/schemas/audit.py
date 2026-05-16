@@ -16,6 +16,7 @@ class M2ConfigIn(BaseModel):
     k: int = 5
     deviation_pp: float = 20.0
     chi2_alpha: float = 0.05
+    random_state: int = 42
 
 
 class AuditCreate(BaseModel):

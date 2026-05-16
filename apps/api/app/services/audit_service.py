@@ -254,6 +254,7 @@ async def run_m2_audit(
         k=cfg_in.k if cfg_in is not None else 5,
         deviation_pp=cfg_in.deviation_pp if cfg_in is not None else 20.0,
         chi2_alpha=cfg_in.chi2_alpha if cfg_in is not None else 0.05,
+        random_state=cfg_in.random_state if cfg_in is not None else 42,
     )
     numeric_cols = [
         c for c in df.columns

@@ -94,6 +94,7 @@ async def test_run_audit_end_to_end(client):
     )
     assert g.status_code == 200
     assert g.json()["metrics"]["worst_group"] == "Femmes"
+    assert "pre_check" in g.json()
 
 
 async def test_run_audit_bad_mapping_returns_422_problem(client):
