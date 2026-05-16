@@ -57,7 +57,7 @@ describe('audits api', () => {
     });
     const out = await uploadDataset(file);
     expect(out.id).toBe('d1');
-    const [url, body] = post.mock.calls[0];
+    const [url, body] = post.mock.calls[0]!;
     expect(url).toBe('/datasets');
     expect(body).toBeInstanceOf(FormData);
     expect((body as FormData).get('file')).toBe(file);
@@ -695,7 +695,7 @@ describe('audit result page', () => {
     });
     render(<AuditResultPage />);
     expect(screen.getByText('Recrutement Q2')).toBeInTheDocument();
-    expect(screen.getByText(/AUD-2026-007/)).toBeInTheDocument();
+    expect(screen.getAllByText(/AUD-2026-007/).length).toBeGreaterThan(0);
     expect(screen.getByText(/écart défavorable/i)).toBeInTheDocument();
     expect(screen.getByText('AI Act art. 10')).toBeInTheDocument();
     expect(screen.getByText(/aide à l/i)).toBeInTheDocument();
