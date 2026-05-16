@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _require_secrets_outside_dev(self) -> "Settings":
-        if self.api_env == "development":
+        if self.api_env.lower() == "development":
             return self
         missing: list[str] = []
         if not self.supabase_service_role_key.get_secret_value():

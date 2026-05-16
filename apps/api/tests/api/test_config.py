@@ -38,3 +38,8 @@ def test_non_dev_ok_when_secrets_present():
     )
     assert s.api_env == "production"
     assert s.supabase_service_role_key.get_secret_value() == "svc-key"
+
+
+def test_dev_check_is_case_insensitive():
+    s = Settings(_env_file=None, api_env="Development")
+    assert s.api_env == "Development"
