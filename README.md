@@ -101,4 +101,7 @@ pnpm format       # prettier --write
 
 ## Statut
 
-🚧 En cours de développement initial (Phase 0).
+🚧 Slice M1 livrée : API (auth Supabase JWKS, upload CSV, audit M1,
+interprétation Gemini+fallback, dashboard, durcissée) + web (auth réelle,
+`/app` protégé, dashboard branché sur l'API). Reste : assistant de création
+d'audit + page résultat web (Plan 3B).
