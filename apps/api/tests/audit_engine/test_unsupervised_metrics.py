@@ -20,3 +20,31 @@ def test_cluster_positive_rates_handles_empty_cluster():
     assert rates == {0: 0.5, 1: 0.0, 2: 0.0}
     assert sizes == {0: 4, 1: 0, 2: 0}
     assert global_rate == 0.5
+
+
+from app.audit_engine.unsupervised_metrics import chi2_cluster_decision
+
+
+def test_chi2_strong_association_low_p():
+    labels = np.array([0] * 50 + [1] * 50)
+    positive = np.array([1] * 45 + [0] * 5 + [0] * 45 + [1] * 5)
+    chi2, p, dof = chi2_cluster_decision(labels, positive, k=2)
+    assert dof == 1
+    assert p < 0.05
+    assert chi2 > 0
+
+
+def test_chi2_no_association_high_p():
+    labels = np.array([0, 1] * 50)
+    positive = np.array([1, 1, 0, 0] * 25)
+    chi2, p, dof = chi2_cluster_decision(labels, positive, k=2)
+    assert p > 0.05
+
+
+def test_chi2_degenerate_constant_decision_returns_neutral():
+    labels = np.array([0] * 5 + [1] * 5)
+    positive = np.array([1] * 10)  # decision constant -> no contingency
+    chi2, p, dof = chi2_cluster_decision(labels, positive, k=2)
+    assert chi2 == 0.0
+    assert p == 1.0
+    assert dof == 0
