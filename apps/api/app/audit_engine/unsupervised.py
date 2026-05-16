@@ -5,9 +5,19 @@ No I/O, no LLM. Deterministic via M2Config.random_state.
 from __future__ import annotations
 
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 from .errors import DatasetValidationError
-from .types import M2Config, M2Result
+from .types import ClusterStat, M2Config, M2Result
+from .unsupervised_metrics import (
+    characterize_cluster,
+    chi2_cluster_decision,
+    cluster_positive_rates,
+    deviations,
+    m2_risk_score,
+    m2_verdict,
+)
 
 _ROUND = 4
 
@@ -98,5 +108,73 @@ def _validate(
 def run_m2(df: pd.DataFrame, config: M2Config) -> M2Result:
     """Run the M2 unsupervised bias-detection audit. Pure. Raises
     DatasetValidationError if the data/config cannot be audited."""
-    _clean, _features, _warnings = _validate(df, config)
-    raise NotImplementedError  # pipeline added in Task 8
+    clean, features, warnings = _validate(df, config)
+
+    x = clean[features].to_numpy(dtype=float)
+    positive = (
+        clean[config.decision_column].astype(str)
+        == str(config.positive_value)
+    ).to_numpy()
+    n = len(clean)
+
+    x_scaled = StandardScaler().fit_transform(x)
+    km = KMeans(
+        n_clusters=config.k, random_state=config.random_state, n_init=10
+    )
+    labels = km.fit_predict(x_scaled)
+
+    rates, global_rate, sizes = cluster_positive_rates(
+        labels, positive, config.k
+    )
+    chi2, p_value, dof = chi2_cluster_decision(labels, positive, config.k)
+    dev, deviant_ids = deviations(rates, global_rate, config.deviation_pp)
+
+    for c in range(config.k):
+        if 0 < sizes[c] < config.min_cluster_warn:
+            warnings.append(
+                f"Cluster {c} de faible effectif (n={sizes[c]} < "
+                f"{config.min_cluster_warn}) — caractérisation peu concluante."
+            )
+
+    global_mean = x.mean(axis=0)
+    global_std = x.std(axis=0)
+    clusters: list[ClusterStat] = []
+    for c in range(config.k):
+        mask = labels == c
+        if sizes[c] > 0:
+            cluster_mean = x[mask].mean(axis=0)
+            top = characterize_cluster(
+                cluster_mean, global_mean, global_std, features, top_n=3
+            )
+        else:
+            top = ()
+        clusters.append(
+            ClusterStat(
+                id=c,
+                n=sizes[c],
+                positive_rate=round(rates[c], _ROUND),
+                deviation_pp=dev[c],
+                is_deviant=c in deviant_ids,
+                top_features=top,
+            )
+        )
+
+    max_abs_dev = max((abs(d) for d in dev.values()), default=0.0)
+    verdict = m2_verdict(p_value, config.chi2_alpha, len(deviant_ids))
+    score = m2_risk_score(
+        p_value, config.chi2_alpha, max_abs_dev, len(deviant_ids), config.k
+    )
+
+    return M2Result(
+        n=n,
+        k=config.k,
+        global_positive_rate=round(global_rate, _ROUND),
+        chi2=round(chi2, _ROUND),
+        p_value=round(p_value, 6),
+        dof=dof,
+        clusters=tuple(clusters),
+        deviant_cluster_ids=tuple(deviant_ids),
+        verdict=verdict,
+        risk_score=score,
+        warnings=tuple(warnings),
+    )

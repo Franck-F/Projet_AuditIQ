@@ -56,3 +56,41 @@ def test_not_enough_rows_for_k():
         run_m2(df, cfg)
     assert e.value.field is None
     assert "Effectif" in e.value.message
+
+
+def test_run_m2_flags_deviant_blocks_as_fail(m2_deviant_df):
+    cfg = M2Config(decision_column="y", positive_value="1", k=2)
+    res = run_m2(m2_deviant_df, cfg)
+    assert res.n == 240
+    assert res.k == 2
+    assert res.p_value < 0.05
+    assert len(res.deviant_cluster_ids) >= 1
+    assert res.verdict == "fail"
+    assert 0 <= res.risk_score <= 100
+    dev = next(
+        c for c in res.clusters if c.id == res.deviant_cluster_ids[0]
+    )
+    assert len(dev.top_features) >= 1
+    assert dev.top_features[0].name in ("f1", "f2")
+
+
+def test_run_m2_homogeneous_is_pass(m2_homogeneous_df):
+    cfg = M2Config(decision_column="y", positive_value="1", k=3)
+    res = run_m2(m2_homogeneous_df, cfg)
+    assert res.verdict == "pass"
+    assert res.deviant_cluster_ids == ()
+
+
+def test_run_m2_is_deterministic(m2_deviant_df):
+    cfg = M2Config(decision_column="y", positive_value="1", k=2)
+    a = run_m2(m2_deviant_df, cfg)
+    b = run_m2(m2_deviant_df, cfg)
+    assert a == b
+
+
+def test_run_m2_non_numeric_feature_warns(m2_deviant_df):
+    df = m2_deviant_df.copy()
+    df["city"] = "Paris"
+    cfg = M2Config(decision_column="y", positive_value="1", k=2)
+    res = run_m2(df, cfg)
+    assert any("non numériques" in w for w in res.warnings)
