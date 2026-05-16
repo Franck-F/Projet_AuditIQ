@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from scipy.stats import chi2_contingency
 
 from .metrics import VERDICT_FAIL, VERDICT_PASS, VERDICT_WARN
@@ -9,7 +10,7 @@ from .types import FeatureContribution
 
 
 def cluster_positive_rates(
-    labels: np.ndarray, positive: np.ndarray, k: int
+    labels: npt.NDArray[np.generic], positive: npt.NDArray[np.generic], k: int
 ) -> tuple[dict[int, float], float, dict[int, int]]:
     """Return (positive_rate_per_cluster, global_positive_rate, size_per_cluster).
 
@@ -27,7 +28,7 @@ def cluster_positive_rates(
 
 
 def chi2_cluster_decision(
-    labels: np.ndarray, positive: np.ndarray, k: int
+    labels: npt.NDArray[np.generic], positive: npt.NDArray[np.generic], k: int
 ) -> tuple[float, float, int]:
     """Chi-squared independence test on the [cluster x decision] table.
 
@@ -61,9 +62,9 @@ def deviations(
 
 
 def characterize_cluster(
-    cluster_mean: np.ndarray,
-    global_mean: np.ndarray,
-    global_std: np.ndarray,
+    cluster_mean: npt.NDArray[np.generic],
+    global_mean: npt.NDArray[np.generic],
+    global_std: npt.NDArray[np.generic],
     feature_names: list[str],
     top_n: int = 3,
 ) -> tuple[FeatureContribution, ...]:

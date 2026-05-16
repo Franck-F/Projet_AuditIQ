@@ -1,6 +1,13 @@
 import numpy as np
 
-from app.audit_engine.unsupervised_metrics import cluster_positive_rates
+from app.audit_engine.unsupervised_metrics import (
+    characterize_cluster,
+    chi2_cluster_decision,
+    cluster_positive_rates,
+    deviations,
+    m2_risk_score,
+    m2_verdict,
+)
 
 
 def test_cluster_positive_rates_and_global():
@@ -20,9 +27,6 @@ def test_cluster_positive_rates_handles_empty_cluster():
     assert rates == {0: 0.5, 1: 0.0, 2: 0.0}
     assert sizes == {0: 4, 1: 0, 2: 0}
     assert global_rate == 0.5
-
-
-from app.audit_engine.unsupervised_metrics import chi2_cluster_decision
 
 
 def test_chi2_strong_association_low_p():
@@ -50,9 +54,6 @@ def test_chi2_degenerate_constant_decision_returns_neutral():
     assert dof == 0
 
 
-from app.audit_engine.unsupervised_metrics import deviations
-
-
 def test_deviations_in_percentage_points_and_flagging():
     rates = {0: 0.20, 1: 0.55, 2: 0.50}
     dev, deviant = deviations(rates, global_rate=0.50, deviation_pp=20.0)
@@ -67,9 +68,6 @@ def test_deviations_threshold_is_strict():
     dev, deviant = deviations(rates, global_rate=0.50, deviation_pp=20.0)
     assert dev[0] == -20.0
     assert deviant == ()  # exactly 20pp is NOT > 20pp
-
-
-from app.audit_engine.unsupervised_metrics import characterize_cluster
 
 
 def test_characterize_returns_signed_top3_by_abs_std_diff():
@@ -93,9 +91,6 @@ def test_characterize_skips_constant_features():
     )
     # const feature has std 0 -> std_diff 0 -> not selected over x
     assert [f.name for f in top] == ["x"]
-
-
-from app.audit_engine.unsupervised_metrics import m2_risk_score, m2_verdict
 
 
 def test_m2_verdict_bands():
