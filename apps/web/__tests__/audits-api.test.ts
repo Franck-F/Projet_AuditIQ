@@ -46,4 +46,23 @@ describe('audits api', () => {
     expect(out.id).toBe('a1');
     expect(get).toHaveBeenCalledWith('/audits/a1');
   });
+
+  it('posts an M2 audit body (module + config) to /audits', async () => {
+    post.mockResolvedValue({ data: { id: 'aud-m2', module: 'M2' } });
+    const { createAudit } = await import('@/lib/api/audits');
+    await createAudit({
+      dataset_id: 'd1',
+      title: 'Détection',
+      module: 'M2',
+      decision_column: 'embauche',
+      favorable_value: 'oui',
+      config: { k: 3, deviation_pp: 25 },
+    });
+    expect(post.mock.calls[2]![0]).toBe('/audits');
+    expect(post.mock.calls[2]![1]).toMatchObject({
+      module: 'M2',
+      decision_column: 'embauche',
+      config: { k: 3, deviation_pp: 25 },
+    });
+  });
 });

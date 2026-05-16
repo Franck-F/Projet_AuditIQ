@@ -48,6 +48,52 @@ export type InterpretationOut = {
   model: string;
 };
 
+export type FeatureContributionOut = {
+  name: string;
+  std_diff: number;
+  direction: string;
+};
+
+export type ClusterStatOut = {
+  id: number;
+  n: number;
+  positive_rate: number;
+  deviation_pp: number;
+  is_deviant: boolean;
+  top_features: FeatureContributionOut[];
+};
+
+export type M2MetricsOut = {
+  n: number;
+  k: number;
+  global_positive_rate: number;
+  chi2: number;
+  p_value: number;
+  dof: number;
+  clusters: ClusterStatOut[];
+  deviant_cluster_ids: number[];
+  verdict: Verdict;
+  risk_score: number;
+  warnings: string[];
+};
+
+export type M2ConfigIn = {
+  features?: string[];
+  k?: number;
+  deviation_pp?: number;
+  chi2_alpha?: number;
+  random_state?: number;
+};
+
+export type M2AuditCreate = {
+  dataset_id: string;
+  title: string;
+  module: 'M2';
+  decision_column: string;
+  favorable_value: string;
+  config?: M2ConfigIn;
+};
+
 export type AuditOut = {
   id: string;
   code: string | null;
@@ -55,14 +101,16 @@ export type AuditOut = {
   status: string;
   module: string;
   dataset_id: string;
-  protected_attribute: string;
+  protected_attribute: string | null;
   decision_column: string;
   favorable_value: string;
   privileged_value: string | null;
   created_at: string;
   completed_at: string | null;
-  metrics: M1MetricsOut | null;
+  metrics: M1MetricsOut | M2MetricsOut | null;
   interpretation: InterpretationOut | null;
+  pre_check: string[];
+  config: Record<string, unknown> | null;
 };
 
 export async function uploadDataset(file: File): Promise<DatasetOut> {
@@ -72,7 +120,9 @@ export async function uploadDataset(file: File): Promise<DatasetOut> {
   return data;
 }
 
-export async function createAudit(body: AuditCreate): Promise<AuditOut> {
+export async function createAudit(
+  body: AuditCreate | M2AuditCreate,
+): Promise<AuditOut> {
   const { data } = await api.post<AuditOut>('/audits', body);
   return data;
 }

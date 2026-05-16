@@ -6,6 +6,7 @@ import { Topbar } from '@/components/app/Topbar';
 import { Gauge } from '@/components/product/Gauge';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { useAudit } from '@/lib/query/use-audit';
+import type { M1MetricsOut } from '@/lib/api/audits';
 
 const VERDICT: Record<'fail' | 'warn' | 'pass', { tone: StatusTone; label: string }> = {
   fail: { tone: 'fail', label: 'Critique' },
@@ -34,6 +35,8 @@ export default function AuditResultPage() {
   }
 
   const m = data.metrics;
+  const isM1 = (metrics: typeof m): metrics is M1MetricsOut =>
+    metrics !== null && 'groups' in metrics;
   const v = m ? VERDICT[m.verdict] : null;
 
   return (
@@ -71,6 +74,7 @@ export default function AuditResultPage() {
                   caption={`/100 · ${v?.label ?? ''}`}
                 />
               </div>
+              {isM1(m) && (
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border-default bg-surface p-6">
                   <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
@@ -95,8 +99,10 @@ export default function AuditResultPage() {
                   </div>
                 </div>
               </div>
+              )}
             </section>
 
+            {isM1(m) && (
             <section className="rounded-2xl border border-border-default bg-surface p-7">
               <h2 className="mb-3 text-[18px] font-medium text-fg">
                 Par groupe
@@ -132,6 +138,7 @@ export default function AuditResultPage() {
                 </table>
               </div>
             </section>
+            )}
 
             {data.interpretation && (
               <section className="rounded-2xl border border-border-default bg-surface p-7">
