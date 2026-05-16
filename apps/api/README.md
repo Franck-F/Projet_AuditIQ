@@ -43,6 +43,20 @@ uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+### Environment
+
+`Settings` reads `apps/api/.env` (working dir = `apps/api`). Required keys for a
+real run (defaults are SQLite/dev-safe so tests need no secrets):
+
+- `SUPABASE_URL` — e.g. `https://jiwexpgcfhnsugouzzvg.supabase.co` (used to derive
+  the public JWKS URL `…/auth/v1/.well-known/jwks.json`; no secret needed).
+- `SUPABASE_DB_URL` — `postgresql+asyncpg://…` (Supabase Postgres).
+- `SUPABASE_SERVICE_ROLE_KEY` — used by Plan 2B (Storage); keep server-side only.
+
+Outside `API_ENV=development`, the app fails fast (pydantic `ValidationError`) if
+`SUPABASE_URL`/`SUPABASE_DB_URL`/`SUPABASE_SERVICE_ROLE_KEY` are absent or default.
+Consolidate all API secrets into `apps/api/.env` (not the repo-root `.env`).
+
 OpenAPI doc available at `http://localhost:8000/api/v1/docs`.
 
 ## Conventions
