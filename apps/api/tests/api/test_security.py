@@ -47,3 +47,21 @@ def test_wrong_audience_raises(keypair):
     priv, pub = keypair
     with pytest.raises(AuthError):
         verify_token(_token(priv, aud="other"), key=pub)
+
+
+def test_missing_sub_raises_auth_error(keypair):
+    priv, pub = keypair
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    # valid signature/aud/exp but no `sub` -> options={"require":[...,"sub"]} fails
+    token = jwt.encode(
+        {
+            "email": "u@acme.fr",
+            "aud": "authenticated",
+            "exp": now + datetime.timedelta(hours=1),
+            "iat": now,
+        },
+        priv,
+        algorithm="RS256",
+    )
+    with pytest.raises(AuthError):
+        verify_token(token, key=pub)
