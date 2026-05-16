@@ -12,11 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.audit_engine import M1Config, M1Result, run_m1
 from app.core.errors import NotFoundError
 from app.integrations.storage import Storage
+from app.interpretation.base import LLMProvider
+from app.interpretation.m1 import interpret_m1
 from app.models import Audit, AuditResult, Dataset
 from app.schemas.audit import (
     AuditCreate,
     AuditOut,
     GroupStatOut,
+    InterpretationOut,
     M1MetricsOut,
     Verdict,
 )
@@ -73,7 +76,11 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
     )
 
 
-def _audit_out(audit: Audit, metrics: M1MetricsOut | None) -> AuditOut:
+def _audit_out(
+    audit: Audit,
+    metrics: M1MetricsOut | None,
+    interpretation: InterpretationOut | None = None,
+) -> AuditOut:
     return AuditOut(
         id=audit.id,
         code=audit.code,
@@ -88,6 +95,7 @@ def _audit_out(audit: Audit, metrics: M1MetricsOut | None) -> AuditOut:
         created_at=audit.created_at,
         completed_at=audit.completed_at,
         metrics=metrics,
+        interpretation=interpretation,
     )
 
 
@@ -98,6 +106,7 @@ async def run_m1_audit(
     org_id: uuid.UUID,
     user_id: uuid.UUID,
     body: AuditCreate,
+    llm_provider: LLMProvider | None,
 ) -> AuditOut:
     dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
 
@@ -140,19 +149,20 @@ async def run_m1_audit(
     )
 
     metrics_out = _to_metrics_out(result)
+    interpretation = await interpret_m1(result, provider=llm_provider)
     session.add(
         AuditResult(
             audit_id=audit.id,
             metrics=metrics_out.model_dump(),
             verdict=result.verdict,
             risk_score=result.risk_score,
-            interpretation={},
+            interpretation=interpretation.model_dump(),
         )
     )
     audit.status = "done"
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
     await session.commit()
-    return _audit_out(audit, metrics_out)
+    return _audit_out(audit, metrics_out, interpretation)
 
 
 async def get_audit(
@@ -173,4 +183,9 @@ async def get_audit(
     metrics = (
         M1MetricsOut.model_validate(result.metrics) if result is not None else None
     )
-    return _audit_out(audit, metrics)
+    interpretation = (
+        InterpretationOut.model_validate(result.interpretation)
+        if result is not None and result.interpretation
+        else None
+    )
+    return _audit_out(audit, metrics, interpretation)
