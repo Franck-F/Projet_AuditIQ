@@ -63,6 +63,12 @@ async def test_memory_storage_missing_raises_keyerror():
     s = MemoryStorage()
     with pytest.raises(KeyError):
         await s.download("nope")
+
+
+def test_memory_storage_satisfies_protocol():
+    from app.integrations.storage import MemoryStorage, Storage
+
+    assert isinstance(MemoryStorage(), Storage)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -79,6 +85,7 @@ Create `apps/api/app/integrations/storage.py`:
 ```python
 from __future__ import annotations
 
+import asyncio
 from typing import Protocol, runtime_checkable
 
 from app.core.config import get_settings
@@ -114,12 +121,17 @@ class SupabaseStorage:
         self._bucket = bucket
 
     async def upload(self, path: str, data: bytes, content_type: str) -> None:
-        self._client.storage.from_(self._bucket).upload(
-            path, data, {"content-type": content_type, "upsert": "true"}
+        await asyncio.to_thread(
+            self._client.storage.from_(self._bucket).upload,
+            path,
+            data,
+            {"content-type": content_type, "upsert": "true"},
         )
 
     async def download(self, path: str) -> bytes:
-        return self._client.storage.from_(self._bucket).download(path)
+        return await asyncio.to_thread(
+            self._client.storage.from_(self._bucket).download, path
+        )
 
 
 def get_storage() -> Storage:
@@ -281,7 +293,7 @@ class DatasetOut(BaseModel):
     columns: list[str]
     status: str
     created_at: datetime.datetime
-    expires_at: datetime.datetime | None
+    expires_at: datetime.datetime | None = None
 ```
 
 Create `apps/api/app/schemas/audit.py`:
@@ -336,7 +348,7 @@ class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
     id: uuid.UUID
-    code: str | None
+    code: str | None = None
     title: str
     status: str
     module: str
@@ -344,10 +356,10 @@ class AuditOut(BaseModel):
     protected_attribute: str
     decision_column: str
     favorable_value: str
-    privileged_value: str | None
+    privileged_value: str | None = None
     created_at: datetime.datetime
-    completed_at: datetime.datetime | None
-    metrics: M1MetricsOut | None
+    completed_at: datetime.datetime | None = None
+    metrics: M1MetricsOut | None = None
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -715,16 +727,23 @@ from __future__ import annotations
 import datetime
 import io
 import uuid
+from typing import cast
 
 import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.audit_engine import M1Config, run_m1
+from app.audit_engine import M1Config, M1Result, run_m1
 from app.core.errors import NotFoundError
 from app.integrations.storage import Storage
 from app.models import Audit, AuditResult, Dataset
-from app.schemas.audit import AuditCreate, AuditOut, GroupStatOut, M1MetricsOut
+from app.schemas.audit import (
+    AuditCreate,
+    AuditOut,
+    GroupStatOut,
+    M1MetricsOut,
+    Verdict,
+)
 from app.services.dataset_service import get_dataset
 
 
@@ -754,7 +773,7 @@ async def _next_code(session: AsyncSession, org_id: uuid.UUID) -> str:
     return f"AUD-{year}-{count + 1:03d}"
 
 
-def _to_metrics_out(result_obj) -> M1MetricsOut:
+def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
     return M1MetricsOut(
         groups=[
             GroupStatOut(
@@ -770,7 +789,9 @@ def _to_metrics_out(result_obj) -> M1MetricsOut:
         disparate_impact=result_obj.disparate_impact,
         demographic_parity_diff=result_obj.demographic_parity_diff,
         worst_group=result_obj.worst_group,
-        verdict=result_obj.verdict,
+        # Engine returns a bare str but only ever VERDICT_PASS/WARN/FAIL
+        # (see audit_engine.metrics.decide_verdict); narrow to the DTO Literal.
+        verdict=cast(Verdict, result_obj.verdict),
         risk_score=result_obj.risk_score,
         warnings=list(result_obj.warnings),
     )

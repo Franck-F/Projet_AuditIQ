@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: SecretStr = SecretStr("")
     api_cors_origins: str = "http://localhost:3000"
     api_log_level: str = "info"
+    storage_bucket: str = "datasets"
+    max_upload_mb: int = 10
+    retention_days_default: int = 30
 
     @property
     def cors_origins(self) -> list[str]:
