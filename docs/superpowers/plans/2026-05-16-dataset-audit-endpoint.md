@@ -732,7 +732,7 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.audit_engine import M1Config, run_m1
+from app.audit_engine import M1Config, M1Result, run_m1
 from app.core.errors import NotFoundError
 from app.integrations.storage import Storage
 from app.models import Audit, AuditResult, Dataset
@@ -766,7 +766,7 @@ async def _next_code(session: AsyncSession, org_id: uuid.UUID) -> str:
     return f"AUD-{year}-{count + 1:03d}"
 
 
-def _to_metrics_out(result_obj) -> M1MetricsOut:
+def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
     return M1MetricsOut(
         groups=[
             GroupStatOut(
