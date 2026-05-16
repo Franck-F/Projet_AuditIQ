@@ -65,6 +65,14 @@ prod, in-memory in dev/test) and persists a `datasets` row. `POST /api/v1/audits
 `audits`+`audit_results`. All queries are org-scoped at the service layer.
 Interpretation (Gemini) and the dashboard are Plan 2C.
 
+#### Interpretation & dashboard (Plan 2C)
+
+Each audit is interpreted by Gemini (`GEMINI_API_KEY`/`GEMINI_MODEL`) into a
+French narrative + AI-Act anchors + disclaimers; on any LLM failure a
+deterministic fallback is persisted (`provider="fallback"`) and the audit never
+fails. `GET /api/v1/dashboard/summary` returns org-scoped aggregates
+(total/failing/warning audits, mean risk score, module usage, recent audits).
+
 OpenAPI doc available at `http://localhost:8000/api/v1/docs`.
 
 ## Conventions
