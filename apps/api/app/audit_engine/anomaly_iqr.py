@@ -37,4 +37,24 @@ def iqr_precheck(
                         f"prudence."
                     )
 
+    cols = numeric_columns or []
+    for col in cols:
+        if col not in df.columns:
+            continue
+        s = pd.to_numeric(df[col], errors="coerce").dropna()
+        if len(s) < 4:
+            continue
+        q1, q3 = s.quantile(0.25), s.quantile(0.75)
+        iqr = q3 - q1
+        if iqr == 0:
+            n_out = int((s != q1).sum())
+        else:
+            lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+            n_out = int(((s < lo) | (s > hi)).sum())
+        if len(s) > 0 and n_out / len(s) >= outlier_row_pct:
+            warnings.append(
+                f"Feature « {col} » : {n_out} valeurs atypiques "
+                f"({n_out / len(s):.0%}) — vérifiez la qualité des données."
+            )
+
     return IqrReport(warnings=tuple(warnings))
