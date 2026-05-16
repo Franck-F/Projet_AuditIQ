@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     api_cors_origins: str = "http://localhost:3000"
     api_log_level: str = "info"
     storage_bucket: str = "datasets"
+    storage_bucket_reports: str = "reports"
     max_upload_mb: int = 10
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")
