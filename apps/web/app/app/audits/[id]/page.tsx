@@ -1,11 +1,14 @@
 'use client';
 
+import * as React from 'react';
+
 import { useParams } from 'next/navigation';
 
 import { Topbar } from '@/components/app/Topbar';
 import { Gauge } from '@/components/product/Gauge';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
-import type { M2MetricsOut } from '@/lib/api/audits';
+import { Button } from '@/components/ui/button';
+import { downloadReport, type M2MetricsOut, type ReportFormat } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
 
 const VERDICT: Record<'fail' | 'warn' | 'pass', { tone: StatusTone; label: string }> = {
@@ -157,6 +160,55 @@ function M2View({
   );
 }
 
+function ReportActions({ auditId }: { auditId: string }) {
+  const [busy, setBusy] = React.useState<ReportFormat | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const onDownload = async (fmt: ReportFormat) => {
+    setError(null);
+    setBusy(fmt);
+    try {
+      await downloadReport(auditId, fmt);
+    } catch {
+      setError(
+        fmt === 'pdf'
+          ? "Le rapport PDF est momentanément indisponible. Le rapport Excel reste disponible."
+          : "Le téléchargement du rapport a échoué.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy !== null}
+          onClick={() => onDownload('xlsx')}
+        >
+          {busy === 'xlsx' ? 'Export…' : 'Rapport Excel'}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy !== null}
+          onClick={() => onDownload('pdf')}
+        >
+          {busy === 'pdf' ? 'Export…' : 'Rapport PDF'}
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="max-w-[36ch] text-right text-xs text-status-fail">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AuditResultPage() {
   const params = useParams<{ id: string }>();
   const id = typeof params?.id === 'string' ? params.id : '';
@@ -199,7 +251,10 @@ export default function AuditResultPage() {
               {data.code ?? data.id} · {data.module} · {data.status}
             </p>
           </div>
-          {v && <StatusBadge tone={v.tone}>{v.label}</StatusBadge>}
+          <div className="flex items-center gap-3">
+            {v && <StatusBadge tone={v.tone}>{v.label}</StatusBadge>}
+            {m && <ReportActions auditId={data.id} />}
+          </div>
         </header>
 
         {data.pre_check.length > 0 && (
