@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import io
 import uuid
+from typing import cast
 
 import pandas as pd
 from sqlalchemy import func, select
@@ -12,7 +13,13 @@ from app.audit_engine import M1Config, M1Result, run_m1
 from app.core.errors import NotFoundError
 from app.integrations.storage import Storage
 from app.models import Audit, AuditResult, Dataset
-from app.schemas.audit import AuditCreate, AuditOut, GroupStatOut, M1MetricsOut
+from app.schemas.audit import (
+    AuditCreate,
+    AuditOut,
+    GroupStatOut,
+    M1MetricsOut,
+    Verdict,
+)
 from app.services.dataset_service import get_dataset
 
 
@@ -58,7 +65,9 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
         disparate_impact=result_obj.disparate_impact,
         demographic_parity_diff=result_obj.demographic_parity_diff,
         worst_group=result_obj.worst_group,
-        verdict=result_obj.verdict,
+        # Engine returns a bare str but only ever VERDICT_PASS/WARN/FAIL
+        # (see audit_engine.metrics.decide_verdict); narrow to the DTO Literal.
+        verdict=cast(Verdict, result_obj.verdict),
         risk_score=result_obj.risk_score,
         warnings=list(result_obj.warnings),
     )
