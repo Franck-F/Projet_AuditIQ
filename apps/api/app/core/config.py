@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     storage_bucket: str = "datasets"
     max_upload_mb: int = 10
     retention_days_default: int = 30
+    gemini_api_key: SecretStr = SecretStr("")
+    gemini_model: str = "gemini-1.5-pro"
 
     @property
     def cors_origins(self) -> list[str]:
