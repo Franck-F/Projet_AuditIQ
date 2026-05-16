@@ -31,7 +31,7 @@ class AuditCreate(BaseModel):
     config: M2ConfigIn | None = None
 
     @model_validator(mode="after")
-    def _per_module(self) -> "AuditCreate":
+    def _per_module(self) -> AuditCreate:
         if self.module == "M1":
             if not self.protected_attribute:
                 raise ValueError(

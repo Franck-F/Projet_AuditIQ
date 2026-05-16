@@ -188,7 +188,7 @@ async def run_m1_audit(
     result = run_m1(
         df,
         M1Config(
-            protected_attribute=body.protected_attribute,
+            protected_attribute=cast(str, body.protected_attribute),
             decision_column=body.decision_column,
             favorable_value=fav,
             privileged_value=priv,

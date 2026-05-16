@@ -27,7 +27,7 @@ class AuditResult(Base):
     interpretation: Mapped[dict[str, object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict
     )
-    pre_check: Mapped[dict[str, object] | None] = mapped_column(
+    pre_check: Mapped[list[str] | None] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(

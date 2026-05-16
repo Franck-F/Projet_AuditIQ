@@ -1,7 +1,5 @@
 import json
 
-import pytest
-
 from app.audit_engine import M2Config, run_m2
 from app.interpretation.m2 import interpret_m2
 
