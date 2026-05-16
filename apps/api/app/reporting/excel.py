@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+from collections.abc import Sequence
 
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -28,7 +29,7 @@ _FR_LAW = (
 )
 
 
-def _rows(ws: Worksheet, rows: list[list[object]]) -> None:
+def _rows(ws: Worksheet, rows: Sequence[Sequence[object]]) -> None:
     for r in rows:
         ws.append(r)
 
