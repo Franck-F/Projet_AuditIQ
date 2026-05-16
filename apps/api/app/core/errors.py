@@ -70,15 +70,17 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:
-        fields = {
-            ".".join(str(p) for p in e["loc"] if p != "body"): e["msg"]
-            for e in exc.errors()
-        }
+        fields: dict[str, str] = {}
+        for e in exc.errors():
+            loc = e["loc"]
+            if loc and loc[0] == "body":
+                loc = loc[1:]
+            fields[".".join(str(p) for p in loc)] = e["msg"]
         problem = Problem(
             title="Validation Error",
             status=422,
             detail="La requête est invalide.",
-            fields=fields,
+            fields=fields or None,
         )
         return JSONResponse(
             status_code=422,
