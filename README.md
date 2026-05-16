@@ -101,7 +101,7 @@ pnpm format       # prettier --write
 
 ## Statut
 
-🚧 Slice M1 livrée : API (auth Supabase JWKS, upload CSV, audit M1,
-interprétation Gemini+fallback, dashboard, durcissée) + web (auth réelle,
-`/app` protégé, dashboard branché sur l'API). Reste : assistant de création
-d'audit + page résultat web (Plan 3B).
+✅ Slice M1 complète end-to-end : web (auth Supabase, `/app` protégé, dashboard
+live, **assistant de création d'audit + page résultat**) → API (upload CSV,
+audit M1, interprétation Gemini+fallback, dashboard), org-scoped et durcie.
+Suite : modules M2/M3, async, export PDF/Excel (hors slice M1).
