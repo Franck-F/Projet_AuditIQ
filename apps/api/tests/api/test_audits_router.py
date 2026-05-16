@@ -1,4 +1,8 @@
+import io
+
 import httpx
+import numpy as np
+import pandas as pd
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -14,6 +18,17 @@ def _recruitment_csv() -> bytes:
     rows += ["Hommes,oui"] * 100 + ["Hommes,non"] * 100
     rows += ["Femmes,oui"] * 72 + ["Femmes,non"] * 128
     return ("\n".join(rows) + "\n").encode()
+
+
+def _m2_csv() -> bytes:
+    rng = np.random.default_rng(42)
+    a = pd.DataFrame({"f1": rng.normal(-5, .5, 120), "f2": rng.normal(-5, .5, 120),
+                      "embauche": (["oui"] * 108) + (["non"] * 12)})
+    b = pd.DataFrame({"f1": rng.normal(5, .5, 120), "f2": rng.normal(5, .5, 120),
+                      "embauche": (["oui"] * 12) + (["non"] * 108)})
+    buf = io.BytesIO()
+    pd.concat([a, b], ignore_index=True).to_csv(buf, index=False)
+    return buf.getvalue()
 
 
 @pytest.fixture
@@ -97,3 +112,54 @@ async def test_run_audit_bad_mapping_returns_422_problem(client):
     assert r.status_code == 422
     assert r.json()["title"] == "Dataset Validation Error"
     assert r.headers["content-type"].startswith("application/problem+json")
+
+
+async def _upload_m2(client) -> str:
+    files = {"file": ("m2.csv", _m2_csv(), "text/csv")}
+    r = await client.post(
+        "/api/v1/datasets", files=files, headers={"Authorization": "Bearer x"}
+    )
+    assert r.status_code == 201
+    return r.json()["id"]
+
+
+@pytest.fixture
+async def m2_dataset_id(client):
+    return await _upload_m2(client)
+
+
+async def test_post_audits_m2_path(client, m2_dataset_id):
+    r = await client.post(
+        "/api/v1/audits",
+        json={
+            "dataset_id": str(m2_dataset_id),
+            "title": "M2 via API",
+            "module": "M2",
+            "decision_column": "embauche",
+            "favorable_value": "oui",
+            "config": {"k": 2},
+        },
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["module"] == "M2"
+    assert body["status"] == "done"
+    assert body["metrics"]["verdict"] in ("fail", "warn", "pass")
+    assert "pre_check" in body
+
+
+async def test_post_audits_m2_bad_config_is_422(client, m2_dataset_id):
+    r = await client.post(
+        "/api/v1/audits",
+        json={
+            "dataset_id": str(m2_dataset_id),
+            "title": "bad",
+            "module": "M2",
+            "decision_column": "embauche",
+            "favorable_value": "oui",
+            "config": {"k": 999},
+        },
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 422
