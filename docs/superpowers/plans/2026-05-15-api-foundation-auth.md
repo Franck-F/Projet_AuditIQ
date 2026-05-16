@@ -910,6 +910,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
+_MODELS = {"organizations", "users", "datasets", "audits", "audit_results"}
+
 
 def test_upgrade_then_downgrade_on_sqlite(tmp_path, monkeypatch):
     db = tmp_path / "mig.db"
@@ -918,17 +920,17 @@ def test_upgrade_then_downgrade_on_sqlite(tmp_path, monkeypatch):
 
     command.upgrade(cfg, "head")
     insp = inspect(create_engine(f"sqlite:///{db}"))
-    assert {
-        "organizations",
-        "users",
-        "datasets",
-        "audits",
-        "audit_results",
-    } <= set(insp.get_table_names())
+    assert set(insp.get_table_names()) >= _MODELS
 
     command.downgrade(cfg, "base")
     insp2 = inspect(create_engine(f"sqlite:///{db}"))
-    assert "organizations" not in insp2.get_table_names()
+    remaining = _MODELS & set(insp2.get_table_names())
+    assert remaining == set(), f"Tables not dropped: {remaining}"
+
+    # Idempotency: migrations re-apply cleanly after a full downgrade.
+    command.upgrade(cfg, "head")
+    insp3 = inspect(create_engine(f"sqlite:///{db}"))
+    assert set(insp3.get_table_names()) >= _MODELS
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -944,6 +946,7 @@ Create `apps/api/alembic.ini`:
 [alembic]
 script_location = migrations
 prepend_sys_path = .
+path_separator = os
 
 [loggers]
 keys = root,sqlalchemy,alembic
@@ -1057,6 +1060,8 @@ if context.is_offline_mode():
     with context.begin_transaction():
         context.run_migrations()
 else:
+    # Alembic is CLI-only; asyncio.run() is safe here. Do not import this
+    # module from async code.
     asyncio.run(_run_online())
 ```
 
@@ -1214,9 +1219,14 @@ def upgrade() -> None:
         for table in _TABLES:
             op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
             op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+            # Supabase provisions the anon/authenticated roles. On a vanilla
+            # Postgres (local dev) those roles are absent — skip the policy
+            # gracefully instead of aborting the whole migration.
             op.execute(
+                "DO $$ BEGIN "
                 f"CREATE POLICY no_direct_access ON {table} FOR ALL "
-                f"TO anon, authenticated USING (false) WITH CHECK (false)"
+                "TO anon, authenticated USING (false) WITH CHECK (false); "
+                "EXCEPTION WHEN undefined_object THEN NULL; END $$"
             )
 
 

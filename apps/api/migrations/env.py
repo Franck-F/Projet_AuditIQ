@@ -43,4 +43,6 @@ if context.is_offline_mode():
     with context.begin_transaction():
         context.run_migrations()
 else:
+    # Alembic is CLI-only; asyncio.run() is safe here. Do not import this
+    # module from async code.
     asyncio.run(_run_online())
