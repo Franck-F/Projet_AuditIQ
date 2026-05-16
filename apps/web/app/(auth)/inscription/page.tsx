@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AuthMain, AuthSide, AuthBenefit } from '@/components/auth/AuthShell';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 const PWD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
@@ -90,10 +91,22 @@ export default function InscriptionPage() {
     resolver: zodResolver(InscriptionSchema),
   });
 
-  const onSubmit = async (_v: InscriptionValues) => {
-    // TODO Task 12 : POST /api/v1/auth/signup (Supabase)
-    await new Promise((r) => setTimeout(r, 500));
-    router.push('/verification-email');
+  const [authError, setAuthError] = React.useState<string | null>(null);
+
+  const onSubmit = async (v: InscriptionValues) => {
+    setAuthError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: v.email,
+      password: v.password,
+    });
+    if (error) {
+      setAuthError(
+        "L'inscription a échoué. Cet email est peut-être déjà utilisé.",
+      );
+      return;
+    }
+    router.push('/app');
   };
 
   return (
@@ -220,6 +233,12 @@ export default function InscriptionPage() {
               méthodologie, retours d&apos;expérience). Désinscription en un clic.
             </span>
           </label>
+
+          {authError && (
+            <p role="alert" className="text-sm text-status-fail">
+              {authError}
+            </p>
+          )}
 
           <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
             {isSubmitting ? 'Création…' : 'Créer mon compte'}
