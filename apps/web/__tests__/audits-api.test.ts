@@ -65,4 +65,38 @@ describe('audits api', () => {
       config: { k: 3, deviation_pp: 25 },
     });
   });
+
+  it('downloadReport GETs the report as a blob and triggers a save', async () => {
+    get.mockClear();
+    const blob = new Blob(['x'], { type: 'application/pdf' });
+    get.mockResolvedValue({
+      data: blob,
+      headers: { 'content-disposition': 'attachment; filename="AUD-1.pdf"' },
+    });
+    const createURL = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:fake');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockReturnValue();
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockReturnValue();
+    const { downloadReport } = await import('@/lib/api/audits');
+
+    await downloadReport('aud-1', 'pdf');
+
+    expect(get.mock.calls[0]![0]).toBe('/audits/aud-1/report.pdf');
+    expect(get.mock.calls[0]![1]).toMatchObject({ responseType: 'blob' });
+    expect(createURL).toHaveBeenCalledWith(blob);
+    expect(click).toHaveBeenCalled();
+    expect(revoke).toHaveBeenCalledWith('blob:fake');
+    createURL.mockRestore();
+    revoke.mockRestore();
+    click.mockRestore();
+  });
+
+  it('downloadReport rejects when the request fails', async () => {
+    get.mockRejectedValue(new Error('502'));
+    const { downloadReport } = await import('@/lib/api/audits');
+    await expect(downloadReport('aud-1', 'pdf')).rejects.toThrow();
+  });
 });

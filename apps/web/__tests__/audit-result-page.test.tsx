@@ -5,6 +5,12 @@ const { useAudit } = vi.hoisted(() => ({ useAudit: vi.fn() }));
 vi.mock('@/lib/query/use-audit', () => ({ useAudit }));
 vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'a1' }) }));
 
+const { downloadReport } = vi.hoisted(() => ({ downloadReport: vi.fn() }));
+vi.mock('@/lib/api/audits', async (orig) => ({
+  ...(await orig<typeof import('@/lib/api/audits')>()),
+  downloadReport,
+}));
+
 import AuditResultPage from '@/app/app/audits/[id]/page';
 
 describe('audit result page', () => {
@@ -115,5 +121,35 @@ describe('audit result page', () => {
     expect(screen.getByText(/p.?value/i)).toBeInTheDocument();
     expect(screen.getByText('code_postal')).toBeInTheDocument();
     expect(screen.getByText(/cluster défavorisé/i)).toBeInTheDocument();
+  });
+
+  it('renders report buttons and downloads Excel/PDF; PDF failure is non-silent', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    useAudit.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        id: 'a3', code: 'AUD-2026-010', title: 'Rapport', status: 'done',
+        module: 'M1', pre_check: [], config: null,
+        metrics: {
+          groups: [], reference_value: 'H', disparate_impact: 0.7,
+          demographic_parity_diff: 0.1, worst_group: 'F', verdict: 'warn',
+          risk_score: 50, warnings: [],
+        },
+        interpretation: null,
+      },
+    });
+    downloadReport.mockResolvedValue(undefined);
+    render(<AuditResultPage />);
+
+    await userEvent.click(screen.getByRole('button', { name: /excel/i }));
+    expect(downloadReport).toHaveBeenCalledWith('a3', 'xlsx');
+
+    downloadReport.mockRejectedValueOnce(new Error('502'));
+    await userEvent.click(screen.getByRole('button', { name: /pdf/i }));
+    expect(downloadReport).toHaveBeenLastCalledWith('a3', 'pdf');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /indisponible|échou/i,
+    );
   });
 });

@@ -131,3 +131,45 @@ export async function fetchAudit(id: string): Promise<AuditOut> {
   const { data } = await api.get<AuditOut>(`/audits/${id}`);
   return data;
 }
+
+export type ReportFormat = 'xlsx' | 'pdf';
+
+const _REPORT_MIME: Record<ReportFormat, string> = {
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pdf: 'application/pdf',
+};
+
+function _filename(contentDisposition: unknown, fallback: string): string {
+  if (typeof contentDisposition === 'string') {
+    const m = contentDisposition.match(/filename="?([^"]+)"?/);
+    if (m && m[1]) return m[1];
+  }
+  return fallback;
+}
+
+export async function downloadReport(
+  auditId: string,
+  fmt: ReportFormat,
+): Promise<void> {
+  const res = await api.get<Blob>(`/audits/${auditId}/report.${fmt}`, {
+    responseType: 'blob',
+  });
+  const blob =
+    res.data instanceof Blob
+      ? res.data
+      : new Blob([res.data], { type: _REPORT_MIME[fmt] });
+  const url = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = _filename(
+      res.headers?.['content-disposition'],
+      `rapport-${auditId}.${fmt}`,
+    );
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
