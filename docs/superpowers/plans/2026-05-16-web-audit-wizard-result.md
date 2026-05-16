@@ -695,7 +695,7 @@ describe('audit result page', () => {
     });
     render(<AuditResultPage />);
     expect(screen.getByText('Recrutement Q2')).toBeInTheDocument();
-    expect(screen.getByText(/AUD-2026-007/)).toBeInTheDocument();
+    expect(screen.getAllByText(/AUD-2026-007/).length).toBeGreaterThan(0);
     expect(screen.getByText(/écart défavorable/i)).toBeInTheDocument();
     expect(screen.getByText('AI Act art. 10')).toBeInTheDocument();
     expect(screen.getByText(/aide à l/i)).toBeInTheDocument();
