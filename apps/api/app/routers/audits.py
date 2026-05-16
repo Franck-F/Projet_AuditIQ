@@ -72,3 +72,20 @@ async def get_audit_report_xlsx(
         ),
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/{audit_id}/report.pdf")
+async def get_audit_report_pdf(
+    audit_id: uuid.UUID,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+    storage: Storage = Depends(get_report_storage_dep),  # noqa: B008
+) -> Response:
+    data, filename = await report_service.get_or_build_pdf(
+        session, storage, audit_id, org_id=user.org_id
+    )
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
