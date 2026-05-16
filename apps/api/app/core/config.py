@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = "gemini-1.5-pro"
+    api_rate_limit_default: str = "60/minute"
 
     @property
     def cors_origins(self) -> list[str]:
@@ -47,6 +48,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Variables requises hors environnement de développement "
                 f"manquantes : {', '.join(missing)}"
+            )
+        if "*" in self.cors_origins:
+            raise ValueError(
+                "API_CORS_ORIGINS='*' est interdit hors développement "
+                "(incompatible avec allow_credentials=True)."
             )
         return self
 
