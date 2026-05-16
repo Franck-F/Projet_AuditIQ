@@ -1714,6 +1714,37 @@ async def test_me_provisions_then_is_idempotent(app_client):
     )
     assert r2.status_code == 200
     assert r2.json()["org_id"] == body["org_id"]
+
+
+async def test_me_rejects_invalid_token(tmp_path, monkeypatch):
+    from app.core.errors import AuthError
+
+    eng = make_engine(f"sqlite+aiosqlite:///{tmp_path / 'inv.db'}")
+    async with eng.begin() as c:
+        await c.run_sync(Base.metadata.create_all)
+    sm = async_sessionmaker(eng, expire_on_commit=False)
+
+    async def _session_override():
+        async with sm() as s:
+            yield s
+
+    def _raise(token, *, key, issuer=None):
+        raise AuthError("Jeton invalide ou expiré.")
+
+    monkeypatch.setattr(deps, "resolve_signing_key", lambda token: "k")
+    monkeypatch.setattr(deps, "verify_token", _raise)
+
+    app = create_app()
+    app.dependency_overrides[get_session] = _session_override
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get(
+            "/api/v1/auth/me", headers={"Authorization": "Bearer bad"}
+        )
+    assert r.status_code == 401
+    assert r.json()["title"] == "Unauthorized"
+    assert r.headers["content-type"].startswith("application/problem+json")
+    await eng.dispose()
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
