@@ -73,7 +73,15 @@ deterministic fallback is persisted (`provider="fallback"`) and the audit never
 fails. `GET /api/v1/dashboard/summary` returns org-scoped aggregates
 (total/failing/warning audits, mean risk score, module usage, recent audits).
 
-OpenAPI doc available at `http://localhost:8000/api/v1/docs`.
+#### Operational hardening (Plan 2D)
+
+Outside `API_ENV=development`: `API_CORS_ORIGINS=*` is rejected at startup and
+Swagger/OpenAPI (`/api/v1/docs`,`/redoc`,`/openapi.json`) are disabled. All
+routes are rate-limited (`API_RATE_LIMIT_DEFAULT`, default `60/minute`) — over
+the limit returns RFC 7807 `429`. Lazy org/user provisioning recovers from a
+concurrent first-request race (IntegrityError → rollback → re-read).
+
+OpenAPI doc available at `http://localhost:8000/api/v1/docs` (development only).
 
 ## Conventions
 
