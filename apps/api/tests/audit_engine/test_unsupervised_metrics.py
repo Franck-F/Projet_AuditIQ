@@ -48,3 +48,22 @@ def test_chi2_degenerate_constant_decision_returns_neutral():
     assert chi2 == 0.0
     assert p == 1.0
     assert dof == 0
+
+
+from app.audit_engine.unsupervised_metrics import deviations
+
+
+def test_deviations_in_percentage_points_and_flagging():
+    rates = {0: 0.20, 1: 0.55, 2: 0.50}
+    dev, deviant = deviations(rates, global_rate=0.50, deviation_pp=20.0)
+    assert dev[0] == -30.0
+    assert dev[1] == 5.0
+    assert dev[2] == 0.0
+    assert deviant == (0,)  # only |dev| > 20pp
+
+
+def test_deviations_threshold_is_strict():
+    rates = {0: 0.30, 1: 0.50}
+    dev, deviant = deviations(rates, global_rate=0.50, deviation_pp=20.0)
+    assert dev[0] == -20.0
+    assert deviant == ()  # exactly 20pp is NOT > 20pp

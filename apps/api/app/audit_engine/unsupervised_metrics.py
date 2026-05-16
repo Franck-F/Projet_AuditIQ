@@ -46,3 +46,15 @@ def chi2_cluster_decision(
         return 0.0, 1.0, 0
     chi2, p, dof, _ = chi2_contingency(table)
     return float(chi2), float(p), int(dof)
+
+
+def deviations(
+    rates: dict[int, float], global_rate: float, deviation_pp: float
+) -> tuple[dict[int, float], tuple[int, ...]]:
+    """Per-cluster deviation in percentage points and the deviant cluster ids.
+
+    A cluster is deviant iff abs(deviation) strictly exceeds `deviation_pp`.
+    """
+    dev = {c: round((r - global_rate) * 100.0, 4) for c, r in rates.items()}
+    deviant = tuple(sorted(c for c, d in dev.items() if abs(d) > deviation_pp))
+    return dev, deviant
