@@ -1,7 +1,9 @@
 import logging
 import sys
+from typing import cast
 
 import structlog
+import structlog.typing
 
 from app.core.config import get_settings
 
@@ -24,5 +26,5 @@ def configure_logging() -> None:
     )
 
 
-def get_logger(name: str = "auditiq") -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+def get_logger(name: str = "auditiq") -> structlog.typing.FilteringBoundLogger:
+    return cast(structlog.typing.FilteringBoundLogger, structlog.get_logger(name))
