@@ -367,7 +367,7 @@ class AuthError(APIError):
     title = "Unauthorized"
 
 
-class ValidationProblem(APIError):
+class ValidationProblemError(APIError):
     status = 422
     title = "Validation Error"
 
