@@ -1143,6 +1143,15 @@ Expected: FAIL (`test_feature_outliers_flagged_when_heavy` fails — no outlier 
 
 In `app/audit_engine/anomaly_iqr.py`, add before `return IqrReport(...)`:
 
+> **Plan correction (synced to shipped code, commit `95c0842`):** the earlier
+> draft used `if iqr == 0: continue` and a strict `>` threshold. With the Task-10
+> fixture (`[10.0]*95 + [1000.0]*5`) Q1=Q3=10 → IQR=0, so the column is a single
+> mass point and Tukey fences collapse; skipping it would miss genuine outliers,
+> and `5/100 = 0.05` is not `> 0.05`. The correct behavior on a degenerate IQR is
+> to treat any value ≠ the mass point as atypical, and the threshold is
+> "at-or-above" (`>=`). A fully constant column still yields 0 outliers (no false
+> positive). This is the shipped, reviewed block:
+
 ```python
     cols = numeric_columns or []
     for col in cols:
@@ -1154,10 +1163,11 @@ In `app/audit_engine/anomaly_iqr.py`, add before `return IqrReport(...)`:
         q1, q3 = s.quantile(0.25), s.quantile(0.75)
         iqr = q3 - q1
         if iqr == 0:
-            continue
-        lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
-        n_out = int(((s < lo) | (s > hi)).sum())
-        if len(s) > 0 and n_out / len(s) > outlier_row_pct:
+            n_out = int((s != q1).sum())
+        else:
+            lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+            n_out = int(((s < lo) | (s > hi)).sum())
+        if len(s) > 0 and n_out / len(s) >= outlier_row_pct:
             warnings.append(
                 f"Feature « {col} » : {n_out} valeurs atypiques "
                 f"({n_out / len(s):.0%}) — vérifiez la qualité des données."
