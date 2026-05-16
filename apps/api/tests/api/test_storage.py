@@ -13,3 +13,9 @@ async def test_memory_storage_missing_raises_keyerror():
     s = MemoryStorage()
     with pytest.raises(KeyError):
         await s.download("nope")
+
+
+def test_memory_storage_satisfies_protocol():
+    from app.integrations.storage import MemoryStorage, Storage
+
+    assert isinstance(MemoryStorage(), Storage)
