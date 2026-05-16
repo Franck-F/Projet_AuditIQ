@@ -57,7 +57,7 @@ describe('audits api', () => {
     });
     const out = await uploadDataset(file);
     expect(out.id).toBe('d1');
-    const [url, body] = post.mock.calls[0];
+    const [url, body] = post.mock.calls[0]!;
     expect(url).toBe('/datasets');
     expect(body).toBeInstanceOf(FormData);
     expect((body as FormData).get('file')).toBe(file);
