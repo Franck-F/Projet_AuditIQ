@@ -5,6 +5,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -31,7 +32,18 @@ async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
     await session.flush()
     user = User(id=uid, org_id=org.id, email=email, role="owner")
     session.add(user)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        # A concurrent first-request already created this user; the orphan
+        # org from this losing transaction is discarded by the rollback.
+        await session.rollback()
+        existing = (
+            await session.execute(select(User).where(User.id == uid))
+        ).scalar_one_or_none()
+        if existing is None:
+            raise
+        return existing
     return user
 
 
