@@ -10,6 +10,7 @@ from app.core import deps
 from app.core.db import Base, get_session, make_engine
 from app.integrations.storage import MemoryStorage
 from app.main import create_app
+from app.routers.audits import get_report_storage_dep
 from app.routers.datasets import get_storage_dep
 
 
@@ -51,9 +52,11 @@ async def client(tmp_path, monkeypatch):
             "email": "c@acme.fr",
         },
     )
+    report_store = MemoryStorage()
     app = create_app()
     app.dependency_overrides[get_session] = _session_override
     app.dependency_overrides[get_storage_dep] = lambda: store
+    app.dependency_overrides[get_report_storage_dep] = lambda: report_store
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
         yield c
@@ -164,3 +167,46 @@ async def test_post_audits_m2_bad_config_is_422(client, m2_dataset_id):
         headers={"Authorization": "Bearer x"},
     )
     assert r.status_code == 422
+
+
+@pytest.fixture
+async def m1_done_audit_id(client):
+    did = await _upload(client)
+    r = await client.post(
+        "/api/v1/audits",
+        json={
+            "dataset_id": did,
+            "title": "Recrutement Q2 report",
+            "protected_attribute": "genre",
+            "decision_column": "decision",
+            "favorable_value": "oui",
+        },
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "done"
+    return r.json()["id"]
+
+
+async def test_get_audit_report_xlsx(client, m1_done_audit_id):
+    r = await client.get(
+        f"/api/v1/audits/{m1_done_audit_id}/report.xlsx",
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 200, r.text
+    assert (
+        r.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert "attachment" in r.headers["content-disposition"]
+    assert r.content[:2] == b"PK"
+
+
+async def test_get_audit_report_unknown_is_404(client):
+    import uuid as _uuid
+
+    r = await client.get(
+        f"/api/v1/audits/{_uuid.uuid4()}/report.xlsx",
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 404
