@@ -58,3 +58,34 @@ def deviations(
     dev = {c: round((r - global_rate) * 100.0, 4) for c, r in rates.items()}
     deviant = tuple(sorted(c for c, d in dev.items() if abs(d) > deviation_pp))
     return dev, deviant
+
+
+def characterize_cluster(
+    cluster_mean: np.ndarray,
+    global_mean: np.ndarray,
+    global_std: np.ndarray,
+    feature_names: list[str],
+    top_n: int = 3,
+) -> tuple[FeatureContribution, ...]:
+    """Top-N features by |standardized difference| (cluster vs global).
+
+    std_diff = (mean_cluster - mean_global) / std_global; a zero-variance
+    feature contributes 0 and is effectively never selected.
+    """
+    contribs: list[FeatureContribution] = []
+    for i, name in enumerate(feature_names):
+        std = global_std[i]
+        sd = 0.0 if std == 0.0 else float(
+            (cluster_mean[i] - global_mean[i]) / std
+        )
+        if sd == 0.0:
+            continue
+        contribs.append(
+            FeatureContribution(
+                name=name,
+                std_diff=round(sd, 4),
+                direction="above" if sd > 0 else "below",
+            )
+        )
+    contribs.sort(key=lambda f: abs(f.std_diff), reverse=True)
+    return tuple(contribs[:top_n])

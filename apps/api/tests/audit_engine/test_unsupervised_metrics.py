@@ -67,3 +67,29 @@ def test_deviations_threshold_is_strict():
     dev, deviant = deviations(rates, global_rate=0.50, deviation_pp=20.0)
     assert dev[0] == -20.0
     assert deviant == ()  # exactly 20pp is NOT > 20pp
+
+
+from app.audit_engine.unsupervised_metrics import characterize_cluster
+
+
+def test_characterize_returns_signed_top3_by_abs_std_diff():
+    feature_names = ["a", "b", "c", "d"]
+    global_mean = np.array([0.0, 0.0, 0.0, 0.0])
+    global_std = np.array([1.0, 1.0, 1.0, 1.0])
+    cluster_mean = np.array([3.0, -2.0, 0.5, 1.0])
+    top = characterize_cluster(
+        cluster_mean, global_mean, global_std, feature_names, top_n=3
+    )
+    assert [f.name for f in top] == ["a", "b", "d"]
+    assert top[0].std_diff == 3.0 and top[0].direction == "above"
+    assert top[1].std_diff == -2.0 and top[1].direction == "below"
+
+
+def test_characterize_skips_constant_features():
+    feature_names = ["const", "x"]
+    top = characterize_cluster(
+        np.array([5.0, 2.0]), np.array([5.0, 0.0]),
+        np.array([0.0, 1.0]), feature_names, top_n=3,
+    )
+    # const feature has std 0 -> std_diff 0 -> not selected over x
+    assert [f.name for f in top] == ["x"]
