@@ -3,7 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Uuid, func
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Uuid, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -25,10 +26,15 @@ class Audit(Base):
     module: Mapped[str] = mapped_column(String(8), nullable=False, default="M1")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
-    protected_attribute: Mapped[str] = mapped_column(String(255), nullable=False)
+    protected_attribute: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
     decision_column: Mapped[str] = mapped_column(String(255), nullable=False)
     favorable_value: Mapped[str] = mapped_column(String(255), nullable=False)
     privileged_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    config: Mapped[dict[str, object] | None] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=True
+    )
     created_by: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
