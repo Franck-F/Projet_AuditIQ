@@ -149,9 +149,14 @@ def upgrade() -> None:
         for table in _TABLES:
             op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
             op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+            # Supabase provisions the anon/authenticated roles. On a vanilla
+            # Postgres (local dev) those roles are absent — skip the policy
+            # gracefully instead of aborting the whole migration.
             op.execute(
+                "DO $$ BEGIN "
                 f"CREATE POLICY no_direct_access ON {table} FOR ALL "
-                f"TO anon, authenticated USING (false) WITH CHECK (false)"
+                "TO anon, authenticated USING (false) WITH CHECK (false); "
+                "EXCEPTION WHEN undefined_object THEN NULL; END $$"
             )
 
 
