@@ -2,11 +2,13 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AuthMain, AuthSide } from '@/components/auth/AuthShell';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 const ConnexionSchema = z.object({
@@ -43,10 +45,23 @@ export default function ConnexionPage() {
     resolver: zodResolver(ConnexionSchema),
   });
 
-  const onSubmit = async (_v: ConnexionValues) => {
-    // TODO Task 12 : POST /api/v1/auth/login (Supabase)
-    await new Promise((r) => setTimeout(r, 500));
-    alert('Connexion simulée');
+  const router = useRouter();
+  const [authError, setAuthError] = React.useState<string | null>(null);
+
+  const onSubmit = async (v: ConnexionValues) => {
+    setAuthError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: v.email,
+      password: v.password,
+    });
+    if (error) {
+      setAuthError(
+        'Identifiants invalides. Vérifiez votre email et mot de passe.',
+      );
+      return;
+    }
+    router.push('/app');
   };
 
   return (
@@ -129,6 +144,12 @@ export default function ConnexionPage() {
               </Link>
             </div>
           </div>
+
+          {authError && (
+            <p role="alert" className="text-sm text-status-fail">
+              {authError}
+            </p>
+          )}
 
           <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
             {isSubmitting ? 'Connexion…' : 'Se connecter'}
