@@ -123,6 +123,11 @@ def test_non_dev_ok_when_secrets_present():
     )
     assert s.api_env == "production"
     assert s.supabase_service_role_key.get_secret_value() == "svc-key"
+
+
+def test_dev_check_is_case_insensitive():
+    s = Settings(_env_file=None, api_env="Development")
+    assert s.api_env == "Development"
 ```
 
 - [ ] **Step 5: Run test to verify it fails**
@@ -166,7 +171,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _require_secrets_outside_dev(self) -> "Settings":
-        if self.api_env == "development":
+        if self.api_env.lower() == "development":
             return self
         missing: list[str] = []
         if not self.supabase_service_role_key.get_secret_value():
@@ -1484,6 +1489,8 @@ def test_bearer_parsing():
         deps._bearer(None)
     with pytest.raises(AuthError):
         deps._bearer("Token abc")
+    with pytest.raises(AuthError):
+        deps._bearer("Bearer    ")
     assert deps._bearer("Bearer abc") == "abc"
 
 
@@ -1502,6 +1509,18 @@ async def test_provision_creates_one_org_and_user(sm):
         ).scalar_one()
         assert orgs == 1
         assert users == 1
+
+
+async def test_get_current_user_rejects_non_uuid_sub(sm, monkeypatch):
+    monkeypatch.setattr(deps, "resolve_signing_key", lambda token: "k")
+    monkeypatch.setattr(
+        deps,
+        "verify_token",
+        lambda token, *, key, issuer=None: {"sub": "not-a-uuid", "email": "x@y.fr"},
+    )
+    async with sm() as s:
+        with pytest.raises(AuthError):
+            await deps.get_current_user(authorization="Bearer x", session=s)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1555,7 +1574,10 @@ from app.schemas.auth import CurrentUser
 def _bearer(authorization: str | None) -> str:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
-    return authorization.split(" ", 1)[1].strip()
+    token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
+    return token
 
 
 async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
@@ -1584,7 +1606,10 @@ async def get_current_user(
     email = claims.get("email")
     if not sub or not email:
         raise AuthError("Jeton sans 'sub' ou 'email'.")
-    uid = uuid.UUID(str(sub))
+    try:
+        uid = uuid.UUID(str(sub))
+    except ValueError as exc:
+        raise AuthError("Jeton avec 'sub' invalide (UUID attendu).") from exc
     user = (
         await session.execute(select(User).where(User.id == uid))
     ).scalar_one_or_none()

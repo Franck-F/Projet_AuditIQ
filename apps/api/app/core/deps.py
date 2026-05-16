@@ -18,7 +18,10 @@ from app.schemas.auth import CurrentUser
 def _bearer(authorization: str | None) -> str:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
-    return authorization.split(" ", 1)[1].strip()
+    token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
+    return token
 
 
 async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
@@ -47,7 +50,10 @@ async def get_current_user(
     email = claims.get("email")
     if not sub or not email:
         raise AuthError("Jeton sans 'sub' ou 'email'.")
-    uid = uuid.UUID(str(sub))
+    try:
+        uid = uuid.UUID(str(sub))
+    except ValueError as exc:
+        raise AuthError("Jeton avec 'sub' invalide (UUID attendu).") from exc
     user = (
         await session.execute(select(User).where(User.id == uid))
     ).scalar_one_or_none()

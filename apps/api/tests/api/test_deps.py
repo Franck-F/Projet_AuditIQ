@@ -24,6 +24,8 @@ def test_bearer_parsing():
         deps._bearer(None)
     with pytest.raises(AuthError):
         deps._bearer("Token abc")
+    with pytest.raises(AuthError):
+        deps._bearer("Bearer    ")
     assert deps._bearer("Bearer abc") == "abc"
 
 
@@ -42,3 +44,15 @@ async def test_provision_creates_one_org_and_user(sm):
         ).scalar_one()
         assert orgs == 1
         assert users == 1
+
+
+async def test_get_current_user_rejects_non_uuid_sub(sm, monkeypatch):
+    monkeypatch.setattr(deps, "resolve_signing_key", lambda token: "k")
+    monkeypatch.setattr(
+        deps,
+        "verify_token",
+        lambda token, *, key, issuer=None: {"sub": "not-a-uuid", "email": "x@y.fr"},
+    )
+    async with sm() as s:
+        with pytest.raises(AuthError):
+            await deps.get_current_user(authorization="Bearer x", session=s)
