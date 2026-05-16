@@ -50,7 +50,8 @@ async def test_run_m1_audit_recruitment_fail(ctx):
             favorable_value="oui",
         )
         out = await audit_service.run_m1_audit(
-            s, store, org_id=org_id, user_id=uid, body=body
+            s, store, org_id=org_id, user_id=uid, body=body,
+            llm_provider=None,
         )
     assert out.status == "done"
     assert out.metrics is not None
@@ -77,7 +78,8 @@ async def test_run_m1_audit_numeric_decision_column(ctx):
             decision_column="decision", favorable_value="1",
         )
         out = await audit_service.run_m1_audit(
-            s, store, org_id=org_id, user_id=uid, body=body
+            s, store, org_id=org_id, user_id=uid, body=body,
+            llm_provider=None,
         )
     assert out.metrics is not None
     assert out.metrics.disparate_impact == 0.72
@@ -100,7 +102,8 @@ async def test_run_m1_audit_invalid_mapping_raises_dataset_validation(ctx):
         )
         with pytest.raises(DatasetValidationError):
             await audit_service.run_m1_audit(
-                s, store, org_id=org_id, user_id=uid, body=body
+                s, store, org_id=org_id, user_id=uid, body=body,
+                llm_provider=None,
             )
 
 
@@ -118,6 +121,7 @@ async def test_get_audit_org_scoped(ctx):
                 dataset_id=ds.id, title="R", protected_attribute="genre",
                 decision_column="decision", favorable_value="oui",
             ),
+            llm_provider=None,
         )
         aid = out.id
     async with sm() as s:
