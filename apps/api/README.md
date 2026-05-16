@@ -57,6 +57,14 @@ Outside `API_ENV=development`, the app fails fast (pydantic `ValidationError`) i
 `SUPABASE_URL`/`SUPABASE_DB_URL`/`SUPABASE_SERVICE_ROLE_KEY` are absent or default.
 Consolidate all API secrets into `apps/api/.env` (not the repo-root `.env`).
 
+#### Datasets & audits (Plan 2B)
+
+`POST /api/v1/datasets` (multipart `file`) stores the CSV (Supabase Storage in
+prod, in-memory in dev/test) and persists a `datasets` row. `POST /api/v1/audits`
+(`dataset_id` + column mapping) runs the pure M1 engine and persists
+`audits`+`audit_results`. All queries are org-scoped at the service layer.
+Interpretation (Gemini) and the dashboard are Plan 2C.
+
 OpenAPI doc available at `http://localhost:8000/api/v1/docs`.
 
 ## Conventions
