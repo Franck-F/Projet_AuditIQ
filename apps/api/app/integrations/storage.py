@@ -51,6 +51,20 @@ class SupabaseStorage:
 
 
 @lru_cache
+def get_report_storage() -> Storage:
+    # Singleton: same rationale as get_storage(); uses the reports bucket.
+    s = get_settings()
+    key = s.supabase_service_role_key.get_secret_value()
+    if s.api_env.lower() == "development" or not key:
+        return MemoryStorage()
+    return SupabaseStorage(
+        url=s.supabase_url,
+        service_role_key=key,
+        bucket=s.storage_bucket_reports,
+    )
+
+
+@lru_cache
 def get_storage() -> Storage:
     # Singleton: an in-process MemoryStorage must persist across requests so
     # an upload (POST /datasets) is visible to a later download (POST /audits).
