@@ -14,11 +14,13 @@ API_PREFIX = "/api/v1"
 def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
+    _dev = settings.api_env.lower() == "development"
     app = FastAPI(
         title="AuditIQ API",
         version="0.1.0",
-        docs_url=f"{API_PREFIX}/docs",
-        openapi_url=f"{API_PREFIX}/openapi.json",
+        docs_url=f"{API_PREFIX}/docs" if _dev else None,
+        redoc_url=f"{API_PREFIX}/redoc" if _dev else None,
+        openapi_url=f"{API_PREFIX}/openapi.json" if _dev else None,
     )
     app.add_middleware(
         CORSMiddleware,
