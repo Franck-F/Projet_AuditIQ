@@ -47,7 +47,7 @@ class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
     id: uuid.UUID
-    code: str | None
+    code: str | None = None
     title: str
     status: str
     module: str
@@ -55,7 +55,7 @@ class AuditOut(BaseModel):
     protected_attribute: str
     decision_column: str
     favorable_value: str
-    privileged_value: str | None
+    privileged_value: str | None = None
     created_at: datetime.datetime
-    completed_at: datetime.datetime | None
-    metrics: M1MetricsOut | None
+    completed_at: datetime.datetime | None = None
+    metrics: M1MetricsOut | None = None

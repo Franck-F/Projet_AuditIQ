@@ -15,4 +15,4 @@ class DatasetOut(BaseModel):
     columns: list[str]
     status: str
     created_at: datetime.datetime
-    expires_at: datetime.datetime | None
+    expires_at: datetime.datetime | None = None
