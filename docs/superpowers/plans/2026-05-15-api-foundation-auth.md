@@ -83,6 +83,9 @@ Create `apps/api/tests/api/__init__.py` as an empty (0-byte) file.
 Create `apps/api/tests/api/test_config.py`:
 
 ```python
+import pytest
+from pydantic import ValidationError
+
 from app.core.config import Settings, get_settings
 
 
@@ -103,6 +106,28 @@ def test_env_override_and_derived_urls(monkeypatch):
 
 def test_get_settings_is_cached():
     assert get_settings() is get_settings()
+
+
+def test_non_dev_requires_secrets():
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, api_env="production")
+
+
+def test_non_dev_ok_when_secrets_present():
+    s = Settings(
+        _env_file=None,
+        api_env="production",
+        supabase_url="https://proj.supabase.co",
+        supabase_db_url="postgresql+asyncpg://u:p@h:5432/db",
+        supabase_service_role_key="svc-key",
+    )
+    assert s.api_env == "production"
+    assert s.supabase_service_role_key.get_secret_value() == "svc-key"
+
+
+def test_dev_check_is_case_insensitive():
+    s = Settings(_env_file=None, api_env="Development")
+    assert s.api_env == "Development"
 ```
 
 - [ ] **Step 5: Run test to verify it fails**
@@ -117,6 +142,7 @@ Create `apps/api/app/core/config.py`:
 ```python
 from functools import lru_cache
 
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -131,7 +157,7 @@ class Settings(BaseSettings):
     api_env: str = "development"
     supabase_url: str = "https://example.supabase.co"
     supabase_db_url: str = "sqlite+aiosqlite:///./auditiq_dev.db"
-    supabase_service_role_key: str = ""
+    supabase_service_role_key: SecretStr = SecretStr("")
     api_cors_origins: str = "http://localhost:3000"
     api_log_level: str = "info"
 
@@ -142,6 +168,24 @@ class Settings(BaseSettings):
     @property
     def jwks_url(self) -> str:
         return f"{self.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+
+    @model_validator(mode="after")
+    def _require_secrets_outside_dev(self) -> "Settings":
+        if self.api_env.lower() == "development":
+            return self
+        missing: list[str] = []
+        if not self.supabase_service_role_key.get_secret_value():
+            missing.append("SUPABASE_SERVICE_ROLE_KEY")
+        if not self.supabase_url or self.supabase_url == "https://example.supabase.co":
+            missing.append("SUPABASE_URL")
+        if self.supabase_db_url.startswith("sqlite"):
+            missing.append("SUPABASE_DB_URL")
+        if missing:
+            raise ValueError(
+                "Variables requises hors environnement de développement "
+                f"manquantes : {', '.join(missing)}"
+            )
+        return self
 
 
 @lru_cache
@@ -202,8 +246,10 @@ Create `apps/api/app/core/logging.py`:
 ```python
 import logging
 import sys
+from typing import cast
 
 import structlog
+import structlog.typing
 
 from app.core.config import get_settings
 
@@ -226,8 +272,8 @@ def configure_logging() -> None:
     )
 
 
-def get_logger(name: str = "auditiq") -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+def get_logger(name: str = "auditiq") -> structlog.typing.FilteringBoundLogger:
+    return cast(structlog.typing.FilteringBoundLogger, structlog.get_logger(name))
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -298,6 +344,33 @@ async def test_auth_error_problem(client):
         r = await c.get("/secret")
     assert r.status_code == 401
     assert r.json()["title"] == "Unauthorized"
+
+
+async def test_request_validation_error_maps_to_problem():
+    from pydantic import BaseModel
+
+    app = FastAPI()
+    register_exception_handlers(app)
+
+    class Body(BaseModel):
+        name: str
+        age: int
+
+    @app.post("/things")
+    async def _create(_: Body) -> dict[str, str]:
+        return {"ok": "1"}
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
+        r = await c.post("/things", json={"name": "x"})
+    assert r.status_code == 422
+    body = r.json()
+    assert body["title"] == "Validation Error"
+    assert body["status"] == 422
+    assert body["detail"] == "La requête est invalide."
+    # leading "body" sentinel stripped -> key is "age", not "body.age"
+    assert "age" in body["fields"]
+    assert "body" not in body["fields"]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -365,7 +438,7 @@ class AuthError(APIError):
     title = "Unauthorized"
 
 
-class ValidationProblem(APIError):
+class ValidationProblemError(APIError):
     status = 422
     title = "Validation Error"
 
@@ -382,15 +455,17 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:
-        fields = {
-            ".".join(str(p) for p in e["loc"] if p != "body"): e["msg"]
-            for e in exc.errors()
-        }
+        fields: dict[str, str] = {}
+        for e in exc.errors():
+            loc = e["loc"]
+            if loc and loc[0] == "body":
+                loc = loc[1:]
+            fields[".".join(str(p) for p in loc)] = e["msg"]
         problem = Problem(
             title="Validation Error",
             status=422,
             detail="La requête est invalide.",
-            fields=fields,
+            fields=fields or None,
         )
         return JSONResponse(
             status_code=422,
@@ -521,7 +596,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.db import Base, make_engine
-from app.models import Organization, User
+from app.models import Audit, AuditResult, Dataset, Organization, User
 
 
 async def test_org_user_roundtrip(tmp_path):
@@ -542,6 +617,87 @@ async def test_org_user_roundtrip(tmp_path):
         ).scalar_one()
         assert got.org_id == org_id
         assert got.role == "owner"
+    await eng.dispose()
+
+
+async def test_organization_settings_default(tmp_path):
+    eng = make_engine(f"sqlite+aiosqlite:///{tmp_path / 's.db'}")
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    sm = async_sessionmaker(eng, expire_on_commit=False)
+    async with sm() as s:
+        org = Organization(name="Acme")
+        s.add(org)
+        await s.commit()
+        oid = org.id
+    async with sm() as s:
+        got = (
+            await s.execute(select(Organization).where(Organization.id == oid))
+        ).scalar_one()
+        assert got.settings == {
+            "llm_provider": "gemini",
+            "di_threshold": 0.8,
+            "retention_days": 30,
+        }
+    await eng.dispose()
+
+
+async def test_full_fk_chain_inserts(tmp_path):
+    eng = make_engine(f"sqlite+aiosqlite:///{tmp_path / 'c.db'}")
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    sm = async_sessionmaker(eng, expire_on_commit=False)
+    async with sm() as s:
+        org = Organization(name="Acme")
+        s.add(org)
+        await s.flush()
+        user = User(id=uuid.uuid4(), org_id=org.id, email="b@acme.fr")
+        s.add(user)
+        await s.flush()
+        ds = Dataset(
+            org_id=org.id,
+            uploaded_by=user.id,
+            filename="data.csv",
+            storage_path=f"{org.id}/x.csv",
+            row_count=10,
+        )
+        s.add(ds)
+        await s.flush()
+        audit = Audit(
+            org_id=org.id,
+            dataset_id=ds.id,
+            title="Recrutement",
+            protected_attribute="genre",
+            decision_column="decision",
+            favorable_value="oui",
+            created_by=user.id,
+        )
+        s.add(audit)
+        await s.flush()
+        s.add(
+            AuditResult(
+                audit_id=audit.id,
+                metrics={"disparate_impact": 0.72},
+                verdict="fail",
+                risk_score=55,
+            )
+        )
+        await s.commit()
+        aid = audit.id
+    async with sm() as s:
+        res = (
+            await s.execute(
+                select(AuditResult).where(AuditResult.audit_id == aid)
+            )
+        ).scalar_one()
+        assert res.verdict == "fail"
+        assert res.risk_score == 55
+        assert res.metrics == {"disparate_impact": 0.72}
+        assert res.interpretation == {}
+        assert ds.columns == []
+        assert ds.status == "ready"
+        assert audit.module == "M1"
+        assert audit.status == "pending"
     await eng.dispose()
 ```
 
@@ -578,7 +734,7 @@ class Organization(Base):
         Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    settings: Mapped[dict] = mapped_column(
+    settings: Mapped[dict[str, object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"),
         nullable=False,
         default=_default_settings,
@@ -648,7 +804,7 @@ class Dataset(Base):
     filename: Mapped[str] = mapped_column(String(512), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     row_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    columns: Mapped[list] = mapped_column(
+    columns: Mapped[list[object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="ready")
@@ -713,8 +869,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Uuid, func
-from sqlalchemy import JSON
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -730,12 +885,12 @@ class AuditResult(Base):
     audit_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("audits.id"), nullable=False, index=True
     )
-    metrics: Mapped[dict] = mapped_column(
+    metrics: Mapped[dict[str, object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=False
     )
     verdict: Mapped[str] = mapped_column(String(16), nullable=False)
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    interpretation: Mapped[dict] = mapped_column(
+    interpretation: Mapped[dict[str, object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=False, default=dict
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -746,6 +901,15 @@ class AuditResult(Base):
 Create `apps/api/app/models/__init__.py`:
 
 ```python
+"""SQLAlchemy models for AuditIQ.
+
+Conventions:
+- Explicit ``nullable=`` is kept on every column (and matches the ``Mapped[...]``
+  annotation) to maintain a 1:1 mapping with the hand-written Alembic migration.
+- No ORM ``relationship()`` is defined: services issue explicit queries
+  (spec §2). TODO(Plan-2B): add relationships only if a service needs
+  navigation (e.g. ``audit.results``); FK columns already exist.
+"""
 from app.core.db import Base
 from app.models.audit import Audit
 from app.models.audit_result import AuditResult
@@ -790,6 +954,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
+_MODELS = {"organizations", "users", "datasets", "audits", "audit_results"}
+
 
 def test_upgrade_then_downgrade_on_sqlite(tmp_path, monkeypatch):
     db = tmp_path / "mig.db"
@@ -798,17 +964,17 @@ def test_upgrade_then_downgrade_on_sqlite(tmp_path, monkeypatch):
 
     command.upgrade(cfg, "head")
     insp = inspect(create_engine(f"sqlite:///{db}"))
-    assert {
-        "organizations",
-        "users",
-        "datasets",
-        "audits",
-        "audit_results",
-    } <= set(insp.get_table_names())
+    assert set(insp.get_table_names()) >= _MODELS
 
     command.downgrade(cfg, "base")
     insp2 = inspect(create_engine(f"sqlite:///{db}"))
-    assert "organizations" not in insp2.get_table_names()
+    remaining = _MODELS & set(insp2.get_table_names())
+    assert remaining == set(), f"Tables not dropped: {remaining}"
+
+    # Idempotency: migrations re-apply cleanly after a full downgrade.
+    command.upgrade(cfg, "head")
+    insp3 = inspect(create_engine(f"sqlite:///{db}"))
+    assert set(insp3.get_table_names()) >= _MODELS
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -824,6 +990,7 @@ Create `apps/api/alembic.ini`:
 [alembic]
 script_location = migrations
 prepend_sys_path = .
+path_separator = os
 
 [loggers]
 keys = root,sqlalchemy,alembic
@@ -937,6 +1104,8 @@ if context.is_offline_mode():
     with context.begin_transaction():
         context.run_migrations()
 else:
+    # Alembic is CLI-only; asyncio.run() is safe here. Do not import this
+    # module from async code.
     asyncio.run(_run_online())
 ```
 
@@ -1094,9 +1263,14 @@ def upgrade() -> None:
         for table in _TABLES:
             op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
             op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+            # Supabase provisions the anon/authenticated roles. On a vanilla
+            # Postgres (local dev) those roles are absent — skip the policy
+            # gracefully instead of aborting the whole migration.
             op.execute(
+                "DO $$ BEGIN "
                 f"CREATE POLICY no_direct_access ON {table} FOR ALL "
-                f"TO anon, authenticated USING (false) WITH CHECK (false)"
+                "TO anon, authenticated USING (false) WITH CHECK (false); "
+                "EXCEPTION WHEN undefined_object THEN NULL; END $$"
             )
 
 
@@ -1182,6 +1356,31 @@ def test_wrong_audience_raises(keypair):
     priv, pub = keypair
     with pytest.raises(AuthError):
         verify_token(_token(priv, aud="other"), key=pub)
+
+
+def test_missing_sub_raises_auth_error(keypair):
+    priv, pub = keypair
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    # valid signature/aud/exp but no `sub` -> options={"require":[...,"sub"]} fails
+    token = jwt.encode(
+        {
+            "email": "u@acme.fr",
+            "aud": "authenticated",
+            "exp": now + datetime.timedelta(hours=1),
+            "iat": now,
+        },
+        priv,
+        algorithm="RS256",
+    )
+    with pytest.raises(AuthError):
+        verify_token(token, key=pub)
+
+
+def test_wrong_issuer_raises(keypair):
+    priv, pub = keypair
+    token = _token(priv, iss="https://evil.example/auth/v1")
+    with pytest.raises(AuthError):
+        verify_token(token, key=pub, issuer="https://proj.supabase.co/auth/v1")
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1222,13 +1421,14 @@ def resolve_signing_key(token: str, *, jwks_client: PyJWKClient | None = None) -
         raise AuthError("Jeton invalide (clé de signature introuvable).") from exc
 
 
-def verify_token(token: str, *, key: Any) -> dict[str, Any]:
+def verify_token(token: str, *, key: Any, issuer: str | None = None) -> dict[str, Any]:
     try:
         return jwt.decode(
             token,
             key,
             algorithms=_ALGORITHMS,
             audience=_AUDIENCE,
+            issuer=issuer,
             options={"require": ["exp", "sub"]},
         )
     except jwt.PyJWTError as exc:
@@ -1238,7 +1438,7 @@ def verify_token(token: str, *, key: Any) -> dict[str, Any]:
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/api/test_security.py -q`
-Expected: PASS (3 passed).
+Expected: PASS (5 passed).
 
 - [ ] **Step 5: Commit**
 
@@ -1289,6 +1489,8 @@ def test_bearer_parsing():
         deps._bearer(None)
     with pytest.raises(AuthError):
         deps._bearer("Token abc")
+    with pytest.raises(AuthError):
+        deps._bearer("Bearer    ")
     assert deps._bearer("Bearer abc") == "abc"
 
 
@@ -1307,6 +1509,18 @@ async def test_provision_creates_one_org_and_user(sm):
         ).scalar_one()
         assert orgs == 1
         assert users == 1
+
+
+async def test_get_current_user_rejects_non_uuid_sub(sm, monkeypatch):
+    monkeypatch.setattr(deps, "resolve_signing_key", lambda token: "k")
+    monkeypatch.setattr(
+        deps,
+        "verify_token",
+        lambda token, *, key, issuer=None: {"sub": "not-a-uuid", "email": "x@y.fr"},
+    )
+    async with sm() as s:
+        with pytest.raises(AuthError):
+            await deps.get_current_user(authorization="Bearer x", session=s)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1349,6 +1563,7 @@ from fastapi import Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.errors import AuthError
 from app.core.security import resolve_signing_key, verify_token
@@ -1359,7 +1574,10 @@ from app.schemas.auth import CurrentUser
 def _bearer(authorization: str | None) -> str:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
-    return authorization.split(" ", 1)[1].strip()
+    token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        raise AuthError("En-tête Authorization Bearer manquant ou invalide.")
+    return token
 
 
 async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
@@ -1373,18 +1591,25 @@ async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
     return user
 
 
+def _issuer() -> str:
+    return f"{get_settings().supabase_url.rstrip('/')}/auth/v1"
+
+
 async def get_current_user(
     authorization: Annotated[str | None, Header()] = None,
     session: AsyncSession = Depends(get_session),
 ) -> CurrentUser:
     token = _bearer(authorization)
     key = resolve_signing_key(token)
-    claims = verify_token(token, key=key)
+    claims = verify_token(token, key=key, issuer=_issuer())
     sub = claims.get("sub")
     email = claims.get("email")
     if not sub or not email:
         raise AuthError("Jeton sans 'sub' ou 'email'.")
-    uid = uuid.UUID(str(sub))
+    try:
+        uid = uuid.UUID(str(sub))
+    except ValueError as exc:
+        raise AuthError("Jeton avec 'sub' invalide (UUID attendu).") from exc
     user = (
         await session.execute(select(User).where(User.id == uid))
     ).scalar_one_or_none()
@@ -1447,7 +1672,7 @@ async def app_client(tmp_path, monkeypatch):
     monkeypatch.setattr(
         deps,
         "verify_token",
-        lambda token, *, key: {
+        lambda token, *, key, issuer=None: {
             "sub": "11111111-1111-1111-1111-111111111111",
             "email": "claire@acme.fr",
         },
@@ -1489,6 +1714,37 @@ async def test_me_provisions_then_is_idempotent(app_client):
     )
     assert r2.status_code == 200
     assert r2.json()["org_id"] == body["org_id"]
+
+
+async def test_me_rejects_invalid_token(tmp_path, monkeypatch):
+    from app.core.errors import AuthError
+
+    eng = make_engine(f"sqlite+aiosqlite:///{tmp_path / 'inv.db'}")
+    async with eng.begin() as c:
+        await c.run_sync(Base.metadata.create_all)
+    sm = async_sessionmaker(eng, expire_on_commit=False)
+
+    async def _session_override():
+        async with sm() as s:
+            yield s
+
+    def _raise(token, *, key, issuer=None):
+        raise AuthError("Jeton invalide ou expiré.")
+
+    monkeypatch.setattr(deps, "resolve_signing_key", lambda token: "k")
+    monkeypatch.setattr(deps, "verify_token", _raise)
+
+    app = create_app()
+    app.dependency_overrides[get_session] = _session_override
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get(
+            "/api/v1/auth/me", headers={"Authorization": "Bearer bad"}
+        )
+    assert r.status_code == 401
+    assert r.json()["title"] == "Unauthorized"
+    assert r.headers["content-type"].startswith("application/problem+json")
+    await eng.dispose()
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
