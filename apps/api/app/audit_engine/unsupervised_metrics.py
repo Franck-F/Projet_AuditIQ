@@ -89,3 +89,30 @@ def characterize_cluster(
         )
     contribs.sort(key=lambda f: abs(f.std_diff), reverse=True)
     return tuple(contribs[:top_n])
+
+
+def m2_verdict(p_value: float, alpha: float, n_deviant: int) -> str:
+    """fail = significant AND >=1 deviant; warn = exactly one; pass = none."""
+    significant = p_value < alpha
+    has_deviant = n_deviant > 0
+    if significant and has_deviant:
+        return VERDICT_FAIL
+    if significant or has_deviant:
+        return VERDICT_WARN
+    return VERDICT_PASS
+
+
+def m2_risk_score(
+    p_value: float, alpha: float, max_abs_dev_pp: float, n_deviant: int, k: int
+) -> int:
+    """Deterministic 0-100. Weights: significance .50, magnitude .35, count .15.
+
+    - sig = 1 - min(p/alpha, 1)            (0 when p>=alpha, ->1 as p->0)
+    - mag = min(max_abs_dev_pp / 50, 1)    (50pp = max severity)
+    - cnt = min(n_deviant / k, 1)
+    """
+    sig = 1.0 - min(p_value / alpha, 1.0) if alpha > 0 else 0.0
+    mag = min(max_abs_dev_pp / 50.0, 1.0)
+    cnt = min(n_deviant / k, 1.0) if k > 0 else 0.0
+    score = 100.0 * (0.50 * sig + 0.35 * mag + 0.15 * cnt)
+    return int(min(100, max(0, round(score))))

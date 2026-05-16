@@ -93,3 +93,28 @@ def test_characterize_skips_constant_features():
     )
     # const feature has std 0 -> std_diff 0 -> not selected over x
     assert [f.name for f in top] == ["x"]
+
+
+from app.audit_engine.unsupervised_metrics import m2_risk_score, m2_verdict
+
+
+def test_m2_verdict_bands():
+    # significant AND a deviant cluster -> fail
+    assert m2_verdict(p_value=0.01, alpha=0.05, n_deviant=1) == "fail"
+    # significant only -> warn
+    assert m2_verdict(p_value=0.01, alpha=0.05, n_deviant=0) == "warn"
+    # deviant only -> warn
+    assert m2_verdict(p_value=0.20, alpha=0.05, n_deviant=2) == "warn"
+    # neither -> pass
+    assert m2_verdict(p_value=0.20, alpha=0.05, n_deviant=0) == "pass"
+
+
+def test_m2_risk_score_monotone_and_bounded():
+    low = m2_risk_score(p_value=0.9, alpha=0.05, max_abs_dev_pp=1.0,
+                         n_deviant=0, k=5)
+    high = m2_risk_score(p_value=1e-6, alpha=0.05, max_abs_dev_pp=50.0,
+                         n_deviant=5, k=5)
+    assert 0 <= low <= 100
+    assert 0 <= high <= 100
+    assert high > low
+    assert high == 100
