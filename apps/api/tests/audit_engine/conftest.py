@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -33,3 +34,28 @@ def warn_df() -> pd.DataFrame:
 def small_sample_df() -> pd.DataFrame:
     # both sr=0.60 (DI 1.0) but GroupB n=20 < 30 -> warn + warning
     return _df([("GroupA", 200, 120), ("GroupB", 20, 12)])
+
+
+@pytest.fixture
+def m2_deviant_df() -> pd.DataFrame:
+    # Two well-separated feature blobs; one block almost always negative.
+    rng = np.random.default_rng(42)
+    a = pd.DataFrame(
+        {"f1": rng.normal(-5, 0.5, 120), "f2": rng.normal(-5, 0.5, 120),
+         "y": (["1"] * 108) + (["0"] * 12)}  # ~0.90 positive
+    )
+    b = pd.DataFrame(
+        {"f1": rng.normal(5, 0.5, 120), "f2": rng.normal(5, 0.5, 120),
+         "y": (["1"] * 12) + (["0"] * 108)}  # ~0.10 positive
+    )
+    return pd.concat([a, b], ignore_index=True)
+
+
+@pytest.fixture
+def m2_homogeneous_df() -> pd.DataFrame:
+    rng = np.random.default_rng(7)
+    n = 200
+    return pd.DataFrame(
+        {"f1": rng.normal(0, 1, n), "f2": rng.normal(0, 1, n),
+         "y": rng.choice(["1", "0"], size=n)}  # decision independent of features
+    )

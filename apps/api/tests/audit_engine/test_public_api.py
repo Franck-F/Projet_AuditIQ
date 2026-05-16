@@ -17,3 +17,14 @@ def test_public_surface():
         )
         is not None
     )
+
+
+def test_m2_public_api_surface():
+    import app.audit_engine as ae
+
+    for name in (
+        "run_m2", "M2Config", "M2Result", "ClusterStat",
+        "FeatureContribution", "iqr_precheck", "IqrReport",
+    ):
+        assert name in ae.__all__
+        assert hasattr(ae, name)
