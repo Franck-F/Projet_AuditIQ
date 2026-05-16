@@ -236,7 +236,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-const get = vi.fn();
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock('@/lib/api/client', () => ({ api: { get } }));
 
 import { useDashboard } from '@/lib/query/use-dashboard';
