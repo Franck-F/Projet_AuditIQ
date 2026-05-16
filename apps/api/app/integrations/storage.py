@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Protocol, runtime_checkable
 
 from app.core.config import get_settings
@@ -35,12 +36,17 @@ class SupabaseStorage:
         self._bucket = bucket
 
     async def upload(self, path: str, data: bytes, content_type: str) -> None:
-        self._client.storage.from_(self._bucket).upload(
-            path, data, {"content-type": content_type, "upsert": "true"}
+        await asyncio.to_thread(
+            self._client.storage.from_(self._bucket).upload,
+            path,
+            data,
+            {"content-type": content_type, "upsert": "true"},
         )
 
     async def download(self, path: str) -> bytes:
-        return self._client.storage.from_(self._bucket).download(path)
+        return await asyncio.to_thread(
+            self._client.storage.from_(self._bucket).download, path
+        )
 
 
 def get_storage() -> Storage:
