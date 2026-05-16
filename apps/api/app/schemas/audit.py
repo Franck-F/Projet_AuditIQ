@@ -43,6 +43,16 @@ class M1MetricsOut(BaseModel):
     warnings: list[str]
 
 
+class InterpretationOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    narrative: str
+    ai_act_anchors: list[str]
+    disclaimers: list[str]
+    provider: str
+    model: str
+
+
 class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
@@ -59,3 +69,4 @@ class AuditOut(BaseModel):
     created_at: datetime.datetime
     completed_at: datetime.datetime | None = None
     metrics: M1MetricsOut | None = None
+    interpretation: InterpretationOut | None = None
