@@ -1,23 +1,25 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+const asArray = (c) => (Array.isArray(c) ? c : [c]);
 
 const config = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...asArray(nextCoreWebVitals),
+  ...asArray(nextTypescript),
   {
     rules: {
-      '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        { prefer: 'type-imports' },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'react/no-unescaped-entities': 'off',
     },
   },
+  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts'] },
 ];
 
 export default config;
