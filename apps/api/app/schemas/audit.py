@@ -129,10 +129,10 @@ class AuditOut(BaseModel):
     title: str
     status: str
     module: str
-    dataset_id: uuid.UUID
+    dataset_id: uuid.UUID | None = None
     protected_attribute: str | None = None
-    decision_column: str
-    favorable_value: str
+    decision_column: str | None = None
+    favorable_value: str | None = None
     privileged_value: str | None = None
     created_at: datetime.datetime
     completed_at: datetime.datetime | None = None
