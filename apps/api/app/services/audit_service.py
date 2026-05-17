@@ -413,6 +413,8 @@ async def run_m3_audit(
         )
         for t in pending:
             t.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
 
     records: list[ResponseRecord] = []
     for i, (pid, cat, label, _prompt) in enumerate(calls):
