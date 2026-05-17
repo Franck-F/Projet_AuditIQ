@@ -123,6 +123,43 @@ describe('audit result page', () => {
     expect(screen.getByText(/cluster défavorisé/i)).toBeInTheDocument();
   });
 
+  it('renders the M3 view (categories + divergent examples + gauge)', async () => {
+    useAudit.mockReturnValue({
+      data: {
+        id: 'm3-1', code: 'AUD-2026-040', title: 'Chatbot', status: 'done',
+        module: 'M3', dataset_id: null, protected_attribute: null,
+        decision_column: null, favorable_value: null, privileged_value: null,
+        created_at: '2026-05-17T00:00:00Z', completed_at: '2026-05-17T00:00:00Z',
+        metrics: {
+          categories: [
+            { name: 'genre', length_gap: 0.4, sentiment_gap: 0.2, refusal_rate: 0.5, score: 0.55, verdict: 'warn' },
+          ],
+          global_score: 0.55, verdict: 'warn', risk_score: 55,
+          divergent_examples: [
+            { category: 'genre', prompt_id: 'g1', variant_a: 'm', variant_b: 'f',
+              excerpt_a: 'réponse longue', excerpt_b: 'Je ne peux pas', reason: 'refus' },
+          ],
+          n_pairs: 12, n_calls_failed: 0, warnings: [],
+        },
+        interpretation: {
+          narrative: 'Écart de traitement détecté.', ai_act_anchors: ['AI Act, article 50'],
+          disclaimers: ['Signal à approfondir.'], provider: 'fallback', model: 'deterministic',
+        },
+        pre_check: [], config: { lang: 'fr' },
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+
+    expect(await screen.findByText('AUD-2026-040')).toBeInTheDocument();
+    expect(screen.getAllByText(/genre/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/refus/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Je ne peux pas/)).toBeInTheDocument();
+    expect(screen.getByText(/article 50/i)).toBeInTheDocument();
+    // M2-only label must NOT appear for an M3 audit:
+    expect(screen.queryByText(/Par cluster/i)).not.toBeInTheDocument();
+  });
+
   it('renders report buttons and downloads Excel/PDF; PDF failure is non-silent', async () => {
     const { default: userEvent } = await import('@testing-library/user-event');
     useAudit.mockReturnValue({

@@ -15,7 +15,7 @@ import {
   uploadDataset,
 } from '@/lib/api/audits';
 
-type Module = 'M1' | 'M2';
+type Module = 'M1' | 'M2' | 'M3';
 
 const M1Schema = z.object({
   title: z.string().min(1, 'Requis'),
@@ -299,6 +299,226 @@ function M2Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
   );
 }
 
+const M3_PRESETS: Record<
+  string,
+  { method: string; body_template: string; response_path: string }
+> = {
+  'OpenAI-compatible (/chat/completions)': {
+    method: 'POST',
+    body_template:
+      '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"{prompt}"}]}',
+    response_path: 'choices.0.message.content',
+  },
+  Personnalisé: { method: 'POST', body_template: '', response_path: '' },
+};
+
+const M3Schema = z.object({
+  title: z.string().min(1, 'Requis'),
+  url: z.string().url('URL invalide'),
+  method: z.string().min(1, 'Requis'),
+  auth_header: z.string().optional(),
+  body_template: z.string().min(1, 'Requis'),
+  response_path: z.string().min(1, 'Requis'),
+  lang: z.enum(['fr', 'en']),
+});
+type M3Values = z.infer<typeof M3Schema>;
+
+type M3FormProps = Omit<FormProps, 'dataset'>;
+
+function M3Form({ busy, setBusy, setError, onDone }: M3FormProps) {
+  const presetNames = Object.keys(M3_PRESETS);
+  const firstPreset = presetNames[0] ?? 'Personnalisé';
+  const firstCfg = M3_PRESETS[firstPreset] ?? {
+    method: 'POST',
+    body_template: '',
+    response_path: '',
+  };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<M3Values>({
+    resolver: zodResolver(M3Schema),
+    defaultValues: {
+      title: '',
+      url: '',
+      method: firstCfg.method,
+      auth_header: '',
+      body_template: firstCfg.body_template,
+      response_path: firstCfg.response_path,
+      lang: 'fr',
+    },
+  });
+  const [preset, setPreset] = React.useState<string>(firstPreset);
+
+  const applyPreset = (name: string) => {
+    setPreset(name);
+    const cfg = M3_PRESETS[name];
+    if (cfg) {
+      reset((prev) => ({
+        ...prev,
+        method: cfg.method,
+        body_template: cfg.body_template,
+        response_path: cfg.response_path,
+      }));
+    }
+  };
+
+  const onSubmit = async (v: M3Values) => {
+    setError(null);
+    setBusy(true);
+    try {
+      const headers: Record<string, string> = {};
+      if (v.auth_header && v.auth_header.trim())
+        headers.Authorization = v.auth_header.trim();
+      const audit = await createAudit({
+        title: v.title,
+        module: 'M3',
+        target: {
+          url: v.url,
+          method: v.method,
+          headers,
+          body_template: v.body_template,
+          response_path: v.response_path,
+        },
+        lang: v.lang,
+      });
+      onDone(audit.id);
+    } catch {
+      setError("Le lancement de l'audit a échoué.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-4 rounded-2xl border border-border-default bg-surface p-8"
+      noValidate
+    >
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-title" className={labelCls}>
+          Titre de l&apos;audit
+        </label>
+        <input id="m3-title" className={fieldCls} {...register('title')} />
+        {errors.title && (
+          <span className="text-xs text-status-fail">
+            {errors.title.message}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-preset" className={labelCls}>
+          Modèle de configuration
+        </label>
+        <select
+          id="m3-preset"
+          value={preset}
+          onChange={(e) => applyPreset(e.target.value)}
+          className={fieldCls}
+        >
+          {presetNames.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-url" className={labelCls}>
+          URL de l&apos;API du chatbot
+        </label>
+        <input
+          id="m3-url"
+          className={fieldCls}
+          placeholder="https://…"
+          {...register('url')}
+        />
+        {errors.url && (
+          <span className="text-xs text-status-fail">
+            {errors.url.message}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-method" className={labelCls}>
+          Méthode HTTP
+        </label>
+        <input
+          id="m3-method"
+          className={fieldCls}
+          {...register('method')}
+        />
+        {errors.method && (
+          <span className="text-xs text-status-fail">
+            {errors.method.message}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-auth" className={labelCls}>
+          En-tête d&apos;authentification (optionnel)
+        </label>
+        <input
+          id="m3-auth"
+          className={fieldCls}
+          placeholder="Bearer sk-…"
+          {...register('auth_header')}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-body" className={labelCls}>
+          Corps de requête (gabarit, doit contenir {'{prompt}'})
+        </label>
+        <textarea
+          id="m3-body"
+          rows={4}
+          className={fieldCls}
+          {...register('body_template')}
+        />
+        {errors.body_template && (
+          <span className="text-xs text-status-fail">
+            {errors.body_template.message}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-rp" className={labelCls}>
+          Chemin de la réponse (response_path, ex.
+          choices.0.message.content)
+        </label>
+        <input
+          id="m3-rp"
+          className={fieldCls}
+          {...register('response_path')}
+        />
+        {errors.response_path && (
+          <span className="text-xs text-status-fail">
+            {errors.response_path.message}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="m3-lang" className={labelCls}>
+          Langue des prompts
+        </label>
+        <select id="m3-lang" className={fieldCls} {...register('lang')}>
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <p className="text-xs text-fg-muted">
+        Le secret d&apos;authentification n&apos;est jamais enregistré ni
+        journalisé.
+      </p>
+      <Button type="submit" variant="primary" size="lg" disabled={busy}>
+        {busy ? 'Analyse…' : "Lancer l'audit"}
+      </Button>
+    </form>
+  );
+}
+
 export default function NouveauPage() {
   const router = useRouter();
   const [dataset, setDataset] = React.useState<DatasetOut | null>(null);
@@ -342,31 +562,8 @@ export default function NouveauPage() {
           </p>
         )}
 
-        {!dataset ? (
-          <div className="rounded-2xl border border-border-default bg-surface p-8">
-            <label htmlFor="csv" className={labelCls}>
-              Jeu de données (CSV)
-            </label>
-            <input
-              id="csv"
-              data-testid="csv-input"
-              type="file"
-              accept=".csv,text/csv"
-              disabled={busy}
-              onChange={onFile}
-              className="mt-2 block w-full text-sm text-fg-secondary"
-            />
-            <p className="mt-3 text-xs text-fg-muted">
-              Le fichier est stocké de façon sécurisée et supprimé après la
-              durée de rétention de votre organisation.
-            </p>
-          </div>
-        ) : module === null ? (
+        {module === null ? (
           <div className="flex flex-col gap-4 rounded-2xl border border-border-default bg-surface p-8">
-            <p className="text-sm text-fg-secondary">
-              <strong className="text-fg">{dataset.filename}</strong> ·{' '}
-              {dataset.row_count} lignes · {dataset.columns.length} colonnes
-            </p>
             <p className={labelCls}>Type d&apos;audit</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <button
@@ -393,9 +590,41 @@ export default function NouveauPage() {
                   sensible.
                 </div>
               </button>
+              <button
+                type="button"
+                onClick={() => setModule('M3')}
+                className="rounded-xl border border-border-default bg-surface p-5 text-left hover:border-fg-muted"
+              >
+                <div className="font-medium text-fg">
+                  Audit LLM / chatbot (M3)
+                </div>
+                <div className="mt-1 text-xs text-fg-muted">
+                  M3 — écart de traitement d&apos;un agent conversationnel,
+                  sans jeu de données.
+                </div>
+              </button>
             </div>
           </div>
-        ) : module === 'M1' ? (
+        ) : (module === 'M1' || module === 'M2') && !dataset ? (
+          <div className="rounded-2xl border border-border-default bg-surface p-8">
+            <label htmlFor="csv" className={labelCls}>
+              Jeu de données (CSV)
+            </label>
+            <input
+              id="csv"
+              data-testid="csv-input"
+              type="file"
+              accept=".csv,text/csv"
+              disabled={busy}
+              onChange={onFile}
+              className="mt-2 block w-full text-sm text-fg-secondary"
+            />
+            <p className="mt-3 text-xs text-fg-muted">
+              Le fichier est stocké de façon sécurisée et supprimé après la
+              durée de rétention de votre organisation.
+            </p>
+          </div>
+        ) : module === 'M1' && dataset ? (
           <M1Form
             dataset={dataset}
             busy={busy}
@@ -403,9 +632,16 @@ export default function NouveauPage() {
             setError={setError}
             onDone={(id) => router.push(`/app/audits/${id}`)}
           />
-        ) : (
+        ) : module === 'M2' && dataset ? (
           <M2Form
             dataset={dataset}
+            busy={busy}
+            setBusy={setBusy}
+            setError={setError}
+            onDone={(id) => router.push(`/app/audits/${id}`)}
+          />
+        ) : (
+          <M3Form
             busy={busy}
             setBusy={setBusy}
             setError={setError}

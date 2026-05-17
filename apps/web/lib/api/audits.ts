@@ -94,20 +94,65 @@ export type M2AuditCreate = {
   config?: M2ConfigIn;
 };
 
+export type TargetIn = {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body_template: string;
+  response_path: string;
+};
+
+export type M3AuditCreate = {
+  title: string;
+  module: 'M3';
+  target: TargetIn;
+  lang: string;
+};
+
+export type CategoryStatOut = {
+  name: string;
+  length_gap: number;
+  sentiment_gap: number;
+  refusal_rate: number;
+  score: number;
+  verdict: Verdict;
+};
+
+export type DivergentExampleOut = {
+  category: string;
+  prompt_id: string;
+  variant_a: string;
+  variant_b: string;
+  excerpt_a: string;
+  excerpt_b: string;
+  reason: string;
+};
+
+export type M3MetricsOut = {
+  categories: CategoryStatOut[];
+  global_score: number;
+  verdict: Verdict;
+  risk_score: number;
+  divergent_examples: DivergentExampleOut[];
+  n_pairs: number;
+  n_calls_failed: number;
+  warnings: string[];
+};
+
 export type AuditOut = {
   id: string;
   code: string | null;
   title: string;
   status: string;
   module: string;
-  dataset_id: string;
+  dataset_id: string | null;
   protected_attribute: string | null;
-  decision_column: string;
-  favorable_value: string;
+  decision_column: string | null;
+  favorable_value: string | null;
   privileged_value: string | null;
   created_at: string;
   completed_at: string | null;
-  metrics: M1MetricsOut | M2MetricsOut | null;
+  metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | null;
   interpretation: InterpretationOut | null;
   pre_check: string[];
   config: Record<string, unknown> | null;
@@ -121,7 +166,7 @@ export async function uploadDataset(file: File): Promise<DatasetOut> {
 }
 
 export async function createAudit(
-  body: AuditCreate | M2AuditCreate,
+  body: AuditCreate | M2AuditCreate | M3AuditCreate,
 ): Promise<AuditOut> {
   const { data } = await api.post<AuditOut>('/audits', body);
   return data;

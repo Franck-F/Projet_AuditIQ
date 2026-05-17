@@ -8,7 +8,7 @@ import { Topbar } from '@/components/app/Topbar';
 import { Gauge } from '@/components/product/Gauge';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { downloadReport, type M2MetricsOut, type ReportFormat } from '@/lib/api/audits';
+import { downloadReport, type M1MetricsOut, type M2MetricsOut, type M3MetricsOut, type ReportFormat } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
 
 const VERDICT: Record<'fail' | 'warn' | 'pass', { tone: StatusTone; label: string }> = {
@@ -160,6 +160,113 @@ function M2View({
   );
 }
 
+function M3View({ metrics }: { metrics: M3MetricsOut }) {
+  const vInfo = VERDICT[metrics.verdict];
+  return (
+    <div className="flex flex-col gap-4">
+      <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        <div className="flex flex-col items-center rounded-2xl border border-border-default bg-surface p-8">
+          <Gauge
+            value={metrics.risk_score}
+            label="Score de risque"
+            caption={`/100 · ${vInfo.label}`}
+          />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border-default bg-surface p-6">
+            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+              Score global
+            </div>
+            <div className="mt-1 text-2xl font-semibold text-fg">
+              {metrics.global_score}
+            </div>
+            <div className="mt-1 text-xs text-fg-muted">
+              Verdict : {metrics.verdict}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border-default bg-surface p-6">
+            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+              Couverture
+            </div>
+            <div className="mt-1 text-2xl font-semibold text-fg">
+              {metrics.n_pairs} paires
+            </div>
+            <div className="mt-1 text-xs text-fg-muted">
+              {metrics.n_calls_failed} appel(s) en échec
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border-default bg-surface p-7">
+        <h2 className="mb-3 text-[18px] font-medium text-fg">Par catégorie</h2>
+        <div className="overflow-hidden rounded-md border border-border-default">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-2 text-fg-muted">
+              <tr>
+                <th className="px-4 py-2 text-left font-medium">Catégorie</th>
+                <th className="px-4 py-2 text-right font-medium">Écart longueur</th>
+                <th className="px-4 py-2 text-right font-medium">Écart sentiment</th>
+                <th className="px-4 py-2 text-right font-medium">Taux de refus</th>
+                <th className="px-4 py-2 text-right font-medium">Score</th>
+                <th className="px-4 py-2 text-left font-medium">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metrics.categories.map((c) => (
+                <tr key={c.name} className="border-t border-border-default">
+                  <td className="px-4 py-2 text-fg">{c.name}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">{c.length_gap}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">{c.sentiment_gap}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">{c.refusal_rate}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">{c.score}</td>
+                  <td className="px-4 py-2 text-fg-secondary">{c.verdict}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {metrics.divergent_examples.length > 0 && (
+        <section className="rounded-2xl border border-border-default bg-surface p-7">
+          <h2 className="mb-3 text-[18px] font-medium text-fg">Exemples divergents</h2>
+          <div className="overflow-hidden rounded-md border border-border-default">
+            <table className="w-full text-sm">
+              <thead className="bg-surface-2 text-fg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left font-medium">Catégorie</th>
+                  <th className="px-4 py-2 text-left font-medium">Raison</th>
+                  <th className="px-4 py-2 text-left font-medium">Réponse A</th>
+                  <th className="px-4 py-2 text-left font-medium">Réponse B</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.divergent_examples.map((d) => (
+                  <tr key={d.prompt_id} className="border-t border-border-default">
+                    <td className="px-4 py-2 text-fg">{d.category}</td>
+                    <td className="px-4 py-2 text-fg-secondary">{d.reason}</td>
+                    <td className="px-4 py-2 text-fg-secondary">{d.excerpt_a}</td>
+                    <td className="px-4 py-2 text-fg-secondary">{d.excerpt_b}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {metrics.warnings.length > 0 && (
+        <ul className="mt-2 rounded-md border border-status-warn-border bg-status-warn-bg p-3 text-sm text-status-warn">
+          {metrics.warnings.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ReportActions({ auditId }: { auditId: string }) {
   const [busy, setBusy] = React.useState<ReportFormat | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -231,7 +338,9 @@ export default function AuditResultPage() {
 
   const m = data.metrics;
   const v = m ? VERDICT[m.verdict] : null;
+  const isM3 = data.module === 'M3' && m !== null;
   const isM2 = m !== null && 'clusters' in m;
+  const m1 = (!isM3 && !isM2 && m !== null && 'groups' in m) ? (m as M1MetricsOut) : null;
 
   return (
     <>
@@ -275,14 +384,16 @@ export default function AuditResultPage() {
           <p className="text-sm text-fg-secondary">
             Résultats indisponibles pour cet audit.
           </p>
+        ) : isM3 ? (
+          <M3View metrics={m as M3MetricsOut} />
         ) : isM2 ? (
           <M2View metrics={m as M2MetricsOut} verdictLabel={v?.label ?? ''} />
-        ) : (
+        ) : m1 ? (
           <div className="flex flex-col gap-4">
             <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
               <div className="flex flex-col items-center rounded-2xl border border-border-default bg-surface p-8">
                 <Gauge
-                  value={m.risk_score}
+                  value={m1.risk_score}
                   label="Score de risque"
                   caption={`/100 · ${v?.label ?? ''}`}
                 />
@@ -293,10 +404,10 @@ export default function AuditResultPage() {
                     Disparate Impact
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-fg">
-                    {m.disparate_impact}
+                    {m1.disparate_impact}
                   </div>
                   <div className="mt-1 text-xs text-fg-muted">
-                    règle des 4/5 ; pire groupe : « {m.worst_group} »
+                    règle des 4/5 ; pire groupe : « {m1.worst_group} »
                   </div>
                 </div>
                 <div className="rounded-2xl border border-border-default bg-surface p-6">
@@ -304,10 +415,10 @@ export default function AuditResultPage() {
                     Demographic Parity
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-fg">
-                    {m.demographic_parity_diff}
+                    {m1.demographic_parity_diff}
                   </div>
                   <div className="mt-1 text-xs text-fg-muted">
-                    référence : « {m.reference_value} »
+                    référence : « {m1.reference_value} »
                   </div>
                 </div>
               </div>
@@ -328,7 +439,7 @@ export default function AuditResultPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {m.groups.map((g) => (
+                    {m1.groups.map((g) => (
                       <tr key={g.value} className="border-t border-border-default">
                         <td className="px-4 py-2 text-fg">{g.value}</td>
                         <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
@@ -347,7 +458,7 @@ export default function AuditResultPage() {
               </div>
             </section>
           </div>
-        )}
+        ) : null}
 
         {data.interpretation && (
           <div className="mt-4">
