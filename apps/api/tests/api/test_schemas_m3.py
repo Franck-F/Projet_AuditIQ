@@ -40,3 +40,13 @@ def test_m3_metrics_out_shape():
         n_pairs=1, n_calls_failed=0, warnings=[],
     )
     assert m.categories[0].name == "genre"
+
+
+def test_m3_rejects_privileged_value():
+    with pytest.raises(ValidationError):
+        AuditCreate(
+            title="t", module="M3",
+            privileged_value="homme",  # not applicable to M3
+            target={"url": "https://x/y", "method": "POST", "headers": {},
+                    "body_template": "{prompt}", "response_path": "a"},
+        )
