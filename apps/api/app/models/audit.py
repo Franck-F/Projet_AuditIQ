@@ -20,8 +20,8 @@ class Audit(Base):
     org_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True
     )
-    dataset_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("datasets.id"), nullable=False
+    dataset_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("datasets.id"), nullable=True
     )
     module: Mapped[str] = mapped_column(String(8), nullable=False, default="M1")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -29,8 +29,8 @@ class Audit(Base):
     protected_attribute: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )
-    decision_column: Mapped[str] = mapped_column(String(255), nullable=False)
-    favorable_value: Mapped[str] = mapped_column(String(255), nullable=False)
+    decision_column: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    favorable_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
     privileged_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
     config: Mapped[dict[str, object] | None] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"), nullable=True
