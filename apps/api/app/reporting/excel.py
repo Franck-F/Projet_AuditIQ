@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut
 
 _VERDICT_FR = {
     "fail": "🔴 Critique",
@@ -78,6 +78,22 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 [c.id, c.n, c.positive_rate, c.deviation_pp,
                  "oui" if c.is_deviant else "non"]
             )
+    elif isinstance(m, M3MetricsOut):
+        _rows(
+            detail,
+            [
+                ["Module 3 — audit LLM/chatbot"],
+                ["Score global", m.global_score],
+                ["Verdict", m.verdict],
+                ["Paires", m.n_pairs, "Appels échoués", m.n_calls_failed],
+                [],
+                ["Catégorie", "Écart long.", "Écart sent.", "Taux refus",
+                 "Score", "Verdict"],
+            ],
+        )
+        for cat in m.categories:
+            detail.append([cat.name, cat.length_gap, cat.sentiment_gap,
+                           cat.refusal_rate, cat.score, cat.verdict])
     elif isinstance(m, M1MetricsOut):
         _rows(
             detail,

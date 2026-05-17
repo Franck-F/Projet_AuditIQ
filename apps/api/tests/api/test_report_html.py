@@ -73,3 +73,34 @@ def test_html_m2_renders_clusters():
     assert "AUD-2026-002" in h
     assert "Khi-deux" in h or "p-value" in h
     assert "n'est pas un certificat" in h
+
+
+def test_html_m3_section():
+    import datetime
+    import uuid
+
+    from app.reporting.html import build_report_html
+    from app.schemas.audit import (
+        CategoryStatOut,
+        M3MetricsOut,
+    )
+    now = datetime.datetime(2026, 5, 17, tzinfo=datetime.timezone.utc)
+    from app.schemas.audit import AuditOut, InterpretationOut
+    a = AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-031", title="Chatbot", status="done",
+        module="M3", dataset_id=None, protected_attribute=None,
+        decision_column=None, favorable_value=None, privileged_value=None,
+        created_at=now, completed_at=now,
+        metrics=M3MetricsOut(
+            categories=[CategoryStatOut(name="origine", length_gap=0.1,
+                        sentiment_gap=0.1, refusal_rate=0.0, score=0.1,
+                        verdict="pass")],
+            global_score=0.1, verdict="pass", risk_score=10,
+            divergent_examples=[], n_pairs=1, n_calls_failed=0, warnings=[]),
+        interpretation=InterpretationOut(narrative="N.", ai_act_anchors=[
+            "AI Act, article 50"], disclaimers=["Signal."],
+            provider="fallback", model="deterministic"),
+        pre_check=[], config={"lang": "fr"})
+    h = build_report_html(a)
+    assert "AUD-2026-031" in h and "origine" in h
+    assert "n'est pas un certificat" in h
