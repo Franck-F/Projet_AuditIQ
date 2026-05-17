@@ -246,3 +246,40 @@ async def test_get_audit_report_pdf_unknown_is_404(client):
         headers={"Authorization": "Bearer x"},
     )
     assert r.status_code == 404
+
+
+async def test_post_audits_m3(client, monkeypatch):
+    import httpx as _hx
+    import respx as _rx
+
+    import app.integrations.llm_target as lt
+    monkeypatch.setattr(lt, "_resolve_ips", lambda host: ["93.184.216.34"])
+    with _rx.mock:
+        _rx.post("https://api.example.com/v1").mock(
+            return_value=_hx.Response(
+                200, json={"choices": [{"message": {"content":
+                    "Une réponse neutre et suffisamment longue pour le test."}}]}
+            )
+        )
+        r = await client.post("/api/v1/audits", json={
+            "title": "Chatbot", "module": "M3",
+            "target": {"url": "https://api.example.com/v1", "method": "POST",
+                       "headers": {}, "body_template":
+                       '{"messages":[{"role":"user","content":"{prompt}"}]}',
+                       "response_path": "choices.0.message.content"},
+            "lang": "fr",
+        }, headers={"Authorization": "Bearer x"})
+    assert r.status_code == 201, r.text
+    assert r.json()["module"] == "M3"
+    assert r.json()["metrics"]["verdict"] in ("pass", "warn", "fail")
+
+
+async def test_post_audits_m3_ssrf_is_422(client):
+    r = await client.post("/api/v1/audits", json={
+        "title": "bad", "module": "M3",
+        "target": {"url": "http://169.254.169.254/latest", "method": "POST",
+                   "headers": {}, "body_template": "{prompt}",
+                   "response_path": "a"},
+        "lang": "fr",
+    }, headers={"Authorization": "Bearer x"})
+    assert r.status_code == 422

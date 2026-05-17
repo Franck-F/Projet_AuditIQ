@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import io
 import uuid
@@ -9,25 +10,47 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.audit_engine import M1Config, M1Result, M2Config, M2Result, iqr_precheck, run_m1, run_m2
+from app.audit_engine import (
+    PROMPT_BANK,
+    M1Config,
+    M1Result,
+    M2Config,
+    M2Result,
+    M3Config,
+    M3Responses,
+    M3Result,
+    ResponseRecord,
+    iqr_precheck,
+    run_m1,
+    run_m2,
+    run_m3,
+)
+from app.core.config import get_settings
 from app.core.errors import NotFoundError
+from app.integrations.llm_target import TargetConfig, assert_public_url, call_target_llm
 from app.integrations.storage import Storage
 from app.interpretation.base import LLMProvider
 from app.interpretation.m1 import interpret_m1
 from app.interpretation.m2 import interpret_m2
+from app.interpretation.m3 import interpret_m3
 from app.models import Audit, AuditResult, Dataset
 from app.schemas.audit import (
     AuditCreate,
     AuditOut,
+    CategoryStatOut,
     ClusterStatOut,
+    DivergentExampleOut,
     FeatureContributionOut,
     GroupStatOut,
     InterpretationOut,
     M1MetricsOut,
     M2MetricsOut,
+    M3MetricsOut,
     Verdict,
 )
 from app.services.dataset_service import get_dataset
+
+_BANK_VERSION = "v1"
 
 
 def _canonical_scalar(value: str, series: pd.Series) -> str:
@@ -116,9 +139,35 @@ def _to_m2_metrics_out(r: M2Result) -> M2MetricsOut:
     )
 
 
+def _to_m3_metrics_out(r: M3Result) -> M3MetricsOut:
+    return M3MetricsOut(
+        categories=[
+            CategoryStatOut(
+                name=c.name, length_gap=c.length_gap,
+                sentiment_gap=c.sentiment_gap, refusal_rate=c.refusal_rate,
+                score=c.score, verdict=cast(Verdict, c.verdict),
+            )
+            for c in r.categories
+        ],
+        global_score=r.global_score,
+        verdict=cast(Verdict, r.verdict),
+        risk_score=r.risk_score,
+        divergent_examples=[
+            DivergentExampleOut(
+                category=e.category, prompt_id=e.prompt_id,
+                variant_a=e.variant_a, variant_b=e.variant_b,
+                excerpt_a=e.excerpt_a, excerpt_b=e.excerpt_b, reason=e.reason,
+            )
+            for e in r.divergent_examples
+        ],
+        n_pairs=r.n_pairs, n_calls_failed=r.n_calls_failed,
+        warnings=list(r.warnings),
+    )
+
+
 def _audit_out(
     audit: Audit,
-    metrics: M1MetricsOut | M2MetricsOut | None,
+    metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | None,
     interpretation: InterpretationOut | None = None,
     pre_check: list[str] | None = None,
 ) -> AuditOut:
@@ -151,6 +200,7 @@ async def run_m1_audit(
     body: AuditCreate,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
     dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
 
     audit = Audit(
@@ -176,10 +226,12 @@ async def run_m1_audit(
         df, group_column=body.protected_attribute, numeric_columns=None
     )
 
-    fav = body.favorable_value
+    dec_col = cast(str, body.decision_column)  # required for M1 by _per_module
+    fav_val = cast(str, body.favorable_value)  # required for M1 by _per_module
+    fav = fav_val
     priv = body.privileged_value
-    if body.decision_column in df.columns:
-        fav = _canonical_scalar(body.favorable_value, df[body.decision_column])
+    if dec_col in df.columns:
+        fav = _canonical_scalar(fav_val, df[dec_col])
     if priv is not None and body.protected_attribute in df.columns:
         priv = _canonical_scalar(priv, df[body.protected_attribute])
 
@@ -189,7 +241,7 @@ async def run_m1_audit(
         df,
         M1Config(
             protected_attribute=cast(str, body.protected_attribute),
-            decision_column=body.decision_column,
+            decision_column=dec_col,
             favorable_value=fav,
             privileged_value=priv,
         ),
@@ -222,6 +274,7 @@ async def run_m2_audit(
     body: AuditCreate,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
     dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
     cfg_in = body.config
     config_payload = cfg_in.model_dump() if cfg_in is not None else None
@@ -247,9 +300,10 @@ async def run_m2_audit(
     df = pd.read_csv(io.BytesIO(raw))
 
     feats = cfg_in.features if cfg_in is not None else None
+    m2_dec_col = cast(str, body.decision_column)  # required for M2 by _per_module
     m2_cfg = M2Config(
-        decision_column=body.decision_column,
-        positive_value=body.favorable_value,
+        decision_column=m2_dec_col,
+        positive_value=cast(str, body.favorable_value),  # required for M2 by _per_module
         feature_columns=tuple(feats) if feats else None,
         k=cfg_in.k if cfg_in is not None else 5,
         deviation_pp=cfg_in.deviation_pp if cfg_in is not None else 20.0,
@@ -258,7 +312,7 @@ async def run_m2_audit(
     )
     numeric_cols = [
         c for c in df.columns
-        if c != body.decision_column
+        if c != m2_dec_col
         and pd.api.types.is_numeric_dtype(df[c])
     ]
     pre_check = _run_iqr(df, group_column=None, numeric_columns=numeric_cols)
@@ -282,6 +336,113 @@ async def run_m2_audit(
     return _audit_out(audit, metrics_out, interpretation, pre_check)
 
 
+async def run_m3_audit(
+    session: AsyncSession,
+    *,
+    org_id: uuid.UUID,
+    user_id: uuid.UUID,
+    body: AuditCreate,
+    llm_provider: LLMProvider | None,
+) -> AuditOut:
+    assert body.target is not None  # guaranteed by AuditCreate._per_module
+    # Validate the target URL early (SSRF + scheme check) — raises APIError 422
+    # before any DB write so the error propagates cleanly through the RFC 7807 handler.
+    assert_public_url(body.target.url)
+    s = get_settings()
+    tcfg = TargetConfig(
+        url=body.target.url,
+        method=body.target.method,
+        headers=dict(body.target.headers),
+        body_template=body.target.body_template,
+        response_path=body.target.response_path,
+    )
+    lang = body.lang if body.lang in ("fr", "en") else "fr"
+
+    audit = Audit(
+        code=await _next_code(session, org_id),
+        org_id=org_id,
+        dataset_id=None,
+        module="M3",
+        title=body.title,
+        status="running",
+        protected_attribute=None,
+        decision_column=None,
+        favorable_value=None,
+        privileged_value=None,
+        config={
+            "target": {
+                "url": body.target.url,
+                "method": body.target.method,
+                "response_path": body.target.response_path,
+            },
+            "bank_version": _BANK_VERSION,
+            "lang": lang,
+        },
+        created_by=user_id,
+    )
+    session.add(audit)
+    await session.flush()
+
+    # (pair_id, category, attribute_label, prompt)
+    calls: list[tuple[str, str, str, str]] = []
+    for pair in PROMPT_BANK:
+        for v in pair.variants:
+            calls.append(
+                (pair.id, pair.category, v.attribute_label,
+                 v.fr if lang == "fr" else v.en)
+            )
+    calls = calls[: s.llm_audit_max_calls]
+
+    sem = asyncio.Semaphore(s.llm_target_max_concurrency)
+    results: dict[int, tuple[str, bool]] = {}
+
+    async def _one(i: int, prompt: str) -> None:
+        async with sem:
+            try:
+                txt = await call_target_llm(tcfg, prompt)
+                results[i] = (txt, False)
+            except Exception:  # noqa: BLE001 — per-call failure is non-fatal
+                results[i] = ("", True)
+
+    tasks = [
+        asyncio.create_task(_one(i, c[3])) for i, c in enumerate(calls)
+    ]
+    if tasks:
+        _done, pending = await asyncio.wait(
+            tasks, timeout=float(s.llm_audit_deadline_s)
+        )
+        for t in pending:
+            t.cancel()
+
+    records: list[ResponseRecord] = []
+    for i, (pid, cat, label, _prompt) in enumerate(calls):
+        text, failed = results.get(i, ("", True))
+        records.append(
+            ResponseRecord(
+                pair_id=pid, category=cat, variant_label=label,
+                text=text, failed=failed,
+            )
+        )
+
+    result = run_m3(M3Responses(records=tuple(records)), M3Config(lang=lang))
+    metrics_out = _to_m3_metrics_out(result)
+    interpretation = await interpret_m3(result, provider=llm_provider)
+    session.add(
+        AuditResult(
+            audit_id=audit.id,
+            metrics=metrics_out.model_dump(),
+            verdict=result.verdict,
+            risk_score=result.risk_score,
+            interpretation=interpretation.model_dump(),
+            pre_check=[],
+        )
+    )
+    audit.status = "done"
+    audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
+    await session.commit()
+    return _audit_out(audit, metrics_out, interpretation, [])
+
+
 async def get_audit(
     session: AsyncSession, audit_id: uuid.UUID, *, org_id: uuid.UUID
 ) -> AuditOut:
@@ -297,9 +458,11 @@ async def get_audit(
             select(AuditResult).where(AuditResult.audit_id == audit_id)
         )
     ).scalar_one_or_none()
-    metrics: M1MetricsOut | M2MetricsOut | None
+    metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | None
     if result is None:
         metrics = None
+    elif audit.module == "M3":
+        metrics = M3MetricsOut.model_validate(result.metrics)
     elif audit.module == "M2":
         metrics = M2MetricsOut.model_validate(result.metrics)
     else:

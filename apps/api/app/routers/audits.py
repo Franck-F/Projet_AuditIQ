@@ -34,6 +34,11 @@ async def create_audit(
     storage: Storage = Depends(get_storage_dep),  # noqa: B008
     llm_provider: LLMProvider | None = Depends(get_llm_provider_dep),  # noqa: B008
 ) -> AuditOut:
+    if body.module == "M3":
+        return await audit_service.run_m3_audit(
+            session, org_id=user.org_id, user_id=user.id,
+            body=body, llm_provider=llm_provider,
+        )
     if body.module == "M2":
         return await audit_service.run_m2_audit(
             session, storage, org_id=user.org_id, user_id=user.id,

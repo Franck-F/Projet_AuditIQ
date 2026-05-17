@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from html import escape
 
-from app.schemas.audit import AuditOut, M2MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut
 
 _VERDICT_FR = {
     "fail": ("Critique", "#b42318"),
@@ -42,6 +42,36 @@ def _detail(audit: AuditOut) -> str:
     m = audit.metrics
     if m is None:
         return "<p>Résultats indisponibles pour cet audit.</p>"
+    if isinstance(m, M3MetricsOut):
+        head = _rows([
+            ("Score global", m.global_score),
+            ("Verdict", m.verdict),
+            ("Paires / échecs", f"{m.n_pairs} / {m.n_calls_failed}"),
+        ])
+        body = "".join(
+            f"<tr><td>{_e(c.name)}</td><td>{c.length_gap}</td>"
+            f"<td>{c.sentiment_gap}</td><td>{c.refusal_rate}</td>"
+            f"<td>{c.score}</td><td>{_e(c.verdict)}</td></tr>"
+            for c in m.categories
+        )
+        ex = "".join(
+            f"<tr><td>{_e(d.category)}</td><td>{_e(d.reason)}</td>"
+            f"<td>{_e(d.excerpt_a)}</td><td>{_e(d.excerpt_b)}</td></tr>"
+            for d in m.divergent_examples
+        )
+        return (
+            f"<h2>Module 3 — audit LLM/chatbot</h2>"
+            f"<table class='kv'>{head}</table>"
+            f"<table class='grid'><thead><tr><th>Catégorie</th><th>Écart "
+            f"long.</th><th>Écart sent.</th><th>Taux refus</th><th>Score</th>"
+            f"<th>Verdict</th></tr></thead><tbody>{body}</tbody></table>"
+            + (
+                f"<h2>Exemples divergents</h2><table class='grid'><thead>"
+                f"<tr><th>Catégorie</th><th>Raison</th><th>Réponse A</th>"
+                f"<th>Réponse B</th></tr></thead><tbody>{ex}</tbody></table>"
+                if ex else ""
+            )
+        )
     if isinstance(m, M2MetricsOut):
         head = _rows(
             [
@@ -64,26 +94,28 @@ def _detail(audit: AuditOut) -> str:
             f"</th><th>Taux fav.</th><th>Écart (pts)</th><th>Déviant</th>"
             f"</tr></thead><tbody>{body}</tbody></table>"
         )
-    head = _rows(
-        [
-            ("Disparate Impact", m.disparate_impact),
-            ("Demographic Parity (écart)", m.demographic_parity_diff),
-            ("Groupe le plus défavorisé", m.worst_group),
-            ("Référence", m.reference_value),
-        ]
-    )
-    body = "".join(
-        f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
-        f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
-        for g in m.groups
-    )
-    return (
-        f"<h2>Module 1 — audit supervisé</h2>"
-        f"<table class='kv'>{head}</table>"
-        f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
-        f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
-        f"<tbody>{body}</tbody></table>"
-    )
+    if isinstance(m, M1MetricsOut):
+        head = _rows(
+            [
+                ("Disparate Impact", m.disparate_impact),
+                ("Demographic Parity (écart)", m.demographic_parity_diff),
+                ("Groupe le plus défavorisé", m.worst_group),
+                ("Référence", m.reference_value),
+            ]
+        )
+        body = "".join(
+            f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
+            f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
+            for g in m.groups
+        )
+        return (
+            f"<h2>Module 1 — audit supervisé</h2>"
+            f"<table class='kv'>{head}</table>"
+            f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
+            f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
+            f"<tbody>{body}</tbody></table>"
+        )
+    return "<p>Résultats indisponibles pour cet audit.</p>"
 
 
 def build_report_html(audit: AuditOut) -> str:
