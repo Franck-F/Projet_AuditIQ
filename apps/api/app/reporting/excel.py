@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.schemas.audit import AuditOut, M2MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut
 
 _VERDICT_FR = {
     "fail": "🔴 Critique",
@@ -78,7 +78,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 [c.id, c.n, c.positive_rate, c.deviation_pp,
                  "oui" if c.is_deviant else "non"]
             )
-    else:
+    elif isinstance(m, M1MetricsOut):
         _rows(
             detail,
             [

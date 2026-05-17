@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from html import escape
 
-from app.schemas.audit import AuditOut, M2MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut
 
 _VERDICT_FR = {
     "fail": ("Critique", "#b42318"),
@@ -64,26 +64,28 @@ def _detail(audit: AuditOut) -> str:
             f"</th><th>Taux fav.</th><th>Écart (pts)</th><th>Déviant</th>"
             f"</tr></thead><tbody>{body}</tbody></table>"
         )
-    head = _rows(
-        [
-            ("Disparate Impact", m.disparate_impact),
-            ("Demographic Parity (écart)", m.demographic_parity_diff),
-            ("Groupe le plus défavorisé", m.worst_group),
-            ("Référence", m.reference_value),
-        ]
-    )
-    body = "".join(
-        f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
-        f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
-        for g in m.groups
-    )
-    return (
-        f"<h2>Module 1 — audit supervisé</h2>"
-        f"<table class='kv'>{head}</table>"
-        f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
-        f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
-        f"<tbody>{body}</tbody></table>"
-    )
+    if isinstance(m, M1MetricsOut):
+        head = _rows(
+            [
+                ("Disparate Impact", m.disparate_impact),
+                ("Demographic Parity (écart)", m.demographic_parity_diff),
+                ("Groupe le plus défavorisé", m.worst_group),
+                ("Référence", m.reference_value),
+            ]
+        )
+        body = "".join(
+            f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
+            f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
+            for g in m.groups
+        )
+        return (
+            f"<h2>Module 1 — audit supervisé</h2>"
+            f"<table class='kv'>{head}</table>"
+            f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
+            f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
+            f"<tbody>{body}</tbody></table>"
+        )
+    return "<p>Résultats indisponibles pour cet audit.</p>"
 
 
 def build_report_html(audit: AuditOut) -> str:

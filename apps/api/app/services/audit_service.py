@@ -176,10 +176,12 @@ async def run_m1_audit(
         df, group_column=body.protected_attribute, numeric_columns=None
     )
 
-    fav = body.favorable_value
+    dec_col = cast(str, body.decision_column)  # required for M1 by _per_module
+    fav_val = cast(str, body.favorable_value)  # required for M1 by _per_module
+    fav = fav_val
     priv = body.privileged_value
-    if body.decision_column in df.columns:
-        fav = _canonical_scalar(body.favorable_value, df[body.decision_column])
+    if dec_col in df.columns:
+        fav = _canonical_scalar(fav_val, df[dec_col])
     if priv is not None and body.protected_attribute in df.columns:
         priv = _canonical_scalar(priv, df[body.protected_attribute])
 
@@ -189,7 +191,7 @@ async def run_m1_audit(
         df,
         M1Config(
             protected_attribute=cast(str, body.protected_attribute),
-            decision_column=body.decision_column,
+            decision_column=dec_col,
             favorable_value=fav,
             privileged_value=priv,
         ),
@@ -247,9 +249,10 @@ async def run_m2_audit(
     df = pd.read_csv(io.BytesIO(raw))
 
     feats = cfg_in.features if cfg_in is not None else None
+    m2_dec_col = cast(str, body.decision_column)  # required for M2 by _per_module
     m2_cfg = M2Config(
-        decision_column=body.decision_column,
-        positive_value=body.favorable_value,
+        decision_column=m2_dec_col,
+        positive_value=cast(str, body.favorable_value),  # required for M2 by _per_module
         feature_columns=tuple(feats) if feats else None,
         k=cfg_in.k if cfg_in is not None else 5,
         deviation_pp=cfg_in.deviation_pp if cfg_in is not None else 20.0,
@@ -258,7 +261,7 @@ async def run_m2_audit(
     )
     numeric_cols = [
         c for c in df.columns
-        if c != body.decision_column
+        if c != m2_dec_col
         and pd.api.types.is_numeric_dtype(df[c])
     ]
     pre_check = _run_iqr(df, group_column=None, numeric_columns=numeric_cols)
