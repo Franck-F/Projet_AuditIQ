@@ -105,6 +105,11 @@ def _assert_public(url: str) -> tuple[str, list[str]]:
     return host, ips
 
 
+def assert_public_url(url: str) -> tuple[str, list[str]]:
+    """Public SSRF/target validation entrypoint (no HTTP call). Raises APIError 422 on a forbidden/invalid target."""
+    return _assert_public(url)
+
+
 async def call_target_llm(cfg: TargetConfig, prompt: str) -> str:
     """POST the prompt-substituted body to the validated, IP-pinned target.
 
