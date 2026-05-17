@@ -28,3 +28,15 @@ def test_m2_public_api_surface():
     ):
         assert name in ae.__all__
         assert hasattr(ae, name)
+
+
+def test_m3_public_api_surface():
+    import app.audit_engine as ae
+
+    for name in (
+        "run_m3", "M3Config", "M3Responses", "ResponseRecord", "M3Result",
+        "CategoryStat", "DivergentExample", "PromptPair", "PromptVariant",
+        "PROMPT_BANK",
+    ):
+        assert name in ae.__all__
+        assert hasattr(ae, name)
