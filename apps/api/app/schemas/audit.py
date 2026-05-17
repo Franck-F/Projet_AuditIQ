@@ -32,7 +32,7 @@ class TargetIn(BaseModel):
 class AuditCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    dataset_id: uuid.UUID
+    dataset_id: uuid.UUID | None = None
     title: str
     module: Literal["M1", "M2", "M3"] = "M1"
     protected_attribute: str | None = None
@@ -46,6 +46,8 @@ class AuditCreate(BaseModel):
     @model_validator(mode="after")
     def _per_module(self) -> AuditCreate:
         if self.module == "M1":
+            if self.dataset_id is None:
+                raise ValueError("module M1 : 'dataset_id' est requis.")
             if not self.protected_attribute:
                 raise ValueError(
                     "module M1 : 'protected_attribute' est requis."
@@ -61,6 +63,8 @@ class AuditCreate(BaseModel):
             if self.config is not None:
                 raise ValueError("module M1 : 'config' n'est pas accepté.")
         elif self.module == "M2":
+            if self.dataset_id is None:
+                raise ValueError("module M2 : 'dataset_id' est requis.")
             if not self.decision_column:
                 raise ValueError(
                     "module M2 : 'decision_column' est requis."

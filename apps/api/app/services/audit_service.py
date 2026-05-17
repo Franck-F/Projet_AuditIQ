@@ -151,6 +151,7 @@ async def run_m1_audit(
     body: AuditCreate,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
     dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
 
     audit = Audit(
@@ -224,6 +225,7 @@ async def run_m2_audit(
     body: AuditCreate,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
     dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
     cfg_in = body.config
     config_payload = cfg_in.model_dump() if cfg_in is not None else None
