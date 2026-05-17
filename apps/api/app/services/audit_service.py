@@ -27,7 +27,7 @@ from app.audit_engine import (
 )
 from app.core.config import get_settings
 from app.core.errors import NotFoundError
-from app.integrations.llm_target import TargetConfig, call_target_llm
+from app.integrations.llm_target import TargetConfig, _assert_public, call_target_llm
 from app.integrations.storage import Storage
 from app.interpretation.base import LLMProvider
 from app.interpretation.m1 import interpret_m1
@@ -345,6 +345,9 @@ async def run_m3_audit(
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
     assert body.target is not None  # guaranteed by AuditCreate._per_module
+    # Validate the target URL early (SSRF + scheme check) — raises APIError 422
+    # before any DB write so the error propagates cleanly through the RFC 7807 handler.
+    _assert_public(body.target.url)
     s = get_settings()
     tcfg = TargetConfig(
         url=body.target.url,
