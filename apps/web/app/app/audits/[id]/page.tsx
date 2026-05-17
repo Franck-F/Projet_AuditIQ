@@ -8,7 +8,7 @@ import { Topbar } from '@/components/app/Topbar';
 import { Gauge } from '@/components/product/Gauge';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { downloadReport, type M2MetricsOut, type ReportFormat } from '@/lib/api/audits';
+import { downloadReport, type M1MetricsOut, type M2MetricsOut, type ReportFormat } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
 
 const VERDICT: Record<'fail' | 'warn' | 'pass', { tone: StatusTone; label: string }> = {
@@ -232,6 +232,7 @@ export default function AuditResultPage() {
   const m = data.metrics;
   const v = m ? VERDICT[m.verdict] : null;
   const isM2 = m !== null && 'clusters' in m;
+  const m1 = (!isM2 && m !== null && 'groups' in m) ? (m as M1MetricsOut) : null;
 
   return (
     <>
@@ -277,12 +278,12 @@ export default function AuditResultPage() {
           </p>
         ) : isM2 ? (
           <M2View metrics={m as M2MetricsOut} verdictLabel={v?.label ?? ''} />
-        ) : (
+        ) : m1 ? (
           <div className="flex flex-col gap-4">
             <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
               <div className="flex flex-col items-center rounded-2xl border border-border-default bg-surface p-8">
                 <Gauge
-                  value={m.risk_score}
+                  value={m1.risk_score}
                   label="Score de risque"
                   caption={`/100 · ${v?.label ?? ''}`}
                 />
@@ -293,10 +294,10 @@ export default function AuditResultPage() {
                     Disparate Impact
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-fg">
-                    {m.disparate_impact}
+                    {m1.disparate_impact}
                   </div>
                   <div className="mt-1 text-xs text-fg-muted">
-                    règle des 4/5 ; pire groupe : « {m.worst_group} »
+                    règle des 4/5 ; pire groupe : « {m1.worst_group} »
                   </div>
                 </div>
                 <div className="rounded-2xl border border-border-default bg-surface p-6">
@@ -304,10 +305,10 @@ export default function AuditResultPage() {
                     Demographic Parity
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-fg">
-                    {m.demographic_parity_diff}
+                    {m1.demographic_parity_diff}
                   </div>
                   <div className="mt-1 text-xs text-fg-muted">
-                    référence : « {m.reference_value} »
+                    référence : « {m1.reference_value} »
                   </div>
                 </div>
               </div>
@@ -328,7 +329,7 @@ export default function AuditResultPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {m.groups.map((g) => (
+                    {m1.groups.map((g) => (
                       <tr key={g.value} className="border-t border-border-default">
                         <td className="px-4 py-2 text-fg">{g.value}</td>
                         <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
@@ -347,7 +348,7 @@ export default function AuditResultPage() {
               </div>
             </section>
           </div>
-        )}
+        ) : null}
 
         {data.interpretation && (
           <div className="mt-4">

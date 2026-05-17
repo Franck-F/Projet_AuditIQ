@@ -99,4 +99,30 @@ describe('audits api', () => {
     const { downloadReport } = await import('@/lib/api/audits');
     await expect(downloadReport('aud-1', 'pdf')).rejects.toThrow();
   });
+
+  it('createAudit sends an M3 body (module M3, target, lang, no dataset)', async () => {
+    post.mockClear();
+    const out = { id: 'a-m3', module: 'M3', status: 'done' };
+    post.mockResolvedValueOnce({ data: out });
+    const { createAudit: createAuditM3 } = await import('@/lib/api/audits');
+    const res = await createAuditM3({
+      title: 'Chatbot RH',
+      module: 'M3',
+      target: {
+        url: 'https://api.example.com/v1',
+        method: 'POST',
+        headers: { Authorization: 'Bearer X' },
+        body_template: '{"messages":[{"role":"user","content":"{prompt}"}]}',
+        response_path: 'choices.0.message.content',
+      },
+      lang: 'fr',
+    });
+    expect(res).toEqual(out);
+    const [url, body] = post.mock.calls.at(-1)!;
+    expect(url).toBe('/audits');
+    expect(body.module).toBe('M3');
+    expect(body.target.url).toBe('https://api.example.com/v1');
+    expect(body.lang).toBe('fr');
+    expect('dataset_id' in body).toBe(false);
+  });
 });
