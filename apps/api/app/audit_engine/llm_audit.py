@@ -7,10 +7,9 @@ from .llm_metrics import (
     m3_risk_score,
     m3_verdict,
     pair_score,
-    refusal_asymmetry,
     sentiment_gap,
 )
-from .llm_refusal import _MARKERS, is_refusal
+from .llm_refusal import _MARKERS
 from .types import (
     CategoryStat,
     DivergentExample,
