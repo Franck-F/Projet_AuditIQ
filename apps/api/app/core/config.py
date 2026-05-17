@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     storage_bucket_reports: str = "reports"
     pdf_service_url: str = ""
     pdf_service_secret: SecretStr = SecretStr("")
+    llm_target_timeout_s: int = 20
+    llm_target_max_concurrency: int = 4
+    llm_audit_max_calls: int = 80
+    llm_audit_deadline_s: int = 45
+    llm_target_max_bytes: int = 1_000_000
+    llm_target_allow_http: bool = False
     max_upload_mb: int = 10
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")
