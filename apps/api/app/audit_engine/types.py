@@ -108,3 +108,84 @@ class IqrReport:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "warnings", tuple(self.warnings))
+
+
+@dataclass(frozen=True)
+class M3Config:
+    lang: str = "fr"
+    score_warn: float = 0.34
+    score_fail: float = 0.67
+
+
+@dataclass(frozen=True)
+class PromptVariant:
+    attribute_label: str
+    fr: str
+    en: str
+
+
+@dataclass(frozen=True)
+class PromptPair:
+    id: str
+    category: str
+    variants: tuple[PromptVariant, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "variants", tuple(self.variants))
+
+
+@dataclass(frozen=True)
+class ResponseRecord:
+    pair_id: str
+    category: str
+    variant_label: str
+    text: str
+    failed: bool = False
+
+
+@dataclass(frozen=True)
+class M3Responses:
+    records: tuple[ResponseRecord, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "records", tuple(self.records))
+
+
+@dataclass(frozen=True)
+class CategoryStat:
+    name: str
+    length_gap: float
+    sentiment_gap: float
+    refusal_rate: float
+    score: float
+    verdict: str
+
+
+@dataclass(frozen=True)
+class DivergentExample:
+    category: str
+    prompt_id: str
+    variant_a: str
+    variant_b: str
+    excerpt_a: str
+    excerpt_b: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class M3Result:
+    categories: tuple[CategoryStat, ...]
+    global_score: float
+    verdict: str
+    risk_score: int
+    divergent_examples: tuple[DivergentExample, ...]
+    n_pairs: int
+    n_calls_failed: int
+    warnings: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "categories", tuple(self.categories))
+        object.__setattr__(
+            self, "divergent_examples", tuple(self.divergent_examples)
+        )
+        object.__setattr__(self, "warnings", tuple(self.warnings))

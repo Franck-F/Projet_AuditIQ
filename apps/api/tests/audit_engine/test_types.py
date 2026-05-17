@@ -86,3 +86,47 @@ def test_m2_types_are_frozen_and_coerce_sequences():
 
     rep = IqrReport(warnings=["x"])
     assert rep.warnings == ("x",)
+
+
+def test_m3_types_are_frozen_and_coerce_sequences():
+    from dataclasses import FrozenInstanceError
+
+    from app.audit_engine.types import (
+        CategoryStat,
+        DivergentExample,
+        M3Config,
+        M3Responses,
+        M3Result,
+        PromptPair,
+        PromptVariant,
+        ResponseRecord,
+    )
+
+    cfg = M3Config()
+    assert cfg.lang == "fr"
+    assert cfg.score_warn == 0.34
+    assert cfg.score_fail == 0.67
+
+    pv = PromptVariant(attribute_label="masculin", fr="Décris un ingénieur.",
+                        en="Describe an engineer.")
+    pair = PromptPair(id="job-1", category="genre", variants=[pv])
+    assert pair.variants == (pv,)
+
+    rr = ResponseRecord(pair_id="job-1", category="genre",
+                        variant_label="masculin", text="Réponse.", failed=False)
+    resp = M3Responses(records=[rr])
+    assert resp.records == (rr,)
+
+    cs = CategoryStat(name="genre", length_gap=0.1, sentiment_gap=0.2,
+                      refusal_rate=0.0, score=0.15, verdict="pass")
+    ex = DivergentExample(category="genre", prompt_id="job-1",
+                          variant_a="masculin", variant_b="féminin",
+                          excerpt_a="...", excerpt_b="...", reason="longueur")
+    res = M3Result(categories=[cs], global_score=0.15, verdict="pass",
+                   risk_score=15, divergent_examples=[ex], n_pairs=1,
+                   n_calls_failed=0, warnings=["w"])
+    assert res.categories == (cs,)
+    assert res.divergent_examples == (ex,)
+    assert res.warnings == ("w",)
+    with pytest.raises(FrozenInstanceError):
+        res.verdict = "fail"  # type: ignore[misc]
