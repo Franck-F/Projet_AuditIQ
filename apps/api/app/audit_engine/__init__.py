@@ -5,6 +5,10 @@ from .errors import AuditEngineError, DatasetValidationError
 from .llm_audit import run_m3
 from .llm_prompt_bank import PROMPT_BANK
 from .m1_supervised import run_m1
+from .metrics import (
+    gap_verdict,
+    truelabel_metrics,
+)
 from .types import (
     CategoryStat,
     ClusterStat,
@@ -49,4 +53,6 @@ __all__ = [
     "DivergentExample",
     "PromptPair",
     "PromptVariant",
+    "gap_verdict",
+    "truelabel_metrics",
 ]
