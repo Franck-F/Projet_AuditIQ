@@ -32,4 +32,10 @@ async def test_interpret_m1_no_eo_is_unchanged_shape():
     )
     out = await interpret_m1(r, provider=None)
     assert out.provider == "fallback"
-    assert out.narrative  # still a valid fallback, no EO mention required
+    assert out.model == "deterministic"
+    assert len(out.disclaimers) == 3   # base disclaimers, no EO disclaimer appended
+    blob = (out.narrative + " " + " ".join(out.disclaimers)).lower()
+    assert "equal opportunity" not in blob
+    assert "vrais positifs" not in blob
+    assert "normati" not in blob
+    assert "simultan" not in blob
