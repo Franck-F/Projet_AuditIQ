@@ -26,6 +26,16 @@ const DATASET = {
   expires_at: null,
 };
 
+const DATASET_REEL = {
+  id: 'd2',
+  filename: 'r2.csv',
+  row_count: 4,
+  columns: ['genre', 'decision', 'reel'],
+  status: 'ready',
+  created_at: '',
+  expires_at: null,
+};
+
 describe('audit wizard', () => {
   it('M1: upload, choose module, map columns, create, redirect', async () => {
     uploadDataset.mockResolvedValue(DATASET);
@@ -159,5 +169,46 @@ describe('audit wizard', () => {
       new File(['x'], 'x.csv', { type: 'text/csv' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent(/échou/i);
+  });
+
+  it('M1: optional "colonne résultat réel" is sent as ground_truth_column', async () => {
+    const user = userEvent.setup();
+    (uploadDataset as unknown as Mock).mockResolvedValueOnce(DATASET_REEL);
+    (createAudit as unknown as Mock).mockResolvedValueOnce({ id: 'm1-gt' });
+    render(<NouveauPage />);
+
+    await user.click(
+      screen.getByRole('button', { name: /audit supervisé/i }),
+    );
+
+    const file = new File(['genre,decision,reel\nH,oui,oui\n'], 'r2.csv', {
+      type: 'text/csv',
+    });
+    await user.upload(screen.getByTestId('csv-input'), file);
+    await waitFor(() => expect(uploadDataset).toHaveBeenCalledWith(file));
+
+    await user.type(screen.getByLabelText(/titre/i), 'Test GT');
+    await user.selectOptions(
+      screen.getByLabelText(/attribut prot/i),
+      'genre',
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/colonne de d/i),
+      'decision',
+    );
+    await user.type(screen.getByLabelText(/valeur favorable/i), 'oui');
+    await user.selectOptions(
+      screen.getByLabelText(/résultat réel|vérité.?terrain/i),
+      'reel',
+    );
+    await user.click(
+      screen.getByRole('button', { name: /lancer l'audit/i }),
+    );
+
+    await waitFor(() =>
+      expect(createAudit as unknown as Mock).toHaveBeenCalled(),
+    );
+    const body = (createAudit as unknown as Mock).mock.calls.at(-1)![0];
+    expect(body.ground_truth_column).toBe('reel');
   });
 });
