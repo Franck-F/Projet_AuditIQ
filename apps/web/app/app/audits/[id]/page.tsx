@@ -457,6 +457,99 @@ export default function AuditResultPage() {
                 </table>
               </div>
             </section>
+
+            {(m1.equal_opportunity_diff != null || m1.truelabel_reason != null) && (
+              <section className="rounded-2xl border border-border-default bg-surface p-7">
+                <h2 className="mb-3 text-[18px] font-medium text-fg">
+                  Equal Opportunity &amp; Equalized Odds
+                </h2>
+
+                {m1.equal_opportunity_diff != null && (
+                  <div className="overflow-hidden rounded-md border border-border-default">
+                    <table className="w-full text-sm">
+                      <thead className="bg-surface-2 text-fg-muted">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium">Groupe</th>
+                          <th className="px-4 py-2 text-right font-medium">TPR</th>
+                          <th className="px-4 py-2 text-right font-medium">FPR</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {m1.groups.map((g) => (
+                          <tr key={g.value} className="border-t border-border-default">
+                            <td className="px-4 py-2 text-fg">{g.value}</td>
+                            <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
+                              {g.tpr != null ? g.tpr : '—'}
+                            </td>
+                            <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
+                              {g.fpr != null ? g.fpr : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                      Demographic Parity (écart)
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-fg">
+                      {m1.demographic_parity_diff}
+                    </div>
+                    {m1.demographic_parity_verdict && (
+                      <div className="mt-2">
+                        <StatusBadge tone={m1.demographic_parity_verdict as StatusTone}>
+                          {VERDICT[m1.demographic_parity_verdict].label}
+                        </StatusBadge>
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                      Equal Opportunity (écart TPR)
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-fg">
+                      {m1.equal_opportunity_diff != null ? m1.equal_opportunity_diff : '—'}
+                    </div>
+                    {m1.equal_opportunity_verdict && (
+                      <div className="mt-2">
+                        <StatusBadge tone={m1.equal_opportunity_verdict as StatusTone}>
+                          {VERDICT[m1.equal_opportunity_verdict].label}
+                        </StatusBadge>
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                      Equalized Odds (écart max)
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-fg">
+                      {m1.equalized_odds_diff != null ? m1.equalized_odds_diff : '—'}
+                    </div>
+                    {m1.equalized_odds_verdict && (
+                      <div className="mt-2">
+                        <StatusBadge tone={m1.equalized_odds_verdict as StatusTone}>
+                          {VERDICT[m1.equalized_odds_verdict].label}
+                        </StatusBadge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <p className="mt-4 rounded-md border border-border-default bg-surface-2 px-4 py-3 text-sm text-fg-secondary">
+                  DP/EO/EOdds ne peuvent être satisfaits simultanément — choix normatif
+                </p>
+
+                {m1.truelabel_reason && (
+                  <p className="mt-3 text-sm text-fg-muted">
+                    {m1.truelabel_reason}
+                  </p>
+                )}
+              </section>
+            )}
           </div>
         ) : null}
 
