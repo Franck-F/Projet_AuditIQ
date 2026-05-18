@@ -125,4 +125,16 @@ describe('audits api', () => {
     expect(body.lang).toBe('fr');
     expect('dataset_id' in body).toBe(false);
   });
+
+  it('createAudit M1 can include ground_truth_column', async () => {
+    const out = { id: 'm1-gt', module: 'M1', status: 'done' };
+    post.mockResolvedValueOnce({ data: out });
+    await createAudit({
+      dataset_id: 'd1', title: 't', protected_attribute: 'genre',
+      decision_column: 'embauche', favorable_value: 'oui',
+      privileged_value: null, ground_truth_column: 'reel',
+    } as Parameters<typeof createAudit>[0]);
+    const body = post.mock.calls.at(-1)![1];
+    expect(body.ground_truth_column).toBe('reel');
+  });
 });
