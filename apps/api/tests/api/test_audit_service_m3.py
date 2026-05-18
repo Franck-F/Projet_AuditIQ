@@ -75,3 +75,56 @@ async def test_run_m3_audit_persists_no_secret(ctx, monkeypatch):
     async with sm() as session:
         fetched = await audit_service.get_audit(session, out.id, org_id=org_id)
     assert isinstance(fetched.metrics, M3MetricsOut)
+
+
+async def test_run_m3_audit_all_calls_fail_is_non_fatal(ctx, monkeypatch):
+    sm, org_id, user_id = ctx
+    import app.integrations.llm_target as lt
+
+    monkeypatch.setattr(lt, "_resolve_ips", lambda host: ["93.184.216.34"])
+    with respx.mock:
+        respx.post("https://api.example.com/v1").mock(
+            return_value=httpx.Response(503)
+        )
+        async with sm() as session:
+            out = await audit_service.run_m3_audit(
+                session, org_id=org_id, user_id=user_id,
+                body=AuditCreate(title="M3 fail", module="M3",
+                                 target=_target(), lang="fr"),
+                llm_provider=None,
+            )
+    assert out.status == "done"
+    assert isinstance(out.metrics, M3MetricsOut)
+    assert out.metrics.n_calls_failed == out.metrics.n_pairs * 2 \
+        or out.metrics.n_calls_failed > 0
+    assert out.metrics.verdict in ("pass", "warn", "fail")
+
+
+async def test_run_m3_audit_deadline_zero_partial(ctx, monkeypatch):
+    sm, org_id, user_id = ctx
+    import app.integrations.llm_target as lt
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(lt, "_resolve_ips", lambda host: ["93.184.216.34"])
+    monkeypatch.setenv("LLM_AUDIT_DEADLINE_S", "0")
+    get_settings.cache_clear()
+    try:
+        with respx.mock:
+            respx.post("https://api.example.com/v1").mock(
+                return_value=httpx.Response(
+                    200,
+                    json={"choices": [{"message": {"content": "ok"}}]},
+                )
+            )
+            async with sm() as session:
+                out = await audit_service.run_m3_audit(
+                    session, org_id=org_id, user_id=user_id,
+                    body=AuditCreate(title="M3 deadline", module="M3",
+                                     target=_target(), lang="fr"),
+                    llm_provider=None,
+                )
+        assert out.status == "done"
+        assert isinstance(out.metrics, M3MetricsOut)
+        assert out.metrics.n_calls_failed >= 1  # deadline cancelled calls
+    finally:
+        get_settings.cache_clear()

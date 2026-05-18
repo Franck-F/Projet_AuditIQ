@@ -89,11 +89,13 @@ class AuditCreate(BaseModel):
                 self.protected_attribute is not None
                 or self.decision_column is not None
                 or self.favorable_value is not None
+                or self.privileged_value is not None
                 or self.config is not None
             ):
                 raise ValueError(
                     "module M3 : 'protected_attribute'/'decision_column'/"
-                    "'favorable_value'/'config' ne s'appliquent pas."
+                    "'favorable_value'/'privileged_value'/'config' ne "
+                    "s'appliquent pas."
                 )
         return self
 
