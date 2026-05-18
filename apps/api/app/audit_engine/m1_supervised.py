@@ -8,9 +8,12 @@ from .metrics import (
     decide_verdict,
     demographic_parity_diff,
     disparate_impacts,
+    gap_verdict,
+    group_confusion,
     pick_reference,
     risk_score,
     selection_rate,
+    truelabel_metrics,
 )
 from .types import GroupStat, M1Config, M1Result
 
@@ -143,6 +146,61 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     size_imbalance = 1.0 - (min_n / max_n) if max_n > 0 else 0.0
     score = risk_score(overall_di, size_imbalance)
 
+    eo_diff = eodds_diff = None
+    dp_verdict = eo_verdict = eodds_verdict = tl_reason = None
+    tpr_map: dict[str, float] = {}
+    fpr_map: dict[str, float] = {}
+    gt = config.ground_truth_column
+    if gt is not None:
+        if gt not in df.columns:
+            raise DatasetValidationError(
+                f"Colonne vérité-terrain « {gt} » absente du jeu de "
+                f"données.",
+                field="ground_truth_column",
+            )
+        tl = df[[pa, dc, gt]].dropna()
+        confusion: dict[str, dict[str, int]] = {}
+        if not tl.empty:
+            tl_pa = tl[pa].astype(str)
+            tl_pred = tl[dc].astype(str) == fav
+            tl_true = tl[gt].astype(str) == fav
+            for g in sorted(tl_pa.unique()):
+                m = tl_pa == g
+                confusion[g] = group_confusion(
+                    list(tl_pred[m]), list(tl_true[m])
+                )
+        if len(confusion) >= 2:
+            res = truelabel_metrics(confusion, privileged)
+            warnings.extend(res.skipped)
+            tpr_map, fpr_map = res.tpr, res.fpr
+            eo_diff = (
+                round(res.eo_diff, _ROUND)
+                if res.eo_diff is not None else None
+            )
+            eodds_diff = (
+                round(res.eodds_diff, _ROUND)
+                if res.eodds_diff is not None else None
+            )
+            tl_reason = res.reason
+            if eo_diff is not None:
+                eo_verdict = gap_verdict(
+                    eo_diff, config.di_fail_below, config.di_warn_below
+                )
+            if eodds_diff is not None:
+                eodds_verdict = gap_verdict(
+                    eodds_diff, config.di_fail_below, config.di_warn_below
+                )
+            dp_verdict = gap_verdict(
+                round(dpd, _ROUND), config.di_fail_below,
+                config.di_warn_below,
+            )
+        else:
+            tl_reason = (
+                "Equal Opportunity / Equalized Odds non calculable : "
+                "moins de 2 groupes exploitables après prise en compte "
+                "de la colonne vérité-terrain."
+            )
+
     group_stats = [
         GroupStat(
             value=g,
@@ -150,6 +208,8 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
             favorable=favs[g],
             selection_rate=round(rates[g], _ROUND),
             disparate_impact=round(di_map[g], _ROUND),
+            tpr=(round(tpr_map[g], _ROUND) if g in tpr_map else None),
+            fpr=(round(fpr_map[g], _ROUND) if g in fpr_map else None),
         )
         for g in groups
     ]
@@ -163,4 +223,10 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         verdict=verdict,
         risk_score=score,
         warnings=tuple(warnings),
+        equal_opportunity_diff=eo_diff,
+        equalized_odds_diff=eodds_diff,
+        demographic_parity_verdict=dp_verdict,
+        equal_opportunity_verdict=eo_verdict,
+        equalized_odds_verdict=eodds_verdict,
+        truelabel_reason=tl_reason,
     )
