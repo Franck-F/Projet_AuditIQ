@@ -134,3 +134,90 @@ def test_build_excel_m3_section():
     assert "AUD-2026-030" in text
     assert "genre" in text
     assert "n'est pas un certificat" in text
+
+
+def _m1_audit_with_eo() -> AuditOut:
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-010", title="Recrutement EO", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[
+                GroupStatOut(value="F", n=100, favorable=30,
+                             selection_rate=0.3, disparate_impact=0.6,
+                             tpr=0.5, fpr=0.4),
+                GroupStatOut(value="H", n=100, favorable=50,
+                             selection_rate=0.5, disparate_impact=1.0,
+                             tpr=0.9, fpr=0.1),
+            ],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            equal_opportunity_diff=0.4,
+            equalized_odds_diff=0.4,
+            demographic_parity_verdict="warn",
+            equal_opportunity_verdict="fail",
+            equalized_odds_verdict="fail",
+            truelabel_reason=None,
+        ),
+        interpretation=_interp(), pre_check=["Déséquilibre groupe F."],
+        config=None,
+    )
+
+
+def test_excel_m1_eo_section_present_and_absent():
+    b_with = build_excel_report(_m1_audit_with_eo())
+    b_without = build_excel_report(_m1_audit())
+
+    t_with = _text(b_with)
+    t_without = _text(b_without)
+
+    # EO section present when fields are set
+    assert "Equal Opportunity" in t_with
+    assert "Equalized Odds" in t_with
+    # per-group TPR values present
+    assert "0.5" in t_with
+    assert "0.9" in t_with
+
+    # Existing M1 cells present in BOTH
+    assert "Disparate Impact" in t_with
+    assert "Disparate Impact" in t_without
+
+    # No EO section when fields are absent
+    assert "Equal Opportunity" not in t_without
+    assert "Equalized Odds" not in t_without
+
+
+def test_excel_m1_with_truelabel_reason():
+    audit = _m1_audit_with_eo()
+    # rebuild with a truelabel_reason set
+    assert audit.metrics is not None
+    m = audit.metrics
+    assert isinstance(m, M1MetricsOut)
+    audit2 = AuditOut(
+        id=audit.id, code="AUD-2026-011", title=audit.title, status=audit.status,
+        module=audit.module, dataset_id=audit.dataset_id,
+        protected_attribute=audit.protected_attribute,
+        decision_column=audit.decision_column, favorable_value=audit.favorable_value,
+        privileged_value=audit.privileged_value,
+        created_at=audit.created_at, completed_at=audit.completed_at,
+        metrics=M1MetricsOut(
+            groups=m.groups, reference_value=m.reference_value,
+            disparate_impact=m.disparate_impact,
+            demographic_parity_diff=m.demographic_parity_diff,
+            worst_group=m.worst_group, verdict=m.verdict,
+            risk_score=m.risk_score, warnings=m.warnings,
+            equal_opportunity_diff=None,
+            equalized_odds_diff=None,
+            demographic_parity_verdict=None,
+            equal_opportunity_verdict=None,
+            equalized_odds_verdict=None,
+            truelabel_reason="Non calculable : moins de 2 groupes.",
+        ),
+        interpretation=audit.interpretation,
+        pre_check=audit.pre_check, config=audit.config,
+    )
+    t = _text(build_excel_report(audit2))
+    assert "Non calculable" in t
+    assert "Disparate Impact" in t
