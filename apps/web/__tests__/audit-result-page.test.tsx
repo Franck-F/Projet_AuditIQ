@@ -160,6 +160,67 @@ describe('audit result page', () => {
     expect(screen.queryByText(/Par cluster/i)).not.toBeInTheDocument();
   });
 
+  it('M1 result shows EO/Equalized Odds section when present', async () => {
+    useAudit.mockReturnValue({
+      data: {
+        id: 'm1-gt', code: 'AUD-2026-050', title: 'M1', status: 'done',
+        module: 'M1', dataset_id: 'd', protected_attribute: 'genre',
+        decision_column: 'embauche', favorable_value: 'oui',
+        privileged_value: 'homme', created_at: '2026-05-18T00:00:00Z',
+        completed_at: '2026-05-18T00:00:00Z',
+        metrics: {
+          groups: [{ value: 'homme', n: 40, favorable: 20,
+            selection_rate: 0.5, disparate_impact: 1.0, tpr: 0.9, fpr: 0.1 },
+            { value: 'femme', n: 40, favorable: 12, selection_rate: 0.3,
+            disparate_impact: 0.6, tpr: 0.5, fpr: 0.4 }],
+          reference_value: 'homme', disparate_impact: 0.6,
+          demographic_parity_diff: 0.2, worst_group: 'femme',
+          verdict: 'fail', risk_score: 70, warnings: [],
+          equal_opportunity_diff: 0.4, equalized_odds_diff: 0.4,
+          demographic_parity_verdict: 'fail',
+          equal_opportunity_verdict: 'fail',
+          equalized_odds_verdict: 'fail', truelabel_reason: null,
+        },
+        interpretation: { narrative: 'N.', ai_act_anchors: ['AI Act art. 10'],
+          disclaimers: ['Signal.'], provider: 'fallback',
+          model: 'deterministic' },
+        pre_check: [], config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect((await screen.findAllByText(/Equal Opportunity|Égalité des chances/i)).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Equalized Odds|cotes égalisées/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/0\.9|0\.5/).length).toBeGreaterThan(0); // TPR
+  });
+
+  it('M1 result WITHOUT EO is unchanged (no EO section)', async () => {
+    useAudit.mockReturnValue({
+      data: {
+        id: 'm1', code: 'AUD-2026-051', title: 'M1', status: 'done',
+        module: 'M1', dataset_id: 'd', protected_attribute: 'genre',
+        decision_column: 'embauche', favorable_value: 'oui',
+        privileged_value: 'homme', created_at: '2026-05-18T00:00:00Z',
+        completed_at: '2026-05-18T00:00:00Z',
+        metrics: {
+          groups: [{ value: 'homme', n: 40, favorable: 20,
+            selection_rate: 0.5, disparate_impact: 1.0 },
+            { value: 'femme', n: 40, favorable: 12, selection_rate: 0.3,
+            disparate_impact: 0.6 }],
+          reference_value: 'homme', disparate_impact: 0.6,
+          demographic_parity_diff: 0.2, worst_group: 'femme',
+          verdict: 'fail', risk_score: 70, warnings: [],
+        },
+        interpretation: null, pre_check: [], config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect(await screen.findByText('AUD-2026-051')).toBeInTheDocument();
+    expect(screen.queryByText(/Equalized Odds|cotes égalisées/i))
+      .not.toBeInTheDocument();
+  });
+
   it('renders report buttons and downloads Excel/PDF; PDF failure is non-silent', async () => {
     const { default: userEvent } = await import('@testing-library/user-event');
     useAudit.mockReturnValue({

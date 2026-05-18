@@ -106,6 +106,113 @@ def test_html_m3_section():
     assert "n'est pas un certificat" in h
 
 
+def _m1_with_eo() -> AuditOut:
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-010", title="Recrutement EO", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[
+                GroupStatOut(value="F", n=100, favorable=30,
+                             selection_rate=0.3, disparate_impact=0.6,
+                             tpr=0.5, fpr=0.4),
+                GroupStatOut(value="H", n=100, favorable=50,
+                             selection_rate=0.5, disparate_impact=1.0,
+                             tpr=0.9, fpr=0.1),
+            ],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            equal_opportunity_diff=0.4,
+            equalized_odds_diff=0.4,
+            demographic_parity_verdict="warn",
+            equal_opportunity_verdict="fail",
+            equalized_odds_verdict="fail",
+            truelabel_reason=None,
+        ),
+        interpretation=_interp(), pre_check=["Déséquilibre groupe F."],
+        config=None,
+    )
+
+
+def test_html_m1_eo_section_present_when_set():
+    h = build_report_html(_m1_with_eo())
+    assert "Equal Opportunity" in h
+    assert "Equalized Odds" in h
+    # per-group TPR values present
+    assert "0.5" in h
+    assert "0.9" in h
+    # existing M1 content still present
+    assert "Disparate Impact" in h
+    assert "AUD-2026-010" in h
+
+
+def test_html_m1_eo_section_absent_when_not_set():
+    h = build_report_html(_m1())
+    # no EO section
+    assert "Equal Opportunity" not in h
+    assert "Equalized Odds" not in h
+    # existing M1 content unchanged
+    assert "Disparate Impact" in h
+    assert "AUD-2026-001" in h
+
+
+def test_html_m1_eo_escapes_group_names():
+    """Group names and verdict strings in the EO section must be HTML-escaped."""
+    audit = AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-020", title="XSS EO", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[
+                GroupStatOut(value="<b>F</b>", n=100, favorable=30,
+                             selection_rate=0.3, disparate_impact=0.6,
+                             tpr=0.5, fpr=0.4),
+                GroupStatOut(value="H", n=100, favorable=50,
+                             selection_rate=0.5, disparate_impact=1.0,
+                             tpr=0.9, fpr=0.1),
+            ],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="<b>F</b>", verdict="fail",
+            risk_score=80, warnings=[],
+            equal_opportunity_diff=0.4,
+            equalized_odds_diff=0.4,
+            demographic_parity_verdict="warn",
+            equal_opportunity_verdict="fail",
+            equalized_odds_verdict="fail",
+            truelabel_reason=None,
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+    h = build_report_html(audit)
+    # raw tag must not appear in TPR/FPR rows
+    assert "<b>F</b>" not in h
+    assert "&lt;b&gt;F&lt;/b&gt;" in h
+
+
+def test_html_m1_truelabel_reason_shown():
+    audit = AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-021", title="Raison EO", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            truelabel_reason="Non calculable : moins de 2 groupes.",
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+    h = build_report_html(audit)
+    assert "Non calculable" in h
+    assert "Disparate Impact" in h
+
+
 def test_html_m3_escapes_hostile_llm_text():
     import datetime
     import uuid

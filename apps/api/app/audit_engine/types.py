@@ -13,6 +13,7 @@ class M1Config:
     di_warn_below: float = 0.90
     min_group_error: int = 5
     min_group_warn: int = 30
+    ground_truth_column: str | None = None
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,8 @@ class GroupStat:
     favorable: int
     selection_rate: float
     disparate_impact: float
+    tpr: float | None = None
+    fpr: float | None = None
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,12 @@ class M1Result:
     verdict: str
     risk_score: int
     warnings: tuple[str, ...] = ()
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
+    demographic_parity_verdict: str | None = None
+    equal_opportunity_verdict: str | None = None
+    equalized_odds_verdict: str | None = None
+    truelabel_reason: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "groups", tuple(self.groups))

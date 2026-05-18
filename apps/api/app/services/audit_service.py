@@ -88,6 +88,8 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                 favorable=g.favorable,
                 selection_rate=g.selection_rate,
                 disparate_impact=g.disparate_impact,
+                tpr=g.tpr,
+                fpr=g.fpr,
             )
             for g in result_obj.groups
         ],
@@ -100,6 +102,21 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
         verdict=cast(Verdict, result_obj.verdict),
         risk_score=result_obj.risk_score,
         warnings=list(result_obj.warnings),
+        equal_opportunity_diff=result_obj.equal_opportunity_diff,
+        equalized_odds_diff=result_obj.equalized_odds_diff,
+        demographic_parity_verdict=(
+            cast(Verdict, result_obj.demographic_parity_verdict)
+            if result_obj.demographic_parity_verdict is not None else None
+        ),
+        equal_opportunity_verdict=(
+            cast(Verdict, result_obj.equal_opportunity_verdict)
+            if result_obj.equal_opportunity_verdict is not None else None
+        ),
+        equalized_odds_verdict=(
+            cast(Verdict, result_obj.equalized_odds_verdict)
+            if result_obj.equalized_odds_verdict is not None else None
+        ),
+        truelabel_reason=result_obj.truelabel_reason,
     )
 
 
@@ -244,6 +261,7 @@ async def run_m1_audit(
             decision_column=dec_col,
             favorable_value=fav,
             privileged_value=priv,
+            ground_truth_column=body.ground_truth_column,
         ),
     )
 

@@ -108,13 +108,52 @@ def _detail(audit: AuditOut) -> str:
             f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
             for g in m.groups
         )
-        return (
+        base = (
             f"<h2>Module 1 — audit supervisé</h2>"
             f"<table class='kv'>{head}</table>"
             f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
             f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
             f"<tbody>{body}</tbody></table>"
         )
+        if m.equal_opportunity_diff is None and m.truelabel_reason is None:
+            return base
+        eo_parts: list[str] = []
+        eo_parts.append("<h2>Equal Opportunity / Equalized Odds</h2>")
+        if m.truelabel_reason is not None:
+            eo_parts.append(
+                f"<p class='note'>{_e(m.truelabel_reason)}</p>"
+            )
+        if m.equal_opportunity_diff is not None:
+            eo_kv = _rows(
+                [
+                    ("Equal Opportunity (écart TPR)",
+                     m.equal_opportunity_diff),
+                    ("Verdict Equal Opportunity",
+                     m.equal_opportunity_verdict or "—"),
+                    ("Equalized Odds (écart max TPR/FPR)",
+                     m.equalized_odds_diff),
+                    ("Verdict Equalized Odds",
+                     m.equalized_odds_verdict or "—"),
+                    ("Demographic Parity (verdict par métrique)",
+                     m.demographic_parity_verdict or "—"),
+                ]
+            )
+            tpr_rows = "".join(
+                f"<tr><td>{_e(g.value)}</td>"
+                f"<td>{_e(g.tpr if g.tpr is not None else '—')}</td>"
+                f"<td>{_e(g.fpr if g.fpr is not None else '—')}</td></tr>"
+                for g in m.groups
+            )
+            eo_parts.append(
+                f"<table class='kv'>{eo_kv}</table>"
+                f"<table class='grid'><thead><tr>"
+                f"<th>Groupe</th><th>TPR</th><th>FPR</th>"
+                f"</tr></thead><tbody>{tpr_rows}</tbody></table>"
+                f"<p class='note'>DP, Equal Opportunity et Equalized Odds ne "
+                f"peuvent être satisfaits simultanément — tout choix de "
+                f"métrique est un choix normatif, pas seulement technique.</p>"
+            )
+        return base + "".join(eo_parts)
     return "<p>Résultats indisponibles pour cet audit.</p>"
 
 

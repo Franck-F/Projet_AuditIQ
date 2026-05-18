@@ -130,3 +130,31 @@ def test_m3_types_are_frozen_and_coerce_sequences():
     assert res.warnings == ("w",)
     with pytest.raises(FrozenInstanceError):
         res.verdict = "fail"  # type: ignore[misc]
+
+
+def test_m1config_ground_truth_optional_default_none():
+    from app.audit_engine.types import M1Config
+
+    c = M1Config(protected_attribute="g", decision_column="d",
+                 favorable_value="oui")
+    assert c.ground_truth_column is None
+    c2 = M1Config(protected_attribute="g", decision_column="d",
+                  favorable_value="oui", ground_truth_column="reel")
+    assert c2.ground_truth_column == "reel"
+
+
+def test_m1result_truelabel_fields_default_none():
+    from app.audit_engine.types import GroupStat, M1Result
+
+    gs = GroupStat(value="a", n=10, favorable=4, selection_rate=0.4,
+                   disparate_impact=1.0)
+    assert gs.tpr is None and gs.fpr is None
+    r = M1Result(groups=(gs,), reference_value="a", disparate_impact=1.0,
+                 demographic_parity_diff=0.0, worst_group="a",
+                 verdict="pass", risk_score=10)
+    assert r.equal_opportunity_diff is None
+    assert r.equalized_odds_diff is None
+    assert r.demographic_parity_verdict is None
+    assert r.equal_opportunity_verdict is None
+    assert r.equalized_odds_verdict is None
+    assert r.truelabel_reason is None
