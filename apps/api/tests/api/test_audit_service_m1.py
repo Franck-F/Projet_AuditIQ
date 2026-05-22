@@ -37,6 +37,20 @@ async def ctx(tmp_path):
     await eng.dispose()
 
 
+async def _run_m1(session, store, *, org_id, user_id, body, llm_provider=None):
+    """Helper: submit + compute + commit + get_audit (replaces run_m1_audit)."""
+    pending = await audit_service.submit_audit(
+        session, org_id=org_id, user_id=user_id, body=body,
+        llm_provider=llm_provider,
+    )
+    audit = await audit_service._load_audit(session, pending.id)
+    await audit_service.compute_m1_audit(
+        session, audit, body, storage=store, llm_provider=llm_provider,
+    )
+    await session.commit()
+    return await audit_service.get_audit(session, pending.id, org_id=org_id)
+
+
 async def test_run_m1_audit_with_ground_truth_roundtrip(ctx):
     sm, org_id, user_id, upload, store = ctx
     # Both groups have real positives AND real negatives so EO + EOdds computable
@@ -49,14 +63,13 @@ async def test_run_m1_audit_with_ground_truth_roundtrip(ctx):
     ).encode()
     async with sm() as session:
         ds = await upload(session, org_id, user_id, csv)
-        out = await audit_service.run_m1_audit(
+        out = await _run_m1(
             session, store, org_id=org_id, user_id=user_id,
             body=AuditCreate(
                 dataset_id=ds.id, title="M1 GT",
                 protected_attribute="genre", decision_column="embauche",
                 favorable_value="oui", ground_truth_column="reel",
             ),
-            llm_provider=None,
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
@@ -75,13 +88,12 @@ async def test_run_m1_audit_without_ground_truth_unchanged(ctx):
            + "femme,oui\n" * 10 + "femme,non\n" * 30).encode()
     async with sm() as session:
         ds = await upload(session, org_id, user_id, csv)
-        out = await audit_service.run_m1_audit(
+        out = await _run_m1(
             session, store, org_id=org_id, user_id=user_id,
             body=AuditCreate(dataset_id=ds.id, title="M1 plain",
                              protected_attribute="genre",
                              decision_column="embauche",
                              favorable_value="oui"),
-            llm_provider=None,
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
@@ -100,7 +112,7 @@ async def test_run_m1_audit_with_secondary_attribute_roundtrip(ctx):
     ).encode()
     async with sm() as session:
         ds = await upload(session, org_id, user_id, csv)
-        out = await audit_service.run_m1_audit(
+        out = await _run_m1(
             session, store, org_id=org_id, user_id=user_id,
             body=AuditCreate(
                 dataset_id=ds.id, title="M1 intersection",
@@ -108,7 +120,6 @@ async def test_run_m1_audit_with_secondary_attribute_roundtrip(ctx):
                 favorable_value="oui",
                 secondary_protected_attribute="origine",
             ),
-            llm_provider=None,
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
@@ -127,7 +138,7 @@ async def test_run_m1_audit_without_secondary_attribute_unchanged(ctx):
            + "f,oui\n" * 10 + "f,non\n" * 30).encode()
     async with sm() as session:
         ds = await upload(session, org_id, user_id, csv)
-        out = await audit_service.run_m1_audit(
+        out = await _run_m1(
             session, store, org_id=org_id, user_id=user_id,
             body=AuditCreate(
                 dataset_id=ds.id, title="M1 plain",
@@ -135,7 +146,6 @@ async def test_run_m1_audit_without_secondary_attribute_unchanged(ctx):
                 decision_column="embauche",
                 favorable_value="oui",
             ),
-            llm_provider=None,
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)

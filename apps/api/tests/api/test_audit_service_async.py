@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.db import Base, make_engine
 from app.core.errors import APIError
-from app.integrations.storage import get_storage
+from app.integrations.storage import get_storage  # used by ctx fixture
 from app.models import Organization, User
 from app.schemas.audit import AuditCreate, M1MetricsOut
 from app.services import audit_service
@@ -145,21 +145,28 @@ async def test_load_audit_missing_raises(ctx):
             await audit_service._load_audit(session, uuid.uuid4())
 
 
-async def test_run_m1_audit_wrapper_still_done(ctx):
-    """The thin run_m1_audit wrapper preserves the synchronous done result."""
+async def test_submit_then_compute_m1_is_done(ctx):
+    """submit_audit + compute_m1_audit produces a done audit (replaces the
+    former run_m1_audit wrapper test now that the wrapper is deleted)."""
     sm, org_id, user_id, upload = ctx
     csv = ("genre,embauche\n" + "h,oui\n" * 20 + "h,non\n" * 20
            + "f,oui\n" * 10 + "f,non\n" * 30).encode()
     async with sm() as session:
         ds = await upload(session, org_id, user_id, csv)
-        out = await audit_service.run_m1_audit(
-            session, get_storage(), org_id=org_id, user_id=user_id,
-            body=AuditCreate(dataset_id=ds.id, title="M1 wrapper",
-                             protected_attribute="genre",
-                             decision_column="embauche",
-                             favorable_value="oui"),
+        body = AuditCreate(dataset_id=ds.id, title="M1 submit+compute",
+                           protected_attribute="genre",
+                           decision_column="embauche",
+                           favorable_value="oui")
+        pending = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id, body=body,
             llm_provider=None,
         )
+        audit = await audit_service._load_audit(session, pending.id)
+        await audit_service.compute_m1_audit(
+            session, audit, body, llm_provider=None,
+        )
+        await session.commit()
+        out = await audit_service.get_audit(session, pending.id, org_id=org_id)
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
 

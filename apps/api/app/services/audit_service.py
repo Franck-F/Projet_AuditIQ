@@ -435,31 +435,6 @@ async def compute_m1_audit(
     return _audit_out(audit, metrics_out, interpretation, pre_check)
 
 
-async def run_m1_audit(
-    session: AsyncSession,
-    storage: Storage,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
-    body: AuditCreate,
-    llm_provider: LLMProvider | None,
-) -> AuditOut:
-    """Thin synchronous wrapper: submit (validate + create) then compute.
-
-    Preserves the pre-split synchronous behaviour for the router and the
-    existing M1 service/router tests.
-    """
-    out = await submit_audit(
-        session, org_id=org_id, user_id=user_id, body=body,
-        llm_provider=llm_provider,
-    )
-    audit = await _load_audit(session, out.id)
-    await compute_m1_audit(
-        session, audit, body, storage=storage, llm_provider=llm_provider
-    )
-    await session.commit()
-    return await get_audit(session, out.id, org_id=org_id)
-
 
 async def compute_m2_audit(
     session: AsyncSession,
@@ -519,31 +494,6 @@ async def compute_m2_audit(
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
     return _audit_out(audit, metrics_out, interpretation, pre_check)
 
-
-async def run_m2_audit(
-    session: AsyncSession,
-    storage: Storage,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
-    body: AuditCreate,
-    llm_provider: LLMProvider | None,
-) -> AuditOut:
-    """Thin synchronous wrapper: submit (validate + create) then compute.
-
-    Preserves the pre-split synchronous behaviour for the router and the
-    existing M2 service/router tests.
-    """
-    out = await submit_audit(
-        session, org_id=org_id, user_id=user_id, body=body,
-        llm_provider=llm_provider,
-    )
-    audit = await _load_audit(session, out.id)
-    await compute_m2_audit(
-        session, audit, body, storage=storage, llm_provider=llm_provider
-    )
-    await session.commit()
-    return await get_audit(session, out.id, org_id=org_id)
 
 
 async def compute_m3_audit(
@@ -629,28 +579,6 @@ async def compute_m3_audit(
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
     return _audit_out(audit, metrics_out, interpretation, [])
 
-
-async def run_m3_audit(
-    session: AsyncSession,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
-    body: AuditCreate,
-    llm_provider: LLMProvider | None,
-) -> AuditOut:
-    """Thin synchronous wrapper: submit (validate + create) then compute.
-
-    Preserves the pre-split synchronous behaviour for the router and the
-    existing M3 service/router tests.
-    """
-    out = await submit_audit(
-        session, org_id=org_id, user_id=user_id, body=body,
-        llm_provider=llm_provider,
-    )
-    audit = await _load_audit(session, out.id)
-    await compute_m3_audit(session, audit, body, llm_provider=llm_provider)
-    await session.commit()
-    return await get_audit(session, out.id, org_id=org_id)
 
 
 async def get_audit(

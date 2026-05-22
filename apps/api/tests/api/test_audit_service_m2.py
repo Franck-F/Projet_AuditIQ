@@ -53,15 +53,21 @@ async def test_run_m2_audit_persists_and_returns(ctx):
             session, store, org_id=org_id, user_id=user_id,
             filename="r.csv", raw=_csv(), retention_days=30,
         )
-        out = await audit_service.run_m2_audit(
-            session, store, org_id=org_id, user_id=user_id,
-            body=AuditCreate(
-                dataset_id=dataset.id, title="Smoke M2", module="M2",
-                decision_column="embauche", favorable_value="oui",
-                config={"k": 2},
-            ),
+        body = AuditCreate(
+            dataset_id=dataset.id, title="Smoke M2", module="M2",
+            decision_column="embauche", favorable_value="oui",
+            config={"k": 2},
+        )
+        pending = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id, body=body,
             llm_provider=None,
         )
+        audit = await audit_service._load_audit(session, pending.id)
+        await audit_service.compute_m2_audit(
+            session, audit, body, storage=store, llm_provider=None,
+        )
+        await session.commit()
+        out = await audit_service.get_audit(session, pending.id, org_id=org_id)
     assert out.module == "M2"
     assert out.status == "done"
     assert isinstance(out.metrics, M2MetricsOut)

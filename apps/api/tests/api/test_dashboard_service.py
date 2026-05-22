@@ -42,14 +42,18 @@ async def test_summary_aggregates_org_audits(ctx):
             s, store, org_id=oid, user_id=uid, filename="r.csv",
             raw=_csv(), retention_days=30,
         )
-        await audit_service.run_m1_audit(
-            s, store, org_id=oid, user_id=uid,
-            body=AuditCreate(dataset_id=ds.id, title="R1",
+        body = AuditCreate(dataset_id=ds.id, title="R1",
                              protected_attribute="genre",
                              decision_column="decision",
-                             favorable_value="oui"),
-            llm_provider=None,
+                             favorable_value="oui")
+        pending = await audit_service.submit_audit(
+            s, org_id=oid, user_id=uid, body=body, llm_provider=None,
         )
+        audit = await audit_service._load_audit(s, pending.id)
+        await audit_service.compute_m1_audit(
+            s, audit, body, storage=store, llm_provider=None,
+        )
+        await s.commit()
         summary = await dashboard_service.get_summary(s, org_id=oid)
     assert summary.total_audits == 1
     assert summary.failing_audits == 1
