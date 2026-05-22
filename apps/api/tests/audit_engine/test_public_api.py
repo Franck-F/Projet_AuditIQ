@@ -51,3 +51,13 @@ def test_truelabel_helpers_exported():
     assert hasattr(ae, "run_m1")
     assert hasattr(ae, "M1Config")
     assert hasattr(ae, "M1Result")
+
+
+def test_intersectional_symbols_exported():
+    import app.audit_engine as ae
+
+    assert hasattr(ae, "run_intersectional")
+    assert hasattr(ae, "IntersectionalResult")
+    assert hasattr(ae, "IntersectionalCell")
+    assert hasattr(ae, "run_m1")
+    assert hasattr(ae, "M1Result")

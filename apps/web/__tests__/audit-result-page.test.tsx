@@ -221,6 +221,73 @@ describe('audit result page', () => {
       .not.toBeInTheDocument();
   });
 
+  it('M1 result shows the intersectional subgroup matrix when present', async () => {
+    useAudit.mockReturnValue({
+      data: {
+        id: 'm1-x', code: 'AUD-2026-060', title: 'M1', status: 'done',
+        module: 'M1', dataset_id: 'd', protected_attribute: 'genre',
+        decision_column: 'embauche', favorable_value: 'oui',
+        privileged_value: 'h', created_at: '2026-05-22T00:00:00Z',
+        completed_at: '2026-05-22T00:00:00Z',
+        metrics: {
+          groups: [{ value: 'h', n: 40, favorable: 28, selection_rate: 0.7,
+            disparate_impact: 1.0 }, { value: 'f', n: 40, favorable: 22,
+            selection_rate: 0.55, disparate_impact: 0.79 }],
+          reference_value: 'h', disparate_impact: 0.3,
+          demographic_parity_diff: 0.35, worst_group: 'f', verdict: 'fail',
+          risk_score: 80, warnings: [],
+          intersectional: {
+            cells: [
+              { primary_value: 'h', secondary_value: 'fr', n: 20,
+                favorable: 18, selection_rate: 0.9, disparate_impact: 1.0,
+                verdict: 'pass' },
+              { primary_value: 'f', secondary_value: 'etr', n: 20,
+                favorable: 3, selection_rate: 0.15, disparate_impact: 0.3,
+                verdict: 'fail' },
+            ],
+            reference_primary: 'h', reference_secondary: 'fr',
+            worst_primary: 'f', worst_secondary: 'etr',
+            disparate_impact: 0.3, demographic_parity_diff: 0.35,
+            verdict: 'fail', risk_score: 80, marginal_di: [0.86, 0.9],
+            warnings: [], reason: null,
+          },
+        },
+        interpretation: null, pre_check: [], config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect((await screen.findAllByText(/intersection|sous-groupe/i)).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/etr/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/0\.86|0\.9/).length).toBeGreaterThan(0); // marginal DI
+  });
+
+  it('M1 result WITHOUT intersectional is unchanged (no matrix)', async () => {
+    useAudit.mockReturnValue({
+      data: {
+        id: 'm1', code: 'AUD-2026-061', title: 'M1', status: 'done',
+        module: 'M1', dataset_id: 'd', protected_attribute: 'genre',
+        decision_column: 'embauche', favorable_value: 'oui',
+        privileged_value: 'h', created_at: '2026-05-22T00:00:00Z',
+        completed_at: '2026-05-22T00:00:00Z',
+        metrics: {
+          groups: [{ value: 'h', n: 40, favorable: 28, selection_rate: 0.7,
+            disparate_impact: 1.0 }, { value: 'f', n: 40, favorable: 22,
+            selection_rate: 0.55, disparate_impact: 0.79 }],
+          reference_value: 'h', disparate_impact: 0.79,
+          demographic_parity_diff: 0.15, worst_group: 'f', verdict: 'warn',
+          risk_score: 40, warnings: [],
+        },
+        interpretation: null, pre_check: [], config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect(await screen.findByText('AUD-2026-061')).toBeInTheDocument();
+    expect(screen.queryByText(/sous-groupe.*crois|matrice/i))
+      .not.toBeInTheDocument();
+  });
+
   it('renders report buttons and downloads Excel/PDF; PDF failure is non-silent', async () => {
     const { default: userEvent } = await import('@testing-library/user-event');
     useAudit.mockReturnValue({

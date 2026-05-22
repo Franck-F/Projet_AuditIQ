@@ -43,6 +43,8 @@ from app.schemas.audit import (
     FeatureContributionOut,
     GroupStatOut,
     InterpretationOut,
+    IntersectionalCellOut,
+    IntersectionalOut,
     M1MetricsOut,
     M2MetricsOut,
     M3MetricsOut,
@@ -117,6 +119,54 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
             if result_obj.equalized_odds_verdict is not None else None
         ),
         truelabel_reason=result_obj.truelabel_reason,
+        intersectional=(
+            IntersectionalOut(
+                cells=[
+                    IntersectionalCellOut(
+                        primary_value=c.primary_value,
+                        secondary_value=c.secondary_value,
+                        n=c.n,
+                        favorable=c.favorable,
+                        selection_rate=c.selection_rate,
+                        disparate_impact=c.disparate_impact,
+                        verdict=cast(Verdict, c.verdict),
+                        tpr=c.tpr,
+                        fpr=c.fpr,
+                    )
+                    for c in result_obj.intersectional.cells
+                ],
+                reference_primary=result_obj.intersectional.reference_primary,
+                reference_secondary=result_obj.intersectional.reference_secondary,
+                worst_primary=result_obj.intersectional.worst_primary,
+                worst_secondary=result_obj.intersectional.worst_secondary,
+                disparate_impact=result_obj.intersectional.disparate_impact,
+                demographic_parity_diff=result_obj.intersectional.demographic_parity_diff,
+                verdict=cast(Verdict, result_obj.intersectional.verdict),
+                risk_score=result_obj.intersectional.risk_score,
+                marginal_di=list(result_obj.intersectional.marginal_di),
+                equal_opportunity_diff=result_obj.intersectional.equal_opportunity_diff,
+                equalized_odds_diff=result_obj.intersectional.equalized_odds_diff,
+                demographic_parity_verdict=(
+                    cast(Verdict, result_obj.intersectional.demographic_parity_verdict)
+                    if result_obj.intersectional.demographic_parity_verdict is not None
+                    else None
+                ),
+                equal_opportunity_verdict=(
+                    cast(Verdict, result_obj.intersectional.equal_opportunity_verdict)
+                    if result_obj.intersectional.equal_opportunity_verdict is not None
+                    else None
+                ),
+                equalized_odds_verdict=(
+                    cast(Verdict, result_obj.intersectional.equalized_odds_verdict)
+                    if result_obj.intersectional.equalized_odds_verdict is not None
+                    else None
+                ),
+                warnings=list(result_obj.intersectional.warnings),
+                reason=result_obj.intersectional.reason,
+            )
+            if result_obj.intersectional is not None
+            else None
+        ),
     )
 
 
@@ -262,6 +312,8 @@ async def run_m1_audit(
             favorable_value=fav,
             privileged_value=priv,
             ground_truth_column=body.ground_truth_column,
+            secondary_protected_attribute=body.secondary_protected_attribute,
+            secondary_privileged_value=body.secondary_privileged_value,
         ),
     )
 

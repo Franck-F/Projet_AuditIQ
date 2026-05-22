@@ -14,6 +14,8 @@ class M1Config:
     min_group_error: int = 5
     min_group_warn: int = 30
     ground_truth_column: str | None = None
+    secondary_protected_attribute: str | None = None
+    secondary_privileged_value: object | None = None
 
 
 @dataclass(frozen=True)
@@ -43,10 +45,50 @@ class M1Result:
     equal_opportunity_verdict: str | None = None
     equalized_odds_verdict: str | None = None
     truelabel_reason: str | None = None
+    intersectional: IntersectionalResult | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "groups", tuple(self.groups))
         object.__setattr__(self, "warnings", tuple(self.warnings))
+
+
+@dataclass(frozen=True)
+class IntersectionalCell:
+    primary_value: str
+    secondary_value: str
+    n: int
+    favorable: int
+    selection_rate: float
+    disparate_impact: float
+    verdict: str
+    tpr: float | None = None
+    fpr: float | None = None
+
+
+@dataclass(frozen=True)
+class IntersectionalResult:
+    cells: tuple[IntersectionalCell, ...]
+    reference_primary: str
+    reference_secondary: str
+    worst_primary: str
+    worst_secondary: str
+    disparate_impact: float
+    demographic_parity_diff: float
+    verdict: str
+    risk_score: int
+    marginal_di: tuple[float, float]
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
+    demographic_parity_verdict: str | None = None
+    equal_opportunity_verdict: str | None = None
+    equalized_odds_verdict: str | None = None
+    warnings: tuple[str, ...] = ()
+    reason: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "cells", tuple(self.cells))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
+        object.__setattr__(self, "marginal_di", tuple(self.marginal_di))
 
 
 @dataclass(frozen=True)

@@ -7,6 +7,8 @@ from app.schemas.audit import (
     ClusterStatOut,
     GroupStatOut,
     InterpretationOut,
+    IntersectionalCellOut,
+    IntersectionalOut,
     M1MetricsOut,
     M2MetricsOut,
 )
@@ -272,3 +274,126 @@ def test_html_m3_escapes_hostile_llm_text():
     assert "&quot;&gt;&lt;img src=x onerror=alert(2)&gt;" in h
     assert "&lt;b&gt;x&lt;/b&gt;" in h
     assert "&lt;svg/onload=alert(3)&gt;" in h
+
+
+def _intersectional_out() -> IntersectionalOut:
+    return IntersectionalOut(
+        cells=[
+            IntersectionalCellOut(
+                primary_value="femme", secondary_value="etr",
+                n=20, favorable=4, selection_rate=0.2,
+                disparate_impact=0.4, verdict="fail",
+            ),
+            IntersectionalCellOut(
+                primary_value="femme", secondary_value="fr",
+                n=80, favorable=32, selection_rate=0.4,
+                disparate_impact=0.8, verdict="warn",
+            ),
+            IntersectionalCellOut(
+                primary_value="homme", secondary_value="etr",
+                n=30, favorable=15, selection_rate=0.5,
+                disparate_impact=1.0, verdict="pass",
+            ),
+            IntersectionalCellOut(
+                primary_value="homme", secondary_value="fr",
+                n=120, favorable=60, selection_rate=0.5,
+                disparate_impact=1.0, verdict="pass",
+            ),
+        ],
+        reference_primary="homme",
+        reference_secondary="fr",
+        worst_primary="femme",
+        worst_secondary="etr",
+        disparate_impact=0.4,
+        demographic_parity_diff=0.3,
+        verdict="fail",
+        risk_score=75,
+        marginal_di=[0.82, 0.9],
+    )
+
+
+def _m1_with_intersectional() -> AuditOut:
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-050", title="Recrutement Intersect.", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            intersectional=_intersectional_out(),
+        ),
+        interpretation=_interp(), pre_check=["Déséquilibre groupe F."],
+        config=None,
+    )
+
+
+def test_html_m1_intersectional_section_present():
+    h = build_report_html(_m1_with_intersectional())
+    # Crossed subgroup values present
+    assert "etr" in h
+    assert "femme" in h
+    assert "intersectionnel" in h
+    # marginal DI values
+    assert "0.82" in h
+    assert "0.9" in h
+    # worst cell labels
+    assert "femme" in h
+    # existing M1 content still present
+    assert "Disparate Impact" in h
+    assert "AUD-2026-050" in h
+
+
+def test_html_m1_intersectional_section_absent():
+    h = build_report_html(_m1())
+    # no intersectional section
+    assert "intersectionnel" not in h
+    assert "etr" not in h
+    # existing M1 content unchanged
+    assert "Disparate Impact" in h
+    assert "AUD-2026-001" in h
+
+
+def test_html_m1_intersectional_escapes_hostile_primary_value():
+    """primary_value with HTML tags must be _e-escaped in the intersectional section."""
+    hostile_primary = "<b>femme</b>"
+    audit = AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-060", title="XSS Intersect.", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            intersectional=IntersectionalOut(
+                cells=[
+                    IntersectionalCellOut(
+                        primary_value=hostile_primary, secondary_value="etr",
+                        n=20, favorable=4, selection_rate=0.2,
+                        disparate_impact=0.4, verdict="fail",
+                    ),
+                ],
+                reference_primary="homme",
+                reference_secondary="fr",
+                worst_primary=hostile_primary,
+                worst_secondary="etr",
+                disparate_impact=0.4,
+                demographic_parity_diff=0.3,
+                verdict="fail",
+                risk_score=75,
+                marginal_di=[0.82, 0.9],
+            ),
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+    h = build_report_html(audit)
+    # Raw hostile tag must NOT appear
+    assert "<b>femme</b>" not in h
+    # Escaped form must be present
+    assert "&lt;b&gt;femme&lt;/b&gt;" in h

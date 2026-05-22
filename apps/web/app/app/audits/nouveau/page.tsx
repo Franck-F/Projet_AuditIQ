@@ -24,6 +24,8 @@ const M1Schema = z.object({
   favorable_value: z.string().min(1, 'Requis'),
   privileged_value: z.string().optional(),
   ground_truth_column: z.string().optional(),
+  secondary_protected_attribute: z.string().optional(),
+  secondary_privileged_value: z.string().optional(),
 });
 type M1Values = z.infer<typeof M1Schema>;
 
@@ -69,6 +71,12 @@ function M1Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
         privileged_value: v.privileged_value ? v.privileged_value : null,
         ...(v.ground_truth_column
           ? { ground_truth_column: v.ground_truth_column }
+          : {}),
+        ...(v.secondary_protected_attribute
+          ? { secondary_protected_attribute: v.secondary_protected_attribute }
+          : {}),
+        ...(v.secondary_privileged_value
+          ? { secondary_privileged_value: v.secondary_privileged_value }
           : {}),
       });
       onDone(audit.id);
@@ -171,6 +179,24 @@ function M1Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
           defaultValue=""
           className={fieldCls}
           {...register('ground_truth_column')}
+        >
+          <option value="">—</option>
+          {dataset.columns.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="spa" className={labelCls}>
+          Attribut secondaire — analyse intersectionnelle (facultatif)
+        </label>
+        <select
+          id="spa"
+          defaultValue=""
+          className={fieldCls}
+          {...register('secondary_protected_attribute')}
         >
           <option value="">—</option>
           {dataset.columns.map((c) => (

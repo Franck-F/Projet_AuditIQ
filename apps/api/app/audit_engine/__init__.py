@@ -2,6 +2,7 @@
 
 from .anomaly_iqr import iqr_precheck
 from .errors import AuditEngineError, DatasetValidationError
+from .intersectional import run_intersectional
 from .llm_audit import run_m3
 from .llm_prompt_bank import PROMPT_BANK
 from .m1_supervised import run_m1
@@ -15,6 +16,8 @@ from .types import (
     DivergentExample,
     FeatureContribution,
     GroupStat,
+    IntersectionalCell,
+    IntersectionalResult,
     IqrReport,
     M1Config,
     M1Result,
@@ -55,4 +58,7 @@ __all__ = [
     "PromptVariant",
     "gap_verdict",
     "truelabel_metrics",
+    "IntersectionalCell",
+    "IntersectionalResult",
+    "run_intersectional",
 ]

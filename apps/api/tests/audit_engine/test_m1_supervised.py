@@ -122,3 +122,93 @@ def test_run_m1_ground_truth_missing_rows_dropna_independent():
     # but the audit still completes and DI/DP unaffected by gt NaNs
     assert r.disparate_impact is not None
     assert r.truelabel_reason is not None
+
+
+def test_run_m1_without_secondary_attribute_is_byte_identical():
+    import pandas as pd
+
+    from app.audit_engine.m1_supervised import run_m1
+    from app.audit_engine.types import M1Config
+
+    df = pd.DataFrame({
+        "g": ["a"] * 40 + ["b"] * 40,
+        "d": (["oui"] * 30 + ["non"] * 10) + (["oui"] * 12 + ["non"] * 28),
+    })
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui")
+    r = run_m1(df, cfg)
+    assert r.intersectional is None
+    assert r.verdict in ("pass", "warn", "fail")
+
+
+def test_run_m1_with_secondary_attribute_attaches_intersectional():
+    import pandas as pd
+
+    from app.audit_engine.m1_supervised import run_m1
+    from app.audit_engine.types import M1Config
+
+    df = pd.DataFrame({
+        "g": ["h"] * 40 + ["f"] * 40,
+        "o": (["fr"] * 20 + ["etr"] * 20) * 2,
+        "d": (["oui"] * 18 + ["non"] * 2 + ["oui"] * 14 + ["non"] * 6)
+        + (["oui"] * 12 + ["non"] * 8 + ["oui"] * 3 + ["non"] * 17),
+    })
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui", privileged_value="h",
+                   secondary_protected_attribute="o",
+                   secondary_privileged_value="fr")
+    r = run_m1(df, cfg)
+    assert r.intersectional is not None
+    assert len(r.intersectional.cells) == 4
+    # global verdict/risk are driven by the intersectional worst cell
+    assert r.verdict == r.intersectional.verdict
+    assert r.risk_score == r.intersectional.risk_score
+
+
+def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
+    """True Simpson's-paradox / Gender-Shades scenario.
+
+    Each attribute audited ALONE is compliant (marginal DI ≈ 1.0, ≥ 0.8)
+    because the favourable subgroups cancel: h×fr=0.9, f×etr=0.9 (high)
+    vs h×etr=0.3, f×fr=0.3 (low) → genre marginal: h=f=0.6 → DI 1.0 ;
+    origine marginal: fr=etr=0.6 → DI 1.0.
+    But the worst crossed cell DI = 0.3/0.9 ≈ 0.33 → intersectional FAIL.
+    """
+    import pandas as pd
+
+    from app.audit_engine.m1_supervised import run_m1
+    from app.audit_engine.types import M1Config
+
+    df = pd.DataFrame({
+        "g": ["h"] * 60 + ["f"] * 60,
+        "o": (["fr"] * 30 + ["etr"] * 30) + (["fr"] * 30 + ["etr"] * 30),
+        "d": (["oui"] * 27 + ["non"] * 3 + ["oui"] * 9 + ["non"] * 21)
+        + (["oui"] * 9 + ["non"] * 21 + ["oui"] * 27 + ["non"] * 3),
+    })
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui",
+                   secondary_protected_attribute="o")
+    r = run_m1(df, cfg)
+    assert r.intersectional is not None
+    assert r.intersectional.verdict == "fail"
+    # Both marginal DIs are genuinely compliant (≥ 0.8)
+    assert all(d >= 0.8 for d in r.intersectional.marginal_di)
+    # The worst crossed cell DI is strictly worse than every marginal DI
+    assert min(r.intersectional.marginal_di) > r.intersectional.disparate_impact
+
+
+def test_run_m1_missing_secondary_column_raises():
+    import pandas as pd
+    import pytest
+
+    from app.audit_engine.errors import DatasetValidationError
+    from app.audit_engine.m1_supervised import run_m1
+    from app.audit_engine.types import M1Config
+
+    df = pd.DataFrame({"g": ["a"] * 10 + ["b"] * 10,
+                       "d": ["oui", "non"] * 10})
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui",
+                   secondary_protected_attribute="absent")
+    with pytest.raises(DatasetValidationError):
+        run_m1(df, cfg)

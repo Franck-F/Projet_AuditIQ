@@ -24,6 +24,10 @@ _TRUELABEL_DISCLAIMER = (
     "calculées par groupe, les groupes dégénérés (aucun positif ou négatif réel) "
     "sont ignorés."
 )
+_INTERSECTIONAL_SPARSITY_DISCLAIMER = (
+    "Les sous-groupes croisés à effectif insuffisant sont exclus ; "
+    "l'analyse intersectionnelle est indicative sur de petits jeux de données."
+)
 
 
 def load_prompt_template() -> str:
@@ -62,6 +66,16 @@ def _metrics_json(result: M1Result) -> str:
         data["equalized_odds_verdict"] = result.equalized_odds_verdict
         if result.truelabel_reason is not None:
             data["truelabel_reason"] = result.truelabel_reason
+    if result.intersectional is not None:
+        ix = result.intersectional
+        data["intersectional"] = {
+            "worst_primary": ix.worst_primary,
+            "worst_secondary": ix.worst_secondary,
+            "disparate_impact": ix.disparate_impact,
+            "marginal_di": list(ix.marginal_di),
+            "verdict": ix.verdict,
+            "risk_score": ix.risk_score,
+        }
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -113,6 +127,22 @@ def _fallback(result: M1Result) -> InterpretationOut:
         )
         narrative += eo_narrative
         disclaimers.append(_TRUELABEL_DISCLAIMER)
+
+    if result.intersectional is not None:
+        ix = result.intersectional
+        marginal_di_primary, marginal_di_secondary = ix.marginal_di
+        ix_narrative = (
+            f" L'analyse intersectionnelle (croisement des deux attributs protégés) "
+            f"révèle que le sous-groupe croisé le plus défavorisé est "
+            f"« {ix.worst_primary} × {ix.worst_secondary} », "
+            f"avec un Disparate Impact de {ix.disparate_impact}. "
+            f"En comparaison, les DI marginaux de chaque attribut pris séparément "
+            f"({marginal_di_primary} et {marginal_di_secondary}) paraissent bien "
+            f"moins sévères — c'est l'effet Gender Shades : l'intersection amplifie "
+            f"les désavantages que l'analyse unidimensionnelle sous-estime."
+        )
+        narrative += ix_narrative
+        disclaimers.append(_INTERSECTIONAL_SPARSITY_DISCLAIMER)
 
     return InterpretationOut(
         narrative=narrative,
