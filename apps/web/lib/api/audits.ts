@@ -20,6 +20,8 @@ export type AuditCreate = {
   favorable_value: string;
   privileged_value: string | null;
   ground_truth_column?: string | null;
+  secondary_protected_attribute?: string | null;
+  secondary_privileged_value?: string | null;
 };
 
 export type GroupStatOut = {
@@ -30,6 +32,38 @@ export type GroupStatOut = {
   disparate_impact: number;
   tpr?: number | null;
   fpr?: number | null;
+};
+
+export type IntersectionalCellOut = {
+  primary_value: string;
+  secondary_value: string;
+  n: number;
+  favorable: number;
+  selection_rate: number;
+  disparate_impact: number;
+  verdict: Verdict;
+  tpr?: number | null;
+  fpr?: number | null;
+};
+
+export type IntersectionalOut = {
+  cells: IntersectionalCellOut[];
+  reference_primary: string;
+  reference_secondary: string;
+  worst_primary: string;
+  worst_secondary: string;
+  disparate_impact: number;
+  demographic_parity_diff: number;
+  verdict: Verdict;
+  risk_score: number;
+  marginal_di: number[];
+  equal_opportunity_diff?: number | null;
+  equalized_odds_diff?: number | null;
+  demographic_parity_verdict?: Verdict | null;
+  equal_opportunity_verdict?: Verdict | null;
+  equalized_odds_verdict?: Verdict | null;
+  warnings: string[];
+  reason?: string | null;
 };
 
 export type M1MetricsOut = {
@@ -47,6 +81,7 @@ export type M1MetricsOut = {
   equal_opportunity_verdict?: Verdict | null;
   equalized_odds_verdict?: Verdict | null;
   truelabel_reason?: string | null;
+  intersectional?: IntersectionalOut | null;
 };
 
 export type InterpretationOut = {
