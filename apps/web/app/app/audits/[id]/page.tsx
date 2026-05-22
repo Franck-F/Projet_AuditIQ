@@ -550,6 +550,122 @@ export default function AuditResultPage() {
                 )}
               </section>
             )}
+
+            {m1.intersectional != null && (
+              <section className="rounded-2xl border border-border-default bg-surface p-7">
+                <h2 className="mb-3 text-[18px] font-medium text-fg">
+                  Analyse intersectionnelle — sous-groupes croisés
+                </h2>
+
+                <div className="mb-4 overflow-hidden rounded-md border border-border-default">
+                  <table className="w-full text-sm">
+                    <thead className="bg-surface-2 text-fg-muted">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium">Sous-groupe (primaire × secondaire)</th>
+                        <th className="px-4 py-2 text-right font-medium">Effectif</th>
+                        <th className="px-4 py-2 text-right font-medium">Taux sélection</th>
+                        <th className="px-4 py-2 text-right font-medium">DI</th>
+                        <th className="px-4 py-2 text-left font-medium">Verdict</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {m1.intersectional.cells.map((cell) => {
+                        const isWorst =
+                          cell.primary_value === m1.intersectional!.worst_primary &&
+                          cell.secondary_value === m1.intersectional!.worst_secondary;
+                        const vInfo = VERDICT[cell.verdict];
+                        return (
+                          <tr
+                            key={`${cell.primary_value}-${cell.secondary_value}`}
+                            className={`border-t border-border-default${isWorst ? ' bg-status-fail-bg' : ''}`}
+                          >
+                            <td className="px-4 py-2 text-fg">
+                              {cell.primary_value} × {cell.secondary_value}
+                              {isWorst && (
+                                <span className="ml-2 rounded bg-status-fail-bg px-1.5 py-0.5 text-[11px] text-status-fail">
+                                  pire cellule
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
+                              {cell.n}
+                            </td>
+                            <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
+                              {cell.selection_rate}
+                            </td>
+                            <td className="px-4 py-2 text-right tabular-nums text-fg-secondary">
+                              {cell.disparate_impact}
+                            </td>
+                            <td className="px-4 py-2">
+                              <StatusBadge tone={vInfo.tone}>{vInfo.label}</StatusBadge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                      DI marginal — attribut primaire seul
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-fg">
+                      {m1.intersectional.marginal_di[0] ?? 0}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                      DI marginal — attribut secondaire seul
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-fg">
+                      {m1.intersectional.marginal_di[1] ?? 0}
+                    </div>
+                  </div>
+                </div>
+
+                {(m1.intersectional.equal_opportunity_diff != null ||
+                  m1.intersectional.equalized_odds_diff != null) && (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                        Equal Opportunity intersectionnelle (écart TPR)
+                      </div>
+                      <div className="mt-1 text-xl font-semibold text-fg">
+                        {m1.intersectional.equal_opportunity_diff != null
+                          ? m1.intersectional.equal_opportunity_diff
+                          : '—'}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border-default bg-surface-2 p-4">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
+                        Equalized Odds intersectionnelle (écart max)
+                      </div>
+                      <div className="mt-1 text-xl font-semibold text-fg">
+                        {m1.intersectional.equalized_odds_diff != null
+                          ? m1.intersectional.equalized_odds_diff
+                          : '—'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {m1.intersectional.warnings.length > 0 && (
+                  <ul className="mt-4 rounded-md border border-status-warn-border bg-status-warn-bg p-3 text-sm text-status-warn">
+                    {m1.intersectional.warnings.map((w) => (
+                      <li key={w}>{w}</li>
+                    ))}
+                  </ul>
+                )}
+
+                {m1.intersectional.reason && (
+                  <p className="mt-3 text-sm text-fg-muted">
+                    {m1.intersectional.reason}
+                  </p>
+                )}
+              </section>
+            )}
           </div>
         ) : null}
 
