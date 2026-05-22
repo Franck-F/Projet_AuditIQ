@@ -336,6 +336,43 @@ export default function AuditResultPage() {
     );
   }
 
+  if (data.status === 'pending' || data.status === 'running') {
+    return (
+      <>
+        <Topbar
+          crumbs={[
+            { label: 'Audits', href: '/app/audits' },
+            { label: data.code ?? data.id },
+          ]}
+        />
+        <main role="status" className="flex-1 px-8 py-8">
+          <p className="text-fg-secondary">Analyse en cours…</p>
+        </main>
+      </>
+    );
+  }
+
+  if (data.status === 'failed') {
+    return (
+      <>
+        <Topbar
+          crumbs={[
+            { label: 'Audits', href: '/app/audits' },
+            { label: data.code ?? data.id },
+          ]}
+        />
+        <main className="flex-1 px-8 py-8">
+          <div role="alert" className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail">
+            <strong>L&apos;audit a échoué.</strong>
+            <p className="mt-1">
+              {data.error ?? "Une erreur inattendue s'est produite."}
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   const m = data.metrics;
   const v = m ? VERDICT[m.verdict] : null;
   const isM3 = data.module === 'M3' && m !== null;
