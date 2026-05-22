@@ -166,8 +166,14 @@ def test_run_m1_with_secondary_attribute_attaches_intersectional():
 
 
 def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
-    """Gender Shades scenario: each attribute alone is compliant, but a
-    crossed cell is not -> intersectional verdict fail."""
+    """True Simpson's-paradox / Gender-Shades scenario.
+
+    Each attribute audited ALONE is compliant (marginal DI ≈ 1.0, ≥ 0.8)
+    because the favourable subgroups cancel: h×fr=0.9, f×etr=0.9 (high)
+    vs h×etr=0.3, f×fr=0.3 (low) → genre marginal: h=f=0.6 → DI 1.0 ;
+    origine marginal: fr=etr=0.6 → DI 1.0.
+    But the worst crossed cell DI = 0.3/0.9 ≈ 0.33 → intersectional FAIL.
+    """
     import pandas as pd
 
     from app.audit_engine.m1_supervised import run_m1
@@ -176,8 +182,8 @@ def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
     df = pd.DataFrame({
         "g": ["h"] * 60 + ["f"] * 60,
         "o": (["fr"] * 30 + ["etr"] * 30) + (["fr"] * 30 + ["etr"] * 30),
-        "d": (["oui"] * 29 + ["non"] + ["oui"] * 9 + ["non"] * 21)
-        + (["oui"] * 21 + ["non"] * 9 + ["oui"] + ["non"] * 29),
+        "d": (["oui"] * 27 + ["non"] * 3 + ["oui"] * 9 + ["non"] * 21)
+        + (["oui"] * 9 + ["non"] * 21 + ["oui"] * 27 + ["non"] * 3),
     })
     cfg = M1Config(protected_attribute="g", decision_column="d",
                    favorable_value="oui",
@@ -185,7 +191,9 @@ def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
     r = run_m1(df, cfg)
     assert r.intersectional is not None
     assert r.intersectional.verdict == "fail"
-    # both marginal DIs are far less severe than the crossed worst DI
+    # Both marginal DIs are genuinely compliant (≥ 0.8)
+    assert all(d >= 0.8 for d in r.intersectional.marginal_di)
+    # The worst crossed cell DI is strictly worse than every marginal DI
     assert min(r.intersectional.marginal_di) > r.intersectional.disparate_impact
 
 
