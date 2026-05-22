@@ -304,6 +304,7 @@ class AuditOut(BaseModel):
     privileged_value: str | None = None
     created_at: datetime.datetime
     completed_at: datetime.datetime | None = None
+    error: str | None = None
     metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | None = None
     interpretation: InterpretationOut | None = None
     pre_check: list[str] = []
