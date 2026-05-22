@@ -148,4 +148,15 @@ describe('audits api', () => {
     const body = post.mock.calls.at(-1)![1];
     expect(body.secondary_protected_attribute).toBe('origine');
   });
+
+  it('fetchAudit surfaces a failed audit error', async () => {
+    get.mockResolvedValueOnce({ data: {
+      id: 'a1', code: null, title: 't', status: 'failed', module: 'M1',
+      error: 'compute exploded', metrics: null, interpretation: null,
+      pre_check: [], created_at: '2026-05-22T00:00:00Z', completed_at: null,
+    } });
+    const a = await fetchAudit('a1');
+    expect(a.status).toBe('failed');
+    expect(a.error).toBe('compute exploded');
+  });
 });
