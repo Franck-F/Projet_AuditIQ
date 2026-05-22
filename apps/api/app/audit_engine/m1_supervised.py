@@ -4,6 +4,7 @@ from __future__ import annotations
 import pandas as pd
 
 from .errors import DatasetValidationError
+from .intersectional import run_intersectional
 from .metrics import (
     decide_verdict,
     demographic_parity_diff,
@@ -214,14 +215,32 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         for g in groups
     ]
 
+    intersectional = None
+    sa = config.secondary_protected_attribute
+    if sa is not None:
+        if sa not in df.columns:
+            raise DatasetValidationError(
+                f"Colonne attribut protégé secondaire « {sa} » absente "
+                f"du jeu de données.",
+                field="secondary_protected_attribute",
+            )
+        if sa == config.protected_attribute:
+            raise DatasetValidationError(
+                "L'attribut protégé secondaire doit différer du primaire.",
+                field="secondary_protected_attribute",
+            )
+        intersectional = run_intersectional(df, config)
+
     return M1Result(
         groups=tuple(group_stats),
         reference_value=reference,
         disparate_impact=round(overall_di, _ROUND),
         demographic_parity_diff=round(dpd, _ROUND),
         worst_group=worst_group,
-        verdict=verdict,
-        risk_score=score,
+        verdict=(intersectional.verdict if intersectional is not None
+                 else verdict),
+        risk_score=(intersectional.risk_score if intersectional is not None
+                    else score),
         warnings=tuple(warnings),
         equal_opportunity_diff=eo_diff,
         equalized_odds_diff=eodds_diff,
@@ -229,4 +248,5 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         equal_opportunity_verdict=eo_verdict,
         equalized_odds_verdict=eodds_verdict,
         truelabel_reason=tl_reason,
+        intersectional=intersectional,
     )
