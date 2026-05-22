@@ -158,3 +158,52 @@ def test_m1result_truelabel_fields_default_none():
     assert r.equal_opportunity_verdict is None
     assert r.equalized_odds_verdict is None
     assert r.truelabel_reason is None
+
+
+def test_m1config_secondary_attribute_optional_default_none():
+    from app.audit_engine.types import M1Config
+
+    c = M1Config(protected_attribute="g", decision_column="d",
+                 favorable_value="oui")
+    assert c.secondary_protected_attribute is None
+    assert c.secondary_privileged_value is None
+    c2 = M1Config(protected_attribute="g", decision_column="d",
+                  favorable_value="oui", secondary_protected_attribute="o",
+                  secondary_privileged_value="fr")
+    assert c2.secondary_protected_attribute == "o"
+    assert c2.secondary_privileged_value == "fr"
+
+
+def test_intersectional_dataclasses():
+    from app.audit_engine.types import (
+        IntersectionalCell,
+        IntersectionalResult,
+        M1Result,
+    )
+
+    cell = IntersectionalCell(
+        primary_value="femme", secondary_value="etrangere", n=20,
+        favorable=4, selection_rate=0.2, disparate_impact=0.4,
+        verdict="fail",
+    )
+    assert cell.tpr is None and cell.fpr is None
+    r = IntersectionalResult(
+        cells=(cell,), reference_primary="homme",
+        reference_secondary="francaise", worst_primary="femme",
+        worst_secondary="etrangere", disparate_impact=0.4,
+        demographic_parity_diff=0.3, verdict="fail", risk_score=70,
+        marginal_di=(0.85, 0.88),
+    )
+    assert r.equal_opportunity_diff is None
+    assert r.equalized_odds_diff is None
+    assert r.demographic_parity_verdict is None
+    assert r.equal_opportunity_verdict is None
+    assert r.equalized_odds_verdict is None
+    assert r.warnings == ()
+    assert r.reason is None
+    res = M1Result(
+        groups=(), reference_value="a", disparate_impact=1.0,
+        demographic_parity_diff=0.0, worst_group="a", verdict="pass",
+        risk_score=10,
+    )
+    assert res.intersectional is None
