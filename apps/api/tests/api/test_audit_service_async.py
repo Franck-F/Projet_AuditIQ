@@ -162,3 +162,55 @@ async def test_run_m1_audit_wrapper_still_done(ctx):
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
+
+
+async def test_run_audit_job_pending_to_done(ctx):
+    sm, org_id, user_id, upload = ctx
+    csv = ("genre,embauche\n" + "h,oui\n" * 20 + "h,non\n" * 20
+           + "f,oui\n" * 10 + "f,non\n" * 30).encode()
+    async with sm() as session:
+        ds = await upload(session, org_id, user_id, csv)
+        body = AuditCreate(dataset_id=ds.id, title="M1",
+                           protected_attribute="genre",
+                           decision_column="embauche",
+                           favorable_value="oui")
+        out = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id, body=body,
+            llm_provider=None)
+    # background job uses its OWN session maker
+    await audit_service.run_audit_job(out.id, body, None,
+                                      session_maker=sm)
+    async with sm() as session:
+        done = await audit_service.get_audit(session, out.id,
+                                             org_id=org_id)
+    assert done.status == "done"
+    assert done.metrics is not None
+    assert done.error is None
+
+
+async def test_run_audit_job_failure_sets_failed_and_error(ctx, monkeypatch):
+    sm, org_id, user_id, upload = ctx
+    csv = ("genre,embauche\n" + "h,oui\n" * 20 + "h,non\n" * 20
+           + "f,oui\n" * 10 + "f,non\n" * 30).encode()
+    async with sm() as session:
+        ds = await upload(session, org_id, user_id, csv)
+        body = AuditCreate(dataset_id=ds.id, title="M1",
+                           protected_attribute="genre",
+                           decision_column="embauche",
+                           favorable_value="oui")
+        out = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id, body=body,
+            llm_provider=None)
+
+    async def _boom(*a, **k):
+        raise RuntimeError("compute exploded")
+
+    monkeypatch.setattr(audit_service, "compute_m1_audit", _boom)
+    # must NOT raise even though the computation throws
+    await audit_service.run_audit_job(out.id, body, None,
+                                      session_maker=sm)
+    async with sm() as session:
+        failed = await audit_service.get_audit(session, out.id,
+                                               org_id=org_id)
+    assert failed.status == "failed"
+    assert failed.error and "exploded" in failed.error

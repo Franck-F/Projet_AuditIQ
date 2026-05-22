@@ -8,7 +8,7 @@ from typing import cast
 
 import pandas as pd
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.audit_engine import (
     PROMPT_BANK,
@@ -26,6 +26,7 @@ from app.audit_engine import (
     run_m3,
 )
 from app.core.config import get_settings
+from app.core.db import _sessionmaker
 from app.core.errors import NotFoundError
 from app.integrations.llm_target import TargetConfig, assert_public_url, call_target_llm
 from app.integrations.storage import Storage, get_storage
@@ -251,6 +252,7 @@ def _audit_out(
         privileged_value=audit.privileged_value,
         created_at=audit.created_at,
         completed_at=audit.completed_at,
+        error=audit.error,
         metrics=metrics,
         interpretation=interpretation,
         pre_check=pre_check or [],
@@ -682,3 +684,63 @@ async def get_audit(
         else None
     )
     return _audit_out(audit, metrics, interpretation, pre_check)
+
+
+_audit_semaphore: asyncio.Semaphore | None = None
+
+
+def _get_audit_semaphore() -> asyncio.Semaphore:
+    """Lazily create the module-level concurrency gate.
+
+    Built lazily (not at import time) so the ``asyncio.Semaphore`` binds to
+    the running event loop, not whatever loop happens to exist at import.
+    """
+    global _audit_semaphore
+    if _audit_semaphore is None:
+        _audit_semaphore = asyncio.Semaphore(
+            get_settings().audit_max_concurrency
+        )
+    return _audit_semaphore
+
+
+async def run_audit_job(
+    audit_id: uuid.UUID,
+    body: AuditCreate,
+    llm_provider: LLMProvider | None,
+    *,
+    session_maker: async_sessionmaker[AsyncSession] | None = None,
+) -> None:
+    """Background runner. Bounded by the audit semaphore. Uses a FRESH DB
+    session (the request session is closed once the 202 is sent). Never
+    propagates: any failure -> status='failed' + a non-empty error message,
+    so an audit is never left stuck in 'running'.
+
+    ``body`` is received in memory (NOT reconstructed from the DB) so it can
+    carry the M3 target secret to the computation without persisting it.
+    ``session_maker`` defaults to the application async-session factory
+    (``app.core.db._sessionmaker()``); tests inject their own.
+    """
+    maker = session_maker if session_maker is not None else _sessionmaker()
+    async with _get_audit_semaphore(), maker() as session:
+        try:
+            audit = await _load_audit(session, audit_id)
+            audit.status = "running"
+            await session.commit()
+            compute = {
+                "M1": compute_m1_audit,
+                "M2": compute_m2_audit,
+                "M3": compute_m3_audit,
+            }[audit.module]
+            await compute(session, audit, body, llm_provider=llm_provider)
+            await session.commit()
+        except Exception as exc:  # noqa: BLE001 — background job must never
+            # crash the event loop; surface the failure on the audit row.
+            await session.rollback()
+            try:
+                audit = await _load_audit(session, audit_id)
+                audit.status = "failed"
+                audit.error = str(exc) or exc.__class__.__name__
+                await session.commit()
+            except Exception:  # noqa: BLE001 — last-resort: nothing more
+                # we can do if even the failure write fails.
+                await session.rollback()
