@@ -214,3 +214,103 @@ async def test_run_audit_job_failure_sets_failed_and_error(ctx, monkeypatch):
                                                org_id=org_id)
     assert failed.status == "failed"
     assert failed.error and "exploded" in failed.error
+
+
+async def test_run_audit_job_concurrency_is_bounded(ctx, monkeypatch):
+    """Prove the semaphore caps concurrency at audit_max_concurrency=1.
+
+    Strategy (Event-based, no sleep):
+    - Force the cap to 1 via env var + clear settings/semaphore caches.
+    - Submit two M1 audits.
+    - Patch compute_m1_audit so the FIRST call sets a 'started' event and
+      then awaits a 'release' event before delegating — holding the single
+      semaphore slot.
+    - Launch both jobs as concurrent tasks.
+    - After the first job signals it has started, assert job 2 is still
+      'pending' (not 'running'), proving it cannot acquire the slot.
+    - Release job 1; gather both; assert both end as 'done'.
+    """
+    import asyncio
+
+    from app.core.config import get_settings
+    from app.services.audit_service import run_audit_job
+
+    sm, org_id, user_id, upload = ctx
+
+    # ── Force concurrency cap to 1 ────────────────────────────────────────
+    monkeypatch.setenv("AUDIT_MAX_CONCURRENCY", "1")
+    get_settings.cache_clear()
+    monkeypatch.setattr(audit_service, "_audit_semaphore", None)
+
+    csv = ("genre,embauche\n" + "h,oui\n" * 20 + "h,non\n" * 20
+           + "f,oui\n" * 10 + "f,non\n" * 30).encode()
+
+    # ── Submit two independent audits (both pending) ───────────────────────
+    async with sm() as session:
+        ds = await upload(session, org_id, user_id, csv)
+
+    body = AuditCreate(
+        dataset_id=ds.id, title="M1",
+        protected_attribute="genre",
+        decision_column="embauche",
+        favorable_value="oui",
+    )
+
+    async with sm() as session:
+        out1 = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id,
+            body=body, llm_provider=None,
+        )
+    async with sm() as session:
+        out2 = await audit_service.submit_audit(
+            session, org_id=org_id, user_id=user_id,
+            body=body, llm_provider=None,
+        )
+
+    # ── Wrap compute_m1_audit to gate the first call ───────────────────────
+    real_compute = audit_service.compute_m1_audit
+    first_started = asyncio.Event()
+    release = asyncio.Event()
+    call_count = 0
+
+    async def _gated_compute(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            first_started.set()       # signal: first job has the slot
+            await release.wait()      # hold the slot until the test releases it
+        return await real_compute(*args, **kwargs)
+
+    monkeypatch.setattr(audit_service, "compute_m1_audit", _gated_compute)
+
+    # ── Launch both jobs concurrently ─────────────────────────────────────
+    task1 = asyncio.create_task(run_audit_job(out1.id, body, None, session_maker=sm))
+    task2 = asyncio.create_task(run_audit_job(out2.id, body, None, session_maker=sm))
+
+    # Wait until job 1 has entered compute (holds the semaphore slot)
+    await first_started.wait()
+
+    # ── Assert job 2 is still pending (blocked outside the semaphore) ─────
+    async with sm() as session:
+        status2 = (
+            await audit_service.get_audit(session, out2.id, org_id=org_id)
+        ).status
+    assert status2 == "pending", (
+        f"Expected job2 to still be 'pending' while job1 holds the only "
+        f"semaphore slot, but got '{status2}'"
+    )
+
+    # ── Release the gate; wait for both to finish ─────────────────────────
+    release.set()
+    await asyncio.gather(task1, task2)
+
+    # ── Assert both audits ended as 'done' ────────────────────────────────
+    async with sm() as session:
+        done1 = await audit_service.get_audit(session, out1.id, org_id=org_id)
+        done2 = await audit_service.get_audit(session, out2.id, org_id=org_id)
+
+    assert done1.status == "done", f"job1 ended as '{done1.status}'"
+    assert done2.status == "done", f"job2 ended as '{done2.status}'"
+
+    # ── Restore caches so other tests are unaffected ──────────────────────
+    get_settings.cache_clear()
