@@ -153,6 +153,55 @@ def build_excel_report(audit: AuditOut) -> bytes:
                          "technique."],
                     ],
                 )
+        if m.intersectional is not None:
+            ix = m.intersectional
+            _rows(
+                detail,
+                [
+                    [],
+                    ["Analyse intersectionnelle"],
+                    ["Disparate Impact intersectionnel", ix.disparate_impact],
+                    ["Demographic Parity (écart intersectionnel)",
+                     ix.demographic_parity_diff],
+                    ["Verdict intersectionnel", ix.verdict],
+                    ["Pire sous-groupe (primaire)", ix.worst_primary],
+                    ["Pire sous-groupe (secondaire)", ix.worst_secondary],
+                    ["DI marginal (attribut primaire)", ix.marginal_di[0]
+                     if len(ix.marginal_di) > 0 else "—"],
+                    ["DI marginal (attribut secondaire)", ix.marginal_di[1]
+                     if len(ix.marginal_di) > 1 else "—"],
+                    [],
+                    ["Matrice croisée : sous-groupes"],
+                    ["Groupe primaire", "Groupe secondaire", "Effectif",
+                     "Favorables", "Taux", "DI", "Verdict"],
+                ],
+            )
+            for cell in ix.cells:
+                detail.append([
+                    cell.primary_value, cell.secondary_value, cell.n,
+                    cell.favorable, cell.selection_rate,
+                    cell.disparate_impact, cell.verdict,
+                ])
+            if ix.equal_opportunity_diff is not None:
+                _rows(
+                    detail,
+                    [
+                        [],
+                        ["Equal Opportunity intersectionnel (écart TPR)",
+                         ix.equal_opportunity_diff,
+                         "Verdict EO intersect.",
+                         ix.equal_opportunity_verdict or "—"],
+                        ["Equalized Odds intersectionnel (écart max TPR/FPR)",
+                         ix.equalized_odds_diff,
+                         "Verdict Eq. Odds intersect.",
+                         ix.equalized_odds_verdict or "—"],
+                    ],
+                )
+            if ix.warnings:
+                for w in ix.warnings:
+                    detail.append(["Avertissement", w])
+            if ix.reason is not None:
+                _rows(detail, [["Note", ix.reason]])
 
     conformity = wb.create_sheet("Conformité")
     _rows(
