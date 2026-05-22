@@ -23,6 +23,7 @@ const M1Schema = z.object({
   decision_column: z.string().min(1, 'Requis'),
   favorable_value: z.string().min(1, 'Requis'),
   privileged_value: z.string().optional(),
+  ground_truth_column: z.string().optional(),
 });
 type M1Values = z.infer<typeof M1Schema>;
 
@@ -66,6 +67,9 @@ function M1Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
         decision_column: v.decision_column,
         favorable_value: v.favorable_value,
         privileged_value: v.privileged_value ? v.privileged_value : null,
+        ...(v.ground_truth_column
+          ? { ground_truth_column: v.ground_truth_column }
+          : {}),
       });
       onDone(audit.id);
     } catch {
@@ -157,6 +161,24 @@ function M1Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
           Groupe de référence (optionnel)
         </label>
         <input id="pv" className={fieldCls} {...register('privileged_value')} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="gtc" className={labelCls}>
+          Colonne résultat réel (vérité-terrain) — facultatif
+        </label>
+        <select
+          id="gtc"
+          defaultValue=""
+          className={fieldCls}
+          {...register('ground_truth_column')}
+        >
+          <option value="">—</option>
+          {dataset.columns.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
       </div>
       <Button type="submit" variant="primary" size="lg" disabled={busy}>
         {busy ? 'Analyse…' : "Lancer l'audit"}

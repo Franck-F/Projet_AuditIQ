@@ -19,6 +19,7 @@ export type AuditCreate = {
   decision_column: string;
   favorable_value: string;
   privileged_value: string | null;
+  ground_truth_column?: string | null;
 };
 
 export type GroupStatOut = {
@@ -27,6 +28,8 @@ export type GroupStatOut = {
   favorable: number;
   selection_rate: number;
   disparate_impact: number;
+  tpr?: number | null;
+  fpr?: number | null;
 };
 
 export type M1MetricsOut = {
@@ -38,6 +41,12 @@ export type M1MetricsOut = {
   verdict: Verdict;
   risk_score: number;
   warnings: string[];
+  equal_opportunity_diff?: number | null;
+  equalized_odds_diff?: number | null;
+  demographic_parity_verdict?: Verdict | null;
+  equal_opportunity_verdict?: Verdict | null;
+  equalized_odds_verdict?: Verdict | null;
+  truelabel_reason?: string | null;
 };
 
 export type InterpretationOut = {

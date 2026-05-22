@@ -39,6 +39,7 @@ class AuditCreate(BaseModel):
     decision_column: str | None = None
     favorable_value: str | None = None
     privileged_value: str | None = None
+    ground_truth_column: str | None = None
     config: M2ConfigIn | None = None
     target: TargetIn | None = None
     lang: str = "fr"
@@ -62,6 +63,14 @@ class AuditCreate(BaseModel):
                 )
             if self.config is not None:
                 raise ValueError("module M1 : 'config' n'est pas accepté.")
+            if self.ground_truth_column is not None and (
+                self.ground_truth_column == self.decision_column
+                or self.ground_truth_column == self.protected_attribute
+            ):
+                raise ValueError(
+                    "module M1 : 'ground_truth_column' doit différer des "
+                    "colonnes décision et attribut protégé."
+                )
         elif self.module == "M2":
             if self.dataset_id is None:
                 raise ValueError("module M2 : 'dataset_id' est requis.")
@@ -82,6 +91,11 @@ class AuditCreate(BaseModel):
                 raise ValueError(
                     "module M2 : 'privileged_value' ne s'applique pas."
                 )
+            if self.ground_truth_column is not None:
+                raise ValueError(
+                    "module M2 : 'ground_truth_column' ne s'applique pas "
+                    "(M1 uniquement)."
+                )
         elif self.module == "M3":
             if self.target is None:
                 raise ValueError("module M3 : 'target' est requis.")
@@ -90,12 +104,13 @@ class AuditCreate(BaseModel):
                 or self.decision_column is not None
                 or self.favorable_value is not None
                 or self.privileged_value is not None
+                or self.ground_truth_column is not None
                 or self.config is not None
             ):
                 raise ValueError(
                     "module M3 : 'protected_attribute'/'decision_column'/"
-                    "'favorable_value'/'privileged_value'/'config' ne "
-                    "s'appliquent pas."
+                    "'favorable_value'/'privileged_value'/'ground_truth_column'/"
+                    "'config' ne s'appliquent pas."
                 )
         return self
 
@@ -108,6 +123,8 @@ class GroupStatOut(BaseModel):
     favorable: int
     selection_rate: float
     disparate_impact: float
+    tpr: float | None = None
+    fpr: float | None = None
 
 
 class M1MetricsOut(BaseModel):
@@ -121,6 +138,12 @@ class M1MetricsOut(BaseModel):
     verdict: Verdict
     risk_score: int
     warnings: list[str]
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
+    demographic_parity_verdict: Verdict | None = None
+    equal_opportunity_verdict: Verdict | None = None
+    equalized_odds_verdict: Verdict | None = None
+    truelabel_reason: str | None = None
 
 
 class FeatureContributionOut(BaseModel):

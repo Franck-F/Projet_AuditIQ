@@ -112,6 +112,47 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 [g.value, g.n, g.favorable, g.selection_rate,
                  g.disparate_impact]
             )
+        if m.equal_opportunity_diff is not None or m.truelabel_reason is not None:
+            _rows(detail, [[]])
+            if m.truelabel_reason is not None:
+                _rows(detail, [["Note vérité-terrain", m.truelabel_reason]])
+            if m.equal_opportunity_diff is not None:
+                _rows(
+                    detail,
+                    [
+                        ["Métriques vérité-terrain (Equal Opportunity / Equalized Odds)"],
+                        ["Equal Opportunity (écart TPR)",
+                         m.equal_opportunity_diff,
+                         "Verdict EO",
+                         m.equal_opportunity_verdict or "—"],
+                        ["Equalized Odds (écart max TPR/FPR)",
+                         m.equalized_odds_diff,
+                         "Verdict Eq. Odds",
+                         m.equalized_odds_verdict or "—"],
+                        ["Demographic Parity (verdict)",
+                         m.demographic_parity_verdict or "—"],
+                        [],
+                        ["Groupe", "TPR", "FPR"],
+                    ],
+                )
+                for g in m.groups:
+                    if g.tpr is not None or g.fpr is not None:
+                        detail.append(
+                            [g.value,
+                             g.tpr if g.tpr is not None else "—",
+                             g.fpr if g.fpr is not None else "—"]
+                        )
+                _rows(
+                    detail,
+                    [
+                        [],
+                        ["Note normative",
+                         "DP, Equal Opportunity et Equalized Odds ne peuvent "
+                         "être satisfaits simultanément — tout choix de "
+                         "métrique est un choix normatif, pas seulement "
+                         "technique."],
+                    ],
+                )
 
     conformity = wb.create_sheet("Conformité")
     _rows(

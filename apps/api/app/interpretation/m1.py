@@ -19,6 +19,11 @@ _DISCLAIMERS = [
     "L'appréciation réglementaire finale relève de votre responsabilité.",
     "Analyse limitée à l'attribut protégé et à la décision fournis.",
 ]
+_TRUELABEL_DISCLAIMER = (
+    "Métriques EO/Equalized Odds sensibles à la qualité de la vérité-terrain ; "
+    "calculées par groupe, les groupes dégénérés (aucun positif ou négatif réel) "
+    "sont ignorés."
+)
 
 
 def load_prompt_template() -> str:
@@ -30,36 +35,50 @@ def load_prompt_template() -> str:
 
 
 def _metrics_json(result: M1Result) -> str:
-    return json.dumps(
-        {
-            "disparate_impact": result.disparate_impact,
-            "demographic_parity_diff": result.demographic_parity_diff,
-            "verdict": result.verdict,
-            "risk_score": result.risk_score,
-            "worst_group": result.worst_group,
-            "reference_value": result.reference_value,
-            "groups": [
-                {
-                    "value": g.value,
-                    "n": g.n,
-                    "selection_rate": g.selection_rate,
-                    "disparate_impact": g.disparate_impact,
-                }
-                for g in result.groups
-            ],
-            "warnings": list(result.warnings),
-        },
-        ensure_ascii=False,
-    )
+    data: dict[str, object] = {
+        "disparate_impact": result.disparate_impact,
+        "demographic_parity_diff": result.demographic_parity_diff,
+        "verdict": result.verdict,
+        "risk_score": result.risk_score,
+        "worst_group": result.worst_group,
+        "reference_value": result.reference_value,
+        "groups": [
+            {
+                "value": g.value,
+                "n": g.n,
+                "selection_rate": g.selection_rate,
+                "disparate_impact": g.disparate_impact,
+                **({"tpr": g.tpr, "fpr": g.fpr} if g.tpr is not None else {}),
+            }
+            for g in result.groups
+        ],
+        "warnings": list(result.warnings),
+    }
+    if result.equal_opportunity_diff is not None:
+        data["equal_opportunity_diff"] = result.equal_opportunity_diff
+        data["equalized_odds_diff"] = result.equalized_odds_diff
+        data["demographic_parity_verdict"] = result.demographic_parity_verdict
+        data["equal_opportunity_verdict"] = result.equal_opportunity_verdict
+        data["equalized_odds_verdict"] = result.equalized_odds_verdict
+        if result.truelabel_reason is not None:
+            data["truelabel_reason"] = result.truelabel_reason
+    return json.dumps(data, ensure_ascii=False)
+
+
+_VERDICT_LABELS = {
+    "fail": "non respectée (écart significatif)",
+    "warn": "respectée avec une marge faible",
+    "pass": "respectée",
+}
+_DI_VERDICT_LABELS = {
+    "fail": "non respectée (impact disproportionné)",
+    "warn": "respectée mais avec une marge faible",
+    "pass": "respectée",
+}
 
 
 def _fallback(result: M1Result) -> InterpretationOut:
-    verdicts = {
-        "fail": "non respectée (impact disproportionné)",
-        "warn": "respectée mais avec une marge faible",
-        "pass": "respectée",
-    }
-    phrase = verdicts.get(result.verdict, result.verdict)
+    phrase = _DI_VERDICT_LABELS.get(result.verdict, result.verdict)
     narrative = (
         f"Sur l'attribut analysé, la règle des 4/5 est {phrase}. "
         f"Le Disparate Impact est de {result.disparate_impact} "
@@ -68,10 +87,37 @@ def _fallback(result: M1Result) -> InterpretationOut:
         f"Score de risque agrégé : {result.risk_score}/100. "
         f"Verdict : {result.verdict}."
     )
+    disclaimers = list(_DISCLAIMERS)
+
+    if result.equal_opportunity_diff is not None:
+        dp_v = _VERDICT_LABELS.get(
+            result.demographic_parity_verdict or "", result.demographic_parity_verdict or ""
+        )
+        eo_v = _VERDICT_LABELS.get(
+            result.equal_opportunity_verdict or "", result.equal_opportunity_verdict or ""
+        )
+        eodds_v = _VERDICT_LABELS.get(
+            result.equalized_odds_verdict or "", result.equalized_odds_verdict or ""
+        )
+        eo_narrative = (
+            f" Concernant les métriques de vérité-terrain : "
+            f"la Parité Démographique (différence) est {dp_v} "
+            f"(écart : {result.demographic_parity_diff}). "
+            f"L'Equal Opportunity (écart de vrais positifs entre groupes) est {eo_v} "
+            f"(écart : {result.equal_opportunity_diff}). "
+            f"L'Equalized Odds (écart max TPR/FPR) est {eodds_v} "
+            f"(écart : {result.equalized_odds_diff}). "
+            f"Demographic Parity, Equal Opportunity et Equalized Odds ne peuvent être "
+            f"satisfaits simultanément — tout choix de métrique est un choix normatif, "
+            f"pas seulement technique."
+        )
+        narrative += eo_narrative
+        disclaimers.append(_TRUELABEL_DISCLAIMER)
+
     return InterpretationOut(
         narrative=narrative,
         ai_act_anchors=list(_AI_ACT_ANCHORS),
-        disclaimers=list(_DISCLAIMERS),
+        disclaimers=disclaimers,
         provider="fallback",
         model="deterministic",
     )

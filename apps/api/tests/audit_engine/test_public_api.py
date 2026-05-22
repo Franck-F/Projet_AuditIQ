@@ -40,3 +40,14 @@ def test_m3_public_api_surface():
     ):
         assert name in ae.__all__
         assert hasattr(ae, name)
+
+
+def test_truelabel_helpers_exported():
+    import app.audit_engine as ae
+
+    assert hasattr(ae, "gap_verdict")
+    assert hasattr(ae, "truelabel_metrics")
+    # existing M1 surface still exported
+    assert hasattr(ae, "run_m1")
+    assert hasattr(ae, "M1Config")
+    assert hasattr(ae, "M1Result")
