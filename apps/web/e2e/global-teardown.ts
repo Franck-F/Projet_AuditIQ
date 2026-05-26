@@ -17,7 +17,6 @@ export default async function globalTeardown(_config: FullConfig): Promise<void>
     const raw = await fs.readFile(META_PATH, 'utf8');
     meta = JSON.parse(raw) as Meta;
   } catch {
-    // eslint-disable-next-line no-console
     console.warn('[e2e teardown] no meta.json — nothing to clean');
     return;
   }
@@ -31,6 +30,5 @@ export default async function globalTeardown(_config: FullConfig): Promise<void>
   } catch {
     /* ignore */
   }
-  // eslint-disable-next-line no-console
   console.log(`[e2e teardown] removed test user ${meta.email} (${meta.user_id})`);
 }

@@ -1,17 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { type Page, test, expect } from '@playwright/test';
 import { waitForAuditDone, sawRunningState } from './helpers/poll';
 
 const HTTPBIN_OK = 'https://httpbin.org/anything';
 const SSRF_METADATA = 'http://169.254.169.254/latest';
 const HTTPBIN_503 = 'https://httpbin.org/status/503';
 
-async function chooseModuleM3(page: import('@playwright/test').Page): Promise<void> {
+async function chooseModuleM3(page: Page): Promise<void> {
   await page.goto('/app/audits/nouveau');
   await page.getByRole('button', { name: /llm|chatbot/i }).click();
 }
 
 async function fillM3Form(
-  page: import('@playwright/test').Page,
+  page: Page,
   url: string,
   title: string,
 ): Promise<void> {

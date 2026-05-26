@@ -93,7 +93,6 @@ export async function adminDeleteUser(userId: string): Promise<void> {
   );
   if (!r.ok && r.status !== 404) {
     // best-effort; do not throw from teardown
-    // eslint-disable-next-line no-console
     console.warn(
       `[e2e teardown] adminDeleteUser ${userId}: ${r.status} ${await r.text().catch(() => '')}`,
     );

@@ -1,18 +1,18 @@
 import path from 'node:path';
-import { test, expect } from '@playwright/test';
+import { type Page, test, expect } from '@playwright/test';
 import { waitForAuditDone } from './helpers/poll';
 
 const FIXTURES = path.resolve(__dirname, 'fixtures');
 
-async function gotoNewAudit(page: import('@playwright/test').Page): Promise<void> {
+async function gotoNewAudit(page: Page): Promise<void> {
   await page.goto('/app/audits/nouveau');
 }
 
-async function chooseModuleM1(page: import('@playwright/test').Page): Promise<void> {
+async function chooseModuleM1(page: Page): Promise<void> {
   await page.getByRole('button', { name: /audit supervis/i }).click();
 }
 
-async function uploadCsv(page: import('@playwright/test').Page, file: string): Promise<void> {
+async function uploadCsv(page: Page, file: string): Promise<void> {
   const input = page.locator('[data-testid="csv-input"]');
   await input.setInputFiles(path.join(FIXTURES, file));
 }

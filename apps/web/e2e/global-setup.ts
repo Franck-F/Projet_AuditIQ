@@ -59,6 +59,5 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
   };
   await fs.writeFile(META_PATH, JSON.stringify(meta, null, 2), 'utf8');
 
-  // eslint-disable-next-line no-console
   console.log(`[e2e setup] created test user ${email} (${user.id})`);
 }

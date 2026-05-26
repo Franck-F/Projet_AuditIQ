@@ -45,7 +45,6 @@ export async function cleanupUserData(userId: string): Promise<void> {
       await c.query('delete from organizations where id = $1', [orgId]);
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[e2e teardown] cleanupUserData failed (best-effort):', err);
   }
 }
