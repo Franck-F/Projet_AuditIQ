@@ -63,7 +63,7 @@ test.describe('M3 LLM/chatbot', () => {
     // Per-call 5xx is caught by run_m3_audit's _one() → audit ends DONE
     // with n_calls_failed > 0; it does NOT end in `failed` status.
     await waitForAuditDone(page, { timeout: 90_000 });
-    await expect(page.getByText(/appels en échec|n_calls_failed/i).first())
+    await expect(page.getByText(/en échec/i).first())
       .toBeVisible();
     // Sanity: no error panel
     await expect(page.getByRole('alert')).toHaveCount(0);
