@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     llm_audit_deadline_s: int = 45
     llm_target_max_bytes: int = 1_000_000
     llm_target_allow_http: bool = False
+    audit_max_concurrency: int = 3
     max_upload_mb: int = 10
     retention_days_default: int = 30
     gemini_api_key: SecretStr = SecretStr("")

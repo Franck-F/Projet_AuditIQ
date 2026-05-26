@@ -46,16 +46,20 @@ async def ctx(tmp_path):
             s, store, org_id=org_id, user_id=uid,
             filename="r.csv", raw=_recruitment_csv(), retention_days=30,
         )
-        out = await audit_service.run_m1_audit(
-            s, store, org_id=org_id, user_id=uid,
-            body=AuditCreate(
-                dataset_id=ds.id, title="Recrutement",
-                protected_attribute="genre", decision_column="decision",
-                favorable_value="oui",
-            ),
-            llm_provider=None,
+        body = AuditCreate(
+            dataset_id=ds.id, title="Recrutement",
+            protected_attribute="genre", decision_column="decision",
+            favorable_value="oui",
         )
-        audit_id = out.id
+        pending = await audit_service.submit_audit(
+            s, org_id=org_id, user_id=uid, body=body, llm_provider=None,
+        )
+        audit = await audit_service._load_audit(s, pending.id)
+        await audit_service.compute_m1_audit(
+            s, audit, body, storage=store, llm_provider=None,
+        )
+        await s.commit()
+        audit_id = pending.id
 
     yield sm, org_id, audit_id
     await eng.dispose()

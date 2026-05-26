@@ -8,7 +8,7 @@ from typing import cast
 
 import pandas as pd
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.audit_engine import (
     PROMPT_BANK,
@@ -26,9 +26,10 @@ from app.audit_engine import (
     run_m3,
 )
 from app.core.config import get_settings
+from app.core.db import _sessionmaker
 from app.core.errors import NotFoundError
 from app.integrations.llm_target import TargetConfig, assert_public_url, call_target_llm
-from app.integrations.storage import Storage
+from app.integrations.storage import Storage, get_storage
 from app.interpretation.base import LLMProvider
 from app.interpretation.m1 import interpret_m1
 from app.interpretation.m2 import interpret_m2
@@ -251,6 +252,7 @@ def _audit_out(
         privileged_value=audit.privileged_value,
         created_at=audit.created_at,
         completed_at=audit.completed_at,
+        error=audit.error,
         metrics=metrics,
         interpretation=interpretation,
         pre_check=pre_check or [],
@@ -258,33 +260,132 @@ def _audit_out(
     )
 
 
-async def run_m1_audit(
-    session: AsyncSession,
-    storage: Storage,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
-    body: AuditCreate,
-    llm_provider: LLMProvider | None,
-) -> AuditOut:
-    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
-    dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
+async def _load_audit(session: AsyncSession, audit_id: uuid.UUID) -> Audit:
+    """Fetch an Audit row by id (no org filter — used by the split pipeline and
+    the background job). Raises NotFoundError (-> RFC 7807 404) if absent.
+    """
+    audit = (
+        await session.execute(select(Audit).where(Audit.id == audit_id))
+    ).scalar_one_or_none()
+    if audit is None:
+        raise NotFoundError("Audit introuvable.")
+    return audit
 
-    audit = Audit(
-        code=await _next_code(session, org_id),
+
+def _build_audit_row(
+    body: AuditCreate, *, org_id: uuid.UUID, user_id: uuid.UUID, code: str
+) -> Audit:
+    """Build the pending Audit row for a request, reproducing exactly the row
+    each former ``run_mX_audit`` created — dispatched by ``body.module``.
+    """
+    if body.module == "M3":
+        assert body.target is not None  # guaranteed by AuditCreate._per_module
+        lang = body.lang if body.lang in ("fr", "en") else "fr"
+        return Audit(
+            code=code,
+            org_id=org_id,
+            dataset_id=None,
+            module="M3",
+            title=body.title,
+            status="pending",
+            protected_attribute=None,
+            decision_column=None,
+            favorable_value=None,
+            privileged_value=None,
+            config={
+                # Secrets (e.g. Authorization header) are NEVER persisted.
+                "target": {
+                    "url": body.target.url,
+                    "method": body.target.method,
+                    "response_path": body.target.response_path,
+                },
+                "bank_version": _BANK_VERSION,
+                "lang": lang,
+            },
+            created_by=user_id,
+        )
+    if body.module == "M2":
+        cfg_in = body.config
+        config_payload = cfg_in.model_dump() if cfg_in is not None else None
+        return Audit(
+            code=code,
+            org_id=org_id,
+            dataset_id=body.dataset_id,
+            module="M2",
+            title=body.title,
+            status="pending",
+            protected_attribute=None,
+            decision_column=body.decision_column,
+            favorable_value=body.favorable_value,
+            privileged_value=None,
+            config=config_payload,
+            created_by=user_id,
+        )
+    # M1
+    return Audit(
+        code=code,
         org_id=org_id,
-        dataset_id=dataset.id,
+        dataset_id=body.dataset_id,
         module="M1",
         title=body.title,
-        status="running",
+        status="pending",
         protected_attribute=body.protected_attribute,
         decision_column=body.decision_column,
         favorable_value=body.favorable_value,
         privileged_value=body.privileged_value,
         created_by=user_id,
     )
+
+
+async def submit_audit(
+    session: AsyncSession,
+    *,
+    org_id: uuid.UUID,
+    user_id: uuid.UUID,
+    body: AuditCreate,
+    llm_provider: LLMProvider | None,
+) -> AuditOut:
+    """Validate the request synchronously and create the pending audit row.
+
+    Raises APIError (-> RFC 7807) for an invalid request BEFORE any row is
+    created (M1/M2: missing dataset -> 404 ; M3: SSRF target -> 422). Does
+    NOT compute anything. The caller is responsible for the computation.
+    """
+    if body.module in ("M1", "M2"):
+        assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
+        # raises NotFoundError (404) if the dataset is missing / not in this org
+        await get_dataset(session, body.dataset_id, org_id=org_id)
+    if body.module == "M3":
+        assert body.target is not None  # guaranteed by AuditCreate._per_module
+        assert_public_url(body.target.url)  # raises APIError 422 on SSRF
+    audit = _build_audit_row(
+        body, org_id=org_id, user_id=user_id,
+        code=await _next_code(session, org_id),
+    )
     session.add(audit)
     await session.flush()
+    await session.commit()
+    return _audit_out(audit, None, None, [])
+
+
+async def compute_m1_audit(
+    session: AsyncSession,
+    audit: Audit,
+    body: AuditCreate,
+    *,
+    storage: Storage | None = None,
+    llm_provider: LLMProvider | None,
+) -> AuditOut:
+    """Run the M1 computation on an already-created (pending/running) row.
+
+    Persists the AuditResult and sets ``status='done'`` + ``completed_at``.
+    Does NOT create the row and does NOT commit — the caller commits.
+    """
+    storage = storage if storage is not None else get_storage()
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
+    dataset: Dataset = await get_dataset(
+        session, body.dataset_id, org_id=audit.org_id
+    )
 
     raw = await storage.download(dataset.storage_path)
     df = pd.read_csv(io.BytesIO(raw))
@@ -331,40 +432,29 @@ async def run_m1_audit(
     )
     audit.status = "done"
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    await session.commit()
     return _audit_out(audit, metrics_out, interpretation, pre_check)
 
 
-async def run_m2_audit(
+
+async def compute_m2_audit(
     session: AsyncSession,
-    storage: Storage,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
+    audit: Audit,
     body: AuditCreate,
+    *,
+    storage: Storage | None = None,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
-    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
-    dataset: Dataset = await get_dataset(session, body.dataset_id, org_id=org_id)
-    cfg_in = body.config
-    config_payload = cfg_in.model_dump() if cfg_in is not None else None
+    """Run the M2 computation on an already-created (pending/running) row.
 
-    audit = Audit(
-        code=await _next_code(session, org_id),
-        org_id=org_id,
-        dataset_id=dataset.id,
-        module="M2",
-        title=body.title,
-        status="running",
-        protected_attribute=None,
-        decision_column=body.decision_column,
-        favorable_value=body.favorable_value,
-        privileged_value=None,
-        config=config_payload,
-        created_by=user_id,
+    Persists the AuditResult and sets ``status='done'`` + ``completed_at``.
+    Does NOT create the row and does NOT commit — the caller commits.
+    """
+    storage = storage if storage is not None else get_storage()
+    assert body.dataset_id is not None  # guaranteed by AuditCreate._per_module
+    dataset: Dataset = await get_dataset(
+        session, body.dataset_id, org_id=audit.org_id
     )
-    session.add(audit)
-    await session.flush()
+    cfg_in = body.config
 
     raw = await storage.download(dataset.storage_path)
     df = pd.read_csv(io.BytesIO(raw))
@@ -402,22 +492,23 @@ async def run_m2_audit(
     )
     audit.status = "done"
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    await session.commit()
     return _audit_out(audit, metrics_out, interpretation, pre_check)
 
 
-async def run_m3_audit(
+
+async def compute_m3_audit(
     session: AsyncSession,
-    *,
-    org_id: uuid.UUID,
-    user_id: uuid.UUID,
+    audit: Audit,
     body: AuditCreate,
+    *,
     llm_provider: LLMProvider | None,
 ) -> AuditOut:
+    """Run the M3 computation on an already-created (pending/running) row.
+
+    Persists the AuditResult and sets ``status='done'`` + ``completed_at``.
+    Does NOT create the row and does NOT commit — the caller commits.
+    """
     assert body.target is not None  # guaranteed by AuditCreate._per_module
-    # Validate the target URL early (SSRF + scheme check) — raises APIError 422
-    # before any DB write so the error propagates cleanly through the RFC 7807 handler.
-    assert_public_url(body.target.url)
     s = get_settings()
     tcfg = TargetConfig(
         url=body.target.url,
@@ -427,31 +518,6 @@ async def run_m3_audit(
         response_path=body.target.response_path,
     )
     lang = body.lang if body.lang in ("fr", "en") else "fr"
-
-    audit = Audit(
-        code=await _next_code(session, org_id),
-        org_id=org_id,
-        dataset_id=None,
-        module="M3",
-        title=body.title,
-        status="running",
-        protected_attribute=None,
-        decision_column=None,
-        favorable_value=None,
-        privileged_value=None,
-        config={
-            "target": {
-                "url": body.target.url,
-                "method": body.target.method,
-                "response_path": body.target.response_path,
-            },
-            "bank_version": _BANK_VERSION,
-            "lang": lang,
-        },
-        created_by=user_id,
-    )
-    session.add(audit)
-    await session.flush()
 
     # (pair_id, category, attribute_label, prompt)
     calls: list[tuple[str, str, str, str]] = []
@@ -511,8 +577,8 @@ async def run_m3_audit(
     )
     audit.status = "done"
     audit.completed_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    await session.commit()
     return _audit_out(audit, metrics_out, interpretation, [])
+
 
 
 async def get_audit(
@@ -546,3 +612,63 @@ async def get_audit(
         else None
     )
     return _audit_out(audit, metrics, interpretation, pre_check)
+
+
+_audit_semaphore: asyncio.Semaphore | None = None
+
+
+def _get_audit_semaphore() -> asyncio.Semaphore:
+    """Lazily create the module-level concurrency gate.
+
+    Built lazily (not at import time) so the ``asyncio.Semaphore`` binds to
+    the running event loop, not whatever loop happens to exist at import.
+    """
+    global _audit_semaphore
+    if _audit_semaphore is None:
+        _audit_semaphore = asyncio.Semaphore(
+            get_settings().audit_max_concurrency
+        )
+    return _audit_semaphore
+
+
+async def run_audit_job(
+    audit_id: uuid.UUID,
+    body: AuditCreate,
+    llm_provider: LLMProvider | None,
+    *,
+    session_maker: async_sessionmaker[AsyncSession] | None = None,
+) -> None:
+    """Background runner. Bounded by the audit semaphore. Uses a FRESH DB
+    session (the request session is closed once the 202 is sent). Never
+    propagates: any failure -> status='failed' + a non-empty error message,
+    so an audit is never left stuck in 'running'.
+
+    ``body`` is received in memory (NOT reconstructed from the DB) so it can
+    carry the M3 target secret to the computation without persisting it.
+    ``session_maker`` defaults to the application async-session factory
+    (``app.core.db._sessionmaker()``); tests inject their own.
+    """
+    maker = session_maker if session_maker is not None else _sessionmaker()
+    async with _get_audit_semaphore(), maker() as session:
+        try:
+            audit = await _load_audit(session, audit_id)
+            audit.status = "running"
+            await session.commit()
+            compute = {
+                "M1": compute_m1_audit,
+                "M2": compute_m2_audit,
+                "M3": compute_m3_audit,
+            }[audit.module]
+            await compute(session, audit, body, llm_provider=llm_provider)
+            await session.commit()
+        except Exception as exc:  # noqa: BLE001 — background job must never
+            # crash the event loop; surface the failure on the audit row.
+            await session.rollback()
+            try:
+                audit = await _load_audit(session, audit_id)
+                audit.status = "failed"
+                audit.error = str(exc) or exc.__class__.__name__
+                await session.commit()
+            except Exception:  # noqa: BLE001 — last-resort: nothing more
+                # we can do if even the failure write fails.
+                await session.rollback()

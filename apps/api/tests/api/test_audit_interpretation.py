@@ -42,14 +42,19 @@ async def test_audit_persists_fallback_interpretation(ctx):
             s, store, org_id=oid, user_id=uid, filename="r.csv",
             raw=_csv(), retention_days=30,
         )
-        out = await audit_service.run_m1_audit(
-            s, store, org_id=oid, user_id=uid,
-            body=AuditCreate(dataset_id=ds.id, title="R",
+        body = AuditCreate(dataset_id=ds.id, title="R",
                              protected_attribute="genre",
                              decision_column="decision",
-                             favorable_value="oui"),
-            llm_provider=None,
+                             favorable_value="oui")
+        pending = await audit_service.submit_audit(
+            s, org_id=oid, user_id=uid, body=body, llm_provider=None,
         )
+        audit = await audit_service._load_audit(s, pending.id)
+        await audit_service.compute_m1_audit(
+            s, audit, body, storage=store, llm_provider=None,
+        )
+        await s.commit()
+        out = await audit_service.get_audit(s, pending.id, org_id=oid)
         aid = out.id
     assert out.interpretation is not None
     assert out.interpretation.provider == "fallback"

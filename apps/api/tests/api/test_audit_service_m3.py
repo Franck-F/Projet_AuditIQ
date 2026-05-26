@@ -38,6 +38,20 @@ def _target():
     }
 
 
+async def _run_m3(session, *, org_id, user_id, body, llm_provider=None):
+    """Helper: submit + compute + commit + get_audit (replaces run_m3_audit)."""
+    pending = await audit_service.submit_audit(
+        session, org_id=org_id, user_id=user_id, body=body,
+        llm_provider=llm_provider,
+    )
+    audit = await audit_service._load_audit(session, pending.id)
+    await audit_service.compute_m3_audit(
+        session, audit, body, llm_provider=llm_provider,
+    )
+    await session.commit()
+    return await audit_service.get_audit(session, pending.id, org_id=org_id)
+
+
 async def test_run_m3_audit_persists_no_secret(ctx, monkeypatch):
     sm, org_id, user_id = ctx
     import app.integrations.llm_target as lt
@@ -57,11 +71,10 @@ async def test_run_m3_audit_persists_no_secret(ctx, monkeypatch):
 
         respx.post("https://api.example.com/v1").mock(side_effect=_h)
         async with sm() as session:
-            out = await audit_service.run_m3_audit(
+            out = await _run_m3(
                 session, org_id=org_id, user_id=user_id,
                 body=AuditCreate(title="Chatbot RH", module="M3",
                                  target=_target(), lang="fr"),
-                llm_provider=None,
             )
     assert out.module == "M3"
     assert out.status == "done"
@@ -87,11 +100,10 @@ async def test_run_m3_audit_all_calls_fail_is_non_fatal(ctx, monkeypatch):
             return_value=httpx.Response(503)
         )
         async with sm() as session:
-            out = await audit_service.run_m3_audit(
+            out = await _run_m3(
                 session, org_id=org_id, user_id=user_id,
                 body=AuditCreate(title="M3 fail", module="M3",
                                  target=_target(), lang="fr"),
-                llm_provider=None,
             )
     assert out.status == "done"
     assert isinstance(out.metrics, M3MetricsOut)
@@ -117,11 +129,10 @@ async def test_run_m3_audit_deadline_zero_partial(ctx, monkeypatch):
                 )
             )
             async with sm() as session:
-                out = await audit_service.run_m3_audit(
+                out = await _run_m3(
                     session, org_id=org_id, user_id=user_id,
                     body=AuditCreate(title="M3 deadline", module="M3",
                                      target=_target(), lang="fr"),
-                    llm_provider=None,
                 )
         assert out.status == "done"
         assert isinstance(out.metrics, M3MetricsOut)

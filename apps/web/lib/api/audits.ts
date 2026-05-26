@@ -188,6 +188,7 @@ export type AuditOut = {
   code: string | null;
   title: string;
   status: string;
+  error?: string | null;
   module: string;
   dataset_id: string | null;
   protected_attribute: string | null;

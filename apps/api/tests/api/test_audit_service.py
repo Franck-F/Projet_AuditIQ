@@ -36,6 +36,20 @@ def _recruitment_csv() -> bytes:
     return ("\n".join(rows) + "\n").encode()
 
 
+async def _run_m1(session, store, *, org_id, user_id, body, llm_provider=None):
+    """Helper: submit + compute + commit + get_audit (replaces run_m1_audit)."""
+    pending = await audit_service.submit_audit(
+        session, org_id=org_id, user_id=user_id, body=body,
+        llm_provider=llm_provider,
+    )
+    audit = await audit_service._load_audit(session, pending.id)
+    await audit_service.compute_m1_audit(
+        session, audit, body, storage=store, llm_provider=llm_provider,
+    )
+    await session.commit()
+    return await audit_service.get_audit(session, pending.id, org_id=org_id)
+
+
 async def test_run_m1_audit_recruitment_fail(ctx):
     sm, org_id, uid = ctx
     store = MemoryStorage()
@@ -49,10 +63,7 @@ async def test_run_m1_audit_recruitment_fail(ctx):
             protected_attribute="genre", decision_column="decision",
             favorable_value="oui",
         )
-        out = await audit_service.run_m1_audit(
-            s, store, org_id=org_id, user_id=uid, body=body,
-            llm_provider=None,
-        )
+        out = await _run_m1(s, store, org_id=org_id, user_id=uid, body=body)
     assert out.status == "done"
     assert out.metrics is not None
     assert out.metrics.verdict == "fail"
@@ -77,10 +88,7 @@ async def test_run_m1_audit_numeric_decision_column(ctx):
             dataset_id=ds.id, title="Num", protected_attribute="genre",
             decision_column="decision", favorable_value="1",
         )
-        out = await audit_service.run_m1_audit(
-            s, store, org_id=org_id, user_id=uid, body=body,
-            llm_provider=None,
-        )
+        out = await _run_m1(s, store, org_id=org_id, user_id=uid, body=body)
     assert out.metrics is not None
     assert out.metrics.disparate_impact == 0.72
     assert out.metrics.verdict == "fail"
@@ -100,10 +108,14 @@ async def test_run_m1_audit_invalid_mapping_raises_dataset_validation(ctx):
             dataset_id=ds.id, title="Bad", protected_attribute="ABSENT",
             decision_column="decision", favorable_value="oui",
         )
+        # submit_audit succeeds (dataset exists); compute raises on bad column
+        pending = await audit_service.submit_audit(
+            s, org_id=org_id, user_id=uid, body=body, llm_provider=None,
+        )
+        audit = await audit_service._load_audit(s, pending.id)
         with pytest.raises(DatasetValidationError):
-            await audit_service.run_m1_audit(
-                s, store, org_id=org_id, user_id=uid, body=body,
-                llm_provider=None,
+            await audit_service.compute_m1_audit(
+                s, audit, body, storage=store, llm_provider=None,
             )
 
 
@@ -115,13 +127,12 @@ async def test_get_audit_org_scoped(ctx):
             s, store, org_id=org_id, user_id=uid, filename="r.csv",
             raw=_recruitment_csv(), retention_days=30,
         )
-        out = await audit_service.run_m1_audit(
+        out = await _run_m1(
             s, store, org_id=org_id, user_id=uid,
             body=AuditCreate(
                 dataset_id=ds.id, title="R", protected_attribute="genre",
                 decision_column="decision", favorable_value="oui",
             ),
-            llm_provider=None,
         )
         aid = out.id
     async with sm() as s:

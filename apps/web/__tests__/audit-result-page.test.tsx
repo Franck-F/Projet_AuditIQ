@@ -288,6 +288,40 @@ describe('audit result page', () => {
       .not.toBeInTheDocument();
   });
 
+  it('shows the running state while the audit is pending/running', async () => {
+    (useAudit as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: {
+        id: 'r1', code: 'AUD-2026-070', title: 'Chatbot', status: 'running',
+        module: 'M3', dataset_id: null, protected_attribute: null,
+        decision_column: null, favorable_value: null, privileged_value: null,
+        created_at: '2026-05-22T00:00:00Z', completed_at: null,
+        metrics: null, interpretation: null, error: null, pre_check: [],
+        config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect(await screen.findByText(/analyse en cours|en cours/i))
+      .toBeInTheDocument();
+  });
+
+  it('shows the failure panel when the audit failed', async () => {
+    (useAudit as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: {
+        id: 'r2', code: 'AUD-2026-071', title: 'Chatbot', status: 'failed',
+        module: 'M3', dataset_id: null, protected_attribute: null,
+        decision_column: null, favorable_value: null, privileged_value: null,
+        created_at: '2026-05-22T00:00:00Z', completed_at: null,
+        metrics: null, interpretation: null,
+        error: 'Le LLM cible est injoignable.', pre_check: [], config: {},
+      },
+      isLoading: false, isError: false,
+    });
+    render(<AuditResultPage />);
+    expect(await screen.findByText(/injoignable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/score de risque/i)).not.toBeInTheDocument();
+  });
+
   it('renders report buttons and downloads Excel/PDF; PDF failure is non-silent', async () => {
     const { default: userEvent } = await import('@testing-library/user-event');
     useAudit.mockReturnValue({

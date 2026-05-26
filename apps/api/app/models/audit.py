@@ -26,6 +26,7 @@ class Audit(Base):
     module: Mapped[str] = mapped_column(String(8), nullable=False, default="M1")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    error: Mapped[str | None] = mapped_column(String(), nullable=True)
     protected_attribute: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )

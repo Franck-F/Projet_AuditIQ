@@ -7,5 +7,9 @@ export function useAudit(id: string) {
     queryKey: ['audit', id],
     queryFn: () => fetchAudit(id),
     enabled: id.length > 0,
+    refetchInterval: (query) => {
+      const s = query.state.data?.status;
+      return s === 'pending' || s === 'running' ? 2000 : false;
+    },
   });
 }
