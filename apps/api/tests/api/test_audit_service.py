@@ -141,3 +141,41 @@ async def test_get_audit_org_scoped(ctx):
         got = await audit_service.get_audit(s, aid, org_id=org_id)
         assert got.id == aid
         assert got.metrics is not None
+
+
+async def test_next_code_unique_per_org_not_global(ctx):
+    """Two organizations can both produce `AUD-YYYY-001` — uniqueness is
+    scoped per-org by migration 0006. Regression guard for the cross-org
+    `audits_code_key` IntegrityError that surfaced in PR #21 e2e runs."""
+    sm, org_a_id, uid_a = ctx
+    store = MemoryStorage()
+    # Build a second org + user in the same SQLite DB
+    async with sm() as s:
+        org_b = Organization(name="bravo")
+        s.add(org_b)
+        await s.flush()
+        user_b = User(id=uuid.uuid4(), org_id=org_b.id, email="b@bravo.fr")
+        s.add(user_b)
+        await s.commit()
+        org_b_id, uid_b = org_b.id, user_b.id
+
+    async def _mk(org_id, user_id):
+        async with sm() as s:
+            ds = await dataset_service.create_dataset(
+                s, store, org_id=org_id, user_id=user_id, filename="r.csv",
+                raw=_recruitment_csv(), retention_days=30,
+            )
+            return await _run_m1(
+                s, store, org_id=org_id, user_id=user_id,
+                body=AuditCreate(
+                    dataset_id=ds.id, title="X", protected_attribute="genre",
+                    decision_column="decision", favorable_value="oui",
+                ),
+            )
+
+    out_a = await _mk(org_a_id, uid_a)
+    out_b = await _mk(org_b_id, uid_b)
+    # Both orgs start at count=0, so both produce the same code suffix.
+    # Pre-0006 this raised IntegrityError on org B's INSERT.
+    assert out_a.code == out_b.code
+    assert out_a.code is not None and out_a.code.startswith("AUD-")
