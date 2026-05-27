@@ -2,11 +2,35 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AuthCenter } from '@/components/auth/AuthShell';
+import { createClient } from '@/lib/supabase/client';
 
 export default function VerificationEmailPage() {
-  const [resent, setResent] = React.useState(false);
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') ?? '';
+
+  const [resendState, setResendState] = React.useState<
+    'idle' | 'sending' | 'sent' | 'error'
+  >('idle');
+  const [resendError, setResendError] = React.useState<string | null>(null);
+
+  const handleResend = async () => {
+    if (!email || resendState === 'sending') return;
+    setResendState('sending');
+    setResendError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      setResendState('error');
+      setResendError(
+        "Le renvoi a échoué. Réessayez dans quelques minutes ou contactez le support.",
+      );
+      return;
+    }
+    setResendState('sent');
+  };
 
   return (
     <AuthCenter>
@@ -27,7 +51,7 @@ export default function VerificationEmailPage() {
         </div>
 
         <div className="rounded-md border border-border-default bg-surface-2 px-4 py-3 font-mono text-sm text-fg">
-          claire.tessier@tessier-associes.fr
+          {email || 'votre adresse email'}
         </div>
 
         <p className="-mt-2 text-sm leading-relaxed text-fg-secondary">
@@ -59,11 +83,19 @@ export default function VerificationEmailPage() {
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => setResent(true)}
-            disabled={resent}
+            onClick={handleResend}
+            disabled={!email || resendState === 'sending' || resendState === 'sent'}
           >
-            {resent ? 'Lien renvoyé ✓' : 'Renvoyer le lien de vérification'}
+            {resendState === 'sending' && 'Envoi en cours…'}
+            {resendState === 'sent' && 'Lien renvoyé ✓'}
+            {(resendState === 'idle' || resendState === 'error') &&
+              'Renvoyer le lien de vérification'}
           </Button>
+          {resendState === 'error' && resendError && (
+            <span role="alert" className="text-xs text-status-fail">
+              {resendError}
+            </span>
+          )}
           <span className="mt-1 text-xs text-fg-muted">
             Mauvaise adresse ?{' '}
             <Link href="/inscription" className="text-accent hover:underline">
