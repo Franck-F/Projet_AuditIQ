@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthMain, AuthSide, AuthBenefit } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
@@ -48,38 +49,74 @@ const BENEFITS = [
   },
 ];
 
-function InputField({
-  id,
-  label,
-  hint,
-  error,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  id: string;
-  label: string;
-  hint?: string;
-  error?: string;
-}) {
+const InputField = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    id: string;
+    label: string;
+    hint?: string;
+    error?: string;
+  }
+>(function InputField({ id, label, hint, error, type, ...props }, ref) {
+  // For `type="password"` we render the input wrapped with an eye toggle.
+  const isPassword = type === 'password';
+  const [reveal, setReveal] = React.useState(false);
+  const effectiveType = isPassword && reveal ? 'text' : type;
+  const inputClass = cn(
+    'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
+    'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
+    isPassword && 'pr-11',
+    error ? 'border-status-fail' : 'border-border-default',
+  );
+
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-fg-secondary">
         {label}
       </label>
-      <input
-        id={id}
-        className={cn(
-          'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
-          'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
-          error ? 'border-status-fail' : 'border-border-default',
-        )}
-        aria-invalid={error ? true : undefined}
-        {...props}
-      />
+      {isPassword ? (
+        <div className="relative">
+          <input
+            ref={ref}
+            id={id}
+            type={effectiveType}
+            className={inputClass}
+            aria-invalid={error ? true : undefined}
+            {...props}
+          />
+          <button
+            type="button"
+            onClick={() => setReveal((v) => !v)}
+            aria-pressed={reveal}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-fg"
+          >
+            {/* sr-only (rather than aria-label) keeps the same accessible
+                name without polluting RTL's getByLabelText queries. */}
+            <span className="sr-only">
+              {reveal ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            </span>
+            {reveal ? (
+              <EyeOff className="size-4" aria-hidden />
+            ) : (
+              <Eye className="size-4" aria-hidden />
+            )}
+          </button>
+        </div>
+      ) : (
+        <input
+          ref={ref}
+          id={id}
+          type={type}
+          className={inputClass}
+          aria-invalid={error ? true : undefined}
+          {...props}
+        />
+      )}
       {hint && !error && <span className="text-xs text-fg-muted">{hint}</span>}
       {error && <span className="text-xs text-status-fail">{error}</span>}
     </div>
   );
-}
+});
 
 export default function InscriptionPage() {
   const router = useRouter();
@@ -96,7 +133,7 @@ export default function InscriptionPage() {
   const onSubmit = async (v: InscriptionValues) => {
     setAuthError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: v.email,
       password: v.password,
     });
@@ -104,6 +141,15 @@ export default function InscriptionPage() {
       setAuthError(
         "L'inscription a échoué. Cet email est peut-être déjà utilisé.",
       );
+      return;
+    }
+    // When Supabase project has email confirmation enabled, signUp returns
+    // success but session=null until the user clicks the link in the email.
+    // We route them to the verification-email page so they know to check
+    // their inbox. When email confirmation is OFF (dev shortcut), session
+    // is present and we proceed straight to /app.
+    if (data.session == null) {
+      router.push(`/verification-email?email=${encodeURIComponent(v.email)}`);
       return;
     }
     router.push('/app');
