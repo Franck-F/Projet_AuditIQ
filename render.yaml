@@ -1,0 +1,119 @@
+# Render.com — Infrastructure as Code
+#
+# Deploys 2 Web Services from this repo:
+#   - auditiq-api : FastAPI on Python 3.12 (uvicorn via uv)
+#   - auditiq-pdf : stateless Puppeteer microservice
+#
+# The web frontend (Next.js) is deployed separately to Vercel; see
+# `apps/web/vercel.json`. Render previews per PR are enabled below.
+#
+# Secrets MUST be set in the Render dashboard before the first deploy
+# (entries with `sync: false`). Shared secrets are grouped under
+# `envVarGroups` so both services see the same value without copy-paste.
+#
+# Region: Frankfurt — keeps data inside the EU (AuditIQ mémoire
+# principe #5 "Souveraineté").
+#
+# Free tier caveat: services auto-sleep after 15min of inactivity. Cold
+# start ~30s. Upgrade to `starter` ($7/mo per service) for always-on.
+
+services:
+  # ---------------------------------------------------------------------
+  # API — FastAPI + audit engines + reporting
+  # ---------------------------------------------------------------------
+  - type: web
+    name: auditiq-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: apps/api
+    previews:
+      generation: automatic           # spin up a preview env per PR
+      expireAfterDays: 3
+    buildCommand: |
+      pip install --quiet uv
+      uv sync --no-dev
+    # Apply pending Alembic migrations before each release.
+    preDeployCommand: uv run alembic upgrade head
+    # Bind to $PORT — Render injects it per service.
+    startCommand: |
+      uv run uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # The .env on dev has curly quotes in comments — UTF-8 mode keeps
+      # Starlette's config-reader happy on Linux too (Linux locale is
+      # typically utf-8 already, but pinning is safer).
+      - key: PYTHONUTF8
+        value: "1"
+      - key: API_ENV
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_LOG_LEVEL
+        value: info
+      - key: API_CORS_ORIGINS
+        sync: false                   # set to the deployed Vercel URL
+      - fromGroup: auditiq-shared
+
+  # ---------------------------------------------------------------------
+  # PDF — Puppeteer renderer (stateless, auth = X-PDF-Secret header)
+  # ---------------------------------------------------------------------
+  - type: web
+    name: auditiq-pdf
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: apps/pdf
+    previews:
+      generation: automatic
+      expireAfterDays: 3
+    buildCommand: pnpm install --frozen-lockfile
+    startCommand: node server.mjs
+    # The PDF service has no /health endpoint; the / GET returns 404
+    # which Render treats as "service responding", which is enough.
+    envVars:
+      - key: PORT
+        value: "3001"
+      - fromGroup: auditiq-shared
+
+envVarGroups:
+  - name: auditiq-shared
+    envVars:
+      - key: SUPABASE_URL
+        sync: false                   # https://<ref>.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false                   # mirror, read by some shared utils
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SUPABASE_DB_URL
+        sync: false                   # postgresql+asyncpg://...
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false                   # used by web; mirrored here for parity
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: LLM_PROVIDER_DEFAULT
+        value: gemini
+      - key: STORAGE_BUCKET_DATASETS
+        value: datasets
+      - key: STORAGE_BUCKET_REPORTS
+        value: reports
+      - key: STORAGE_SIGNED_URL_TTL_SECONDS
+        value: "900"
+      - key: PDF_SERVICE_URL
+        sync: false                   # https://auditiq-pdf.onrender.com
+      - key: PDF_SERVICE_SECRET
+        generateValue: true           # Render generates a 32-char secret on first deploy
+      - key: AUDIT_MAX_CONCURRENCY
+        value: "3"
+      - key: MAX_UPLOAD_MB
+        value: "10"
+      - key: DATA_RETENTION_DAYS
+        value: "30"
