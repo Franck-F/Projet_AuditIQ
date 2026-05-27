@@ -1,0 +1,82 @@
+# Continuous integration — runs the per-app gates on every push to main
+# and on every pull request. Two parallel jobs (api / web) keep total
+# wall-clock under ~3 min on the free GitHub-hosted runners.
+#
+# What is intentionally NOT in CI:
+# - Playwright E2E suite (apps/web/e2e/) — needs a running stack + live
+#   Supabase admin REST + WARP/Cloudflare to bypass corporate DNS blocks.
+#   Run manually before a release with `pnpm --filter @auditiq/web e2e`
+#   per docs/deployment.md.
+# - Migration tests against a real Postgres — covered by the SQLite-based
+#   tests in apps/api/tests/api/test_migration_*.py.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel previous in-flight runs of the same workflow on the same branch.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (pytest · ruff · mypy)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv (Astral)
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Pin Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (with dev extras)
+        run: uv sync --extra dev
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Mypy --strict
+        run: uv run mypy --strict app
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  web:
+    name: Web (vitest · eslint · tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm --filter @auditiq/web lint
+
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm --filter @auditiq/web typecheck
+
+      - name: Vitest
+        run: pnpm --filter @auditiq/web test
