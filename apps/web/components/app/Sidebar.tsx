@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutGrid,
   Activity,
@@ -16,9 +16,36 @@ import {
   HelpCircle,
   Plus,
   ChevronDown,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
+
+/** Local-part of an email, capped to fit a 2-letter avatar. */
+function initialsFrom(emailOrName: string): string {
+  if (!emailOrName) return '??';
+  // Try "First Last" first
+  const parts = emailOrName.trim().split(/\s+/);
+  if (parts.length >= 2 && parts[0] && parts[1]) {
+    return (parts[0][0]! + parts[1][0]!).toUpperCase();
+  }
+  // Fall back to the first two letters of the email local part
+  const local = emailOrName.split('@')[0] ?? '';
+  return (local.slice(0, 2) || '??').toUpperCase();
+}
+
+/** Derive a human-readable org name from the email domain — matches what
+ *  the API's `_provision` uses when bootstrapping a fresh user. */
+function orgNameFromEmail(email: string): string {
+  const domain = email.split('@')[1];
+  return domain || 'Organisation';
+}
+
+interface SessionUser {
+  email: string;
+  name?: string;
+}
 
 type NavItem =
   | { type: 'section'; label: string }
@@ -27,7 +54,7 @@ type NavItem =
 const NAV: NavItem[] = [
   { type: 'section', label: 'Espace de travail' },
   { type: 'item', key: 'dashboard', label: "Vue d'ensemble", href: '/app', icon: LayoutGrid },
-  { type: 'item', key: 'audits', label: 'Audits', href: '/app/audits', icon: Activity, count: 12 },
+  { type: 'item', key: 'audits', label: 'Audits', href: '/app/audits', icon: Activity },
   { type: 'item', key: 'rapports', label: 'Rapports', href: '/app/rapports', icon: FileText },
   {
     type: 'item',
@@ -35,7 +62,6 @@ const NAV: NavItem[] = [
     label: 'Recommandations',
     href: '/app/recommandations',
     icon: Lightbulb,
-    count: 8,
   },
 
   { type: 'section', label: "Modules d'audit" },
@@ -57,6 +83,53 @@ function isActive(pathname: string, href: string): boolean {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = React.useState<SessionUser | null>(null);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user?.email) return;
+      const meta = (data.user.user_metadata ?? {}) as {
+        full_name?: string;
+        name?: string;
+      };
+      setUser({
+        email: data.user.email,
+        name: meta.full_name ?? meta.name,
+      });
+    });
+    // Refresh on auth state changes so a logout/login in another tab is reflected.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user?.email) {
+        setUser(null);
+        return;
+      }
+      const meta = (session.user.user_metadata ?? {}) as {
+        full_name?: string;
+        name?: string;
+      };
+      setUser({
+        email: session.user.email,
+        name: meta.full_name ?? meta.name,
+      });
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/connexion');
+  };
+
+  const displayName = user?.name ?? user?.email ?? 'Chargement…';
+  const orgName = user ? orgNameFromEmail(user.email) : '—';
+  const initials = user ? initialsFrom(user.name ?? user.email) : '··';
 
   return (
     <aside
@@ -78,7 +151,10 @@ export function Sidebar() {
         AuditIQ
       </Link>
 
-      {/* Workspace switcher (mock) */}
+      {/* Workspace switcher — single org for now; the multi-tenant story is
+          deferred so this button is a stub until the org-switcher feature
+          ships. The org name is derived from the email domain to match the
+          API's `_provision` behavior. */}
       <button
         type="button"
         className="mx-3 mt-3 flex items-center gap-2.5 rounded-md border border-border-subtle bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-default"
@@ -87,12 +163,12 @@ export function Sidebar() {
           aria-hidden
           className="inline-flex size-7 items-center justify-center rounded-md bg-[linear-gradient(135deg,oklch(54%_0.12_270),oklch(48%_0.10_200))] font-mono text-xs font-semibold text-[#fafafa]"
         >
-          TS
+          {user ? initialsFrom(orgName) : '··'}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium leading-tight">Cabinet Tessier</div>
+          <div className="truncate text-sm font-medium leading-tight">{orgName}</div>
           <div className="text-[11px] uppercase tracking-wider text-fg-muted">
-            Plan Équipe · 5 sièges
+            Organisation
           </div>
         </div>
         <ChevronDown size={12} className="text-fg-muted" aria-hidden />
@@ -156,21 +232,31 @@ export function Sidebar() {
           <Plus size={14} strokeWidth={2} aria-hidden />
           Lancer un audit
         </Link>
-        <button
-          type="button"
-          className="flex items-center gap-2.5 rounded-sm p-2 text-left transition-colors hover:bg-surface-2"
-        >
+        <div className="flex items-center gap-2.5 rounded-sm p-2 text-left">
           <span
             aria-hidden
             className="inline-flex size-7 items-center justify-center rounded-full border border-border-subtle bg-surface-3 font-mono text-[11px] text-fg"
           >
-            CT
+            {initials}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm leading-tight">Claire Tessier</div>
-            <div className="text-[11px] text-fg-muted">Responsable conformité</div>
+            <div className="truncate text-sm leading-tight" title={displayName}>
+              {displayName}
+            </div>
+            <div className="truncate text-[11px] text-fg-muted">
+              {user ? user.email : 'Session en cours…'}
+            </div>
           </div>
-        </button>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            aria-label="Se déconnecter"
+            title="Se déconnecter"
+            className="ml-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            <LogOut size={14} strokeWidth={1.75} />
+          </button>
+        </div>
       </div>
     </aside>
   );
