@@ -11,7 +11,10 @@ export async function waitForAuditDone(
   page: Page,
   { timeout = 60_000 } = {},
 ): Promise<void> {
-  await expect(page.getByText(/Score de risque|Disparate Impact/i)).toBeVisible({ timeout });
+  // .first() avoids strict-mode violation when the same label appears both
+  // as a KPI title and inside the narrative paragraph (M1's "Disparate
+  // Impact" mention in the explanation).
+  await expect(page.getByText(/Score de risque|Disparate Impact/i).first()).toBeVisible({ timeout });
 }
 
 export async function waitForAuditFailed(

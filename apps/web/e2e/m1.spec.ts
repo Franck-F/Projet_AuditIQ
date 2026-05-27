@@ -29,8 +29,8 @@ test.describe('M1 supervisé', () => {
     await page.getByRole('button', { name: /lancer|créer/i }).click();
     await page.waitForURL(/\/app\/audits\/[0-9a-f-]{36}/);
     await waitForAuditDone(page);
-    await expect(page.getByText(/Disparate Impact/i)).toBeVisible();
-    await expect(page.getByText(/Score de risque/i)).toBeVisible();
+    await expect(page.getByText(/Disparate Impact/i).first()).toBeVisible();
+    await expect(page.getByText(/Score de risque/i).first()).toBeVisible();
   });
 
   test('+ ground truth: Equal Opportunity & Equalized Odds shown', async ({ page }) => {
