@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 import { Topbar } from '@/components/app/Topbar';
 import { Button } from '@/components/ui/button';
+import { DatasetUploadCard } from '@/components/audits/DatasetUploadCard';
 import {
   type DatasetOut,
   type M2ConfigIn,
@@ -574,9 +575,7 @@ export default function NouveauPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
-  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFile = async (file: File) => {
     setError(null);
     setBusy(true);
     try {
@@ -654,24 +653,11 @@ export default function NouveauPage() {
             </div>
           </div>
         ) : (module === 'M1' || module === 'M2') && !dataset ? (
-          <div className="rounded-2xl border border-border-default bg-surface p-8">
-            <label htmlFor="csv" className={labelCls}>
-              Jeu de données (CSV)
-            </label>
-            <input
-              id="csv"
-              data-testid="csv-input"
-              type="file"
-              accept=".csv,text/csv"
-              disabled={busy}
-              onChange={onFile}
-              className="mt-2 block w-full text-sm text-fg-secondary"
-            />
-            <p className="mt-3 text-xs text-fg-muted">
-              Le fichier est stocké de façon sécurisée et supprimé après la
-              durée de rétention de votre organisation.
-            </p>
-          </div>
+          <DatasetUploadCard
+            module={module}
+            busy={busy}
+            onSelected={handleFile}
+          />
         ) : module === 'M1' && dataset ? (
           <M1Form
             dataset={dataset}
