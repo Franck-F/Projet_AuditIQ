@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -240,3 +241,38 @@ class M3Result:
             self, "divergent_examples", tuple(self.divergent_examples)
         )
         object.__setattr__(self, "warnings", tuple(self.warnings))
+
+
+DType = Literal["numeric", "categorical", "boolean", "text", "datetime"]
+RoleHint = Literal["decision", "protected", "identifier", "feature", "unknown"]
+
+
+@dataclass(frozen=True)
+class ColumnProfile:
+    name: str
+    dtype: DType
+    unique_count: int
+    null_ratio: float
+    top_values: tuple[tuple[object, int], ...]  # empty if unique_count > 50
+    role_hint: RoleHint
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "top_values", tuple(self.top_values))
+
+
+@dataclass(frozen=True)
+class Suggestion:
+    column: str
+    confidence: float  # in [0, 1]
+    reason: str
+    favorable_value: object | None = None
+
+
+@dataclass(frozen=True)
+class DatasetAnalysis:
+    columns: tuple[ColumnProfile, ...]
+    suggested_decision: Suggestion | None
+    suggested_protected: Suggestion | None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "columns", tuple(self.columns))

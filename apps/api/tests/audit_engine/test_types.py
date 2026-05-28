@@ -207,3 +207,52 @@ def test_intersectional_dataclasses():
         risk_score=10,
     )
     assert res.intersectional is None
+
+
+def test_column_profile_is_frozen() -> None:
+    from app.audit_engine.types import ColumnProfile
+
+    p = ColumnProfile(
+        name="age",
+        dtype="numeric",
+        unique_count=5,
+        null_ratio=0.0,
+        top_values=(),
+        role_hint="protected",
+    )
+    with pytest.raises(FrozenInstanceError):
+        p.name = "x"  # type: ignore[misc]
+
+
+def test_suggestion_optional_favorable_value() -> None:
+    from app.audit_engine.types import Suggestion
+
+    s = Suggestion(column="approved", confidence=0.85, reason="Nom évocateur")
+    assert s.favorable_value is None
+    s2 = Suggestion(
+        column="approved", confidence=0.85, reason="Nom évocateur", favorable_value="1"
+    )
+    assert s2.favorable_value == "1"
+
+
+def test_dataset_analysis_holds_optional_suggestions() -> None:
+    from app.audit_engine.types import DatasetAnalysis
+
+    a = DatasetAnalysis(columns=(), suggested_decision=None, suggested_protected=None)
+    assert a.suggested_decision is None
+    assert a.suggested_protected is None
+
+
+def test_column_profile_top_values_coerced_to_tuple() -> None:
+    from app.audit_engine.types import ColumnProfile
+
+    p = ColumnProfile(
+        name="x",
+        dtype="categorical",
+        unique_count=2,
+        null_ratio=0.0,
+        top_values=[("a", 3), ("b", 2)],  # passed as list
+        role_hint="feature",
+    )
+    assert isinstance(p.top_values, tuple)
+    assert p.top_values == (("a", 3), ("b", 2))
