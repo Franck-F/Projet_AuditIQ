@@ -57,3 +57,6 @@ supabase/.temp/
 
 # PDF/Excel generation temp
 /var/exports/
+
+# Claude Code worktrees (created via EnterWorktree)
+.claude/worktrees/
