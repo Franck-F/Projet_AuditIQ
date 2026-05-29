@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.audit_engine.dataset_analysis import _profile_column
+from app.audit_engine.dataset_analysis import _profile_column, _suggest_decision
+from app.audit_engine.types import ColumnProfile
 
 
 def test_profile_numeric_column() -> None:
@@ -75,3 +76,54 @@ def test_role_hint_unknown_for_text_column() -> None:
     p = _profile_column(df, "some_text_col")
     assert p.dtype == "text"
     assert p.role_hint == "unknown"
+
+
+def _profiles(df: pd.DataFrame) -> tuple[ColumnProfile, ...]:
+    return tuple(_profile_column(df, c) for c in df.columns)
+
+
+def test_suggest_decision_prefers_name_match() -> None:
+    df = pd.DataFrame({
+        "approved": [0, 1, 1, 0, 1, 0, 1, 0, 1, 0],
+        "noise": [1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 10.0],
+    })
+    s = _suggest_decision(df, _profiles(df))
+    assert s is not None
+    assert s.column == "approved"
+    assert s.confidence >= 0.5
+
+
+def test_suggest_decision_favorable_is_minority_value() -> None:
+    df = pd.DataFrame({"approved": ["yes"] * 3 + ["no"] * 7})
+    s = _suggest_decision(df, _profiles(df))
+    assert s is not None
+    assert s.favorable_value == "yes"
+
+
+def test_suggest_decision_skips_high_cardinality() -> None:
+    df = pd.DataFrame({"id": list(range(20)), "decision": [0, 1] * 10})
+    s = _suggest_decision(df, _profiles(df))
+    assert s is not None
+    assert s.column == "decision"
+
+
+def test_suggest_decision_none_below_threshold() -> None:
+    df = pd.DataFrame({
+        "x": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        "y": ["a", "b", "c", "d", "e", "f"],
+    })
+    s = _suggest_decision(df, _profiles(df))
+    assert s is None
+
+
+def test_suggest_decision_robust_to_feature_nan() -> None:
+    # Decision strongly tied to feature 'A'; column 'noisy' is mostly NaN.
+    # The NaN column should NOT win over 'A' just by accident.
+    df = pd.DataFrame({
+        "approved": [0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1],
+        "A": ["x", "y", "y", "x", "y", "x", "y", "x", "y", "x", "x", "y"],
+        "noisy": [None, None, None, None, None, None, None, None, "z", "z", None, None],
+    })
+    s = _suggest_decision(df, _profiles(df))
+    assert s is not None
+    assert s.column == "approved"  # picked by name match, not poisoned MI

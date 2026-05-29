@@ -7,12 +7,16 @@ from __future__ import annotations
 
 import re
 
+import numpy as np
 import pandas as pd
+from sklearn.feature_selection import mutual_info_classif
+from sklearn.preprocessing import LabelEncoder
 
 from app.audit_engine.types import (
     ColumnProfile,
     DType,
     RoleHint,
+    Suggestion,
 )
 
 _DECISION_RE = re.compile(
@@ -77,4 +81,75 @@ def _profile_column(df: pd.DataFrame, name: str) -> ColumnProfile:
         null_ratio=null_ratio,
         top_values=top_values,
         role_hint=role_hint,
+    )
+
+
+_CONFIDENCE_THRESHOLD = 0.3
+
+
+def _normalize_score(raw: float, *, hi: float) -> float:
+    """Linear clamp into [0, 1]."""
+    if hi <= 0:
+        return 0.0
+    return max(0.0, min(1.0, raw / hi))
+
+
+def _mutual_info_avg(df: pd.DataFrame, target_col: str) -> float:
+    """Average normalized mutual information between target and all other columns."""
+    if df.shape[1] < 2:
+        return 0.0
+    y_raw = df[target_col].dropna()
+    if y_raw.nunique() < 2:
+        return 0.0
+    y = LabelEncoder().fit_transform(y_raw.astype(str))
+    x = df.drop(columns=[target_col]).loc[y_raw.index]
+    x_enc = pd.DataFrame(
+        {c: LabelEncoder().fit_transform(x[c].fillna("__NA__").astype(str)) for c in x.columns}
+    )
+    try:
+        mi = mutual_info_classif(x_enc, y, random_state=0)
+    except ValueError:
+        return 0.0
+    max_mi = float(np.log2(y_raw.nunique()))
+    return float(np.mean(mi) / max_mi) if max_mi > 0 else 0.0
+
+
+def _suggest_decision(
+    df: pd.DataFrame, profiles: tuple[ColumnProfile, ...]
+) -> Suggestion | None:
+    candidates: list[tuple[float, str, str, object | None]] = []
+    for p in profiles:
+        if not (2 <= p.unique_count <= 10):
+            continue
+        if p.null_ratio >= 0.3:
+            continue
+        if p.unique_count > len(df) / 2:
+            continue
+        name_score = 1.0 if _DECISION_RE.match(p.name) else 0.0
+        stats_score = _mutual_info_avg(df, p.name)
+        final = 0.6 * name_score + 0.4 * stats_score
+        reasons: list[str] = []
+        if name_score > 0:
+            reasons.append("nom évocateur")
+        if stats_score > 0.3:
+            reasons.append("colonne prédictible par les autres")
+        reason = (
+            "Colonne candidate : " + ", ".join(reasons) + "."
+            if reasons
+            else "Cardinalité compatible avec une décision binaire/discrète."
+        )
+        counts = df[p.name].value_counts(dropna=True)
+        favorable = counts.idxmin() if len(counts) >= 2 else None
+        candidates.append((final, p.name, reason, favorable))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    score, col, reason, fav = candidates[0]
+    if score < _CONFIDENCE_THRESHOLD:
+        return None
+    return Suggestion(
+        column=col,
+        confidence=round(score, 3),
+        reason=reason,
+        favorable_value=fav,
     )
