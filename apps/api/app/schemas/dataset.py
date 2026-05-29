@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
+
+from app.audit_engine.types import (
+    ColumnProfile,
+    DatasetAnalysis,
+    Suggestion,
+)
 
 
 class DatasetOut(BaseModel):
@@ -16,3 +23,67 @@ class DatasetOut(BaseModel):
     status: str
     created_at: datetime.datetime
     expires_at: datetime.datetime | None = None
+
+
+class ColumnProfileOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    dtype: str
+    unique_count: int
+    null_ratio: float
+    top_values: list[tuple[Any, int]]
+    role_hint: str
+
+    @classmethod
+    def from_engine(cls, p: ColumnProfile) -> ColumnProfileOut:
+        return cls(
+            name=p.name,
+            dtype=p.dtype,
+            unique_count=p.unique_count,
+            null_ratio=p.null_ratio,
+            top_values=[(k, v) for k, v in p.top_values],
+            role_hint=p.role_hint,
+        )
+
+
+class SuggestionOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    column: str
+    confidence: float
+    reason: str
+    favorable_value: Any | None = None
+
+    @classmethod
+    def from_engine(cls, s: Suggestion) -> SuggestionOut:
+        return cls(
+            column=s.column,
+            confidence=s.confidence,
+            reason=s.reason,
+            favorable_value=s.favorable_value,
+        )
+
+
+class DatasetAnalysisOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    columns: list[ColumnProfileOut]
+    suggested_decision: SuggestionOut | None = None
+    suggested_protected: SuggestionOut | None = None
+
+    @classmethod
+    def from_engine(cls, a: DatasetAnalysis) -> DatasetAnalysisOut:
+        return cls(
+            columns=[ColumnProfileOut.from_engine(c) for c in a.columns],
+            suggested_decision=(
+                SuggestionOut.from_engine(a.suggested_decision)
+                if a.suggested_decision
+                else None
+            ),
+            suggested_protected=(
+                SuggestionOut.from_engine(a.suggested_protected)
+                if a.suggested_protected
+                else None
+            ),
+        )
