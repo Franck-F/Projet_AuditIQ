@@ -289,6 +289,15 @@ class InterpretationOut(BaseModel):
     model: str
 
 
+class M3TestConnectionOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ok", "error"]
+    elapsed_ms: int
+    extracted_value: str | None = None
+    error: str | None = None
+
+
 class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
