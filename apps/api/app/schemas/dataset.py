@@ -4,6 +4,7 @@ import datetime
 import uuid
 from typing import Any
 
+import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from app.audit_engine.types import (
@@ -11,6 +12,17 @@ from app.audit_engine.types import (
     DatasetAnalysis,
     Suggestion,
 )
+
+
+def _to_json_scalar(v: Any) -> Any:
+    """Convert numpy scalars to native Python types for JSON serialisation."""
+    if isinstance(v, np.integer):
+        return int(v)
+    if isinstance(v, np.floating):
+        return float(v)
+    if isinstance(v, np.bool_):
+        return bool(v)
+    return v
 
 
 class DatasetOut(BaseModel):
@@ -40,9 +52,9 @@ class ColumnProfileOut(BaseModel):
         return cls(
             name=p.name,
             dtype=p.dtype,
-            unique_count=p.unique_count,
-            null_ratio=p.null_ratio,
-            top_values=[(k, v) for k, v in p.top_values],
+            unique_count=int(p.unique_count),
+            null_ratio=float(p.null_ratio),
+            top_values=[(_to_json_scalar(k), int(v)) for k, v in p.top_values],
             role_hint=p.role_hint,
         )
 
@@ -59,9 +71,9 @@ class SuggestionOut(BaseModel):
     def from_engine(cls, s: Suggestion) -> SuggestionOut:
         return cls(
             column=s.column,
-            confidence=s.confidence,
+            confidence=float(s.confidence),
             reason=s.reason,
-            favorable_value=s.favorable_value,
+            favorable_value=_to_json_scalar(s.favorable_value),
         )
 
 
