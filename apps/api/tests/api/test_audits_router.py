@@ -573,3 +573,45 @@ async def test_m3_test_connection_requires_auth(client):
         },
     )
     assert r.status_code in (401, 403)
+
+
+# ---------------------------------------------------------------------------
+# M3 validate-url endpoint tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_m3_validate_url_public_url_ok(
+    client,
+) -> None:
+    resp = await client.post(
+        "/api/v1/audits/m3/validate-url",
+        json={"url": "https://api.openai.com/v1/chat/completions"},
+        headers={"Authorization": "Bearer x"},
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
+
+
+@pytest.mark.asyncio
+async def test_m3_validate_url_private_url_422(
+    client,
+) -> None:
+    resp = await client.post(
+        "/api/v1/audits/m3/validate-url",
+        json={"url": "http://10.0.0.1/internal"},
+        headers={"Authorization": "Bearer x"},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_m3_validate_url_metadata_endpoint_422(
+    client,
+) -> None:
+    resp = await client.post(
+        "/api/v1/audits/m3/validate-url",
+        json={"url": "http://169.254.169.254/latest"},
+        headers={"Authorization": "Bearer x"},
+    )
+    assert resp.status_code == 422
