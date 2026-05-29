@@ -50,3 +50,35 @@ def test_m3_rejects_privileged_value():
             target={"url": "https://x/y", "method": "POST", "headers": {},
                     "body_template": "{prompt}", "response_path": "a"},
         )
+
+
+def test_m3_test_connection_in_default_prompt() -> None:
+    from app.schemas.audit import M3TestConnectionIn, TargetIn
+
+    body = M3TestConnectionIn(
+        target=TargetIn(
+            url="https://api.example.com/v1/chat",
+            method="POST",
+            headers={"Authorization": "Bearer x"},
+            body_template='{"prompt":"{prompt}"}',
+            response_path="choices.0.message.content",
+        )
+    )
+    assert body.test_prompt.startswith("Bonjour")
+
+
+def test_m3_test_connection_out_status_literal() -> None:
+    from app.schemas.audit import M3TestConnectionOut
+
+    out = M3TestConnectionOut(status="ok", elapsed_ms=120)
+    assert out.status == "ok"
+    with pytest.raises(ValidationError):
+        M3TestConnectionOut(status="weird", elapsed_ms=0)  # type: ignore[arg-type]
+
+
+def test_m3_validate_url_in_requires_url() -> None:
+    from app.schemas.audit import M3ValidateUrlIn
+
+    M3ValidateUrlIn(url="https://api.example.com")
+    with pytest.raises(ValidationError):
+        M3ValidateUrlIn(url="not-a-url")  # type: ignore[arg-type]
