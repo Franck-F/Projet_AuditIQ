@@ -492,3 +492,84 @@ async def test_post_audits_m3_ssrf_is_422(client):
         "lang": "fr",
     }, headers={"Authorization": "Bearer x"})
     assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# M3 test-connection endpoint tests
+# ---------------------------------------------------------------------------
+
+async def test_m3_test_connection_happy_path(client, monkeypatch):
+    """POST /m3/test-connection with valid target, mocked check_connection."""
+    from app.schemas.audit import M3TestConnectionOut
+
+    async def _mock_check(cfg, prompt):
+        return M3TestConnectionOut(
+            status="ok", elapsed_ms=120, extracted_value="hi"
+        )
+
+    monkeypatch.setattr(
+        "app.routers.audits.check_connection", _mock_check
+    )
+
+    r = await client.post(
+        "/api/v1/audits/m3/test-connection",
+        json={
+            "target": {
+                "url": "https://api.example.com/v1",
+                "method": "POST",
+                "headers": {"Authorization": "Bearer x"},
+                "body_template": '{"messages":[{"role":"user","content":"{prompt}"}]}',
+                "response_path": "choices.0.message.content",
+            },
+            "test_prompt": "Bonjour",
+        },
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["elapsed_ms"] == 120
+    assert body["extracted_value"] == "hi"
+
+
+async def test_m3_test_connection_ssrf_refused(client, monkeypatch):
+    """POST /m3/test-connection with SSRF target; check_connection catches error."""
+    import app.integrations.llm_target as lt
+
+    monkeypatch.setattr(lt, "_resolve_ips", lambda host: ["127.0.0.1"])
+
+    r = await client.post(
+        "/api/v1/audits/m3/test-connection",
+        json={
+            "target": {
+                "url": "http://169.254.169.254/latest",
+                "method": "POST",
+                "headers": {},
+                "body_template": "{prompt}",
+                "response_path": "a",
+            },
+            "test_prompt": "test",
+        },
+        headers={"Authorization": "Bearer x"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "error"
+
+
+async def test_m3_test_connection_requires_auth(client):
+    """POST /m3/test-connection without auth returns 401/403."""
+    r = await client.post(
+        "/api/v1/audits/m3/test-connection",
+        json={
+            "target": {
+                "url": "https://api.example.com/v1",
+                "method": "POST",
+                "headers": {},
+                "body_template": "{prompt}",
+                "response_path": "a",
+            },
+            "test_prompt": "test",
+        },
+    )
+    assert r.status_code in (401, 403)

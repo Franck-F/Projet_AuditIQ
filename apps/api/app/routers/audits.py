@@ -8,12 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
 from app.core.deps import get_current_user
+from app.integrations.llm_target import TargetConfig
 from app.integrations.storage import Storage, get_report_storage
 from app.interpretation.base import LLMProvider
 from app.interpretation.gemini import get_llm_provider
-from app.schemas.audit import AuditCreate, AuditOut
+from app.schemas.audit import (
+    AuditCreate,
+    AuditOut,
+    M3TestConnectionIn,
+    M3TestConnectionOut,
+)
 from app.schemas.auth import CurrentUser
 from app.services import audit_service, report_service
+from app.services.llm_test_connection import check_connection
 
 router = APIRouter(prefix="/audits", tags=["audits"])
 
@@ -90,3 +97,18 @@ async def get_audit_report_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.post("/m3/test-connection", response_model=M3TestConnectionOut)
+async def m3_test_connection(
+    body: M3TestConnectionIn,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+) -> M3TestConnectionOut:
+    cfg = TargetConfig(
+        url=body.target.url,
+        method=body.target.method,
+        headers=dict(body.target.headers),
+        body_template=body.target.body_template,
+        response_path=body.target.response_path,
+    )
+    return await check_connection(cfg, body.test_prompt)
