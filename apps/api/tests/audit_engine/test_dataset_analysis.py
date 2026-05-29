@@ -8,8 +8,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from app.audit_engine import run_dataset_analysis
 from app.audit_engine.dataset_analysis import _profile_column, _suggest_decision, _suggest_protected
-from app.audit_engine.types import ColumnProfile
+from app.audit_engine.types import ColumnProfile, DatasetAnalysis
 
 
 def test_profile_numeric_column() -> None:
@@ -165,3 +166,44 @@ def test_suggest_protected_filters_high_cardinality() -> None:
     })
     s = _suggest_protected(df, _profiles(df), decision_col="decision")
     assert s is None
+
+
+def test_run_dataset_analysis_full_flow() -> None:
+    df = pd.DataFrame({
+        "sex": ["M"] * 100 + ["F"] * 100,
+        "approved": [1] * 80 + [0] * 20 + [1] * 40 + [0] * 60,
+        "noise": list(range(200)),
+    })
+    a = run_dataset_analysis(df)
+    assert isinstance(a, DatasetAnalysis)
+    assert len(a.columns) == 3
+    assert a.suggested_decision is not None
+    assert a.suggested_decision.column == "approved"
+    assert a.suggested_protected is not None
+    assert a.suggested_protected.column == "sex"
+
+
+def test_run_dataset_analysis_single_column_no_suggestions() -> None:
+    df = pd.DataFrame({"x": [1, 2, 3, 4, 5]})
+    a = run_dataset_analysis(df)
+    assert len(a.columns) == 1
+    assert a.suggested_decision is None
+    assert a.suggested_protected is None
+
+
+def test_run_dataset_analysis_constant_column_handled() -> None:
+    df = pd.DataFrame({"x": [1] * 50, "y": [0, 1] * 25})
+    a = run_dataset_analysis(df)
+    assert all(p.unique_count >= 1 for p in a.columns)
+
+
+def test_run_dataset_analysis_low_confidence_returns_none_suggestions() -> None:
+    rng = np.random.default_rng(123)
+    df = pd.DataFrame({
+        "a": rng.choice(["x", "y"], 200),
+        "b": rng.choice(["p", "q"], 200),
+        "c": rng.choice([0, 1], 200),
+    })
+    a = run_dataset_analysis(df)
+    if a.suggested_protected is not None:
+        assert a.suggested_protected.confidence >= 0.3

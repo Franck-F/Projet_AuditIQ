@@ -15,6 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from app.audit_engine.types import (
     ColumnProfile,
+    DatasetAnalysis,
     DType,
     RoleHint,
     Suggestion,
@@ -208,3 +209,19 @@ def _suggest_protected(
     if score < _CONFIDENCE_THRESHOLD:
         return None
     return Suggestion(column=col, confidence=round(score, 3), reason=reason)
+
+
+def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
+    """Profile every column and emit decision/protected suggestions.
+
+    Pure function — no I/O, deterministic given the input DataFrame.
+    """
+    profiles = tuple(_profile_column(df, c) for c in df.columns)
+    sug_decision = _suggest_decision(df, profiles)
+    decision_col = sug_decision.column if sug_decision else None
+    sug_protected = _suggest_protected(df, profiles, decision_col=decision_col)
+    return DatasetAnalysis(
+        columns=profiles,
+        suggested_decision=sug_decision,
+        suggested_protected=sug_protected,
+    )
