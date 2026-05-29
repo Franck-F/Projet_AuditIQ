@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.audit_engine.dataset_analysis import _profile_column, _suggest_decision
+from app.audit_engine.dataset_analysis import _profile_column, _suggest_decision, _suggest_protected
 from app.audit_engine.types import ColumnProfile
 
 
@@ -127,3 +127,41 @@ def test_suggest_decision_robust_to_feature_nan() -> None:
     s = _suggest_decision(df, _profiles(df))
     assert s is not None
     assert s.column == "approved"  # picked by name match, not poisoned MI
+
+
+def test_suggest_protected_picks_name_match() -> None:
+    df = pd.DataFrame({
+        "sex": ["M"] * 100 + ["F"] * 100,
+        "approved": [1] * 80 + [0] * 20 + [1] * 40 + [0] * 60,
+        "city": (["Paris", "Lyon"] * 100),
+    })
+    s = _suggest_protected(df, _profiles(df), decision_col="approved")
+    assert s is not None
+    assert s.column == "sex"
+
+
+def test_suggest_protected_uses_chi2_when_name_silent() -> None:
+    rng = np.random.default_rng(0)
+    n = 200
+    decision = (["1"] * (n // 2)) + (["0"] * (n // 2))
+    a = rng.choice(["x", "y"], size=n).tolist()
+    b = (["alpha"] * 80 + ["beta"] * 20) + (["alpha"] * 30 + ["beta"] * 70)
+    df = pd.DataFrame({"a": a, "b": b, "decision": decision})
+    s = _suggest_protected(df, _profiles(df), decision_col="decision")
+    assert s is not None
+    assert s.column == "b"
+
+
+def test_suggest_protected_none_if_decision_missing() -> None:
+    df = pd.DataFrame({"sex": ["M", "F", "M", "F"]})
+    s = _suggest_protected(df, _profiles(df), decision_col=None)
+    assert s is None
+
+
+def test_suggest_protected_filters_high_cardinality() -> None:
+    df = pd.DataFrame({
+        "postcode": [f"7500{i % 100}" for i in range(200)],
+        "decision": ([0, 1] * 100),
+    })
+    s = _suggest_protected(df, _profiles(df), decision_col="decision")
+    assert s is None

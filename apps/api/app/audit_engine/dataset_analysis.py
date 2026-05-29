@@ -9,6 +9,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from scipy.stats import chi2_contingency
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.preprocessing import LabelEncoder
 
@@ -153,3 +154,57 @@ def _suggest_decision(
         reason=reason,
         favorable_value=fav,
     )
+
+
+def _chi2_score(df: pd.DataFrame, col: str, decision_col: str) -> float:
+    """Score = -log10(p_value) of chi² independence test, normalized to [0,1] at hi=10."""
+    if col == decision_col:
+        return 0.0
+    contingency = pd.crosstab(df[col], df[decision_col])
+    if contingency.size == 0 or contingency.shape[0] < 2 or contingency.shape[1] < 2:
+        return 0.0
+    try:
+        _, p, _, _ = chi2_contingency(contingency)
+    except ValueError:
+        return 0.0
+    if p <= 0 or np.isnan(p):
+        return 1.0
+    raw = -float(np.log10(p))
+    return _normalize_score(raw, hi=10.0)
+
+
+def _suggest_protected(
+    df: pd.DataFrame,
+    profiles: tuple[ColumnProfile, ...],
+    *,
+    decision_col: str | None,
+) -> Suggestion | None:
+    if decision_col is None or decision_col not in df.columns:
+        return None
+    candidates: list[tuple[float, str, str]] = []
+    for p in profiles:
+        if p.name == decision_col:
+            continue
+        if not (2 <= p.unique_count <= 20):
+            continue
+        name_score = 1.0 if _PROTECTED_RE.match(p.name) else 0.0
+        stats_score = _chi2_score(df, p.name, decision_col)
+        final = 0.6 * name_score + 0.4 * stats_score
+        reasons: list[str] = []
+        if name_score > 0:
+            reasons.append("nom évocateur d'attribut sensible")
+        if stats_score > 0.3:
+            reasons.append("lien fort avec la décision (χ²)")
+        reason = (
+            "Colonne candidate : " + ", ".join(reasons) + "."
+            if reasons
+            else "Cardinalité compatible mais aucun signal fort détecté."
+        )
+        candidates.append((final, p.name, reason))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    score, col, reason = candidates[0]
+    if score < _CONFIDENCE_THRESHOLD:
+        return None
+    return Suggestion(column=col, confidence=round(score, 3), reason=reason)
