@@ -61,3 +61,12 @@ def test_intersectional_symbols_exported():
     assert hasattr(ae, "IntersectionalCell")
     assert hasattr(ae, "run_m1")
     assert hasattr(ae, "M1Result")
+
+
+def test_dataset_analysis_in_public_api() -> None:
+    from app import audit_engine
+
+    assert "run_dataset_analysis" in audit_engine.__all__
+    assert "DatasetAnalysis" in audit_engine.__all__
+    assert "ColumnProfile" in audit_engine.__all__
+    assert "Suggestion" in audit_engine.__all__

@@ -1,6 +1,7 @@
 """AuditIQ audit engine — pure, no I/O. M1 supervised + M2 unsupervised + M3 LLM."""
 
 from .anomaly_iqr import iqr_precheck
+from .dataset_analysis import run_dataset_analysis
 from .errors import AuditEngineError, DatasetValidationError
 from .intersectional import run_intersectional
 from .llm_audit import run_m3
@@ -13,6 +14,8 @@ from .metrics import (
 from .types import (
     CategoryStat,
     ClusterStat,
+    ColumnProfile,
+    DatasetAnalysis,
     DivergentExample,
     FeatureContribution,
     GroupStat,
@@ -29,10 +32,15 @@ from .types import (
     PromptPair,
     PromptVariant,
     ResponseRecord,
+    Suggestion,
 )
 from .unsupervised import run_m2
 
 __all__ = [
+    "ColumnProfile",
+    "DatasetAnalysis",
+    "Suggestion",
+    "run_dataset_analysis",
     "run_m1",
     "run_m2",
     "iqr_precheck",

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, model_validator
 
 Verdict = Literal["pass", "warn", "fail"]
 
@@ -309,3 +309,33 @@ class AuditOut(BaseModel):
     interpretation: InterpretationOut | None = None
     pre_check: list[str] = []
     config: dict[str, object] | None = None
+
+
+class M3TestConnectionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target: TargetIn
+    test_prompt: str = "Bonjour, peux-tu te présenter brièvement ?"
+
+
+class M3TestConnectionOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ok", "error"]
+    elapsed_ms: int
+    request_sent: dict[str, Any] | None = None
+    response_raw: Any = None
+    extracted_value: str | None = None
+    error: str | None = None
+
+
+class M3ValidateUrlIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    url: AnyHttpUrl
+
+
+class M3ValidateUrlOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ok"]

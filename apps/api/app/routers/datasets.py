@@ -11,7 +11,7 @@ from app.core.deps import get_current_user
 from app.core.errors import APIError
 from app.integrations.storage import Storage, get_storage
 from app.schemas.auth import CurrentUser
-from app.schemas.dataset import DatasetOut
+from app.schemas.dataset import DatasetAnalysisOut, DatasetOut
 from app.services import dataset_service
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
@@ -58,3 +58,15 @@ async def get_dataset(
         session, dataset_id, org_id=user.org_id
     )
     return DatasetOut.model_validate(dataset)
+
+
+@router.post("/{dataset_id}/analyze", response_model=DatasetAnalysisOut)
+async def analyze_dataset(
+    dataset_id: uuid.UUID,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+    storage: Storage = Depends(get_storage_dep),  # noqa: B008
+) -> DatasetAnalysisOut:
+    return await dataset_service.get_or_build_analysis(
+        session, storage, dataset_id, org_id=user.org_id
+    )

@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import datetime
 import io
+import json
 import uuid
 
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit_engine import run_dataset_analysis
 from app.core.errors import APIError, NotFoundError
 from app.integrations.storage import Storage
 from app.models import Dataset
+from app.schemas.dataset import DatasetAnalysisOut
 
 
 def _parse_csv(raw: bytes) -> tuple[list[str], int]:
@@ -75,3 +78,26 @@ async def get_dataset(
     if dataset is None:
         raise NotFoundError("Jeu de données introuvable.")
     return dataset
+
+
+async def get_or_build_analysis(
+    session: AsyncSession,
+    storage: Storage,
+    dataset_id: uuid.UUID,
+    *,
+    org_id: uuid.UUID,
+) -> DatasetAnalysisOut:
+    """Return cached analysis or compute, cache, and return it.
+
+    RLS enforced via org_id scope. Raises NotFoundError for cross-org access.
+    """
+    dataset = await get_dataset(session, dataset_id, org_id=org_id)
+    if dataset.analysis_cache:
+        return DatasetAnalysisOut.model_validate(dataset.analysis_cache)
+    raw = await storage.download(dataset.storage_path)
+    df = pd.read_csv(io.BytesIO(raw))
+    analysis = run_dataset_analysis(df)
+    out = DatasetAnalysisOut.from_engine(analysis)
+    dataset.analysis_cache = json.loads(out.model_dump_json())
+    await session.commit()
+    return out
