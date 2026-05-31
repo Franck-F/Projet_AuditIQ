@@ -1,5 +1,34 @@
+import json
+
+import pytest
+
 from app.audit_engine.types import GroupStat, M1Result
 from app.interpretation.m1 import interpret_m1
+
+
+class _StubLLM:
+    """Stub LLM provider that returns a canned JSON response."""
+
+    name = "stub"
+    model = "stub-1"
+
+    def __init__(self, response_json: str) -> None:
+        self.response_json = response_json
+
+    async def complete(self, prompt: str, *, as_json: bool = False) -> str:
+        return self.response_json
+
+
+@pytest.fixture
+def m1_result_pass() -> M1Result:
+    """Fixture: a passing M1Result."""
+    return M1Result(
+        groups=(GroupStat("a", 40, 20, 0.5, 1.0),
+                GroupStat("b", 40, 12, 0.3, 0.6)),
+        reference_value="a", disparate_impact=0.6,
+        demographic_parity_diff=0.2, worst_group="b", verdict="pass",
+        risk_score=30, warnings=(),
+    )
 
 
 async def test_interpret_m1_fallback_mentions_normative_tension_when_eo_present():
@@ -83,3 +112,65 @@ async def test_interpret_m1_no_intersectional_unchanged_shape():
     assert out.provider == "fallback"
     blob = (out.narrative + " " + " ".join(out.disclaimers)).lower()
     assert "intersection" not in blob
+
+
+@pytest.mark.asyncio
+async def test_interpret_m1_recommendations_parsed_from_valid_json(
+    m1_result_pass: M1Result,
+) -> None:
+    """LLM returns 3 valid recos → all 3 surface in InterpretationOut."""
+    llm_json = json.dumps(
+        {
+            "narrative": "n",
+            "ai_act_anchors": ["a"],
+            "disclaimers": ["d"],
+            "recommendations": [
+                {"title": "R1", "detail": "D1.", "priority": "high"},
+                {"title": "R2", "detail": "D2.", "priority": "medium"},
+                {"title": "R3", "detail": "D3.", "priority": "low"},
+            ],
+        },
+        ensure_ascii=False,
+    )
+    provider = _StubLLM(llm_json)
+    out = await interpret_m1(m1_result_pass, provider=provider)
+    assert len(out.recommendations) == 3
+    assert out.recommendations[0].title == "R1"
+    assert out.recommendations[0].priority == "high"
+
+
+@pytest.mark.asyncio
+async def test_interpret_m1_recommendations_dropped_when_malformed(
+    m1_result_pass: M1Result,
+) -> None:
+    """LLM returns 1 valid + 1 invalid → only the valid one surfaces."""
+    llm_json = json.dumps(
+        {
+            "narrative": "n",
+            "ai_act_anchors": ["a"],
+            "disclaimers": ["d"],
+            "recommendations": [
+                {"title": "Valid", "detail": "OK.", "priority": "high"},
+                {"title": "No priority", "detail": "OK."},
+            ],
+        },
+        ensure_ascii=False,
+    )
+    provider = _StubLLM(llm_json)
+    out = await interpret_m1(m1_result_pass, provider=provider)
+    assert len(out.recommendations) == 1
+    assert out.recommendations[0].title == "Valid"
+
+
+@pytest.mark.asyncio
+async def test_interpret_m1_recommendations_empty_when_field_absent(
+    m1_result_pass: M1Result,
+) -> None:
+    """LLM omits recommendations field → empty list (audit still valid)."""
+    llm_json = json.dumps(
+        {"narrative": "n", "ai_act_anchors": ["a"], "disclaimers": ["d"]},
+        ensure_ascii=False,
+    )
+    provider = _StubLLM(llm_json)
+    out = await interpret_m1(m1_result_pass, provider=provider)
+    assert out.recommendations == []
