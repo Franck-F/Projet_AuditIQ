@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { Topbar } from '@/components/app/Topbar';
 import { Button } from '@/components/ui/button';
 import { DatasetUploadCard } from '@/components/audits/DatasetUploadCard';
+import { M1Wizard } from '@/components/audits/wizard/m1/M1Wizard';
 import {
   type DatasetOut,
   type M2ConfigIn,
@@ -17,18 +18,6 @@ import {
 } from '@/lib/api/audits';
 
 type Module = 'M1' | 'M2' | 'M3';
-
-const M1Schema = z.object({
-  title: z.string().min(1, 'Requis'),
-  protected_attribute: z.string().min(1, 'Requis'),
-  decision_column: z.string().min(1, 'Requis'),
-  favorable_value: z.string().min(1, 'Requis'),
-  privileged_value: z.string().optional(),
-  ground_truth_column: z.string().optional(),
-  secondary_protected_attribute: z.string().optional(),
-  secondary_privileged_value: z.string().optional(),
-});
-type M1Values = z.infer<typeof M1Schema>;
 
 const M2Schema = z.object({
   title: z.string().min(1, 'Requis'),
@@ -51,168 +40,6 @@ type FormProps = {
   setError: (e: string | null) => void;
   onDone: (id: string) => void;
 };
-
-function M1Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<M1Values>({ resolver: zodResolver(M1Schema) });
-
-  const onSubmit = async (v: M1Values) => {
-    setError(null);
-    setBusy(true);
-    try {
-      const audit = await createAudit({
-        dataset_id: dataset.id,
-        title: v.title,
-        protected_attribute: v.protected_attribute,
-        decision_column: v.decision_column,
-        favorable_value: v.favorable_value,
-        privileged_value: v.privileged_value ? v.privileged_value : null,
-        ...(v.ground_truth_column
-          ? { ground_truth_column: v.ground_truth_column }
-          : {}),
-        ...(v.secondary_protected_attribute
-          ? { secondary_protected_attribute: v.secondary_protected_attribute }
-          : {}),
-        ...(v.secondary_privileged_value
-          ? { secondary_privileged_value: v.secondary_privileged_value }
-          : {}),
-      });
-      onDone(audit.id);
-    } catch {
-      setError("Le lancement de l'audit a échoué.");
-      setBusy(false);
-    }
-  };
-
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4 rounded-2xl border border-border-default bg-surface p-8"
-      noValidate
-    >
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="title" className={labelCls}>
-          Titre de l&apos;audit
-        </label>
-        <input id="title" className={fieldCls} {...register('title')} />
-        {errors.title && (
-          <span className="text-xs text-status-fail">
-            {errors.title.message}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="pa" className={labelCls}>
-          Attribut protégé
-        </label>
-        <select
-          id="pa"
-          defaultValue=""
-          className={fieldCls}
-          {...register('protected_attribute')}
-        >
-          <option value="" disabled>
-            —
-          </option>
-          {dataset.columns.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {errors.protected_attribute && (
-          <span className="text-xs text-status-fail">
-            {errors.protected_attribute.message}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="dc" className={labelCls}>
-          Colonne de décision
-        </label>
-        <select
-          id="dc"
-          defaultValue=""
-          className={fieldCls}
-          {...register('decision_column')}
-        >
-          <option value="" disabled>
-            —
-          </option>
-          {dataset.columns.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {errors.decision_column && (
-          <span className="text-xs text-status-fail">
-            {errors.decision_column.message}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="fv" className={labelCls}>
-          Valeur favorable
-        </label>
-        <input id="fv" className={fieldCls} {...register('favorable_value')} />
-        {errors.favorable_value && (
-          <span className="text-xs text-status-fail">
-            {errors.favorable_value.message}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="pv" className={labelCls}>
-          Groupe de référence (optionnel)
-        </label>
-        <input id="pv" className={fieldCls} {...register('privileged_value')} />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="gtc" className={labelCls}>
-          Colonne résultat réel (vérité-terrain) — facultatif
-        </label>
-        <select
-          id="gtc"
-          defaultValue=""
-          className={fieldCls}
-          {...register('ground_truth_column')}
-        >
-          <option value="">—</option>
-          {dataset.columns.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="spa" className={labelCls}>
-          Attribut secondaire — analyse intersectionnelle (facultatif)
-        </label>
-        <select
-          id="spa"
-          defaultValue=""
-          className={fieldCls}
-          {...register('secondary_protected_attribute')}
-        >
-          <option value="">—</option>
-          {dataset.columns.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <Button type="submit" variant="primary" size="lg" disabled={busy}>
-        {busy ? 'Analyse…' : "Lancer l'audit"}
-      </Button>
-    </form>
-  );
-}
 
 function M2Form({ dataset, busy, setBusy, setError, onDone }: FormProps) {
   const {
@@ -652,19 +479,13 @@ export default function NouveauPage() {
               </button>
             </div>
           </div>
-        ) : (module === 'M1' || module === 'M2') && !dataset ? (
+        ) : module === 'M1' ? (
+          <M1Wizard onComplete={(id) => router.push(`/app/audits/${id}`)} />
+        ) : module === 'M2' && !dataset ? (
           <DatasetUploadCard
             module={module}
             busy={busy}
             onSelected={handleFile}
-          />
-        ) : module === 'M1' && dataset ? (
-          <M1Form
-            dataset={dataset}
-            busy={busy}
-            setBusy={setBusy}
-            setError={setError}
-            onDone={(id) => router.push(`/app/audits/${id}`)}
           />
         ) : module === 'M2' && dataset ? (
           <M2Form
