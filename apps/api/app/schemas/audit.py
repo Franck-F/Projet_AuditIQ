@@ -4,7 +4,7 @@ import datetime
 import uuid
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, model_validator
 
 Verdict = Literal["pass", "warn", "fail"]
 
@@ -279,6 +279,14 @@ class M3MetricsOut(BaseModel):
     warnings: list[str]
 
 
+class RecommendationOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=200)
+    detail: str = Field(min_length=1, max_length=1000)
+    priority: Literal["high", "medium", "low"]
+
+
 class InterpretationOut(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -287,6 +295,7 @@ class InterpretationOut(BaseModel):
     disclaimers: list[str]
     provider: str
     model: str
+    recommendations: list[RecommendationOut] = Field(default_factory=list)
 
 
 class AuditOut(BaseModel):
