@@ -35,3 +35,29 @@ describe('help-content', () => {
     }
   });
 });
+
+describe('M1 help entries', () => {
+  const M1_REQUIRED_KEYS = [
+    'm1.step1',
+    'm1.step1.title',
+    'm1.step2',
+    'm1.step3',
+    'm1.step3.decision_column',
+    'm1.step3.favorable_value',
+    'm1.step4',
+    'm1.step4.protected_attribute',
+    'm1.step4.privileged_value',
+    'm1.step4.ground_truth_column',
+    'm1.step4.secondary_protected_attribute',
+    'm1.step5',
+  ];
+
+  it('all M1 required help keys have entries', () => {
+    for (const key of M1_REQUIRED_KEYS) {
+      const entry = getHelp(key);
+      expect(entry, `missing entry for ${key}`).toBeDefined();
+      expect(entry?.title.length).toBeGreaterThan(0);
+      expect(entry?.body.length).toBeGreaterThan(0);
+    }
+  });
+});
