@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 const { post, get } = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
 vi.mock('@/lib/api/client', () => ({ api: { post, get } }));
 
-import { createAudit, fetchAudit, uploadDataset } from '@/lib/api/audits';
+import { api } from '@/lib/api/client';
+import { analyzeDataset, createAudit, fetchAudit, uploadDataset } from '@/lib/api/audits';
 
 describe('audits api', () => {
   it('uploads a dataset as multipart to /datasets', async () => {
@@ -158,5 +159,23 @@ describe('audits api', () => {
     const a = await fetchAudit('a1');
     expect(a.status).toBe('failed');
     expect(a.error).toBe('compute exploded');
+  });
+});
+
+describe('analyzeDataset', () => {
+  it('POSTs to /datasets/:id/analyze and returns the payload', async () => {
+    const mock = vi.spyOn(api, 'post').mockResolvedValue({
+      data: {
+        columns: [
+          { name: 'sex', dtype: 'categorical', unique_count: 2, null_ratio: 0, top_values: [['F', 100], ['M', 100]], role_hint: 'protected' },
+        ],
+        suggested_decision: null,
+        suggested_protected: { column: 'sex', confidence: 0.95, reason: 'Nom évocateur', favorable_value: null },
+      },
+    });
+    const out = await analyzeDataset('abc-123');
+    expect(mock).toHaveBeenCalledWith('/datasets/abc-123/analyze');
+    expect(out.suggested_protected?.column).toBe('sex');
+    mock.mockRestore();
   });
 });

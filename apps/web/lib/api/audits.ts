@@ -263,3 +263,34 @@ export async function downloadReport(
     URL.revokeObjectURL(url);
   }
 }
+
+export type ColumnProfileOut = {
+  name: string;
+  dtype: string;
+  unique_count: number;
+  null_ratio: number;
+  top_values: Array<[unknown, number]>;
+  role_hint: string;
+};
+
+export type SuggestionOut = {
+  column: string;
+  confidence: number;
+  reason: string;
+  favorable_value?: unknown | null;
+};
+
+export type DatasetAnalysisOut = {
+  columns: ColumnProfileOut[];
+  suggested_decision: SuggestionOut | null;
+  suggested_protected: SuggestionOut | null;
+};
+
+export async function analyzeDataset(
+  datasetId: string,
+): Promise<DatasetAnalysisOut> {
+  const { data } = await api.post<DatasetAnalysisOut>(
+    `/datasets/${datasetId}/analyze`,
+  );
+  return data;
+}
