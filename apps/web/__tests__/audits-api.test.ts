@@ -179,3 +179,22 @@ describe('analyzeDataset', () => {
     mock.mockRestore();
   });
 });
+
+describe('RecommendationOut type', () => {
+  it('InterpretationOut includes a recommendations array', () => {
+    const interp: import('@/lib/api/audits').InterpretationOut = {
+      narrative: 'n',
+      ai_act_anchors: ['a'],
+      disclaimers: ['d'],
+      provider: 'fallback',
+      model: 'deterministic',
+      recommendations: [
+        { title: 'R1', detail: 'D1.', priority: 'high' },
+        { title: 'R2', detail: 'D2.', priority: 'medium' },
+        { title: 'R3', detail: 'D3.', priority: 'low' },
+      ],
+    };
+    expect(interp.recommendations).toHaveLength(3);
+    expect(interp.recommendations[0]?.priority).toBe('high');
+  });
+});

@@ -84,12 +84,19 @@ export type M1MetricsOut = {
   intersectional?: IntersectionalOut | null;
 };
 
+export type RecommendationOut = {
+  title: string;
+  detail: string;
+  priority: 'high' | 'medium' | 'low';
+};
+
 export type InterpretationOut = {
   narrative: string;
   ai_act_anchors: string[];
   disclaimers: string[];
   provider: string;
   model: string;
+  recommendations: RecommendationOut[];
 };
 
 export type FeatureContributionOut = {
