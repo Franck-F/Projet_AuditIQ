@@ -4,6 +4,7 @@ import json
 from importlib import resources
 
 from app.audit_engine import M2Result
+from app.interpretation._recommendations import parse_recommendations
 from app.interpretation.base import LLMProvider
 from app.schemas.audit import InterpretationOut
 
@@ -101,6 +102,7 @@ async def interpret_m2(
             or list(_DISCLAIMERS),
             provider=provider.name,
             model=provider.model,
+            recommendations=parse_recommendations(data.get("recommendations")),
         )
     except Exception:  # noqa: BLE001 — any LLM/parse failure → safe fallback
         return _fallback(result)

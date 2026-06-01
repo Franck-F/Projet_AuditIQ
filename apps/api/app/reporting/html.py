@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from html import escape
 
-from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
 
 _VERDICT_FR = {
     "fail": ("Critique", "#b42318"),
@@ -21,6 +21,12 @@ _FR_LAW = (
     "Références droit français : Code du travail L.1132-1 ; Défenseur des "
     "droits ; CNIL ; ACPR (selon le contexte d'usage)."
 )
+_PRIORITY_LABEL_FR = {
+    "high": "Action prioritaire",
+    "medium": "À planifier",
+    "low": "Maintien / veille",
+}
+
 _AI_ACT = [
     ("Article 9 — gestion des risques", "Risque agrégé / verdict"),
     ("Article 10 — qualité des données", "Pré-vérifications / groupes"),
@@ -210,6 +216,27 @@ def _detail(audit: AuditOut) -> str:
     return "<p>Résultats indisponibles pour cet audit.</p>"
 
 
+def _render_recommendations(recs: list[RecommendationOut]) -> str:
+    if not recs:
+        return ""
+    items = "".join(
+        '<li class="rec rec-' + escape(r.priority) + '">'
+        '<div class="rec-head">'
+        '<span class="rec-title">' + escape(r.title) + '</span>'
+        '<span class="rec-prio">' + escape(_PRIORITY_LABEL_FR[r.priority]) + '</span>'
+        '</div>'
+        '<p class="rec-detail">' + escape(r.detail) + '</p>'
+        '</li>'
+        for r in recs
+    )
+    return (
+        '<section class="recommendations">'
+        '<h3>Recommandations</h3>'
+        '<ul>' + items + '</ul>'
+        '</section>'
+    )
+
+
 def build_report_html(audit: AuditOut) -> str:
     m = audit.metrics
     verdict = m.verdict if m is not None else "pass"
@@ -229,6 +256,12 @@ def build_report_html(audit: AuditOut) -> str:
         if audit.interpretation is not None
         else ""
     )
+    recs = (
+        audit.interpretation.recommendations
+        if audit.interpretation is not None
+        else []
+    )
+    recs_html = _render_recommendations(recs)
     return f"""<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <style>
@@ -242,6 +275,16 @@ background:{color};font-weight:bold}}
 .note{{color:#475467;font-size:11px;margin-top:6px}}
 footer{{margin-top:32px;border-top:1px solid #eaecf0;padding-top:8px;
 color:#475467;font-size:10px}}
+.recommendations{{margin-top:24px}}
+.recommendations h3{{font-size:14px;font-weight:600;margin-bottom:8px}}
+.recommendations ul{{list-style:none;padding:0}}
+.recommendations .rec{{border:1px solid #d4d4d8;border-radius:6px;padding:12px;margin-bottom:8px}}
+.recommendations .rec-head{{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}}
+.recommendations .rec-title{{font-weight:500;font-size:13px}}
+.recommendations .rec-prio{{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#71717a}}
+.recommendations .rec-high .rec-prio{{color:#dc2626}}
+.recommendations .rec-medium .rec-prio{{color:#d97706}}
+.recommendations .rec-detail{{font-size:12px;color:#52525b;margin:0}}
 </style></head><body>
 <h1>Rapport de conformité AuditIQ</h1>
 <p class="note">{_NOT_A_CERTIFICATE}</p>
@@ -255,6 +298,7 @@ color:#475467;font-size:10px}}
 </table>
 {_detail(audit)}
 <h2>Interprétation</h2><p>{narrative}</p>
+{recs_html}
 <h2>Mise en regard AI Act</h2><table class="kv">{anchors}</table>
 <p class="note">{_FR_LAW}</p>
 <h2>Pré-vérifications</h2><ul>{pre}</ul>

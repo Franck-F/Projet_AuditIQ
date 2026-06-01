@@ -36,6 +36,26 @@ Consignes STRICTES :
   sont exclus du calcul ; l'analyse intersectionnelle est indicative sur de
   petits jeux de données.
   Si le champ `intersectional` est ABSENT du JSON, ne le mentionne pas.
+- Termine en proposant 3 à 5 recommandations actionnables (PAS plus, PAS moins),
+  prioritisées par impact réel :
+  - chaque reco = un objet {{"title": "...", "detail": "...", "priority": "..."}}
+  - title = action courte (5-10 mots), à l'impératif (ex. « Re-collecter
+    les données d'entraînement »)
+  - detail = explication concrète en 1-2 phrases : pourquoi maintenant,
+    quoi faire d'abord, sans jargon
+  - priority ∈ {{"high", "medium", "low"}} :
+    - "high" : action nécessaire pour répondre à un échec/risque AI Act
+    - "medium" : amélioration recommandée mais pas bloquante
+    - "low" : maintenance/veille
+  - Si le verdict est PASS (pas d'écart significatif), garde 1-2 recos
+    « maintien de la veille » (priority="low") — ne pas inventer de
+    problème.
+  - Si FAIL/WARN, privilégier les actions concrètes : qualité de données,
+    monitoring, documentation, choix de métrique.
+- Pour M1, prioriser les recos sur la collecte de données (groupe sous-représenté),
+  le choix de la métrique de fairness (DI vs EO vs EOdds — chaque choix est un
+  choix normatif), et le monitoring post-déploiement.
+- N'invente JAMAIS un défaut qui n'est pas dans les métriques fournies.
 
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
-{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."]}}
+{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."], "recommendations": [{{"title": "...", "detail": "...", "priority": "high"}}]}}

@@ -52,3 +52,74 @@ async def test_interpret_m2_uses_provider_then_falls_back_on_error():
 
     out2 = await interpret_m2(_result(), provider=_Boom())
     assert out2.provider == "fallback"
+
+
+async def test_interpret_m2_recommendations_parsed_from_valid_json() -> None:
+    """LLM returns 2 valid recos → all 2 surface in InterpretationOut."""
+    llm_json = json.dumps(
+        {
+            "narrative": "n",
+            "ai_act_anchors": ["a"],
+            "disclaimers": ["d"],
+            "recommendations": [
+                {"title": "R1", "detail": "D1.", "priority": "high"},
+                {"title": "R2", "detail": "D2.", "priority": "medium"},
+            ],
+        },
+        ensure_ascii=False,
+    )
+
+    class _StubLLM:
+        name = "stub"
+        model = "stub-1"
+
+        async def complete(self, prompt: str, *, as_json: bool = False) -> str:
+            return llm_json
+
+    out = await interpret_m2(_result(), provider=_StubLLM())
+    assert len(out.recommendations) == 2
+
+
+async def test_interpret_m2_recommendations_dropped_when_malformed() -> None:
+    """LLM returns 1 valid + 1 invalid → only the valid one surfaces."""
+    llm_json = json.dumps(
+        {
+            "narrative": "n",
+            "ai_act_anchors": ["a"],
+            "disclaimers": ["d"],
+            "recommendations": [
+                {"title": "Valid", "detail": "OK.", "priority": "high"},
+                "not a dict",
+            ],
+        },
+        ensure_ascii=False,
+    )
+
+    class _StubLLM:
+        name = "stub"
+        model = "stub-1"
+
+        async def complete(self, prompt: str, *, as_json: bool = False) -> str:
+            return llm_json
+
+    out = await interpret_m2(_result(), provider=_StubLLM())
+    assert len(out.recommendations) == 1
+    assert out.recommendations[0].title == "Valid"
+
+
+async def test_interpret_m2_recommendations_empty_when_field_absent() -> None:
+    """LLM omits recommendations field → empty list (audit still valid)."""
+    llm_json = json.dumps(
+        {"narrative": "n", "ai_act_anchors": ["a"], "disclaimers": ["d"]},
+        ensure_ascii=False,
+    )
+
+    class _StubLLM:
+        name = "stub"
+        model = "stub-1"
+
+        async def complete(self, prompt: str, *, as_json: bool = False) -> str:
+            return llm_json
+
+    out = await interpret_m2(_result(), provider=_StubLLM())
+    assert out.recommendations == []
