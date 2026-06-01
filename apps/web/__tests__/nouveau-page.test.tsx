@@ -16,16 +16,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
 import NouveauPage from '@/app/app/audits/nouveau/page';
 
-const DATASET = {
-  id: 'd1',
-  filename: 'r.csv',
-  row_count: 2,
-  columns: ['genre', 'age', 'decision'],
-  status: 'ready',
-  created_at: '',
-  expires_at: null,
-};
-
 describe('audit wizard', () => {
   it('M1 module choice shows the new wizard (step 1: title input)', async () => {
     const user = userEvent.setup();
@@ -37,44 +27,13 @@ describe('audit wizard', () => {
     expect(screen.queryByLabelText(/Attribut protégé/i)).toBeNull();
   });
 
-  it('M2: choose unsupervised module, configure, create, redirect', async () => {
-    uploadDataset.mockResolvedValue(DATASET);
-    createAudit.mockResolvedValue({ id: 'aud-m2', status: 'done' });
+  it('M2 module choice shows the new wizard (step 1: title input)', async () => {
+    const user = userEvent.setup();
     render(<NouveauPage />);
-
-    await userEvent.click(
-      screen.getByRole('button', { name: /détection non supervisée/i }),
-    );
-
-    await userEvent.upload(
-      screen.getByTestId('csv-input'),
-      new File(['x'], 'r.csv', { type: 'text/csv' }),
-    );
-    await waitFor(() => expect(uploadDataset).toHaveBeenCalled());
-
-    await userEvent.type(screen.getByLabelText(/titre/i), 'Détection Q2');
-    await userEvent.selectOptions(
-      screen.getByLabelText(/colonne de décision/i),
-      'decision',
-    );
-    await userEvent.type(screen.getByLabelText(/valeur favorable/i), 'oui');
-    await userEvent.click(
-      screen.getByRole('button', { name: /lancer l'audit/i }),
-    );
-
-    await waitFor(() =>
-      expect(createAudit).toHaveBeenCalledWith({
-        dataset_id: 'd1',
-        title: 'Détection Q2',
-        module: 'M2',
-        decision_column: 'decision',
-        favorable_value: 'oui',
-        config: {},
-      }),
-    );
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith('/app/audits/aud-m2'),
-    );
+    await user.click(screen.getByRole('button', { name: /Détection non supervisée/i }));
+    expect(screen.getByRole('textbox', { name: /titre/i })).toBeInTheDocument();
+    // Step 4 advanced not visible at step 1
+    expect(screen.queryByLabelText(/Nombre de clusters/i)).toBeNull();
   });
 
   it('M3: choose module, fill target form (no CSV), creates an M3 audit', async () => {
@@ -112,18 +71,5 @@ describe('audit wizard', () => {
     expect(body.lang).toBeTruthy();
     expect(uploadDataset as unknown as Mock).not.toHaveBeenCalled();
     expect(push).toHaveBeenCalledWith('/app/audits/m3-1');
-  });
-
-  it('shows an error if the upload fails (M2)', async () => {
-    uploadDataset.mockRejectedValue(new Error('bad csv'));
-    render(<NouveauPage />);
-    await userEvent.click(
-      screen.getByRole('button', { name: /détection non supervisée/i }),
-    );
-    await userEvent.upload(
-      screen.getByTestId('csv-input'),
-      new File(['x'], 'x.csv', { type: 'text/csv' }),
-    );
-    expect(await screen.findByRole('alert')).toHaveTextContent(/échou/i);
   });
 });

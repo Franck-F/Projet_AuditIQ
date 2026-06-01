@@ -61,3 +61,28 @@ describe('M1 help entries', () => {
     }
   });
 });
+
+describe('M2 help entries', () => {
+  const M2_REQUIRED_KEYS = [
+    'm2.step1',
+    'm2.step1.title',
+    'm2.step2',
+    'm2.step3',
+    'm2.step3.decision_column',
+    'm2.step3.favorable_value',
+    'm2.step4',
+    'm2.step4.k',
+    'm2.step4.deviation_pp',
+    'm2.step4.chi2_alpha',
+    'm2.step5',
+  ];
+
+  it('all M2 required help keys have entries', () => {
+    for (const key of M2_REQUIRED_KEYS) {
+      const entry = getHelp(key);
+      expect(entry, `missing entry for ${key}`).toBeDefined();
+      expect(entry?.title.length).toBeGreaterThan(0);
+      expect(entry?.body.length).toBeGreaterThan(0);
+    }
+  });
+});

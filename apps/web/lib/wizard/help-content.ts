@@ -92,6 +92,58 @@ export const STEP_HELP: Record<HelpKey, HelpEntry> = {
     title: 'Récapitulatif',
     body: "Vérifiez les paramètres avant de lancer l'audit. Le calcul prend généralement 5-30 secondes selon la taille du dataset. Vous pourrez télécharger les rapports Excel et PDF une fois terminé.",
   },
+
+  // M2 — Détection non supervisée
+  'm2.step1': {
+    title: 'Donnez un nom à votre détection',
+    body: "Choisissez un titre court et descriptif. La détection non supervisée cherche des groupes de décisions inhabituels sans connaître l'attribut sensible.",
+    example: '« Détection biais octrois crédit 2026 »',
+  },
+  'm2.step1.title': {
+    title: 'Titre de la détection',
+    body: 'Un nom court (3-50 caractères) qui identifie l\'audit. Apparaît dans le tableau de bord et les rapports.',
+  },
+  'm2.step2': {
+    title: 'Importez votre jeu de données',
+    body: "Importez le CSV des décisions à analyser. Inutile d'inclure un attribut protégé : M2 détecte les écarts à partir des features comportementales (montant, durée, ancienneté, etc.).",
+    example: 'Un CSV de 1 000 décisions de crédit avec colonnes : montant, duree, garantie, anciennete, decision.',
+  },
+  'm2.step3': {
+    title: 'Quelle décision auditer ?',
+    body: "Indiquez la colonne de décision et la valeur favorable. M2 mesurera comment cette valeur se distribue entre les clusters découverts automatiquement.",
+  },
+  'm2.step3.decision_column': {
+    title: 'Colonne de décision',
+    body: "Colonne qui contient la sortie binaire ou catégorielle du modèle. AuditIQ propose la plus probable.",
+    example: '« accorde » avec valeurs 0 / 1.',
+  },
+  'm2.step3.favorable_value': {
+    title: 'Valeur favorable',
+    body: "Valeur représentant le bénéfice (accordé, accepté, 1). M2 mesure le taux de cette valeur dans chaque cluster.",
+  },
+  'm2.step4': {
+    title: 'Paramètres avancés (facultatif)',
+    body: "Les valeurs par défaut conviennent à la plupart des cas (k=5 clusters, seuil 20 pp, alpha 0.05). N'ajustez que si vous savez ce que vous faites — par exemple plus de clusters sur un grand dataset.",
+  },
+  'm2.step4.k': {
+    title: 'Nombre de clusters (k)',
+    body: "Nombre de groupes que KMeans cherchera. Plus k est grand, plus la segmentation est fine — mais aussi plus sensible au bruit. Par défaut k=5 convient à 100-10 000 lignes.",
+    example: 'k=3 pour un petit dataset (<200 lignes), k=8 pour un grand (>10 000).',
+  },
+  'm2.step4.deviation_pp': {
+    title: 'Seuil de déviation (points)',
+    body: "Un cluster est considéré « déviant » si son taux de décision favorable s'écarte de cette valeur (en points de pourcentage) du taux global. 20 pp = écart d'environ 20 points avec la moyenne.",
+    example: 'Taux global 50 %, seuil 20 pp → un cluster à 25 % ou à 75 % est marqué déviant.',
+  },
+  'm2.step4.chi2_alpha': {
+    title: 'Seuil χ² (alpha)',
+    body: "Niveau de significativité du test du chi-deux d'indépendance. 0.05 = on accepte 5 % de chance de fausse alerte.",
+    example: 'alpha=0.01 (plus strict), 0.05 (standard), 0.10 (plus permissif).',
+  },
+  'm2.step5': {
+    title: 'Récapitulatif',
+    body: "Vérifiez les paramètres avant de lancer la détection. KMeans + chi² prennent généralement 5-30 secondes selon la taille du dataset.",
+  },
 };
 
 /**
