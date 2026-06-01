@@ -11,6 +11,7 @@ from app.schemas.audit import (
     IntersectionalOut,
     M1MetricsOut,
     M2MetricsOut,
+    RecommendationOut,
 )
 
 _NOW = datetime.datetime(2026, 5, 17, tzinfo=datetime.timezone.utc)
@@ -397,3 +398,64 @@ def test_html_m1_intersectional_escapes_hostile_primary_value():
     assert "<b>femme</b>" not in h
     # Escaped form must be present
     assert "&lt;b&gt;femme&lt;/b&gt;" in h
+
+
+def _interp_with_recommendations(recs: list[RecommendationOut]) -> InterpretationOut:
+    return InterpretationOut(
+        narrative="Texte.",
+        ai_act_anchors=["AI Act, article 10"],
+        disclaimers=["Aide à l'analyse."],
+        provider="fallback",
+        model="deterministic",
+        recommendations=recs,
+    )
+
+
+def _sample_audit_with_recommendations(recs: list[RecommendationOut]) -> AuditOut:
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-REC", title="Recrutement Recos", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+        ),
+        interpretation=_interp_with_recommendations(recs),
+        pre_check=[],
+        config=None,
+    )
+
+
+def test_html_includes_recommendations_section_when_present() -> None:
+    audit = _sample_audit_with_recommendations([
+        RecommendationOut(title="Re-collecter", detail="Détail.", priority="high"),
+    ])
+    html = build_report_html(audit)
+    assert '<section class="recommendations">' in html
+    assert "Recommandations" in html
+    assert "Re-collecter" in html
+    assert "Action prioritaire" in html
+
+
+def test_html_omits_recommendations_section_when_empty() -> None:
+    audit = _sample_audit_with_recommendations([])
+    html = build_report_html(audit)
+    assert '<section class="recommendations">' not in html
+
+
+def test_html_escapes_recommendation_xss() -> None:
+    """A <script> tag in title/detail must be escaped — no raw injection."""
+    audit = _sample_audit_with_recommendations([
+        RecommendationOut(
+            title="<script>alert(1)</script>",
+            detail="Détail.",
+            priority="high",
+        ),
+    ])
+    html = build_report_html(audit)
+    assert "<script>alert(1)</script>" not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
