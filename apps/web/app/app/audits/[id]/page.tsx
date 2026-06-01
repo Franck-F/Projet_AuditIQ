@@ -8,6 +8,7 @@ import { Topbar } from '@/components/app/Topbar';
 import { Gauge } from '@/components/product/Gauge';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Recommendations } from '@/components/audits/Recommendations';
 import { downloadReport, type M1MetricsOut, type M2MetricsOut, type M3MetricsOut, type ReportFormat } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
 
@@ -29,6 +30,9 @@ function Interpretation({ interpretation }: { interpretation: Interp }) {
       <p className="text-sm leading-relaxed text-fg-secondary">
         {interpretation.narrative}
       </p>
+      <div className="mt-4">
+        <Recommendations items={interpretation.recommendations ?? []} />
+      </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
