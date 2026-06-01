@@ -5,9 +5,10 @@ import io
 from collections.abc import Sequence
 
 from openpyxl import Workbook
+from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut
+from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
 
 _VERDICT_FR = {
     "fail": "🔴 Critique",
@@ -29,9 +30,29 @@ _FR_LAW = (
 )
 
 
+_PRIORITY_LABEL_FR = {
+    "high": "Action prioritaire",
+    "medium": "À planifier",
+    "low": "Maintien / veille",
+}
+
+
 def _rows(ws: Worksheet, rows: Sequence[Sequence[object]]) -> None:
     for r in rows:
         ws.append(r)
+
+
+def _write_recommendations_sheet(
+    wb: Workbook, recs: list[RecommendationOut]
+) -> None:
+    if not recs:
+        return
+    ws = wb.create_sheet("Recommandations")
+    ws.append(["#", "Priorité", "Action", "Détail"])
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+    for idx, rec in enumerate(recs, start=1):
+        ws.append([idx, _PRIORITY_LABEL_FR[rec.priority], rec.title, rec.detail])
 
 
 def build_excel_report(audit: AuditOut) -> bytes:
@@ -225,6 +246,11 @@ def build_excel_report(audit: AuditOut) -> bytes:
             [],
             [_NOT_A_CERTIFICATE],
         ],
+    )
+
+    _write_recommendations_sheet(
+        wb,
+        audit.interpretation.recommendations if audit.interpretation is not None else [],
     )
 
     buf = io.BytesIO()

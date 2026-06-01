@@ -14,6 +14,7 @@ from app.schemas.audit import (
     IntersectionalOut,
     M1MetricsOut,
     M2MetricsOut,
+    RecommendationOut,
 )
 
 _NOW = datetime.datetime(2026, 5, 16, tzinfo=datetime.timezone.utc)
@@ -304,3 +305,59 @@ def test_excel_m1_intersectional_section_present_and_absent():
     # No intersectional section when absent
     assert "etr" not in t_without
     assert "intersectionnel" not in t_without.lower()
+
+
+def _interp_with_recommendations(
+    recs: list[RecommendationOut],
+) -> InterpretationOut:
+    return InterpretationOut(
+        narrative="Texte.",
+        ai_act_anchors=["AI Act, article 10"],
+        disclaimers=["Aide à l'analyse."],
+        provider="fallback",
+        model="deterministic",
+        recommendations=recs,
+    )
+
+
+def _sample_audit_with_recommendations(recs: list[RecommendationOut]) -> AuditOut:
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-REC", title="Recrutement Recos", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+        ),
+        interpretation=_interp_with_recommendations(recs),
+        pre_check=[],
+        config=None,
+    )
+
+
+def test_excel_includes_recommendations_sheet_when_present() -> None:
+    """Excel workbook gains a 'Recommandations' sheet when interpretation has recos."""
+    audit = _sample_audit_with_recommendations([
+        RecommendationOut(title="Re-collecter données", detail="Détail 1.", priority="high"),
+        RecommendationOut(title="Audit features", detail="Détail 2.", priority="medium"),
+    ])
+    data = build_excel_report(audit)
+    wb = load_workbook(io.BytesIO(data))
+    assert "Recommandations" in wb.sheetnames
+    ws = wb["Recommandations"]
+    rows = list(ws.iter_rows(values_only=True))
+    assert rows[0] == ("#", "Priorité", "Action", "Détail")
+    assert rows[1] == (1, "Action prioritaire", "Re-collecter données", "Détail 1.")
+    assert rows[2] == (2, "À planifier", "Audit features", "Détail 2.")
+
+
+def test_excel_omits_recommendations_sheet_when_empty() -> None:
+    """No recos → no sheet."""
+    audit = _sample_audit_with_recommendations([])
+    data = build_excel_report(audit)
+    wb = load_workbook(io.BytesIO(data))
+    assert "Recommandations" not in wb.sheetnames
