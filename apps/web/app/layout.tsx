@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
+
+import { ThemeProvider } from '@/components/app/ThemeProvider';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -51,7 +54,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
     >
-      <body>{children}</body>
+      <head>
+        {/* Pre-hydration FOUC prevention — must run before React mounts */}
+        <Script src="/theme-bootstrap.js" strategy="beforeInteractive" />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
