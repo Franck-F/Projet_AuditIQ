@@ -36,49 +36,18 @@ describe('help-content', () => {
   });
 });
 
-describe('M1 help entries', () => {
-  const M1_REQUIRED_KEYS = [
-    'm1.step1',
-    'm1.step1.title',
-    'm1.step2',
-    'm1.step3',
-    'm1.step3.decision_column',
-    'm1.step3.favorable_value',
-    'm1.step4',
-    'm1.step4.protected_attribute',
-    'm1.step4.privileged_value',
-    'm1.step4.ground_truth_column',
-    'm1.step4.secondary_protected_attribute',
-    'm1.step5',
+describe('Unified wizard help entries', () => {
+  const UNIFIED_KEYS = [
+    'wizard.step1', 'wizard.step1.title', 'wizard.step1.audit_type', 'wizard.step1.sector',
+    'wizard.step2', 'wizard.step2.upload', 'wizard.step2.url', 'wizard.step2.auth_header',
+    'wizard.step3', 'wizard.step3.decision_column', 'wizard.step3.favorable_value',
+    'wizard.step3.protected_attribute', 'wizard.step3.body_template', 'wizard.step3.response_path',
+    'wizard.step4', 'wizard.step4.metrics', 'wizard.step4.advanced', 'wizard.step4.test_connection',
+    'wizard.step5',
   ];
 
-  it('all M1 required help keys have entries', () => {
-    for (const key of M1_REQUIRED_KEYS) {
-      const entry = getHelp(key);
-      expect(entry, `missing entry for ${key}`).toBeDefined();
-      expect(entry?.title.length).toBeGreaterThan(0);
-      expect(entry?.body.length).toBeGreaterThan(0);
-    }
-  });
-});
-
-describe('M2 help entries', () => {
-  const M2_REQUIRED_KEYS = [
-    'm2.step1',
-    'm2.step1.title',
-    'm2.step2',
-    'm2.step3',
-    'm2.step3.decision_column',
-    'm2.step3.favorable_value',
-    'm2.step4',
-    'm2.step4.k',
-    'm2.step4.deviation_pp',
-    'm2.step4.chi2_alpha',
-    'm2.step5',
-  ];
-
-  it('all M2 required help keys have entries', () => {
-    for (const key of M2_REQUIRED_KEYS) {
+  it('all unified wizard help keys have entries', () => {
+    for (const key of UNIFIED_KEYS) {
       const entry = getHelp(key);
       expect(entry, `missing entry for ${key}`).toBeDefined();
       expect(entry?.title.length).toBeGreaterThan(0);
