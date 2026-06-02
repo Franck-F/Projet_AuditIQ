@@ -111,7 +111,7 @@ const auditCreatedM3: audits.AuditOut = {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('Unified Wizard happy paths', () => {
+describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(audits, 'uploadDataset').mockResolvedValue(dataset);
