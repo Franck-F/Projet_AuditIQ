@@ -14,12 +14,14 @@ interface TopbarProps {
   crumbs?: ReadonlyArray<Crumb>;
   searchPlaceholder?: string;
   onSearch?: (q: string) => void;
+  actions?: React.ReactNode;
 }
 
 export function Topbar({
   crumbs = [],
   searchPlaceholder = 'Rechercher un audit, une page…',
   onSearch,
+  actions,
 }: TopbarProps): React.ReactElement {
   return (
     <div className="topbar">
@@ -54,6 +56,11 @@ export function Topbar({
           <Icons.bell size={16} />
           <span className="icon-btn-dot" aria-hidden />
         </button>
+        {actions && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {actions}
+          </div>
+        )}
       </div>
     </div>
   );

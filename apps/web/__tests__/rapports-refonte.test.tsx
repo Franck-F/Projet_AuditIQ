@@ -54,7 +54,7 @@ describe('RapportsPage', () => {
     vi.mocked(useDashboardModule.useDashboard).mockReturnValue({
       data: mockDashboard,
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboardModule.useDashboard>);
 
     vi.mocked(auditsModule.downloadReport).mockResolvedValue(undefined);
 
@@ -113,7 +113,7 @@ describe('RapportsPage', () => {
     vi.mocked(useDashboardModule.useDashboard).mockReturnValue({
       data: mockDashboard,
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboardModule.useDashboard>);
 
     vi.mocked(auditsModule.downloadReport).mockResolvedValue(undefined);
 
@@ -155,7 +155,7 @@ describe('RapportsPage', () => {
     vi.mocked(useDashboardModule.useDashboard).mockReturnValue({
       data: mockDashboard,
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboardModule.useDashboard>);
 
     vi.mocked(auditsModule.downloadReport).mockImplementation(mockDownload);
 
@@ -181,7 +181,7 @@ describe('RapportsPage', () => {
     vi.mocked(useDashboardModule.useDashboard).mockReturnValue({
       data: mockDashboard,
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboardModule.useDashboard>);
 
     vi.mocked(auditsModule.downloadReport).mockResolvedValue(undefined);
 

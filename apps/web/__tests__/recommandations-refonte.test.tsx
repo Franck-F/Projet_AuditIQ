@@ -30,10 +30,10 @@ describe('RecommandationsPage — R3 refonte', () => {
 
   describe('State A: Dashboard list (no auditId)', () => {
     it('renders 2 audit rows when useDashboard returns 2 recent_audits with verdicts', () => {
-      const mockUseSearchParams = navigationModule.useSearchParams as any;
-      mockUseSearchParams.mockReturnValue(new URLSearchParams(''));
+      const mockUseSearchParams = vi.mocked(navigationModule.useSearchParams);
+      mockUseSearchParams.mockReturnValue(new URLSearchParams('') as unknown as ReturnType<typeof navigationModule.useSearchParams>);
 
-      const mockUseDashboard = useDashboardModule.useDashboard as any;
+      const mockUseDashboard = vi.mocked(useDashboardModule.useDashboard);
       mockUseDashboard.mockReturnValue({
         data: {
           total_audits: 5,
@@ -64,7 +64,7 @@ describe('RecommandationsPage — R3 refonte', () => {
         },
         isLoading: false,
         isError: false,
-      });
+      } as unknown as ReturnType<typeof useDashboardModule.useDashboard>);
 
       render(<RecommandationsPage />, { wrapper: Wrapper });
 
@@ -87,11 +87,11 @@ describe('RecommandationsPage — R3 refonte', () => {
 
   describe('State B: Audit detail (with ?auditId)', () => {
     it('renders 3 recommendation cards with titles when useAudit returns interpretation with 3 recos', () => {
-      const mockUseSearchParams = navigationModule.useSearchParams as any;
+      const mockUseSearchParams = vi.mocked(navigationModule.useSearchParams);
       const params = new URLSearchParams('auditId=aud-1');
-      mockUseSearchParams.mockReturnValue(params);
+      mockUseSearchParams.mockReturnValue(params as unknown as ReturnType<typeof navigationModule.useSearchParams>);
 
-      const mockUseAudit = useAuditModule.useAudit as any;
+      const mockUseAudit = vi.mocked(useAuditModule.useAudit);
       mockUseAudit.mockReturnValue({
         data: {
           id: 'aud-1',
@@ -136,7 +136,7 @@ describe('RecommandationsPage — R3 refonte', () => {
         },
         isLoading: false,
         isError: false,
-      });
+      } as unknown as ReturnType<typeof useAuditModule.useAudit>);
 
       render(<RecommandationsPage />, { wrapper: Wrapper });
 
@@ -159,11 +159,11 @@ describe('RecommandationsPage — R3 refonte', () => {
     });
 
     it('shows InlineNote when audit has no recommendations', () => {
-      const mockUseSearchParams = navigationModule.useSearchParams as any;
+      const mockUseSearchParams = vi.mocked(navigationModule.useSearchParams);
       const params = new URLSearchParams('auditId=aud-1');
-      mockUseSearchParams.mockReturnValue(params);
+      mockUseSearchParams.mockReturnValue(params as unknown as ReturnType<typeof navigationModule.useSearchParams>);
 
-      const mockUseAudit = useAuditModule.useAudit as any;
+      const mockUseAudit = vi.mocked(useAuditModule.useAudit);
       mockUseAudit.mockReturnValue({
         data: {
           id: 'aud-1',
@@ -192,7 +192,7 @@ describe('RecommandationsPage — R3 refonte', () => {
         },
         isLoading: false,
         isError: false,
-      });
+      } as unknown as ReturnType<typeof useAuditModule.useAudit>);
 
       render(<RecommandationsPage />, { wrapper: Wrapper });
 
