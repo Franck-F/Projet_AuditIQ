@@ -11,6 +11,8 @@ const buttonVariants = cva(
         primary: 'bg-accent text-accent-fg border border-accent hover:bg-accent-hover hover:border-accent-hover',
         secondary:
           'bg-transparent text-fg border border-border-strong hover:border-border-prominent hover:bg-surface-2',
+        outline:
+          'bg-transparent text-fg border border-border-default hover:border-border-strong hover:bg-surface-2',
         ghost: 'rounded-md text-fg-secondary hover:text-fg hover:bg-surface-2',
         destructive:
           'bg-status-fail text-fg border border-status-fail-border hover:bg-status-fail/90',
