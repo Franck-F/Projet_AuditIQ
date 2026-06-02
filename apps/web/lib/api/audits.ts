@@ -301,3 +301,25 @@ export async function analyzeDataset(
   );
   return data;
 }
+
+export type TestConnectionIn = {
+  target: TargetIn;
+  test_prompt: string;
+};
+
+export type TestConnectionOut = {
+  ok: boolean;
+  extracted_value?: string;
+  elapsed_ms?: number;
+  reason?: string;
+};
+
+export async function testConnectionM3(
+  body: TestConnectionIn,
+): Promise<TestConnectionOut> {
+  const { data } = await api.post<TestConnectionOut>(
+    '/audits/m3/test-connection',
+    body,
+  );
+  return data;
+}
