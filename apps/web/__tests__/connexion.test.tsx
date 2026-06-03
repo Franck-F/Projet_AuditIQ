@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const { signInWithPassword, push } = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
@@ -12,11 +12,28 @@ vi.mock('@/lib/supabase/client', () => ({
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
 import ConnexionPage from '@/app/(auth)/connexion/page';
+import { ThemeProvider } from '@/components/app/ThemeProvider';
+
+function Wrapped() {
+  return <ThemeProvider><ConnexionPage /></ThemeProvider>;
+}
+
+beforeEach(() => {
+  const store: Record<string, string> = {};
+  vi.stubGlobal('localStorage', {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => { store[k] = v; },
+    removeItem: (k: string) => { delete store[k]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() { return Object.keys(store).length; },
+  });
+});
 
 describe('connexion', () => {
   it('signs in then redirects to /app', async () => {
     signInWithPassword.mockResolvedValue({ error: null });
-    render(<ConnexionPage />);
+    render(<Wrapped />);
     await userEvent.type(screen.getByLabelText(/email/i), 'claire@acme.fr');
     await userEvent.type(screen.getByLabelText(/mot de passe/i), 'secret123');
     await userEvent.click(
@@ -36,7 +53,7 @@ describe('connexion', () => {
       error: { message: 'Invalid login credentials' },
     });
     push.mockClear();
-    render(<ConnexionPage />);
+    render(<Wrapped />);
     await userEvent.type(screen.getByLabelText(/email/i), 'x@y.fr');
     await userEvent.type(screen.getByLabelText(/mot de passe/i), 'bad');
     await userEvent.click(

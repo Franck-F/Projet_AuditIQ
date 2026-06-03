@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AuthMain, AuthSide } from '@/components/auth/AuthShell';
+import { AuthShell } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -128,148 +128,122 @@ export default function ConnexionPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2">
-      <AuthMain>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
-          <div>
-            <h1 className="text-h2 font-display font-medium tracking-[-0.02em] text-fg">
-              Connectez-vous
-            </h1>
-            <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
-              Accédez à votre console AuditIQ pour lancer un audit, consulter vos rapports ou gérer
-              votre équipe.
-            </p>
+    <AuthShell
+      activeTab="login"
+      heading="Content de vous revoir"
+      intro="Accédez à votre espace de conformité."
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
+        <div className="flex flex-col gap-2">
+          <OAuthButton
+            provider="google"
+            label="Google"
+            onClick={() => handleOAuth('google')}
+          >
+            <GoogleLogo className="size-5" />
+          </OAuthButton>
+          <OAuthButton
+            provider="github"
+            label="GitHub"
+            onClick={() => handleOAuth('github')}
+          >
+            <GitHubLogo className="size-5" />
+          </OAuthButton>
+        </div>
+
+        <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] text-fg-muted before:h-px before:flex-1 before:bg-border-subtle after:h-px after:flex-1 after:bg-border-subtle">
+          Ou avec votre email
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-sm font-medium text-fg-secondary">
+              Email professionnel
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="vous@entreprise.fr"
+              autoComplete="email"
+              className={cn(
+                'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
+                'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
+                errors.email ? 'border-status-fail' : 'border-border-default',
+              )}
+              aria-invalid={errors.email ? true : undefined}
+              {...register('email')}
+            />
+            {errors.email && (
+              <span className="text-xs text-status-fail">{errors.email.message}</span>
+            )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <OAuthButton
-              provider="google"
-              label="Google"
-              onClick={() => handleOAuth('google')}
-            >
-              <GoogleLogo className="size-5" />
-            </OAuthButton>
-            <OAuthButton
-              provider="github"
-              label="GitHub"
-              onClick={() => handleOAuth('github')}
-            >
-              <GitHubLogo className="size-5" />
-            </OAuthButton>
-          </div>
-
-          <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] text-fg-muted before:h-px before:flex-1 before:bg-border-subtle after:h-px after:flex-1 after:bg-border-subtle">
-            Ou avec votre email
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-fg-secondary">
-                Email professionnel
-              </label>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="pwd" className="text-sm font-medium text-fg-secondary">
+              Mot de passe
+            </label>
+            <div className="relative">
               <input
-                id="email"
-                type="email"
+                id="pwd"
+                type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="vous@entreprise.fr"
-                autoComplete="email"
+                placeholder="••••••••"
+                autoComplete="current-password"
                 className={cn(
-                  'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
+                  // pr-11 reserves room for the eye toggle so the bullets don't overlap
+                  'w-full rounded-md border bg-surface px-3.5 py-2.5 pr-11 text-sm text-fg placeholder:text-fg-muted',
                   'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
-                  errors.email ? 'border-status-fail' : 'border-border-default',
+                  errors.password ? 'border-status-fail' : 'border-border-default',
                 )}
-                aria-invalid={errors.email ? true : undefined}
-                {...register('email')}
+                {...register('password')}
               />
-              {errors.email && (
-                <span className="text-xs text-status-fail">{errors.email.message}</span>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-fg"
+              >
+                {/* sr-only (instead of aria-label) avoids interfering with
+                    Testing Library's getByLabelText(/mot de passe/i) match
+                    on the input above — same accessible name for AT, but
+                    the matcher walks text content rather than aria-label. */}
+                <span className="sr-only">
+                  {showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                </span>
+                {showPassword ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+              </button>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="pwd" className="text-sm font-medium text-fg-secondary">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  id="pwd"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  className={cn(
-                    // pr-11 reserves room for the eye toggle so the bullets don't overlap
-                    'w-full rounded-md border bg-surface px-3.5 py-2.5 pr-11 text-sm text-fg placeholder:text-fg-muted',
-                    'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
-                    errors.password ? 'border-status-fail' : 'border-border-default',
-                  )}
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-fg"
-                >
-                  {/* sr-only (instead of aria-label) avoids interfering with
-                      Testing Library's getByLabelText(/mot de passe/i) match
-                      on the input above — same accessible name for AT, but
-                      the matcher walks text content rather than aria-label. */}
-                  <span className="sr-only">
-                    {showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                  </span>
-                  {showPassword ? (
-                    <EyeOff className="size-4" aria-hidden />
-                  ) : (
-                    <Eye className="size-4" aria-hidden />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <span className="text-xs text-status-fail">{errors.password.message}</span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 text-fg-secondary">
-                <input type="checkbox" className="size-4 accent-accent" {...register('remember')} />
-                Rester connecté 30 jours
-              </label>
-              <Link href="/mot-de-passe-oublie" className="text-accent hover:underline">
-                Mot de passe oublié ?
-              </Link>
-            </div>
+            {errors.password && (
+              <span className="text-xs text-status-fail">{errors.password.message}</span>
+            )}
           </div>
 
-          {authError && (
-            <p role="alert" className="text-sm text-status-fail">
-              {authError}
-            </p>
-          )}
-
-          <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Connexion…' : 'Se connecter'}
-          </Button>
-
-          <p className="mt-auto pt-8 text-center text-sm text-fg-muted">
-            Pas encore de compte ?{' '}
-            <Link href="/inscription" className="text-accent hover:underline">
-              Créer un compte gratuit
+          <div className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2 text-fg-secondary">
+              <input type="checkbox" className="size-4 accent-accent" {...register('remember')} />
+              Rester connecté 30 jours
+            </label>
+            <Link href="/mot-de-passe-oublie" className="text-accent hover:underline">
+              Mot de passe oublié ?
             </Link>
-          </p>
-        </form>
-      </AuthMain>
+          </div>
+        </div>
 
-      <AuthSide
-        eyebrow="Reprenez où vous en étiez"
-        title="Vos audits, vos rapports, votre conformité — en un seul endroit."
-        body="AuditIQ centralise vos audits sur cinq ans. Comparez les scores entre deux exécutions, suivez la dérive, et restez prêt pour les contrôles."
-        metrics={[
-          { label: 'Audits archivés (vous)', value: '12', tone: 'info' },
-          { label: 'Score moyen 2026', value: '4,2 / 5', tone: 'pass' },
-          { label: 'Alertes ouvertes', value: '2', tone: 'warn' },
-        ]}
-      />
-    </div>
+        {authError && (
+          <p role="alert" className="text-sm text-status-fail">
+            {authError}
+          </p>
+        )}
+
+        <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? 'Connexion…' : 'Se connecter'}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

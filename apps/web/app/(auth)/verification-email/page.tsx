@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { AuthCenter } from '@/components/auth/AuthShell';
+import { AuthShell } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
 
 export default function VerificationEmailPage() {
@@ -33,22 +33,21 @@ export default function VerificationEmailPage() {
   };
 
   return (
-    <AuthCenter>
-      <div className="flex w-full max-w-[480px] flex-col gap-6 rounded-2xl border border-border-default bg-surface p-8 text-center sm:p-12">
+    <AuthShell
+      activeTab="signup"
+      heading="Vérifiez votre adresse email."
+      intro="Cliquez sur le lien dans l'email pour activer votre compte."
+    >
+      <div className="flex w-full flex-col gap-6 text-center">
         <div
           aria-hidden
           className="mx-auto mb-2 flex size-[72px] items-center justify-center rounded-2xl border border-accent-border bg-accent-soft text-[32px] text-accent"
         >
           ✉
         </div>
-        <div>
-          <h1 className="text-h3 font-display font-medium tracking-[-0.015em] text-fg">
-            Vérifiez votre adresse email.
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
-            Nous venons d&apos;envoyer un lien de vérification à
-          </p>
-        </div>
+        <p className="text-sm leading-relaxed text-fg-secondary">
+          Nous venons d&apos;envoyer un lien de vérification à
+        </p>
 
         <div className="rounded-md border border-border-default bg-surface-2 px-4 py-3 font-mono text-sm text-fg">
           {email || 'votre adresse email'}
@@ -104,6 +103,6 @@ export default function VerificationEmailPage() {
           </span>
         </div>
       </div>
-    </AuthCenter>
+    </AuthShell>
   );
 }

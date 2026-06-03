@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { AuthCenter, AuthCard } from '@/components/auth/AuthShell';
+import { AuthShell } from '@/components/auth/AuthShell';
 import { cn } from '@/lib/utils';
 
 const ResetSchema = z.object({
@@ -32,9 +32,13 @@ export default function MotDePasseOubliePage() {
   };
 
   return (
-    <AuthCenter>
+    <AuthShell
+      activeTab="login"
+      heading="Mot de passe oublié ?"
+      intro="Entrez votre email pour recevoir un lien de réinitialisation."
+    >
       {sent ? (
-        <AuthCard>
+        <div className="flex flex-col gap-5">
           <div className="py-4 text-center">
             <div
               aria-hidden
@@ -64,50 +68,41 @@ export default function MotDePasseOubliePage() {
               ← Retour à la connexion
             </Link>
           </p>
-        </AuthCard>
+        </div>
       ) : (
-        <AuthCard>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
-            <h1 className="text-h3 font-display font-medium tracking-[-0.015em] text-fg">
-              Mot de passe oublié ?
-            </h1>
-            <p className="text-sm leading-relaxed text-fg-secondary">
-              Entrez l&apos;email professionnel associé à votre compte. Nous vous envoyons un lien
-              sécurisé valable 30 minutes pour définir un nouveau mot de passe.
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-fg-secondary">
-                Email professionnel
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                autoFocus
-                placeholder="vous@entreprise.fr"
-                autoComplete="email"
-                className={cn(
-                  'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
-                  'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
-                  errors.email ? 'border-status-fail' : 'border-border-default',
-                )}
-                {...register('email')}
-              />
-              {errors.email && (
-                <span className="text-xs text-status-fail">{errors.email.message}</span>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-sm font-medium text-fg-secondary">
+              Email professionnel
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              autoFocus
+              placeholder="vous@entreprise.fr"
+              autoComplete="email"
+              className={cn(
+                'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
+                'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
+                errors.email ? 'border-status-fail' : 'border-border-default',
               )}
-            </div>
-            <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? 'Envoi…' : 'Envoyer le lien de réinitialisation'}
-            </Button>
-            <p className="text-center text-sm text-fg-muted">
-              <Link href="/connexion" className="text-accent hover:underline">
-                ← Retour à la connexion
-              </Link>
-            </p>
-          </form>
-        </AuthCard>
+              {...register('email')}
+            />
+            {errors.email && (
+              <span className="text-xs text-status-fail">{errors.email.message}</span>
+            )}
+          </div>
+          <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? 'Envoi…' : 'Envoyer le lien de réinitialisation'}
+          </Button>
+          <p className="text-center text-sm text-fg-muted">
+            <Link href="/connexion" className="text-accent hover:underline">
+              ← Retour à la connexion
+            </Link>
+          </p>
+        </form>
       )}
-    </AuthCenter>
+    </AuthShell>
   );
 }
