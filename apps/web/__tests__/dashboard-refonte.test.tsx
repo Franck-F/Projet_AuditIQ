@@ -99,28 +99,27 @@ describe('Dashboard refonte (R4)', () => {
 
     render(<DashboardPage />);
 
-    // Check 4 metric cards by label
+    // Check 4 metric cards by label (R5 maquette labels)
     expect(
-      screen.getByText('Score conformité', { selector: '[class*="uppercase"]' })
+      screen.getByText('Audits cette année', { selector: '[class*="uppercase"]' })
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Audits actifs', { selector: '[class*="uppercase"]' })
+      screen.getByText('Biais détectés (90j)', { selector: '[class*="uppercase"]' })
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Modèles non conformes', {
+      screen.getByText('Recommandations ouvertes', {
         selector: '[class*="uppercase"]',
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Délai moyen d'audit", {
+      screen.getByText('Couverture AI Act', {
         selector: '[class*="uppercase"]',
       })
     ).toBeInTheDocument();
 
     // Check metric values (may appear multiple times, so use getAllBy)
-    expect(screen.getAllByText('74')).toBeTruthy(); // risk_score
     expect(screen.getAllByText('18')).toBeTruthy(); // total_audits
-    expect(screen.getAllByText('2')).toBeTruthy(); // failing_audits appears
+    expect(screen.getAllByText('5')).toBeTruthy(); // failing + warning = 2+3
   });
 
   it('renders recent audits table with at least 1 row', () => {
@@ -149,11 +148,8 @@ describe('Dashboard refonte (R4)', () => {
 
     render(<DashboardPage />);
 
-    // Check table headers
-    expect(screen.getByText('Audit')).toBeInTheDocument();
-    expect(screen.getByText('Attribut')).toBeInTheDocument();
-    expect(screen.getByText('Score')).toBeInTheDocument();
-    expect(screen.getByText('Statut')).toBeInTheDocument();
+    // Check recent audits section heading
+    expect(screen.getByText('Audits récents')).toBeInTheDocument();
 
     // Check recent audit row
     expect(screen.getByText('Prêt immobilier')).toBeInTheDocument();
@@ -175,7 +171,7 @@ describe('Dashboard refonte (R4)', () => {
 
     render(<DashboardPage />);
 
-    const newAuditButton = screen.getAllByText('Nouvel audit');
+    const newAuditButton = screen.getAllByText('+ Lancer un audit');
     expect(newAuditButton.length).toBeGreaterThan(0);
     const link = newAuditButton[0]?.closest('a');
     expect(link).toBeTruthy();
@@ -200,12 +196,8 @@ describe('Dashboard refonte (R4)', () => {
 
     render(<DashboardPage />);
 
-    // Check hero greeting exists (text split across nodes due to italic)
-    expect(screen.getByText(/Bonjour/i)).toBeInTheDocument();
-    expect(screen.getByText('fairness', { selector: 'em' })).toBeInTheDocument();
-    expect(
-      screen.getByText(/modèles en production/i)
-    ).toBeInTheDocument();
+    // Check hero greeting exists
+    expect(screen.getByRole('heading', { name: /Bonjour/i })).toBeInTheDocument();
   });
 
   it('renders action band with CTA', () => {
@@ -227,6 +219,7 @@ describe('Dashboard refonte (R4)', () => {
     expect(
       screen.getByText('Lancez un audit en moins de 7 minutes')
     ).toBeInTheDocument();
-    expect(screen.getByText('Commencer')).toBeInTheDocument();
+    const ctaLinks = screen.getAllByText('+ Lancer un audit');
+    expect(ctaLinks.length).toBeGreaterThanOrEqual(1);
   });
 });
