@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock next/navigation
+const routerPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: routerPush,
   }),
 }));
 
@@ -104,8 +105,8 @@ describe('Onboarding R5 — 5-step stepper', () => {
     const nextBtn = screen.getByRole('button', { name: /Commencer/ });
     await user.click(nextBtn);
 
-    // Click on PME option
-    const pmeBtn = screen.getByRole('button', { name: /PME — 10 à 250/ });
+    // Click on PME option (Choice primitive uses role=radio)
+    const pmeBtn = screen.getByRole('radio', { name: /PME — 10 à 250/ });
     await user.click(pmeBtn);
 
     // Wait for debounce
@@ -200,9 +201,7 @@ describe('Onboarding R5 — 5-step stepper', () => {
 
   it('clears localStorage when completing onboarding', async () => {
     const user = userEvent.setup();
-    const { useRouter } = await import('next/navigation');
-    const pushSpy = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushSpy } as any);
+    routerPush.mockClear();
 
     render(<OnboardingPage />);
 
