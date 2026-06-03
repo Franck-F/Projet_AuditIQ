@@ -155,6 +155,7 @@ describe('Onboarding R5 — 5-step stepper', () => {
     // Find and click checkbox for dataset
     const checkboxes = screen.getAllByRole('checkbox');
     const datasetCheckbox = checkboxes[0];
+    if (!datasetCheckbox) throw new Error('Dataset checkbox not found');
     await user.click(datasetCheckbox);
 
     // Wait for debounce
