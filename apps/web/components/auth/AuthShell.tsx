@@ -1,4 +1,189 @@
+'use client';
+
 import * as React from 'react';
+import Link from 'next/link';
+import { Shield, CheckCircle2, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/components/app/ThemeProvider';
+
+/* ------------------------------------------------------------------ */
+/* New split-screen AuthShell                                          */
+/* ------------------------------------------------------------------ */
+
+export interface AuthShellProps {
+  /** Active tab for the nav inside the right column */
+  activeTab: 'login' | 'signup';
+  /** Form heading e.g., "Content de vous revoir" */
+  heading: string;
+  /** Form intro paragraph */
+  intro: string;
+  /** Form contents */
+  children: React.ReactNode;
+}
+
+const BULLETS = [
+  "Métriques alignées sur la règle des 4/5 et l'AI Act",
+  "Rapports signés et horodatés, prêts pour l'audit",
+  'Vos données restent chez vous — calcul en mémoire',
+];
+
+export function AuthShell({ activeTab, heading, intro, children }: AuthShellProps) {
+  const { theme, toggle } = useTheme();
+
+  return (
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
+      {/* ---- Left brand panel (hidden on mobile) ---- */}
+      <aside
+        className="hidden md:flex flex-col justify-between overflow-hidden border-r border-border-subtle bg-surface"
+        style={{ padding: '44px 56px' }}
+      >
+        {/* Radial gradient overlay */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(120% 80% at 0% 0%, var(--accent-softer, rgba(16,185,129,0.08)), transparent 50%)',
+          }}
+        />
+
+        {/* Top: logo */}
+        <div className="relative flex items-center gap-[11px]">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-accent text-[#0b1410]">
+            <Shield size={17} aria-hidden />
+          </div>
+          <div>
+            <div className="text-base font-semibold text-fg">AuditIQ</div>
+            <div className="font-mono text-[9.5px] tracking-[0.1em] text-fg-muted uppercase">
+              FAIRNESS PLATFORM
+            </div>
+          </div>
+        </div>
+
+        {/* Middle: badge + headline + bullets */}
+        <div className="relative max-w-[420px]">
+          {/* AI Act badge */}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-status-pass-border bg-status-pass-bg px-3 py-1 text-xs font-medium text-status-pass">
+            <span
+              aria-hidden
+              className="size-1.5 rounded-full bg-status-pass"
+            />
+            Conforme AI Act · RGPD
+          </span>
+
+          <h2
+            className="mt-[18px] mb-[14px] font-display font-medium text-fg leading-[1.15]"
+            style={{ fontSize: 30, letterSpacing: '-0.035em' }}
+          >
+            Prouvez l'équité de vos modèles d'IA, en quelques minutes.
+          </h2>
+
+          <p className="text-[15px] leading-[1.6] text-fg-secondary">
+            AuditIQ détecte les biais discriminatoires, calcule les métriques réglementaires et
+            génère des rapports opposables. Sans déplacer vos données.
+          </p>
+
+          <ul className="mt-[26px] flex flex-col gap-3">
+            {BULLETS.map((t) => (
+              <li key={t} className="flex gap-[10px] text-[13.5px] text-fg-secondary">
+                <CheckCircle2
+                  size={17}
+                  aria-hidden
+                  className="mt-px shrink-0 text-accent"
+                />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom: compliance footer */}
+        <div className="relative flex gap-[22px] font-mono text-[12.5px] text-fg-muted">
+          <span>SOC 2 Type II</span>
+          <span>ISO 27001</span>
+          <span>Hébergé en UE</span>
+        </div>
+      </aside>
+
+      {/* ---- Right form column ---- */}
+      <div className="relative grid place-items-center bg-bg p-10">
+        {/* Theme toggle */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label="Basculer le thème"
+          className="absolute top-6 right-6 flex size-9 items-center justify-center rounded-md border border-border-default bg-surface text-fg-muted transition-colors hover:border-border-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+        >
+          {theme === 'dark' ? (
+            <Sun size={16} aria-hidden />
+          ) : (
+            <Moon size={16} aria-hidden />
+          )}
+        </button>
+
+        {/* Form container */}
+        <div className="w-full max-w-[380px]">
+          {/* Tab strip */}
+          <div className="mb-6 flex rounded-lg border border-border-default bg-surface p-1">
+            <Link
+              href="/connexion"
+              aria-current={activeTab === 'login' ? 'page' : undefined}
+              className={[
+                'flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors',
+                activeTab === 'login'
+                  ? 'bg-bg text-fg shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              ].join(' ')}
+            >
+              Connexion
+            </Link>
+            <Link
+              href="/inscription"
+              aria-current={activeTab === 'signup' ? 'page' : undefined}
+              className={[
+                'flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors',
+                activeTab === 'signup'
+                  ? 'bg-bg text-fg shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              ].join(' ')}
+            >
+              Créer un compte
+            </Link>
+          </div>
+
+          {/* Heading + intro */}
+          <h1
+            className="font-display font-medium text-fg"
+            style={{ fontSize: 22, letterSpacing: '-0.025em', marginBottom: 6 }}
+          >
+            {heading}
+          </h1>
+          <p className="mb-6 text-[13.5px] leading-relaxed text-fg-muted">{intro}</p>
+
+          {/* Form slot */}
+          {children}
+
+          {/* Terms */}
+          <p className="mt-5 text-center text-xs leading-[1.5] text-fg-muted">
+            En continuant, vous acceptez nos{' '}
+            <Link href="/cgu" className="text-fg-secondary underline hover:text-fg">
+              conditions
+            </Link>{' '}
+            et notre{' '}
+            <Link href="/confidentialite" className="text-fg-secondary underline hover:text-fg">
+              politique de confidentialité
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Legacy exports kept for mot-de-passe-oublie + verification-email    */
+/* ------------------------------------------------------------------ */
+
 import { BrandMark } from '@/components/layout/BrandMark';
 import { StatusPill } from '@/components/marketing/StatusPill';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
