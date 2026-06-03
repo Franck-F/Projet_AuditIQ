@@ -55,7 +55,7 @@ describe('AuditsListPage - R4 Refonte', () => {
       data: mockDashboardData,
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboard>);
   });
 
   it('renders 4 MetricCards with correct labels', () => {
@@ -164,7 +164,7 @@ describe('AuditsListPage - R4 Refonte', () => {
       data: undefined,
       isLoading: true,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboard>);
 
     render(<AuditsListPage />);
     expect(screen.getByRole('status')).toBeInTheDocument();
@@ -175,7 +175,7 @@ describe('AuditsListPage - R4 Refonte', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-    } as any);
+    } as unknown as ReturnType<typeof useDashboard>);
 
     render(<AuditsListPage />);
     expect(screen.getByRole('alert')).toBeInTheDocument();

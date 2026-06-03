@@ -18,7 +18,7 @@ describe('Dashboard refonte (R4)', () => {
       data: undefined,
       isLoading: true,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
     expect(screen.getByRole('status')).toHaveTextContent(
@@ -31,7 +31,7 @@ describe('Dashboard refonte (R4)', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
     expect(screen.getByText('Impossible de charger le tableau de bord.')).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe('Dashboard refonte (R4)', () => {
       },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
 
@@ -145,7 +145,7 @@ describe('Dashboard refonte (R4)', () => {
       },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
 
@@ -171,7 +171,7 @@ describe('Dashboard refonte (R4)', () => {
       },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
 
@@ -196,7 +196,7 @@ describe('Dashboard refonte (R4)', () => {
       },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
 
@@ -220,7 +220,7 @@ describe('Dashboard refonte (R4)', () => {
       },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as ReturnType<typeof useD.useDashboard>);
 
     render(<DashboardPage />);
 
