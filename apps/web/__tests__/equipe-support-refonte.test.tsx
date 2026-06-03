@@ -99,36 +99,41 @@ describe('SupportPage - R4 Refonte', () => {
 
   it('renders search input with correct placeholder', () => {
     render(<SupportPage />);
-    const searchInput = screen.getByPlaceholderText('Rechercher dans l\'aide…');
+    const searchInput = screen.getByPlaceholderText(/Tapez votre question/i);
     expect(searchInput).toBeInTheDocument();
   });
 
-  it('renders 3 quick-link cards', () => {
+  it('renders 6 topic cards', () => {
     render(<SupportPage />);
-    expect(screen.getByText('Démarrage rapide')).toBeInTheDocument();
-    expect(screen.getByText('Guide méthodologique')).toBeInTheDocument();
-    expect(screen.getByText('Cadre réglementaire')).toBeInTheDocument();
+    expect(screen.getByText('Bien démarrer')).toBeInTheDocument();
+    expect(screen.getByText("Modules d'audit")).toBeInTheDocument();
+    expect(screen.getByText('AI Act & conformité')).toBeInTheDocument();
+    expect(screen.getByText('Rapports & exports')).toBeInTheDocument();
+    expect(screen.getByText('Sécurité & RGPD')).toBeInTheDocument();
+    expect(screen.getByText('Paramétrage avancé')).toBeInTheDocument();
   });
 
-  it('renders quick-link descriptions', () => {
+  it('renders topic card article counts', () => {
     render(<SupportPage />);
-    expect(screen.getByText('Lancez votre premier audit en 7 minutes')).toBeInTheDocument();
-    expect(screen.getByText('Comprendre les métriques de fairness')).toBeInTheDocument();
-    expect(screen.getByText('AI Act, RGPD, et obligations légales')).toBeInTheDocument();
+    expect(screen.getByText('22 articles')).toBeInTheDocument();
+    expect(screen.getByText('34 articles')).toBeInTheDocument();
   });
 
-  it('renders "Besoin d\'un accompagnement personnalisé ?" card', () => {
+  it('renders "Ouvrir un ticket support" section', () => {
     render(<SupportPage />);
-    expect(screen.getByText('Besoin d\'un accompagnement personnalisé ?')).toBeInTheDocument();
+    expect(screen.getByText('Ouvrir un ticket support')).toBeInTheDocument();
+    expect(screen.getByText("Vous n'avez pas trouvé votre réponse ?")).toBeInTheDocument();
   });
 
-  it('renders "Contacter le support" button', () => {
+  it('renders "Envoyer le ticket" button', () => {
     render(<SupportPage />);
-    expect(screen.getByRole('button', { name: /Contacter le support/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Envoyer le ticket/ })).toBeInTheDocument();
   });
 
-  it('renders support card description', () => {
+  it('renders expert contact section with "Réserver" buttons', () => {
     render(<SupportPage />);
-    expect(screen.getByText('Nos experts conformité répondent sous 4 h ouvrées.')).toBeInTheDocument();
+    expect(screen.getByText('Contact expert AuditIQ')).toBeInTheDocument();
+    const reserverButtons = screen.getAllByRole('button', { name: /Réserver/ });
+    expect(reserverButtons.length).toBe(3);
   });
 });

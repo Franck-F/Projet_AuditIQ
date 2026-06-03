@@ -140,8 +140,8 @@ export default function InscriptionPage() {
   return (
     <AuthShell
       activeTab="signup"
-      heading="Commencez gratuitement"
-      intro="14 jours d'essai, sans carte bancaire."
+      heading="Créez votre compte gratuit"
+      intro="Palier Découverte sans carte bancaire. Un audit par mois, jusqu'à 3 utilisateurs, conservation 3 mois. Passage payant à tout moment."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         <div className="flex flex-col gap-3">
