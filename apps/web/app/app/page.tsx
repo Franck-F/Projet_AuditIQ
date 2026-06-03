@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { Zap } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
-import { Gauge } from '@/components/product/Gauge';
 import { MetricCard } from '@/components/product/MetricCard';
+import { Sparkline } from '@/components/product/Sparkline';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
 
@@ -19,10 +21,10 @@ const VERDICT_TONE: Record<
   pass: { tone: 'pass', label: 'Conforme' },
 };
 
-function riskCaption(score: number): string {
-  if (score >= 71) return '/100 · risque critique';
-  if (score >= 31) return '/100 · risque modéré';
-  return '/100 · risque faible';
+function getScoreTone(score: number): StatusTone {
+  if (score > 70) return 'pass';
+  if (score >= 30) return 'warn';
+  return 'fail';
 }
 
 function auditTone(
@@ -32,6 +34,9 @@ function auditTone(
     ? VERDICT_TONE[verdict]
     : { tone: 'info', label: 'En cours' };
 }
+
+// Synthetic monthly trend data for sparkline
+const SPARK_DATA = [62, 64, 61, 66, 70, 68, 73, 71, 76, 78, 81, 84];
 
 export default function DashboardPage() {
   const { data, isLoading, isError } = useDashboard();
@@ -52,170 +57,246 @@ export default function DashboardPage() {
   }
 
   const total = data.total_audits;
-  const moduleEntries = Object.entries(data.module_usage);
+  const conformityScore = Math.round(data.risk_score);
+  const scoreTone = getScoreTone(conformityScore);
+
+  // Count recent audits by verdict
+  const recentByVerdict = {
+    pass: data.recent_audits.filter((a) => a.verdict === 'pass').length,
+    warn: data.recent_audits.filter((a) => a.verdict === 'warn').length,
+    fail: data.recent_audits.filter((a) => a.verdict === 'fail').length,
+  };
 
   return (
     <>
-      <Topbar crumbs={[{ label: "Vue d'ensemble" }]} />
+      <Topbar
+        crumbs={[{ label: "Vue d'ensemble" }]}
+        actions={
+          <Button asChild variant="primary">
+            <Link href="/app/audits/nouveau">Nouvel audit</Link>
+          </Button>
+        }
+      />
       <main className="flex-1 px-8 py-8">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-fg">
-              Bonjour
-            </h1>
-            <p className="mt-1.5 max-w-[60ch] text-sm text-fg-secondary">
-              Vous avez{' '}
-              <strong className="text-fg">{total} audits</strong> et{' '}
-              <strong className="text-fg">
-                {data.warning_audits} en vigilance
-              </strong>
-              .
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/app/audits">Historique</Link>
-            </Button>
-            <Button asChild variant="primary">
-              <Link href="/app/audits/nouveau">+ Lancer un audit</Link>
-            </Button>
-          </div>
-        </header>
+        {/* Hero paragraph */}
+        <div className="mb-[22px]">
+          <p className="max-w-[620px] text-sm text-fg-secondary">
+            Bonjour. Voici l&apos;état de conformité{' '}
+            <em className="font-normal text-fg-secondary">fairness</em> de vos
+            modèles en production.
+          </p>
+        </div>
 
-        <section className="mb-4 grid gap-4 lg:grid-cols-[360px_1fr]">
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-border-default bg-surface p-8">
-            <div className="flex w-full items-baseline justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-                Score de risque global
-              </span>
-              <StatusBadge
-                tone={
-                  data.risk_score >= 71
-                    ? 'fail'
-                    : data.risk_score >= 31
-                      ? 'warn'
-                      : 'pass'
-                }
-              >
-                {data.risk_score >= 71
-                  ? 'Critique'
-                  : data.risk_score >= 31
-                    ? 'Vigilance'
-                    : 'Conforme'}
-              </StatusBadge>
-            </div>
-            <Gauge
-              value={data.risk_score}
-              label="Score de risque global"
-              caption={riskCaption(data.risk_score)}
-            />
-            <p className="mt-2 max-w-[32ch] text-center text-sm leading-relaxed text-fg-secondary">
-              Score agrégé sur vos{' '}
-              <strong className="text-fg">{total} audits</strong>.
-            </p>
-          </div>
+        {/* 4-column metric cards */}
+        <div className="mb-4 grid gap-4 grid-cols-4">
+          <MetricCard
+            label="Score conformité"
+            value={conformityScore}
+            suffix="/100"
+          />
+          <MetricCard label="Audits actifs" value={total} />
+          <MetricCard
+            label="Modèles non conformes"
+            value={data.failing_audits}
+          />
+          <MetricCard label="Délai moyen d'audit" value="—" suffix="min" />
+        </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <MetricCard label="Audits réalisés" value={total} />
-            <MetricCard label="Biais détectés" value={data.failing_audits} />
-            <MetricCard label="En vigilance" value={data.warning_audits} />
-            <MetricCard label="Score de risque moyen" value={data.risk_score} />
-          </div>
-        </section>
-
-        <section className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-          <div className="rounded-2xl border border-border-default bg-surface p-7">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="text-[18px] font-medium text-fg">Audits récents</h2>
-                <span className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg-muted">
-                  {data.recent_audits.length}
-                </span>
+        {/* 1.55fr / 1fr grid */}
+        <div className="mb-4 grid gap-4" style={{ gridTemplateColumns: '1.55fr 1fr' }}>
+          {/* Left: Recent audits table */}
+          <Card className="flex flex-col p-0">
+            <div className="border-b border-border-default px-6 py-4">
+              <div className="font-mono text-xs uppercase tracking-widest text-fg-muted mb-1">
+                Activité récente
               </div>
-              <Button asChild variant="ghost">
-                <Link href="/app/audits">Historique complet →</Link>
-              </Button>
-            </div>
-            <div className="flex flex-col gap-2">
-              {data.recent_audits.length === 0 && (
-                <p className="py-8 text-center text-sm text-fg-muted">
-                  Aucun audit pour le moment.
-                </p>
-              )}
-              {data.recent_audits.map((audit) => {
-                const t = auditTone(audit.verdict);
-                return (
-                  <article
-                    key={audit.id}
-                    className="grid grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))_auto] items-center gap-4 rounded-md border border-border-default bg-surface px-4 py-3.5 transition-colors hover:border-border-strong"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-fg">
-                        {audit.title}
-                      </div>
-                      <div className="mt-0.5 truncate font-mono text-xs text-fg-muted">
-                        {audit.code ?? audit.id} · {audit.module}
-                      </div>
-                    </div>
-                    <StatusBadge tone={t.tone}>{t.label}</StatusBadge>
-                    <span className="font-mono text-xs tabular-nums text-fg-muted">
-                      {new Date(audit.created_at).toLocaleDateString('fr-FR')}
-                    </span>
-                    <span className="font-mono text-xs tabular-nums text-fg-muted">
-                      {audit.risk_score ?? '—'}
-                    </span>
-                    <Button asChild variant="secondary" size="sm">
-                      <Link href={`/app/audits/${audit.id}`}>Ouvrir</Link>
-                    </Button>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border-default bg-surface p-7">
-            <div className="mb-4 flex items-center gap-3">
-              <h2 className="text-[18px] font-medium text-fg">
-                Répartition par module
+              <h2 className="text-base font-medium text-fg">
+                Derniers audits exécutés
               </h2>
             </div>
-            <div className="flex flex-col gap-4">
-              {moduleEntries.length === 0 && (
-                <p className="text-sm text-fg-muted">Aucune donnée.</p>
-              )}
-              {moduleEntries.map(([mod, count]) => {
-                const percent = Math.round(
-                  (count / Math.max(total, 1)) * 100,
-                );
-                return (
-                  <div key={mod}>
-                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                      <span className="text-sm text-fg">{mod}</span>
-                      <span className="font-mono text-xs tabular-nums text-fg-muted">
-                        {count} · {percent}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
-                      <div
-                        className="h-full rounded-full bg-accent"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-default">
+                    <th className="px-6 py-3 text-left font-semibold text-fg-muted text-xs">
+                      Audit
+                    </th>
+                    <th className="px-6 py-3 text-left font-semibold text-fg-muted text-xs">
+                      Attribut
+                    </th>
+                    <th className="px-6 py-3 text-left font-semibold text-fg-muted text-xs">
+                      Score
+                    </th>
+                    <th className="px-6 py-3 text-left font-semibold text-fg-muted text-xs">
+                      Statut
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recent_audits.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-fg-muted">
+                        Aucun audit pour le moment.
+                      </td>
+                    </tr>
+                  ) : (
+                    data.recent_audits.slice(0, 5).map((audit) => {
+                      const t = auditTone(audit.verdict);
+                      return (
+                        <tr
+                          key={audit.id}
+                          className="border-b border-border-default hover:bg-surface-2 transition-colors cursor-pointer"
+                        >
+                          <td className="px-6 py-3">
+                            <div className="font-medium text-fg">
+                              {audit.title}
+                            </div>
+                            <div className="text-xs text-fg-muted font-mono">
+                              {audit.code ?? audit.id} · {audit.module}
+                            </div>
+                          </td>
+                          <td className="px-6 py-3">
+                            <span className="inline-block rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 text-xs font-medium">
+                              {audit.module}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 font-mono font-semibold tabular-nums text-fg">
+                            {audit.risk_score ?? '—'}
+                          </td>
+                          <td className="px-6 py-3">
+                            <StatusBadge tone={t.tone} noDot>
+                              {t.label}
+                            </StatusBadge>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Right column: Trend + Distribution */}
+          <div className="flex flex-col gap-4">
+            {/* Trend card */}
+            <Card className="p-6">
+              <div className="font-mono text-xs uppercase tracking-widest text-fg-muted mb-1">
+                Tendance
+              </div>
+              <h3 className="text-base font-medium text-fg mb-4">
+                Conformité globale
+              </h3>
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-[34px] font-semibold leading-none tracking-tight tabular-nums text-fg">
+                    {conformityScore}
+                    <span className="ml-1 text-base text-fg-muted">%</span>
                   </div>
-                );
-              })}
-            </div>
-            <div className="mt-6 rounded-md border border-status-info-border bg-status-info-bg p-4 text-xs leading-relaxed text-fg-secondary">
-              <strong className="font-medium text-fg">
-                Couche transversale.
-              </strong>{' '}
-              Chaque audit produit un rapport rattaché aux articles AI Act
-              applicables. Les résultats sont une aide à l&apos;analyse —
-              l&apos;appréciation réglementaire finale reste de votre
-              responsabilité.
-            </div>
+                  <div className="mt-2 text-xs text-fg-muted font-mono">
+                    ↑ 6 pts / 90 j
+                  </div>
+                </div>
+                <div className="w-[130px] h-11">
+                  <Sparkline
+                    values={SPARK_DATA}
+                    tone="accent"
+                    label="Évolution conformité"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Distribution card */}
+            <Card className="p-6">
+              <div className="font-mono text-xs uppercase tracking-widest text-fg-muted mb-3">
+                Répartition des statuts
+              </div>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: 'pass',
+                    label: 'Conformes',
+                    count: recentByVerdict.pass,
+                    tone: 'pass' as const,
+                  },
+                  {
+                    key: 'warn',
+                    label: 'Sous vigilance',
+                    count: recentByVerdict.warn,
+                    tone: 'warn' as const,
+                  },
+                  {
+                    key: 'fail',
+                    label: 'Non conformes',
+                    count: recentByVerdict.fail,
+                    tone: 'fail' as const,
+                  },
+                ].map(({ key, label, count, tone }) => {
+                  const total = data.recent_audits.length || 1;
+                  const percent = Math.round((count / total) * 100);
+                  return (
+                    <div key={key}>
+                      <div className="flex justify-between items-center mb-1.5 text-xs">
+                        <span className="flex items-center gap-2 text-fg">
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              backgroundColor:
+                                tone === 'pass'
+                                  ? 'var(--status-pass)'
+                                  : tone === 'warn'
+                                    ? 'var(--status-warn)'
+                                    : 'var(--status-fail)',
+                            }}
+                          />
+                          {label}
+                        </span>
+                        <span className="text-fg-muted font-mono">
+                          {count} · {percent}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${percent}%`,
+                            backgroundColor:
+                              tone === 'pass'
+                                ? 'var(--status-pass)'
+                                : tone === 'warn'
+                                  ? 'var(--status-warn)'
+                                  : 'var(--status-fail)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
           </div>
-        </section>
+        </div>
+
+        {/* Action band */}
+        <Card className="flex items-center gap-5 p-6 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent">
+          <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-accent" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-medium text-fg">
+              Lancez un audit en moins de 7 minutes
+            </h3>
+            <p className="text-sm text-fg-secondary mt-1">
+              Importez votre jeu de données, sélectionnez les attributs
+              protégés, AuditIQ calcule l&apos;ensemble des métriques
+              réglementaires.
+            </p>
+          </div>
+          <Button asChild variant="primary">
+            <Link href="/app/audits/nouveau">Commencer</Link>
+          </Button>
+        </Card>
       </main>
     </>
   );
