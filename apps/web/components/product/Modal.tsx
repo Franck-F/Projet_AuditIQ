@@ -38,6 +38,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(function Modal
   // Reset typed confirmation when modal opens
   React.useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on open
       setTyped('');
       // Defer focus so the DOM is ready
       const id = setTimeout(() => firstFocusRef.current?.focus(), 20);

@@ -44,11 +44,13 @@ export default function OnboardingPage() {
 
   // Hydrate from localStorage on mount
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration
     setIsMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as OnboardingState;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration
         setState(parsed);
       } catch {
         // fallback to default
