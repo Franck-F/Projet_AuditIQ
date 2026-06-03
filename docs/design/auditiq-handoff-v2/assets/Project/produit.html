@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produit — AuditIQ</title>
+<meta name="description" content="Vue d'ensemble de la plateforme AuditIQ : 3 modules d'audit fairness, couche transversale conformité, gouvernance équipe.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 18ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .anchor-nav {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+    background: var(--surface-glass);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 30;
+    overflow-x: auto;
+  }
+  .anchor-nav .container { display: flex; gap: 4px; }
+  .anchor-nav a { padding: 8px 14px; font-size: var(--fs-sm); color: var(--fg-secondary); border-radius: var(--r-sm); white-space: nowrap; }
+  .anchor-nav a:hover, .anchor-nav a.is-active { color: var(--fg); background: var(--surface-2); }
+
+  .module-row { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; padding-block: var(--sp-11); border-top: 1px solid var(--border-subtle); }
+  .module-row:first-of-type { border-top: 0; }
+  .module-row--reverse { grid-template-columns: 1fr 1fr; }
+  .module-row--reverse > div:first-child { order: 2; }
+  @media (max-width: 920px) { .module-row, .module-row--reverse { grid-template-columns: 1fr; gap: 40px; } .module-row--reverse > div:first-child { order: 0; } }
+  .module-text h2 { font-size: var(--fs-h2); margin: 12px 0 16px; letter-spacing: -0.015em; }
+  .module-text > p.lede { font-size: var(--fs-h4); color: var(--fg-secondary); margin-bottom: 24px; line-height: 1.5; }
+  .module-text ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+  .module-text li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55; }
+  .module-text li::before { content: ""; width: 16px; height: 16px; margin-top: 5px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364c89a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.5l3 3 7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-size: contain; }
+
+  .module-text__actions { display: flex; gap: 12px; margin-top: 32px; }
+
+  .mock {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .mock__head { display: flex; justify-content: space-between; align-items: center; }
+  .mock__title { font-size: 14px; font-weight: 500; }
+  .mock__title__sub { font-size: var(--fs-xs); color: var(--fg-muted); font-family: var(--font-mono); }
+
+  /* Dashboard preview */
+  .dash-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden; }
+  .dash-preview__bar { background: var(--surface); border-bottom: 1px solid var(--border-subtle); padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
+  .dash-preview__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-prominent); }
+  .dash-preview__url { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); margin-left: 12px; }
+  .dash-preview__body { display: grid; grid-template-columns: 200px 1fr; min-height: 360px; }
+  .dash-preview__side { background: var(--surface); border-right: 1px solid var(--border-subtle); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .dash-preview__side-item { padding: 8px 10px; border-radius: var(--r-sm); font-size: var(--fs-sm); color: var(--fg-secondary); display: flex; align-items: center; gap: 8px; }
+  .dash-preview__side-item.is-active { background: var(--surface-2); color: var(--fg); position: relative; }
+  .dash-preview__side-item.is-active::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; background: var(--accent); border-radius: 2px; }
+  .dash-preview__side-icon { width: 14px; height: 14px; border-radius: 3px; background: var(--surface-3); }
+  .dash-preview__main { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .dash-preview__title { font-size: var(--fs-h4); font-weight: 600; }
+  .dash-preview__kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; }
+  .kpi__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+  .kpi__val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi__sub { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 4px; }
+
+  .transverse-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 820px) { .transverse-grid { grid-template-columns: 1fr; } }
+  .transverse-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px; }
+  .transverse-card__icon { width: 32px; height: 32px; border-radius: 8px; background: var(--accent-soft); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--font-mono); font-weight: 500; margin-bottom: 16px; }
+  .transverse-card h4 { font-size: var(--fs-h4); margin-bottom: 8px; }
+  .transverse-card p { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="produit"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Produit</span>
+    <h1 style="margin-top: 16px;">Trois modules d'audit, une chaîne de conformité complète.</h1>
+    <p class="lede">AuditIQ couvre les trois grandes familles d'IA déployées en PME : modèles supervisés, datasets sans cible explicite, et assistants conversationnels LLM. Chaque audit se conclut par une trace exploitable, alignée sur l'AI Act et exportable.</p>
+    <div style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap;">
+      <a class="btn btn--primary" href="contact.html">Demander une démo</a>
+      <a class="btn btn--secondary" href="comment-ca-marche.html">Voir le parcours produit</a>
+    </div>
+  </div>
+</header>
+
+<div class="anchor-nav">
+  <div class="container">
+    <a href="#supervise">Audit supervisé</a>
+    <a href="#non-supervise">Détection non supervisée</a>
+    <a href="#llm">Audit LLM</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#couche">Couche transversale</a>
+    <a href="#securite">Sécurité &amp; gouvernance</a>
+  </div>
+</div>
+
+<!-- MODULE 1 -->
+<section id="supervise" class="container">
+  <div class="module-row">
+    <div class="module-text">
+      <span class="eyebrow eyebrow--accent">Module 01 · Audit supervisé</span>
+      <h2>Mesurez l'écart entre groupes sur vos modèles de scoring.</h2>
+      <p class="lede">Adapté aux classifications binaires ou multi-classes (acceptation crédit, présélection CV, scoring risque). AuditIQ calcule les métriques fairness reconnues par la littérature académique et la régulation.</p>
+      <ul>
+        <li>Quatre métriques canoniques : Demographic Parity, Equal Opportunity, Equalized Odds, règle des quatre cinquièmes.</li>
+        <li>Décomposition par groupe et sous-groupe — intersectionalité (genre × tranche d'âge, par exemple).</li>
+        <li>Seuils ajustables par votre responsable conformité, ou recommandation par défaut selon le secteur.</li>
+        <li>Mapping automatique des colonnes sensibles avec suggestions, validation manuelle obligatoire.</li>
+        <li>Explication en langage naturel — chaque écart est commenté en deux à trois phrases compréhensibles.</li>
+      </ul>
+      <div class="module-text__actions">
+        <a class="btn btn--secondary" href="modules.html#supervise">Détail technique</a>
+        <a class="btn btn--ghost" href="cas-usage.html#rh">Cas d'usage RH →</a>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock__head">
+        <div>
+          <div class="mock__title">Recrutement_2024.csv · Module 1</div>
+          <div class="mock__title__sub">412 lignes · sensitive: genre · target: short_listed</div>
+        </div>
+        <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+      </div>
+
+      <div class="metric">
+        <div class="metric__head">
+          <span class="metric__label">Demographic Parity</span>
+          <span class="status status--warn"><span class="status__dot"></span>0.78</span>
+        </div>
+        <div class="metric__bar">
+          <div class="metric__bar__fill metric__bar__fill--warn" style="width: 78%;"></div>
+          <div class="metric__threshold" style="left: 80%;"></div>
+        </div>
+        <span class="metric__sub">L'écart de présélection entre les groupes Hommes et Femmes est de 12 %.</span>
+      </div>
+
+      <div class="metric">
+        <div class="metric__head">
+          <span class="metric__label">Equal Opportunity</span>
+          <span class="status status--pass"><span class="status__dot"></span>0.92</span>
+        </div>
+        <div class="metric__bar">
+          <div class="metric__bar__fill" style="width: 92%;"></div>
+          <div class="metric__threshold" style="left: 80%;"></div>
+        </div>
+        <span class="metric__sub">Pour un profil qualifié, la probabilité de présélection est équivalente.</span>
+      </div>
+
+      <div>
+        <div class="bar-row">
+          <span class="bar-row__label">Groupe : Femmes</span>
+          <div class="bar-row__bar"><div class="bar-row__fill bar-row__fill--warn" style="width: 32%;"></div></div>
+          <span class="bar-row__value">32&nbsp;%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-row__label">Groupe : Hommes</span>
+          <div class="bar-row__bar"><div class="bar-row__fill" style="width: 44%;"></div></div>
+          <span class="bar-row__value">44&nbsp;%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 2 -->
+<section id="non-supervise" class="container">
+  <div class="module-row module-row--reverse">
+    <div class="module-text">
+      <span class="eyebrow eyebrow--accent">Module 02 · Détection non supervisée</span>
+      <h2>Repérez les biais dans vos données — même sans variable de décision.</h2>
+      <p class="lede">Pour les jeux de données où il n'y a pas (encore) de modèle entraîné, ou pour préparer l'entraînement. AuditIQ identifie les regroupements naturels et signale les déviations.</p>
+      <ul>
+        <li>Clustering automatique (k-means, DBSCAN, mixtures gaussiennes) — choix du nombre de clusters guidé.</li>
+        <li>Détection de clusters déviants par densité et par composition relative.</li>
+        <li>Identification des features dominantes par cluster — qu'est-ce qui caractérise chaque groupe.</li>
+        <li>Signalement automatique de proxies de critères protégés (code postal ↔ origine présumée, etc.).</li>
+        <li>Restitution pédagogique avec niveau de risque qualifié et explication des raisons.</li>
+      </ul>
+      <div class="module-text__actions">
+        <a class="btn btn--secondary" href="modules.html#non-supervise">Détail technique</a>
+        <a class="btn btn--ghost" href="cas-usage.html#credit">Cas d'usage crédit →</a>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock__head">
+        <div>
+          <div class="mock__title">Demandes_credit_Q3.csv · Module 2</div>
+          <div class="mock__title__sub">2 840 lignes · 12 features · 4 clusters détectés</div>
+        </div>
+        <span class="status status--fail"><span class="status__dot"></span>Critique</span>
+      </div>
+
+      <!-- Cluster viz -->
+      <div style="position: relative; height: 220px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); overflow: hidden;">
+        <!-- Grid lines -->
+        <div style="position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border-subtle); opacity: 0.5;"></div>
+        <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--border-subtle); opacity: 0.5;"></div>
+        <!-- Clusters -->
+        <div style="position: absolute; left: 18%; top: 25%; width: 80px; height: 80px; border-radius: 50%; background: var(--accent-soft); border: 1px dashed var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--font-mono); font-size: 12px;">C1</div>
+        <div style="position: absolute; left: 44%; top: 12%; width: 90px; height: 90px; border-radius: 50%; background: var(--status-info-bg); border: 1px dashed var(--status-info-border); display: flex; align-items: center; justify-content: center; color: var(--status-info); font-family: var(--font-mono); font-size: 12px;">C2</div>
+        <div style="position: absolute; left: 30%; top: 56%; width: 60px; height: 60px; border-radius: 50%; background: var(--status-warn-bg); border: 1px dashed var(--status-warn-border); display: flex; align-items: center; justify-content: center; color: var(--status-warn); font-family: var(--font-mono); font-size: 12px;">C3</div>
+        <div style="position: absolute; left: 65%; top: 45%; width: 70px; height: 70px; border-radius: 50%; background: var(--status-fail-bg); border: 2px solid var(--status-fail); display: flex; align-items: center; justify-content: center; color: var(--status-fail); font-family: var(--font-mono); font-size: 13px; font-weight: 500;">C4 ⚠</div>
+      </div>
+
+      <div class="card card--surface-2" style="padding: 16px;">
+        <div class="row row--between">
+          <div>
+            <span class="eyebrow">Cluster C4 — déviant</span>
+            <h4 style="font-size: 15px; margin-top: 4px;">Profil sur-représenté en refus</h4>
+          </div>
+          <span class="status status--fail"><span class="status__dot"></span>Proxy détecté</span>
+        </div>
+        <p style="font-size: var(--fs-sm); color: var(--fg-secondary); margin-top: 10px; line-height: 1.55;">Le code postal apparaît comme feature dominante (corrélation 0,82). Risque de proxy géographique pour l'origine présumée.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 3 -->
+<section id="llm" class="container">
+  <div class="module-row">
+    <div class="module-text">
+      <span class="eyebrow eyebrow--accent">Module 03 · Audit LLM &amp; chatbot</span>
+      <h2>Testez vos assistants conversationnels sur six axes de discrimination.</h2>
+      <p class="lede">Connectez votre API LLM (OpenAI, Mistral, Anthropic, modèles fine-tunés). AuditIQ envoie une banque de prompts pairs et compare les réponses pour mesurer les écarts.</p>
+      <ul>
+        <li>Six axes : genre, origine présumée, âge, religion, handicap, orientation.</li>
+        <li>400+ prompts pairs, maintenus en français, anglais et espagnol par notre équipe.</li>
+        <li>Métriques par axe : écart de longueur, sentiment, taux de refus, polarité.</li>
+        <li>Score global et score par axe, avec extraits significatifs annotés.</li>
+        <li>Compatible avec vos prompts métiers — banque personnalisable.</li>
+      </ul>
+      <div class="module-text__actions">
+        <a class="btn btn--secondary" href="modules.html#llm">Détail technique</a>
+        <a class="btn btn--ghost" href="cas-usage.html#chatbot">Cas d'usage chatbot →</a>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock__head">
+        <div>
+          <div class="mock__title">Chatbot SAV · Module 3</div>
+          <div class="mock__title__sub">Mistral-7B-instruct · 412 prompts pairs</div>
+        </div>
+        <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+      </div>
+
+      <div class="grid-2" style="gap: 12px;">
+        <div class="card card--surface-2" style="padding: 14px;">
+          <span class="eyebrow">Genre</span>
+          <div style="font-family: var(--font-mono); font-size: 22px; margin-top: 4px;">4,1<span style="font-size: 12px; color: var(--fg-muted);"> / 5</span></div>
+          <div style="font-size: var(--fs-xs); color: var(--status-pass); margin-top: 4px;">Faibles écarts</div>
+        </div>
+        <div class="card card--surface-2" style="padding: 14px;">
+          <span class="eyebrow">Origine</span>
+          <div style="font-family: var(--font-mono); font-size: 22px; margin-top: 4px;">2,8<span style="font-size: 12px; color: var(--fg-muted);"> / 5</span></div>
+          <div style="font-size: var(--fs-xs); color: var(--status-warn); margin-top: 4px;">Écarts modérés</div>
+        </div>
+        <div class="card card--surface-2" style="padding: 14px;">
+          <span class="eyebrow">Âge</span>
+          <div style="font-family: var(--font-mono); font-size: 22px; margin-top: 4px;">3,5<span style="font-size: 12px; color: var(--fg-muted);"> / 5</span></div>
+          <div style="font-size: var(--fs-xs); color: var(--status-warn); margin-top: 4px;">Acceptable</div>
+        </div>
+        <div class="card card--surface-2" style="padding: 14px;">
+          <span class="eyebrow">Handicap</span>
+          <div style="font-family: var(--font-mono); font-size: 22px; margin-top: 4px;">2,1<span style="font-size: 12px; color: var(--fg-muted);"> / 5</span></div>
+          <div style="font-size: var(--fs-xs); color: var(--status-fail); margin-top: 4px;">Écarts significatifs</div>
+        </div>
+      </div>
+
+      <div class="card card--surface-2" style="padding: 16px;">
+        <span class="eyebrow">Extrait significatif</span>
+        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="font-size: var(--fs-xs); padding: 10px; background: var(--surface); border-radius: 6px; border-left: 2px solid var(--status-pass);">
+            <strong style="font-weight: 500; color: var(--fg-muted);">Profil A · 142 mots</strong><br>
+            <span style="color: var(--fg-secondary);">« Bien sûr, je peux vous aider à finaliser votre dossier. Voici les étapes… »</span>
+          </div>
+          <div style="font-size: var(--fs-xs); padding: 10px; background: var(--surface); border-radius: 6px; border-left: 2px solid var(--status-fail);">
+            <strong style="font-weight: 500; color: var(--fg-muted);">Profil B · 38 mots</strong><br>
+            <span style="color: var(--fg-secondary);">« Je vous invite à contacter notre service spécialisé. »</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD PREVIEW -->
+<section id="dashboard" class="section" style="border-top: 1px solid var(--border-subtle); background: var(--surface);">
+  <div class="container">
+    <div class="section-header" style="max-width: 760px;">
+      <span class="eyebrow eyebrow--accent">Dashboard &amp; produit</span>
+      <h2 class="section-header__title">Un tableau de bord pensé pour vos parties prenantes.</h2>
+      <p class="section-header__lede">Le responsable conformité voit le score de risque. La DRH voit les audits récents. Le dirigeant voit les alertes critiques. Une seule plateforme, plusieurs lectures.</p>
+    </div>
+
+    <div class="dash-preview">
+      <div class="dash-preview__bar">
+        <span class="dash-preview__dot"></span>
+        <span class="dash-preview__dot"></span>
+        <span class="dash-preview__dot"></span>
+        <span class="dash-preview__url">app.auditiq.fr/dashboard</span>
+      </div>
+      <div class="dash-preview__body">
+        <aside class="dash-preview__side">
+          <div class="dash-preview__side-item is-active"><span class="dash-preview__side-icon"></span>Dashboard</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Audits</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Rapports</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Recommandations</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Historique</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Équipe</div>
+          <div class="dash-preview__side-item"><span class="dash-preview__side-icon"></span>Paramètres</div>
+        </aside>
+        <main class="dash-preview__main">
+          <div class="row row--between">
+            <div>
+              <div style="font-size: var(--fs-xs); color: var(--fg-muted); font-family: var(--font-mono); letter-spacing: 0.08em;">CABINET TESSIER &amp; ASSOCIÉS</div>
+              <div class="dash-preview__title">Bonjour Claire</div>
+            </div>
+            <a class="btn btn--primary btn--sm" href="#">+ Lancer un audit</a>
+          </div>
+
+          <div class="dash-preview__kpis">
+            <div class="kpi">
+              <div class="kpi__label">Score de risque global</div>
+              <div class="kpi__val" style="color: var(--status-warn);">3.2 / 5</div>
+              <div class="kpi__sub">Vigilance — 2 alertes ouvertes</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi__label">Audits ce trimestre</div>
+              <div class="kpi__val">8</div>
+              <div class="kpi__sub">+3 vs Q3</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi__label">Couverture AI Act</div>
+              <div class="kpi__val">76 %</div>
+              <div class="kpi__sub">Annexe IV documentée</div>
+            </div>
+          </div>
+
+          <div class="card card--surface-2" style="padding: 16px;">
+            <div class="row row--between" style="margin-bottom: 12px;">
+              <div style="font-size: var(--fs-sm); font-weight: 500;">Audits récents</div>
+              <a href="#" style="font-size: var(--fs-xs); color: var(--accent);">Voir tous →</a>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="row row--between" style="padding: 8px 10px; background: var(--surface); border-radius: 6px;">
+                <span style="font-size: var(--fs-sm);">Recrutement_2024.csv</span>
+                <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+              </div>
+              <div class="row row--between" style="padding: 8px 10px; background: var(--surface); border-radius: 6px;">
+                <span style="font-size: var(--fs-sm);">Chatbot SAV — Mistral-7B</span>
+                <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+              </div>
+              <div class="row row--between" style="padding: 8px 10px; background: var(--surface); border-radius: 6px;">
+                <span style="font-size: var(--fs-sm);">Scoring_credit_v3.csv</span>
+                <span class="status status--pass"><span class="status__dot"></span>Conforme</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <p class="muted text-center" style="font-size: var(--fs-xs); margin-top: 16px;">Capture du produit — exemple PME, secteur RH.</p>
+  </div>
+</section>
+
+<!-- COUCHE TRANSVERSALE -->
+<section id="couche" class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 760px;">
+      <span class="eyebrow eyebrow--accent">Couche transversale</span>
+      <h2 class="section-header__title">Au-delà de la mesure : une chaîne complète conforme.</h2>
+      <p class="section-header__lede">Détecter n'est qu'une étape. AuditIQ vous accompagne sur la documentation, la priorisation des actions, la conservation et le partage.</p>
+    </div>
+
+    <div class="transverse-grid">
+      <div class="transverse-card">
+        <div class="transverse-card__icon">01</div>
+        <h4>Recommandations assistées</h4>
+        <p>Pour chaque écart détecté, AuditIQ propose des actions hiérarchisées : revoir un seuil, ré-équilibrer un jeu d'entraînement, ouvrir un ticket interne, déclencher un test complémentaire. Les recommandations sont catégorisées par effort estimé et impact attendu.</p>
+      </div>
+      <div class="transverse-card">
+        <div class="transverse-card__icon">02</div>
+        <h4>Explication en langage naturel</h4>
+        <p>Chaque métrique est traduite en deux ou trois phrases lisibles. Pas de jargon statistique. Vos parties prenantes non techniques comprennent la situation en une lecture — vos data scientists peuvent dérouler les détails techniques en un clic.</p>
+      </div>
+      <div class="transverse-card">
+        <div class="transverse-card__icon">03</div>
+        <h4>Ancrage réglementaire</h4>
+        <p>Chaque écart est rattaché aux articles applicables : AI Act (articles 10, 13, 15, annexe IV), RGPD, Code du travail (L.1132-1), Code pénal (article 225-1). Vous savez précisément quel texte est touché et quelle réponse attendue.</p>
+      </div>
+      <div class="transverse-card">
+        <div class="transverse-card__icon">04</div>
+        <h4>Rapport exportable PDF / Excel</h4>
+        <p>Deux vues : un executive summary pour le CODIR (1 page) et une vue réglementaire complète (10 à 25 pages selon le module). Format Excel structuré pour intégration dans votre registre des systèmes d'IA.</p>
+      </div>
+      <div class="transverse-card">
+        <div class="transverse-card__icon">05</div>
+        <h4>Historique des audits</h4>
+        <p>Tous vos audits sont conservés cinq ans (durée recommandée par l'AI Act). Comparez deux versions d'un même modèle. Suivez la dérive dans le temps. Construisez votre dossier de preuve.</p>
+      </div>
+      <div class="transverse-card">
+        <div class="transverse-card__icon">06</div>
+        <h4>Équipe &amp; permissions</h4>
+        <p>Trois rôles intégrés : Administrateur, Auditeur, Lecteur. Journal d'activité complet. Invitations par email professionnel. SSO sur les paliers Entreprise et Souverain.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="securite" class="section section--sm" style="background: var(--surface);">
+  <div class="container">
+    <div class="grid-2" style="gap: 64px; align-items: center;">
+      <div>
+        <span class="eyebrow eyebrow--accent">Sécurité &amp; gouvernance</span>
+        <h2 style="font-size: var(--fs-h2); margin-top: 12px; margin-bottom: 16px; letter-spacing: -0.015em;">Vos données ne sortent pas d'Europe.</h2>
+        <p style="color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.65;">Hébergement OVHcloud Roubaix (FR), chiffrement AES-256 au repos et TLS 1.3 en transit. Vos données sont supprimées sur demande sous 72 heures. Audits de sécurité annuels. Conforme RGPD, en cours de certification ISO 27001 (Q3 2026).</p>
+      </div>
+      <div class="card card--surface-2" style="padding: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="row" style="justify-content: space-between;">
+            <span style="font-size: var(--fs-sm);">Hébergement</span>
+            <span class="badge badge--mono">OVHcloud · FR</span>
+          </div>
+          <hr class="divider">
+          <div class="row" style="justify-content: space-between;">
+            <span style="font-size: var(--fs-sm);">Chiffrement</span>
+            <span class="badge badge--mono">AES-256 · TLS 1.3</span>
+          </div>
+          <hr class="divider">
+          <div class="row" style="justify-content: space-between;">
+            <span style="font-size: var(--fs-sm);">Conformité</span>
+            <span class="status status--pass"><span class="status__dot"></span>RGPD</span>
+          </div>
+          <hr class="divider">
+          <div class="row" style="justify-content: space-between;">
+            <span style="font-size: var(--fs-sm);">ISO 27001</span>
+            <span class="status status--info"><span class="status__dot"></span>En cours Q3 2026</span>
+          </div>
+          <hr class="divider">
+          <div class="row" style="justify-content: space-between;">
+            <span style="font-size: var(--fs-sm);">SSO &amp; SAML 2.0</span>
+            <span class="badge">Entreprise</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Prochaine étape</span>
+        <h2 style="margin-top: 12px;">Voyez AuditIQ tourner sur votre propre cas d'usage.</h2>
+        <p>30 minutes de démo guidée. On apporte les scénarios — vous apportez vos questions de conformité.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver une démo</a>
+        <a class="btn btn--secondary" href="tarifs.html">Comparer les paliers</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Équipe & permissions — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="equipe"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Équipe & permissions" data-no-cta="true"></div>
+
+    <main class="app__content">
+
+      <div class="page-head">
+        <div>
+          <h1 class="page-head__title">Équipe & permissions</h1>
+          <p class="page-head__lede">Cabinet Tessier · Plan Équipe (5 sièges, 4 utilisés) · Auditeurs et spectateurs gérés par Owner ou Admin.</p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--secondary btn--sm">Gérer les sièges</button>
+          <button class="btn btn--primary">+ Inviter un membre</button>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <a class="tabbar__tab tabbar__tab--active">Membres <span class="tabbar__tab-count">4</span></a>
+        <a class="tabbar__tab">Invitations <span class="tabbar__tab-count">2</span></a>
+        <a class="tabbar__tab">Rôles & permissions</a>
+        <a class="tabbar__tab">Journal d'activité</a>
+      </div>
+
+      <!-- Members table -->
+      <div class="card card--xl" style="padding: 0; margin-bottom: 24px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="padding-left: 20px;">Membre</th>
+              <th>Email</th>
+              <th>Rôle</th>
+              <th>Authentification</th>
+              <th>Dernière activité</th>
+              <th style="text-align: right; padding-right: 20px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding-left: 20px;">
+                <div class="row" style="gap: 12px;">
+                  <span class="avatar">CT</span>
+                  <div>
+                    <div style="font-weight: 500;">Claire Tessier <span class="muted" style="font-size: 11px; margin-left: 6px;">(vous)</span></div>
+                    <div class="muted" style="font-size: 11px;">Responsable conformité</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-family: var(--font-mono); font-size: 13px;">claire.tessier@tessier.fr</span></td>
+              <td><span class="role-pill role-pill--owner"><span class="status__dot" style="background: currentColor;"></span>Owner</span></td>
+              <td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>SSO + 2FA</span></td>
+              <td>Maintenant</td>
+              <td style="text-align: right; padding-right: 20px;"><span class="muted" style="font-size: 12px;">—</span></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">
+                <div class="row" style="gap: 12px;">
+                  <span class="avatar">PM</span>
+                  <div>
+                    <div style="font-weight: 500;">Paul Mendy</div>
+                    <div class="muted" style="font-size: 11px;">Data scientist</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-family: var(--font-mono); font-size: 13px;">paul.mendy@tessier.fr</span></td>
+              <td><span class="role-pill role-pill--admin"><span class="status__dot" style="background: currentColor;"></span>Admin</span></td>
+              <td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>SSO + 2FA</span></td>
+              <td>Il y a 2 h</td>
+              <td style="text-align: right; padding-right: 20px;"><button class="btn btn--ghost btn--sm">Modifier</button></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">
+                <div class="row" style="gap: 12px;">
+                  <span class="avatar">MB</span>
+                  <div>
+                    <div style="font-weight: 500;">Marc Benhamou</div>
+                    <div class="muted" style="font-size: 11px;">Lead auditeur LLM</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-family: var(--font-mono); font-size: 13px;">marc.benhamou@tessier.fr</span></td>
+              <td><span class="role-pill role-pill--auditor"><span class="status__dot" style="background: currentColor;"></span>Auditeur</span></td>
+              <td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>SSO + 2FA</span></td>
+              <td>Hier 17:54</td>
+              <td style="text-align: right; padding-right: 20px;"><button class="btn btn--ghost btn--sm">Modifier</button></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">
+                <div class="row" style="gap: 12px;">
+                  <span class="avatar">NR</span>
+                  <div>
+                    <div style="font-weight: 500;">Noémie Roussel</div>
+                    <div class="muted" style="font-size: 11px;">Consultante RH</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-family: var(--font-mono); font-size: 13px;">noemie.r@tessier.fr</span></td>
+              <td><span class="role-pill role-pill--viewer"><span class="status__dot" style="background: currentColor;"></span>Spectateur</span></td>
+              <td><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Email seul</span></td>
+              <td>3 jours</td>
+              <td style="text-align: right; padding-right: 20px;"><button class="btn btn--ghost btn--sm">Modifier</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pending invitations -->
+      <div class="section-title mb-4"><h3>Invitations en attente</h3><span class="section-title__count">2</span></div>
+      <div class="card card--xl" style="padding: 0; margin-bottom: 24px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="padding-left: 20px;">Email invité</th>
+              <th>Rôle proposé</th>
+              <th>Invité par</th>
+              <th>Envoyée</th>
+              <th>Expire</th>
+              <th style="text-align: right; padding-right: 20px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding-left: 20px;"><span style="font-family: var(--font-mono); font-size: 13px;">julien.morel@tessier.fr</span></td>
+              <td><span class="role-pill role-pill--auditor"><span class="status__dot" style="background: currentColor;"></span>Auditeur</span></td>
+              <td>Claire Tessier</td>
+              <td>Hier · 18:02</td>
+              <td>Dans 6 jours</td>
+              <td style="text-align: right; padding-right: 20px;">
+                <button class="btn btn--ghost btn--sm">Renvoyer</button>
+                <button class="btn btn--ghost btn--sm" style="color: var(--status-fail);">Annuler</button>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><span style="font-family: var(--font-mono); font-size: 13px;">dpo.consultant@externe.com</span></td>
+              <td><span class="role-pill role-pill--viewer"><span class="status__dot" style="background: currentColor;"></span>Spectateur</span></td>
+              <td>Paul Mendy</td>
+              <td>4 mai · 11:20</td>
+              <td>Dans 3 jours</td>
+              <td style="text-align: right; padding-right: 20px;">
+                <button class="btn btn--ghost btn--sm">Renvoyer</button>
+                <button class="btn btn--ghost btn--sm" style="color: var(--status-fail);">Annuler</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Roles matrix -->
+      <div class="section-title mb-4"><h3>Permissions par rôle</h3></div>
+      <div class="card card--xl" style="padding: 0; margin-bottom: 24px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="padding-left: 20px;">Permission</th>
+              <th style="text-align: center;"><span class="role-pill role-pill--owner"><span class="status__dot" style="background: currentColor;"></span>Owner</span></th>
+              <th style="text-align: center;"><span class="role-pill role-pill--admin"><span class="status__dot" style="background: currentColor;"></span>Admin</span></th>
+              <th style="text-align: center;"><span class="role-pill role-pill--auditor"><span class="status__dot" style="background: currentColor;"></span>Auditeur</span></th>
+              <th style="text-align: center; padding-right: 20px;"><span class="role-pill role-pill--viewer"><span class="status__dot" style="background: currentColor;"></span>Spectateur</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding-left: 20px;">Lancer un audit (M1, M2, M3)</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Lire les résultats d'audit</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--status-pass);">✓</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Générer / signer un rapport</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Exporter un rapport (PDF / Excel)</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--status-pass);">✓</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Modifier les seuils par défaut</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Inviter / supprimer un membre</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Gérer la facturation</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;">Supprimer l'espace de travail</td>
+              <td style="text-align: center; color: var(--status-pass);">✓</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; color: var(--fg-disabled);">—</td>
+              <td style="text-align: center; padding-right: 20px; color: var(--fg-disabled);">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Activity log -->
+      <div class="section-title mb-4"><h3>Journal d'activité</h3><span class="section-title__count">42</span></div>
+      <div class="card card--xl">
+        <div class="row mb-4" style="gap: 12px; flex-wrap: wrap;">
+          <input class="input" placeholder="Rechercher dans le journal…" style="flex: 1; max-width: 320px;">
+          <select class="select" style="max-width: 180px;"><option>Tous les types</option><option>Audit</option><option>Rapport</option><option>Membre</option><option>Paramètres</option></select>
+          <select class="select" style="max-width: 180px;"><option>Tous les membres</option><option>Claire Tessier</option><option>Paul Mendy</option><option>Marc Benhamou</option></select>
+          <span class="muted" style="font-size: 12px; margin-left: auto;">Affichage des 30 derniers jours</span>
+        </div>
+
+        <ul class="timeline" style="list-style: none; padding: 0; margin: 0;">
+          <li class="tl-item"><span class="tl-item__dot"></span><div class="tl-item__date">14 MAI · 10:42</div><div class="tl-item__title">Claire Tessier a généré le rapport RPT-2026-014</div><div class="tl-item__desc">PDF signé eIDAS · 24 pages · adresse IP 78.231.x.x · agent Chrome 126</div></li>
+          <li class="tl-item"><span class="tl-item__dot tl-item__dot--warn"></span><div class="tl-item__date">14 MAI · 09:18</div><div class="tl-item__title">L'audit AUD-2026-014 a basculé en niveau critique</div><div class="tl-item__desc">DP passé de 0.81 à 0.72 · changement automatique de statut</div></li>
+          <li class="tl-item"><span class="tl-item__dot tl-item__dot--info"></span><div class="tl-item__date">13 MAI · 17:54</div><div class="tl-item__title">Paul Mendy a invité 2 membres dans l'espace</div><div class="tl-item__desc">julien.morel@tessier.fr (Auditeur) · noemie.r@tessier.fr (Spectateur)</div></li>
+          <li class="tl-item"><span class="tl-item__dot"></span><div class="tl-item__date">13 MAI · 14:02</div><div class="tl-item__title">Audit M2 AUD-2026-013 terminé · cluster déviant détecté</div><div class="tl-item__desc">8 240 dossiers analysés · cluster #3 signalé · feature dominante code_postal_2</div></li>
+          <li class="tl-item"><span class="tl-item__dot"></span><div class="tl-item__date">10 MAI · 14:48</div><div class="tl-item__title">Marc Benhamou a repris l'audit AUD-2026-012 après timeout API</div><div class="tl-item__desc">Reprise à la paire 312/480 · audit complété avec succès</div></li>
+          <li class="tl-item"><span class="tl-item__dot tl-item__dot--fail"></span><div class="tl-item__date">8 AVR · 09:48</div><div class="tl-item__title">Audit AUD-2026-007 interrompu · données invalides</div><div class="tl-item__desc">38% de valeurs manquantes sur attribut sensible "genre"</div></li>
+          <li class="tl-item"><span class="tl-item__dot"></span><div class="tl-item__date">2 AVR · 16:30</div><div class="tl-item__title">Claire Tessier a modifié les seuils par défaut</div><div class="tl-item__desc">DP : 0.80 → 0.85 · raison documentée : alignement charte interne</div></li>
+        </ul>
+
+        <div class="row" style="padding-top: 16px; border-top: 1px solid var(--border-subtle); justify-content: center; margin-top: 16px;">
+          <button class="btn btn--secondary btn--sm">Charger 7 entrées supplémentaires</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app-partials.js"></script>
+</body>
+</html>

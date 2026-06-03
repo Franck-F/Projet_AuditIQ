@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Act pour PME : ce qui change le 2 août 2026 — AuditIQ</title>
+<meta name="description" content="Guide complet à destination des PME pour comprendre et anticiper l'application de l'AI Act au 2 août 2026.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .article-hero { padding: clamp(48px, 6vw, 80px) 0 var(--sp-7); border-bottom: 1px solid var(--border-subtle); }
+  .article-hero .container { max-width: 880px; }
+  .article-hero h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.15; letter-spacing: -0.02em; max-width: 22ch; margin: 16px 0 24px; }
+  .article-hero .meta { display: flex; gap: 16px; align-items: center; font-size: var(--fs-sm); color: var(--fg-muted); flex-wrap: wrap; }
+  .article-hero .meta .dot { width: 4px; height: 4px; background: var(--fg-muted); border-radius: 50%; }
+  .article-hero__cat { color: var(--accent); font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .article-layout { display: grid; grid-template-columns: 1fr 240px; gap: 64px; padding-block: var(--sp-10); }
+  @media (max-width: 1080px) { .article-layout { grid-template-columns: 1fr; gap: 32px; } }
+
+  .article-content { max-width: 720px; }
+  .article-content h2 { font-size: clamp(24px, 2.5vw, 32px); margin: 40px 0 16px; letter-spacing: -0.015em; }
+  .article-content h2:first-of-type { margin-top: 0; }
+  .article-content h3 { font-size: var(--fs-h3); margin: 32px 0 12px; }
+  .article-content p { font-size: 17px; line-height: 1.7; color: var(--fg-secondary); margin: 16px 0; }
+  .article-content p strong { color: var(--fg); font-weight: 500; }
+  .article-content a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .article-content ul, .article-content ol { margin: 16px 0; padding-left: 24px; color: var(--fg-secondary); font-size: 17px; line-height: 1.7; }
+  .article-content li { margin: 8px 0; }
+  .article-content blockquote {
+    border-left: 2px solid var(--accent);
+    padding: 12px 0 12px 24px;
+    margin: 24px 0;
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--fg);
+    font-style: italic;
+  }
+  .article-content code {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--accent);
+  }
+  .article-content figure {
+    margin: 32px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 24px;
+  }
+  .article-content figcaption { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 12px; }
+  .article-content hr { border: 0; border-top: 1px solid var(--border-subtle); margin: 40px 0; }
+
+  .toc {
+    position: sticky;
+    top: calc(var(--nav-h) + 24px);
+    align-self: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+  }
+  .toc h5 { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 16px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; display: flex; flex-direction: column; gap: 6px; }
+  .toc li { counter-increment: toc; position: relative; padding-left: 28px; }
+  .toc li::before { content: counter(toc, decimal-leading-zero); position: absolute; left: 0; top: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); }
+  .toc a { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.4; display: block; padding: 4px 0; }
+  .toc a:hover { color: var(--fg); }
+  .toc__author { display: flex; gap: 10px; align-items: center; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--border-subtle); }
+  .toc__avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--fg-secondary); }
+
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--r-md);
+    padding: 20px 24px;
+    margin: 24px 0;
+    font-size: var(--fs-sm);
+    color: var(--fg);
+    line-height: 1.6;
+  }
+  .callout strong { color: var(--fg); font-weight: 500; display: block; margin-bottom: 6px; }
+
+  .related { padding-block: var(--sp-9); border-top: 1px solid var(--border-subtle); }
+  .related h2 { font-size: var(--fs-h2); margin-bottom: 32px; }
+  .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 920px) { .related-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="ressources"></div>
+
+<header class="article-hero">
+  <div class="container">
+    <span class="article-hero__cat">Guide · AI Act</span>
+    <h1>AI Act pour PME : ce qui change le 2 août 2026 (et comment s'y préparer).</h1>
+    <div class="meta">
+      <span>Par <strong style="color: var(--fg); font-weight: 500;">Zineb Khelifi</strong></span>
+      <span class="dot"></span>
+      <span>12 mai 2026</span>
+      <span class="dot"></span>
+      <span>14 min de lecture</span>
+      <span class="dot"></span>
+      <span>v3 — révision après publication du décret d'application</span>
+    </div>
+  </div>
+</header>
+
+<section class="container">
+  <div class="article-layout">
+    <article class="article-content">
+
+      <p style="font-size: 19px;">Le 2 août 2026, les obligations de l'AI Act sur les systèmes d'IA à haut risque deviennent contraignantes. <strong>Pour une PME française, cela peut signifier devoir produire, sous 90 jours, une documentation technique exhaustive (annexe IV)</strong> sur chaque système d'IA déployé. Voici, en six points, ce que ça implique concrètement.</p>
+
+      <h2 id="quel-perimetre">01 — Quel périmètre vous concerne ?</h2>
+      <p>L'AI Act applique une approche par les risques. Pour une PME, le seuil critique est le périmètre <strong>« haut risque »</strong>, défini à l'annexe III du règlement. Les usages concernés en pratique :</p>
+      <ul>
+        <li>Recrutement et gestion RH avec IA (tri de CV, scoring de performance, sélection promotion).</li>
+        <li>Évaluation de la solvabilité ou des risques de crédit (scoring crédit, anti-fraude).</li>
+        <li>Tarification ou sélection des risques en assurance santé et vie.</li>
+        <li>Accès aux services publics essentiels (énergie, eau, transport).</li>
+        <li>Justice et exécution des peines.</li>
+        <li>Éducation et formation professionnelle (notation, accès, expulsion).</li>
+        <li>Biométrie d'identification.</li>
+      </ul>
+      <p>Si l'un de vos cas d'usage tombe dans cette liste, vous êtes <strong>déployeur d'un système d'IA à haut risque</strong> au sens de l'article 26. Si vous éditez un logiciel qui intègre une telle IA et que vous le distribuez, vous êtes <strong>fournisseur</strong> au sens de l'article 16 — avec des obligations renforcées.</p>
+
+      <div class="callout">
+        <strong>À retenir.</strong> 68 % des PME françaises de plus de 50 salariés utilisent au moins un outil IA en production en 2025 (source : Bpifrance Le Lab). Toutes ne sont pas dans le périmètre haut risque, mais celles qui font du tri de CV, du scoring crédit ou de la tarification le sont mécaniquement.
+      </div>
+
+      <h2 id="obligations">02 — Quelles obligations concrètes ?</h2>
+      <p>L'article 26 liste les obligations du déployeur. Les plus structurantes pour une PME :</p>
+      <ol>
+        <li><strong>Documentation technique tenue à jour</strong> (annexe IV) — disponible sur demande de l'autorité.</li>
+        <li><strong>Supervision humaine effective</strong> — un humain doit pouvoir comprendre et contester la décision IA.</li>
+        <li><strong>Surveillance du fonctionnement</strong> — y compris des performances par sous-groupe et des biais possibles.</li>
+        <li><strong>Logs conservés</strong> — au moins 6 mois, parfois 5 ans selon le système.</li>
+        <li><strong>Notification d'incident</strong> — sous 15 jours en cas d'incident grave.</li>
+        <li><strong>Évaluation d'impact sur les droits fondamentaux</strong> (FRIA) — obligatoire pour les acteurs publics et certains acteurs privés (article 27).</li>
+      </ol>
+      <p>La pièce la plus complexe à produire est la <strong>section 2.f de l'annexe IV</strong> : « informations sur les biais possibles et les actions prises pour les atténuer ». C'est précisément ce qu'AuditIQ produit.</p>
+
+      <h2 id="calendrier">03 — Quel calendrier respecter ?</h2>
+      <p>L'AI Act se déploie par phases :</p>
+      <ul>
+        <li><strong>2 février 2025</strong> — pratiques interdites en vigueur.</li>
+        <li><strong>2 août 2025</strong> — obligations GPAI et gouvernance européenne.</li>
+        <li><strong>2 août 2026</strong> — <strong>obligations haut risque applicables</strong> (le point d'attention pour les PME).</li>
+        <li><strong>2 août 2027</strong> — extension aux IA intégrées dans des produits régulés (dispositifs médicaux, véhicules).</li>
+      </ul>
+
+      <blockquote>« Le calendrier paraît lointain. Mais une remédiation, en pratique, prend 6 à 9 mois. Commencer en juin 2026 pour une mise en conformité en août, c'est déjà trop tard. »</blockquote>
+
+      <h2 id="charges-de-preuve">04 — Charge de la preuve : ce qui change vraiment</h2>
+      <p>L'AI Act, comme le RGPD, inverse la charge de la preuve. En cas de plainte ou de contrôle, ce n'est pas à l'autorité de prouver que votre IA discrimine — c'est à vous de prouver qu'elle ne discrimine pas.</p>
+      <p>Concrètement, cela signifie qu'<strong>un audit fairness antérieur à un éventuel signalement est une pièce probante essentielle</strong>. À l'inverse, l'absence d'audit ne signifie pas seulement « pas de preuve » : elle peut être interprétée comme un manquement à l'obligation de vigilance (article 26 § 3).</p>
+
+      <h2 id="sanctions">05 — Quelles sanctions encourues ?</h2>
+      <p>Le règlement prévoit trois niveaux de sanctions, gradués selon la gravité (article 99) :</p>
+      <ul>
+        <li><strong>Pratiques interdites</strong> (article 5) : jusqu'à 35 M€ ou 7 % du CA mondial.</li>
+        <li><strong>Manquements aux obligations haut risque</strong> (articles 8 à 27) : jusqu'à 15 M€ ou 3 % du CA mondial.</li>
+        <li><strong>Information inexacte ou incomplète aux autorités</strong> : jusqu'à 7,5 M€ ou 1 % du CA mondial.</li>
+      </ul>
+      <p>Pour les PME, des plafonds plus bas s'appliquent : le règlement précise que les sanctions doivent rester proportionnées et tenir compte de la taille de l'entreprise. La France a confié l'application à la CNIL et à la DGCCRF (décret du 4 février 2026).</p>
+
+      <h2 id="plan-action">06 — Un plan d'action en six mois</h2>
+      <p>Voici une trame réaliste pour une PME qui démarre en mai 2026 et veut être conforme en novembre 2026 :</p>
+
+      <h3>Mois 1 — Cartographie</h3>
+      <p>Inventoriez tous vos systèmes d'IA en production. Identifiez ceux qui tombent en haut risque. Désignez un responsable conformité IA (peut être le DPO).</p>
+
+      <h3>Mois 2 — Audit fairness initial</h3>
+      <p>Pour chaque système à haut risque, lancez un audit (Module 1, 2 ou 3 selon le système). Identifiez les écarts. Documentez les seuils utilisés.</p>
+
+      <h3>Mois 3 — Remédiation prioritaire</h3>
+      <p>Hiérarchisez les remédiations. Une PME ne peut généralement pas tout corriger d'un coup. Concentrez-vous sur les écarts les plus significatifs, en lien avec votre data team ou votre fournisseur.</p>
+
+      <h3>Mois 4 — Documentation annexe IV</h3>
+      <p>Produisez ou complétez votre dossier technique. AuditIQ génère la section 2.f. Les autres sections (description du système, finalité, supervision humaine) sont à produire en parallèle.</p>
+
+      <h3>Mois 5 — Mise en production de la supervision</h3>
+      <p>Mettez en place la supervision humaine effective. Logguez les décisions. Définissez les seuils d'alerte. Formez les équipes.</p>
+
+      <h3>Mois 6 — Audit de validation</h3>
+      <p>Re-lancez un audit après remédiation pour valider la conformité. Comparez les scores avant/après. Archivez le tout. Vous êtes conforme.</p>
+
+      <hr>
+
+      <div class="callout">
+        <strong>Comment AuditIQ vous aide.</strong> Notre plateforme couvre les étapes 2, 3 (recommandations), 4 (section 2.f) et 6. Elle ne remplace ni votre DPO, ni votre responsable conformité, ni un cabinet d'avocats — mais elle outille l'essentiel du travail technique. <a href="contact.html">Demandez une démo</a> pour voir l'audit sur vos propres données.
+      </div>
+
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li><a href="ai-act.html">Notre page de référence sur l'AI Act</a> — les articles, le calendrier, le rattachement français.</li>
+        <li><a href="pme.html">Êtes-vous concerné ?</a> — la check-list de qualification haut risque en 10 questions.</li>
+        <li><a href="article.html">La règle des quatre cinquièmes, expliquée concrètement</a> — l'article pour comprendre la métrique fondamentale.</li>
+        <li><a href="#">Livre blanc « Préparer son audit AI Act en PME »</a> — 64 pages, téléchargement gratuit.</li>
+      </ul>
+    </article>
+
+    <aside class="toc">
+      <h5>Au sommaire</h5>
+      <ol>
+        <li><a href="#quel-perimetre">Quel périmètre vous concerne</a></li>
+        <li><a href="#obligations">Obligations concrètes</a></li>
+        <li><a href="#calendrier">Calendrier à respecter</a></li>
+        <li><a href="#charges-de-preuve">Charge de la preuve</a></li>
+        <li><a href="#sanctions">Sanctions encourues</a></li>
+        <li><a href="#plan-action">Plan d'action en six mois</a></li>
+      </ol>
+      <div class="toc__author">
+        <div class="toc__avatar">ZK</div>
+        <div>
+          <div style="font-size: var(--fs-sm); font-weight: 500;">Zineb Khelifi</div>
+          <div style="font-size: 11px; color: var(--fg-muted);">CLO · AuditIQ</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- RELATED -->
+<section class="related">
+  <div class="container">
+    <h2>À lire aussi</h2>
+    <div class="related-grid">
+      <a href="article.html" class="article-card">
+        <div class="article-card__meta">
+          <span style="color: var(--accent); font-family: var(--font-mono); letter-spacing: 0.08em;">AI ACT</span><span>·</span><span>9 min</span>
+        </div>
+        <h3>Article 10 de l'AI Act : ce que « gouvernance des données » signifie en pratique.</h3>
+      </a>
+      <a href="article.html" class="article-card">
+        <div class="article-card__meta">
+          <span style="color: var(--accent); font-family: var(--font-mono); letter-spacing: 0.08em;">MÉTHODE</span><span>·</span><span>7 min</span>
+        </div>
+        <h3>Demographic Parity vs Equal Opportunity : laquelle choisir, et quand ?</h3>
+      </a>
+      <a href="article.html" class="article-card">
+        <div class="article-card__meta">
+          <span style="color: var(--accent); font-family: var(--font-mono); letter-spacing: 0.08em;">RETOUR D'EXP</span><span>·</span><span>11 min</span>
+        </div>
+        <h3>Comment Banque Loiret a corrigé un proxy géographique en 7 mois.</h3>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Prochaine étape</span>
+        <h2 style="margin-top: 12px;">Lancez votre audit AI Act sur vos données.</h2>
+        <p>30 minutes de démo guidée pour identifier vos systèmes à haut risque et lancer un premier audit pilote.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver une démo</a>
+        <a class="btn btn--secondary" href="blog.html">Voir tous les articles</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

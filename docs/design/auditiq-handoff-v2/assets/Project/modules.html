@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modules — AuditIQ</title>
+<meta name="description" content="Détail des 3 modules d'audit AuditIQ : audit supervisé, détection non supervisée, audit LLM. Métriques, méthodes, livrables.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .anchor-nav { display: flex; gap: 4px; padding: 8px 0; background: var(--surface-glass); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); position: sticky; top: var(--nav-h); z-index: 30; overflow-x: auto; }
+  .anchor-nav .container { display: flex; gap: 4px; }
+  .anchor-nav a { padding: 8px 14px; font-size: var(--fs-sm); color: var(--fg-secondary); border-radius: var(--r-sm); white-space: nowrap; }
+  .anchor-nav a:hover { color: var(--fg); background: var(--surface-2); }
+
+  .module-section { padding-block: var(--sp-12); border-top: 1px solid var(--border-subtle); }
+  .module-section:first-of-type { border-top: 0; }
+  .module-section__head { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: end; margin-bottom: var(--sp-8); }
+  @media (max-width: 920px) { .module-section__head { grid-template-columns: 1fr; gap: 24px; } }
+  .module-section__head h2 { font-size: clamp(32px, 4vw, 40px); letter-spacing: -0.02em; max-width: 16ch; }
+  .module-section__head p { color: var(--fg-secondary); font-size: var(--fs-h4); line-height: 1.5; }
+
+  .specs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: var(--sp-7); }
+  @media (max-width: 920px) { .specs-grid { grid-template-columns: 1fr; } }
+  .spec { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px; }
+  .spec h4 { font-size: var(--fs-h4); margin-bottom: 12px; }
+  .spec ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .spec li { font-size: var(--fs-sm); color: var(--fg-secondary); display: grid; grid-template-columns: 14px 1fr; gap: 10px; line-height: 1.5; }
+  .spec li::before { content: ""; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-top: 9px; }
+
+  .metric-defs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 820px) { .metric-defs { grid-template-columns: 1fr; } }
+  .metric-def { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; }
+  .metric-def__formula { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--accent); padding: 8px 10px; background: var(--accent-soft); border-radius: 4px; display: inline-block; margin: 8px 0 12px; }
+  .metric-def h4 { font-size: 15px; }
+  .metric-def p { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="modules"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Modules</span>
+    <h1 style="margin-top: 16px;">Trois angles d'analyse. Une seule logique de conformité.</h1>
+    <p class="lede">Chaque module d'AuditIQ correspond à une famille d'IA réellement déployée en PME. Voici les méthodes, les métriques, les livrables — détail technique pour vos data analysts, traduction pédagogique pour vos décideurs.</p>
+  </div>
+</header>
+
+<div class="anchor-nav">
+  <div class="container">
+    <a href="#supervise">01 · Audit supervisé</a>
+    <a href="#non-supervise">02 · Détection non supervisée</a>
+    <a href="#llm">03 · Audit LLM</a>
+  </div>
+</div>
+
+<!-- MODULE 1 -->
+<section id="supervise" class="module-section">
+  <div class="container">
+    <div class="module-section__head">
+      <div>
+        <span class="eyebrow eyebrow--accent">Module 01</span>
+        <h2 style="margin-top: 12px;">Audit supervisé classique.</h2>
+      </div>
+      <p>Pour les modèles de classification binaire ou multi-classes, et de scoring. Compatible avec vos modèles internes (export CSV des prédictions) ou via intégration API.</p>
+    </div>
+
+    <div class="specs-grid">
+      <div class="spec">
+        <span class="eyebrow">Entrées</span>
+        <h4 style="margin-top: 8px;">Données acceptées</h4>
+        <ul>
+          <li>CSV, XLSX, Parquet, JSON</li>
+          <li>5M lignes max en standard</li>
+          <li>Colonne cible (target) requise</li>
+          <li>Une ou plusieurs colonnes sensibles</li>
+          <li>Colonne de prédiction du modèle</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Méthodes</span>
+        <h4 style="margin-top: 8px;">Algorithmes utilisés</h4>
+        <ul>
+          <li>Test de proportions par groupe</li>
+          <li>Test du χ² d'indépendance</li>
+          <li>Intervalles de confiance bootstrap</li>
+          <li>Décomposition intersectionnelle</li>
+          <li>Stratification automatique</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Livrables</span>
+        <h4 style="margin-top: 8px;">Sorties produites</h4>
+        <ul>
+          <li>Feu tricolore par métrique + global</li>
+          <li>Visualisation des écarts par groupe</li>
+          <li>Explication en langage naturel</li>
+          <li>Rapport PDF executive + Excel annexe IV</li>
+          <li>Recommandations priorisées</li>
+        </ul>
+      </div>
+    </div>
+
+    <span class="eyebrow" style="margin-bottom: 12px; display: block;">Métriques calculées</span>
+    <div class="metric-defs">
+      <div class="metric-def">
+        <h4>Demographic Parity (DP)</h4>
+        <div class="metric-def__formula">P(Ŷ=1 | A=a) ≈ P(Ŷ=1 | A=b)</div>
+        <p>Mesure si la probabilité d'obtenir une décision favorable est équivalente entre groupes. Un score &lt; 0.80 viole la règle des 4/5.</p>
+      </div>
+      <div class="metric-def">
+        <h4>Equal Opportunity (EO)</h4>
+        <div class="metric-def__formula">P(Ŷ=1 | Y=1, A=a) ≈ P(Ŷ=1 | Y=1, A=b)</div>
+        <p>Vérifie si, parmi les profils qualifiés, la probabilité d'être correctement sélectionné est équivalente entre groupes.</p>
+      </div>
+      <div class="metric-def">
+        <h4>Equalized Odds (EOdds)</h4>
+        <div class="metric-def__formula">TPR(a) ≈ TPR(b) ET FPR(a) ≈ FPR(b)</div>
+        <p>Conjugue Equal Opportunity et égalité des taux de faux positifs. Métrique la plus stricte parmi les quatre.</p>
+      </div>
+      <div class="metric-def">
+        <h4>Règle des quatre cinquièmes</h4>
+        <div class="metric-def__formula">min(SR_a) / max(SR_a) ≥ 0.80</div>
+        <p>Standard EEOC (US) et référence dans la jurisprudence européenne. Seuil par défaut 0.80, ajustable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 2 -->
+<section id="non-supervise" class="module-section" style="background: var(--surface);">
+  <div class="container">
+    <div class="module-section__head">
+      <div>
+        <span class="eyebrow eyebrow--accent">Module 02</span>
+        <h2 style="margin-top: 12px;">Détection non supervisée.</h2>
+      </div>
+      <p>Pour les jeux de données sans modèle entraîné. Utile en amont de l'entraînement, sur des datasets d'entraînement bruts, ou pour analyser des bases clients avant déploiement d'une IA.</p>
+    </div>
+
+    <div class="specs-grid">
+      <div class="spec">
+        <span class="eyebrow">Entrées</span>
+        <h4 style="margin-top: 8px;">Données acceptées</h4>
+        <ul>
+          <li>CSV, XLSX, Parquet, JSON</li>
+          <li>Pas de variable cible requise</li>
+          <li>Features numériques et catégorielles</li>
+          <li>Indication optionnelle des colonnes sensibles</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Méthodes</span>
+        <h4 style="margin-top: 8px;">Algorithmes utilisés</h4>
+        <ul>
+          <li>k-means (clusters compacts)</li>
+          <li>DBSCAN (clusters de densité)</li>
+          <li>Mixtures gaussiennes (clusters probabilistes)</li>
+          <li>Sélection automatique par silhouette</li>
+          <li>SHAP pour features dominantes</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Livrables</span>
+        <h4 style="margin-top: 8px;">Sorties produites</h4>
+        <ul>
+          <li>Carte des clusters (projection 2D)</li>
+          <li>Signalement de clusters déviants</li>
+          <li>Liste des features dominantes</li>
+          <li>Alerte sur proxies de critères protégés</li>
+          <li>Rapport pédagogique avec niveau de risque</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card card--surface-2" style="padding: 24px;">
+      <span class="eyebrow eyebrow--accent">Focus : détection de proxies</span>
+      <h4 style="margin-top: 8px;">Pourquoi c'est important ?</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-top: 12px; line-height: 1.65;">Un modèle peut discriminer sans utiliser directement l'attribut sensible — en s'appuyant sur des variables fortement corrélées (proxies). Exemple typique : un code postal qui corrèle à 0,82 avec l'origine présumée. AuditIQ calcule l'information mutuelle entre chaque feature et les attributs sensibles déclarés, et signale tout dépassement du seuil de 0,4.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 3 -->
+<section id="llm" class="module-section">
+  <div class="container">
+    <div class="module-section__head">
+      <div>
+        <span class="eyebrow eyebrow--accent">Module 03</span>
+        <h2 style="margin-top: 12px;">Audit LLM &amp; chatbot.</h2>
+      </div>
+      <p>Pour les assistants conversationnels intégrés à votre service client, vos RH ou vos outils internes. Compatible avec OpenAI, Mistral, Anthropic, Llama, modèles fine-tunés et endpoints custom.</p>
+    </div>
+
+    <div class="specs-grid">
+      <div class="spec">
+        <span class="eyebrow">Entrées</span>
+        <h4 style="margin-top: 8px;">Configuration nécessaire</h4>
+        <ul>
+          <li>URL d'endpoint API ou clé fournisseur</li>
+          <li>Choix de la banque de prompts (générale ou métier)</li>
+          <li>Définition des axes à auditer (1 à 6)</li>
+          <li>Paramètres de température et de tokens max</li>
+          <li>Mode de coût contrôlé (budget API plafond)</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Méthodes</span>
+        <h4 style="margin-top: 8px;">Tests appliqués</h4>
+        <ul>
+          <li>Prompts pairs (Counterfactual Pairs)</li>
+          <li>Mesure d'écart de longueur (token count)</li>
+          <li>Analyse de sentiment (RoBERTa-FR)</li>
+          <li>Taux de refus / déflexion par axe</li>
+          <li>Polarité et présence de stéréotypes</li>
+        </ul>
+      </div>
+      <div class="spec">
+        <span class="eyebrow">Livrables</span>
+        <h4 style="margin-top: 8px;">Sorties produites</h4>
+        <ul>
+          <li>Score global / 5 + score par axe</li>
+          <li>Tableau de comparaison réponses</li>
+          <li>Extraits significatifs annotés</li>
+          <li>Recommandations d'instructions système</li>
+          <li>Rapport audit LLM PDF + Excel</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card card--surface-2" style="padding: 24px;">
+      <span class="eyebrow eyebrow--accent">Banque de prompts</span>
+      <h4 style="margin-top: 8px;">400+ prompts pairs maintenus</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-top: 12px; line-height: 1.65;">Notre équipe maintient une banque de 412 prompts pairs en français (228 en anglais, 96 en espagnol), répartis sur six axes : genre, origine, âge, religion, handicap, orientation. Chaque prompt teste une situation concrète : demande de remboursement, demande de prêt, sollicitation de support, demande d'avis. Vous pouvez aussi importer vos propres prompts métiers.</p>
+      <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="badge">Genre · 86 prompts</span>
+        <span class="badge">Origine · 78 prompts</span>
+        <span class="badge">Âge · 64 prompts</span>
+        <span class="badge">Religion · 52 prompts</span>
+        <span class="badge">Handicap · 68 prompts</span>
+        <span class="badge">Orientation · 64 prompts</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Aller plus loin</span>
+        <h2 style="margin-top: 12px;">Voyez les modules tourner sur vos données.</h2>
+        <p>Une démo guidée de 30 minutes, sur vos cas concrets, par un de nos consultants.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver une démo</a>
+        <a class="btn btn--secondary" href="cas-usage.html">Voir les cas d'usage</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

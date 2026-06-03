@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — AuditIQ</title>
+<meta name="description" content="Toutes les questions fréquentes sur AuditIQ : produit, conformité, sécurité, tarification, intégration.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<script src="assets/partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .faq-layout { display: grid; grid-template-columns: 240px 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 920px) { .faq-layout { grid-template-columns: 1fr; gap: 24px; } }
+
+  .faq-side { position: sticky; top: calc(var(--nav-h) + 24px); display: flex; flex-direction: column; gap: 2px; }
+  @media (max-width: 920px) { .faq-side { position: static; flex-direction: row; flex-wrap: wrap; gap: 6px; } }
+  .faq-side a { padding: 8px 12px; font-size: var(--fs-sm); color: var(--fg-secondary); border-radius: var(--r-sm); }
+  .faq-side a:hover, .faq-side a.is-active { color: var(--fg); background: var(--surface-2); }
+
+  .faq-cat { margin-bottom: var(--sp-9); }
+  .faq-cat:last-child { margin-bottom: 0; }
+  .faq-cat h2 { font-size: var(--fs-h2); margin-bottom: 24px; letter-spacing: -0.015em; }
+
+  .faq-list { display: flex; flex-direction: column; gap: 12px; }
+  .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; }
+  .faq-item summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; font-size: var(--fs-h4); font-weight: 500; align-items: start; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; font-family: var(--font-mono); font-size: 22px; color: var(--fg-muted); line-height: 1; }
+  .faq-item[open] summary::after { content: "−"; }
+  .faq-item p { margin-top: 12px; color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.65; }
+  .faq-item p + p { margin-top: 12px; }
+  .faq-item a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="ressources"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">FAQ</span>
+    <h1 style="margin-top: 16px;">Tout ce que vous voulez savoir avant de réserver une démo.</h1>
+    <p class="lede">42 questions regroupées par thème. Vous ne trouvez pas votre réponse ? Posez-la directement à notre équipe via la <a href="contact.html" style="color: var(--accent);">page contact</a>.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="faq-layout">
+      <aside class="faq-side">
+        <a href="#produit" class="is-active">Produit</a>
+        <a href="#conformite">Conformité &amp; AI Act</a>
+        <a href="#securite">Sécurité &amp; données</a>
+        <a href="#tarification">Tarification</a>
+        <a href="#integration">Intégration</a>
+        <a href="#support">Support</a>
+        <a href="#commercial">Commercial</a>
+      </aside>
+
+      <main>
+        <!-- PRODUIT -->
+        <section id="produit" class="faq-cat">
+          <h2>Produit</h2>
+          <div class="faq-list">
+            <details class="faq-item" open><summary>À qui s'adresse AuditIQ ?</summary>
+              <p>Aux PME et ETI françaises et européennes qui déploient des systèmes d'IA dans leurs opérations (RH, crédit, scoring, chatbot, assurance, marketing) et qui doivent documenter la conformité de ces systèmes au regard de l'AI Act.</p>
+              <p>Les profils utilisateurs typiques : responsable conformité, DPO, DRH, responsable innovation, dirigeant, équipe data limitée (1-3 personnes).</p>
+            </details>
+            <details class="faq-item"><summary>Quels types de modèles AuditIQ peut-il auditer ?</summary>
+              <p>Trois familles : modèles supervisés de classification ou de scoring (Module 1), datasets sans cible explicite (Module 2), assistants LLM et chatbots (Module 3). Compatible avec vos modèles internes, des APIs externes (OpenAI, Mistral, Anthropic), et des modèles déployés en production.</p>
+            </details>
+            <details class="faq-item"><summary>Faut-il avoir une équipe data interne ?</summary>
+              <p>Non. AuditIQ est conçu pour être utilisable sans bagage statistique. Le mode expert reste disponible pour les équipes data qui souhaitent ajuster les métriques, les agrégations ou les intervalles de confiance.</p>
+            </details>
+            <details class="faq-item"><summary>Quelle quantité de données puis-je analyser ?</summary>
+              <p>Jusqu'à 5 millions de lignes en standard sur les paliers PME et Entreprise. Datasets plus volumineux : optimisations possibles sur le palier Souverain ou en architecture dédiée.</p>
+            </details>
+            <details class="faq-item"><summary>AuditIQ corrige-t-il les biais ?</summary>
+              <p>Non. AuditIQ détecte, explique, alerte et documente. La correction d'un modèle relève de votre équipe data ou de votre prestataire ML. Nous proposons des recommandations hiérarchisées d'actions, mais nous n'intervenons pas dans le code du modèle.</p>
+            </details>
+            <details class="faq-item"><summary>AuditIQ est-il disponible en anglais ?</summary>
+              <p>Interface, documentation et rapports principalement en français. La banque de prompts LLM est disponible en français, anglais et espagnol. Une version anglaise complète de la plateforme est planifiée pour Q4 2026.</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- CONFORMITÉ -->
+        <section id="conformite" class="faq-cat">
+          <h2>Conformité &amp; AI Act</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Mon entreprise est-elle concernée par l'AI Act ?</summary>
+              <p>Probablement, si vous utilisez ou éditez une IA pour : tri de CV, scoring crédit, tarification d'assurance, services essentiels, biométrie, justice, éducation, santé. Voir la <a href="pme.html">page PME : pourquoi maintenant</a> pour une check-list de qualification.</p>
+            </details>
+            <details class="faq-item"><summary>AuditIQ délivre-t-il un certificat de conformité ?</summary>
+              <p>Non. Un certificat formel relève d'un organisme notifié au sens de l'article 43 du règlement (UE) 2024/1689. AuditIQ produit une analyse documentée des écarts mesurés et un rapport opposable. La qualification réglementaire finale appartient à votre responsable conformité ou DPO.</p>
+            </details>
+            <details class="faq-item"><summary>Quels articles de l'AI Act sont couverts ?</summary>
+              <p>Articles 10 (gouvernance des données), 13 (transparence), 15 (exactitude et robustesse), et annexe IV (documentation technique). Pour les obligations spécifiques aux fournisseurs (article 16), AuditIQ produit les pièces fairness ; les autres pièces (système qualité, surveillance post-marché) restent à votre charge.</p>
+            </details>
+            <details class="faq-item"><summary>Le rapport AuditIQ est-il opposable en cas de contrôle ?</summary>
+              <p>Le rapport est signé numériquement, horodaté par notre tiers d'horodatage qualifié (CertEurope), et archivé dans un format inviolable. Il constitue une pièce probante au sens du droit français. Il ne se substitue cependant pas à l'expertise d'un cabinet d'avocats spécialisé en cas de contentieux.</p>
+            </details>
+            <details class="faq-item"><summary>Et le droit français ?</summary>
+              <p>AuditIQ rattache chaque écart aux textes français pertinents : article L.1132-1 du Code du travail (discrimination dans l'emploi), article 225-1 du Code pénal, RGPD article 22 (décisions automatisées). Ces rattachements sont indicatifs et ne remplacent pas un avis juridique.</p>
+            </details>
+            <details class="faq-item"><summary>Comment se positionne AuditIQ par rapport à la CNIL ?</summary>
+              <p>Nous sommes en dialogue ouvert avec la CNIL, qui suit le marché des outils fairness. AuditIQ n'est pas labellisé par la CNIL — aucun outil ne l'est à ce jour. Nous appliquons les recommandations de la CNIL sur l'évaluation des systèmes d'IA (publication d'octobre 2023).</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- SÉCURITÉ -->
+        <section id="securite" class="faq-cat">
+          <h2>Sécurité &amp; données</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Où sont stockées mes données ?</summary>
+              <p>Sur OVHcloud, datacenters de Roubaix et Strasbourg. Aucun transfert hors UE, à aucune étape. Pour le palier Souverain : hébergement SecNumCloud dédié sur infrastructure 3DS Outscale.</p>
+            </details>
+            <details class="faq-item"><summary>Comment sont chiffrées les données ?</summary>
+              <p>Chiffrement AES-256 au repos (objet et base de données), TLS 1.3 en transit. Sur le palier Souverain : option BYOK (Bring Your Own Key) avec rotation hebdomadaire automatique.</p>
+            </details>
+            <details class="faq-item"><summary>Combien de temps conservez-vous mes données ?</summary>
+              <p>Données d'audit (résultats, rapports) : 5 ans par défaut, configurable jusqu'à illimité. Données sources (datasets uploadés) : 90 jours après l'audit, puis suppression automatique. Suppression sur demande sous 72h.</p>
+            </details>
+            <details class="faq-item"><summary>Êtes-vous certifiés ISO 27001 ?</summary>
+              <p>Certification ISO 27001 en cours, audit en Q3 2026. Notre PSSI est aligné sur les exigences. Le rapport de pré-audit (juin 2025) est disponible sur demande sous NDA.</p>
+            </details>
+            <details class="faq-item"><summary>Comment se passe une demande de suppression ?</summary>
+              <p>Demande à formuler par un admin via le panel de paramètres, ou par email à dpo@auditiq.fr. Confirmation sous 24h, suppression effective sous 72h, certificat de suppression émis.</p>
+            </details>
+            <details class="faq-item"><summary>Mes données servent-elles à entraîner vos modèles ?</summary>
+              <p>Non. Aucune donnée client n'est utilisée pour entraîner ou améliorer nos modèles. La banque de prompts LLM est maintenue manuellement par notre équipe linguiste, sans réutilisation de prompts client.</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- TARIFICATION -->
+        <section id="tarification" class="faq-cat">
+          <h2>Tarification</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Existe-t-il un essai gratuit ?</summary>
+              <p>Oui. Le palier Découverte est gratuit et permanent (1 audit Module 1/mois, dataset ≤ 5 000 lignes). Le palier PME est en essai 14 jours sans carte bancaire. Voir <a href="tarifs.html">la page tarifs</a>.</p>
+            </details>
+            <details class="faq-item"><summary>Y a-t-il un engagement minimum ?</summary>
+              <p>Non. Facturation mensuelle sans durée minimale. Vous pouvez annuler à tout moment depuis votre panel — l'annulation prend effet à la fin de la période en cours.</p>
+            </details>
+            <details class="faq-item"><summary>Acceptez-vous les marchés publics ?</summary>
+              <p>Oui sur les paliers Entreprise et Souverain. Devis sur 30 ou 60 jours, bons de commande publics acceptés.</p>
+            </details>
+            <details class="faq-item"><summary>Quelle remise pour le paiement annuel ?</summary>
+              <p>15 % sur tous les paliers payants. Facturation en une seule fois, en début d'année d'abonnement. SEPA disponible.</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- INTÉGRATION -->
+        <section id="integration" class="faq-cat">
+          <h2>Intégration</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Comment importer mes données ?</summary>
+              <p>Quatre options : upload manuel (CSV, XLSX, Parquet, JSON), connecteurs natifs (Workday, BambooHR, Snowflake, BigQuery, PostgreSQL), API REST, ou export depuis votre solution existante. La validation de schéma est automatique.</p>
+            </details>
+            <details class="faq-item"><summary>Comment connecter mon chatbot LLM ?</summary>
+              <p>Via une clé API du fournisseur (OpenAI, Mistral, Anthropic, Cohere) ou via une URL d'endpoint custom. AuditIQ gère le rate limiting, retry, et budget API plafonné pour éviter les coûts non maîtrisés.</p>
+            </details>
+            <details class="faq-item"><summary>SSO et authentification ?</summary>
+              <p>SSO SAML 2.0 et OIDC sur les paliers Entreprise et Souverain. Compatible Okta, Azure AD, Google Workspace, OneLogin. MFA obligatoire sur tous les paliers payants.</p>
+            </details>
+            <details class="faq-item"><summary>Existe-t-il une API publique ?</summary>
+              <p>Oui sur les paliers Entreprise et Souverain. API REST documentée pour : lancer un audit, récupérer les résultats, télécharger les rapports, lister l'historique. Pas d'API de modification — tout audit modifié laisse trace dans le journal d'activité.</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- SUPPORT -->
+        <section id="support" class="faq-cat">
+          <h2>Support</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Comment se passe l'onboarding ?</summary>
+              <p>Palier Découverte : autonome via documentation et chat IA. Palier PME : 4h d'onboarding accompagné incluses, avec un consultant en visio. Palier Entreprise : 1 jour. Palier Souverain : 2 jours + formation équipe.</p>
+            </details>
+            <details class="faq-item"><summary>Délais de réponse du support ?</summary>
+              <p>Découverte : communautaire (Discord, sans SLA). PME : 24h ouvrées. Entreprise : 4h en jour ouvré. Souverain : SLA personnalisé jusqu'à 1h.</p>
+            </details>
+            <details class="faq-item"><summary>Existe-t-il une documentation publique ?</summary>
+              <p>Oui — <a href="blog.html">documentation et ressources</a> accessibles sans compte. La documentation technique avancée (API, structures de rapport, schémas de données) est accessible aux utilisateurs connectés.</p>
+            </details>
+            <details class="faq-item"><summary>Y a-t-il une communauté utilisateur ?</summary>
+              <p>Oui — un canal Discord modéré (1 200 membres) et un meetup trimestriel à Paris (50 places). Les annonces produit y sont faites une semaine avant la communication officielle.</p>
+            </details>
+          </div>
+        </section>
+
+        <!-- COMMERCIAL -->
+        <section id="commercial" class="faq-cat">
+          <h2>Commercial</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary>Comment se passe une démo ?</summary>
+              <p>30 minutes en visio, avec un consultant. Vous apportez un cas d'usage et idéalement un dataset anonymisé ; nous lançons l'audit en live. À l'issue : un rapport pilote utilisable pour votre comité.</p>
+            </details>
+            <details class="faq-item"><summary>Proposez-vous un programme partenaires ?</summary>
+              <p>Oui — pour les cabinets de conseil, intégrateurs, ESN et cabinets d'avocats. Co-vente, co-formation, marges revendeur. Contactez partners@auditiq.fr.</p>
+            </details>
+            <details class="faq-item"><summary>Êtes-vous référencés UGAP ?</summary>
+              <p>Référencement UGAP en cours, attendu Q3 2026. En attendant, marchés publics traitables en gré à gré sous le seuil de 40 000 €.</p>
+            </details>
+            <details class="faq-item"><summary>Avez-vous un cas client comparable au nôtre ?</summary>
+              <p>Probablement. Nous accompagnons 47 PME au moment où nous écrivons ces lignes, dans 9 secteurs. Demandez-nous un cas client de votre secteur, sous NDA.</p>
+            </details>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Question non listée</span>
+        <h2 style="margin-top: 12px;">On vous répond.</h2>
+        <p>Notre équipe répond en moins de 24h ouvrées, même avant la signature.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Poser une question</a>
+        <a class="btn btn--secondary" href="contact.html">Réserver une démo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

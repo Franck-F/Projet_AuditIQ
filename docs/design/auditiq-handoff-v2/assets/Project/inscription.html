@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Créer un compte — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  .auth-shell { display: grid; grid-template-columns: 1fr 1fr; min-height: 100%; }
+  @media (max-width: 920px) { .auth-shell { grid-template-columns: 1fr; } .auth-side { display: none; } }
+  .auth-main { padding: clamp(40px, 6vw, 80px) clamp(24px, 5vw, 80px); display: flex; flex-direction: column; overflow-y: auto; }
+  .auth-brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); letter-spacing: -0.01em; color: var(--fg); margin-bottom: clamp(32px, 4vw, 48px); width: max-content; }
+  .auth-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; color: #0b1410; font-family: var(--font-mono); font-weight: 600; font-size: 14px; }
+  .auth-form { max-width: 440px; width: 100%; margin: 0; display: flex; flex-direction: column; gap: 20px; }
+  .auth-form h1 { font-size: var(--fs-h2); letter-spacing: -0.02em; }
+  .auth-form > p.sub { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.5; margin-top: -8px; }
+  .auth-fields { display: flex; flex-direction: column; gap: 12px; }
+  .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .auth-consent { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-xs); color: var(--fg-muted); line-height: 1.5; }
+  .auth-consent input { accent-color: var(--accent); margin-top: 2px; flex-shrink: 0; }
+  .auth-consent a { color: var(--accent); }
+  .auth-form__bottom { font-size: var(--fs-sm); color: var(--fg-muted); text-align: center; margin-top: 16px; }
+  .auth-form__bottom a { color: var(--accent); }
+
+  .auth-side { background: var(--surface); border-left: 1px solid var(--border-subtle); padding: clamp(40px, 6vw, 80px); display: flex; flex-direction: column; justify-content: center; gap: 32px; position: relative; overflow: hidden; }
+  .auth-side__bg { position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, var(--accent-soft), transparent 50%), radial-gradient(circle at 20% 80%, var(--status-info-bg), transparent 60%); opacity: 0.6; pointer-events: none; }
+  .auth-side__inner { position: relative; max-width: 440px; }
+  .auth-side h2 { font-size: clamp(28px, 3vw, 36px); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px; }
+  .auth-side p { color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.55; }
+  .auth-benefits { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+  .auth-benefit { display: grid; grid-template-columns: 32px 1fr; gap: 12px; }
+  .auth-benefit__num { width: 24px; height: 24px; border-radius: 6px; background: var(--accent-soft); border: 1px solid var(--accent-border); color: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; }
+  .auth-benefit h4 { font-size: 15px; margin-bottom: 4px; }
+  .auth-benefit p { font-size: 13px; color: var(--fg-secondary); line-height: 1.5; }
+
+  .auth-foot { padding: 24px clamp(24px, 5vw, 80px); font-size: var(--fs-xs); color: var(--fg-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); }
+  .auth-foot a { color: var(--fg-muted); }
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+  <main class="auth-main">
+    <a href="index.html" class="auth-brand">
+      <span class="auth-brand-mark">A</span>AuditIQ
+    </a>
+
+    <form class="auth-form" onsubmit="event.preventDefault(); window.location.href='verification-email.html';">
+      <div>
+        <h1>Créez votre compte gratuit</h1>
+        <p class="sub" style="margin-top: 8px;">Palier Découverte sans carte bancaire. Un audit par mois, jusqu'à 3 utilisateurs, conservation 3 mois. Passage payant à tout moment.</p>
+      </div>
+
+      <div class="auth-fields">
+        <div class="auth-grid">
+          <div class="field">
+            <label class="field__label" for="prenom">Prénom</label>
+            <input class="input" id="prenom" type="text" required>
+          </div>
+          <div class="field">
+            <label class="field__label" for="nom">Nom</label>
+            <input class="input" id="nom" type="text" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="email">Email professionnel</label>
+          <input class="input" id="email" type="email" required placeholder="vous@entreprise.fr">
+          <span class="field__hint">Pas d'adresses Gmail / Yahoo personnelles, sauf pour les freelances.</span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="entreprise">Nom de l'entreprise</label>
+          <input class="input" id="entreprise" type="text" required>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="role">Votre fonction</label>
+          <select class="select" id="role">
+            <option>—</option>
+            <option>Responsable conformité / DPO</option>
+            <option>DRH / RH</option>
+            <option>Direction générale</option>
+            <option>Direction innovation</option>
+            <option>CTO / Engineering</option>
+            <option>Data / ML</option>
+            <option>Autre</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="pwd">Mot de passe</label>
+          <input class="input" id="pwd" type="password" required placeholder="Minimum 12 caractères">
+          <span class="field__hint">12 caractères minimum, dont une majuscule, un chiffre et un symbole.</span>
+        </div>
+      </div>
+
+      <label class="auth-consent">
+        <input type="checkbox" required>
+        <span>J'accepte les <a href="#">CGU</a> et la <a href="#">politique de confidentialité</a>. Mes données sont hébergées en France et ne servent pas à entraîner des modèles tiers.</span>
+      </label>
+
+      <label class="auth-consent">
+        <input type="checkbox">
+        <span>Je souhaite recevoir la newsletter mensuelle (actualité réglementaire AI Act, méthodologie, retours d'expérience). Désinscription en un clic.</span>
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--block btn--lg">Créer mon compte</button>
+
+      <p class="auth-form__bottom">Déjà un compte ? <a href="connexion.html">Se connecter</a></p>
+    </form>
+  </main>
+
+  <aside class="auth-side">
+    <div class="auth-side__bg"></div>
+    <div class="auth-side__inner">
+      <span class="eyebrow eyebrow--accent">Vos premières minutes</span>
+      <h2 style="margin-top: 12px;">Premier audit en moins de 15 minutes après création de compte.</h2>
+      <p>Pas de période d'attente, pas de validation manuelle. Vous chargez un dataset, vous configurez, vous recevez votre rapport.</p>
+
+      <div class="auth-benefits">
+        <div class="auth-benefit">
+          <span class="auth-benefit__num">01</span>
+          <div>
+            <h4>Bienvenue &amp; profil</h4>
+            <p>Trois questions : votre secteur, votre cas d'usage prioritaire, votre rôle.</p>
+          </div>
+        </div>
+        <div class="auth-benefit">
+          <span class="auth-benefit__num">02</span>
+          <div>
+            <h4>Import du premier dataset</h4>
+            <p>Téléchargez un CSV ou utilisez l'un de nos datasets d'exemple (RH, crédit, santé).</p>
+          </div>
+        </div>
+        <div class="auth-benefit">
+          <span class="auth-benefit__num">03</span>
+          <div>
+            <h4>Configuration assistée</h4>
+            <p>Mapping automatique des colonnes, seuils par défaut adaptés à votre secteur.</p>
+          </div>
+        </div>
+        <div class="auth-benefit">
+          <span class="auth-benefit__num">04</span>
+          <div>
+            <h4>Premier rapport</h4>
+            <p>Feu tricolore, métriques, explications, recommandations. Exportable PDF et Excel.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer class="auth-foot">
+  <span>© 2026 AuditIQ SAS</span>
+  <span style="display: flex; gap: 16px;">
+    <a href="#">Mentions légales</a>
+    <a href="#">Confidentialité</a>
+    <a href="#">Sécurité</a>
+  </span>
+</footer>
+
+</body>
+</html>

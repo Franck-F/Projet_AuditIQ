@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="dashboard"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Vue d'ensemble"></div>
+
+    <main class="app__content">
+
+      <!-- Page header -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-head__title">Bonjour Claire</h1>
+          <p class="page-head__lede">Dernière session il y a 2 jours · Vous avez <strong style="color: var(--fg);">3 audits actifs</strong> et <strong style="color: var(--fg);">8 recommandations</strong> en attente de revue.</p>
+        </div>
+        <div class="page-head__actions">
+          <a href="app-historique.html" class="btn btn--secondary btn--sm">Historique</a>
+          <a href="app-audit-m1.html" class="btn btn--primary">+ Lancer un audit</a>
+        </div>
+      </div>
+
+      <!-- Top: global risk + KPIs -->
+      <section style="display: grid; grid-template-columns: 360px 1fr; gap: 16px; margin-bottom: 16px;">
+
+        <!-- Risk gauge -->
+        <div class="card card--xl" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: baseline;">
+            <span class="label-mono">Score de risque global</span>
+            <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span> Vigilance</span>
+          </div>
+          <div class="gauge">
+            <svg class="gauge__svg" viewBox="0 0 200 115">
+              <!-- bg arc -->
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--surface-3)" stroke-width="14" stroke-linecap="round"/>
+              <!-- pass segment -->
+              <path d="M 20 100 A 80 80 0 0 1 73 30" fill="none" stroke="var(--status-pass)" stroke-width="14" stroke-linecap="round"/>
+              <!-- warn segment (active) -->
+              <path d="M 73 30 A 80 80 0 0 1 127 30" fill="none" stroke="var(--status-warn)" stroke-width="14" stroke-linecap="round"/>
+              <!-- fail segment -->
+              <path d="M 127 30 A 80 80 0 0 1 180 100" fill="none" stroke="var(--status-fail)" stroke-width="14" stroke-linecap="round" opacity="0.35"/>
+              <!-- needle pointing ~62 -->
+              <line x1="100" y1="100" x2="118" y2="38" stroke="var(--fg)" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="5" fill="var(--fg)"/>
+            </svg>
+            <div class="gauge__center">
+              <div class="gauge__value">62</div>
+              <div class="gauge__label">/100 · risque modéré</div>
+            </div>
+          </div>
+          <div class="row" style="font-size: 12px; gap: 16px; margin-top: 12px;">
+            <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-pass);"></span><span class="muted">0–30 Conforme</span></span>
+            <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-warn);"></span><span class="muted">31–70 Vigilance</span></span>
+            <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-fail);"></span><span class="muted">71–100 Critique</span></span>
+          </div>
+          <p style="color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.55; text-align: center; margin-top: 8px; max-width: 32ch;">
+            Score agrégé sur vos <strong style="color: var(--fg);">12 audits actifs</strong>, pondéré par sensibilité du cas d'usage.
+          </p>
+        </div>
+
+        <!-- KPI grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="kpi">
+            <span class="kpi__label">Audits cette année</span>
+            <span class="kpi__value">12</span>
+            <span class="kpi__delta kpi__delta--up">↑ 4 vs trimestre dernier</span>
+            <svg class="sparkline mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path class="sparkline__fill" d="M0,28 L0,22 L14,18 L28,20 L42,12 L56,15 L70,8 L84,10 L100,5 L100,28 Z"/>
+              <path class="sparkline__path" d="M0,22 L14,18 L28,20 L42,12 L56,15 L70,8 L84,10 L100,5"/>
+            </svg>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">Biais détectés (90j)</span>
+            <span class="kpi__value">7</span>
+            <span class="kpi__delta kpi__delta--down">↓ 2 vs précédent</span>
+            <svg class="sparkline mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path class="sparkline__path" stroke="var(--status-warn)" d="M0,8 L14,12 L28,10 L42,15 L56,12 L70,18 L84,16 L100,22"/>
+            </svg>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">Recommandations ouvertes</span>
+            <span class="kpi__value">8</span>
+            <span class="kpi__delta" style="color: var(--fg-muted);">3 prioritaires · 5 normales</span>
+            <div style="display: flex; gap: 4px; margin-top: 10px;">
+              <span style="height: 6px; flex: 3; background: var(--status-fail); border-radius: 3px;"></span>
+              <span style="height: 6px; flex: 5; background: var(--status-warn); border-radius: 3px;"></span>
+            </div>
+          </div>
+          <div class="kpi">
+            <span class="kpi__label">Couverture AI Act</span>
+            <span class="kpi__value">76<span style="font-size: 18px; color: var(--fg-muted);">%</span></span>
+            <span class="kpi__delta kpi__delta--up">↑ 12 pts en 30 jours</span>
+            <div class="progress mt-2"><div class="progress__fill" style="width: 76%;"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Alerts -->
+      <section class="card card--xl" style="margin-bottom: 16px;">
+        <div class="row row--between" style="margin-bottom: 12px;">
+          <div class="section-title" style="margin-bottom: 0;">
+            <h3>Alertes prioritaires</h3>
+            <span class="section-title__count">3</span>
+          </div>
+          <a href="app-recommandations.html" class="btn btn--ghost">Tout voir →</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+
+          <div class="alert alert--fail">
+            <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.86a2 2 0 0 1 3.4 0l8.4 14.1a2 2 0 0 1-1.7 3H3.6a2 2 0 0 1-1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>
+            <div class="alert__body">
+              <div class="alert__title">Audit M1 — Recrutement Q2 2026 : règle des 4/5 non respectée pour le groupe Femmes (0.72).</div>
+              <div class="alert__text">Disparate Impact = 0.72 sur 412 candidatures. Seuil AI Act recommandé : ≥ 0.80. Action suggérée : revoir le pipeline de scoring CV avant déploiement.</div>
+            </div>
+            <a href="app-audit-m1.html#resultats" class="btn btn--sm btn--secondary" style="margin-left: 12px;">Examiner</a>
+          </div>
+
+          <div class="alert alert--warn">
+            <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+            <div class="alert__body">
+              <div class="alert__title">M2 — Scoring crédit : cluster déviant détecté (code postal comme proxy d'origine).</div>
+              <div class="alert__text">Le cluster #3 (8% des dossiers) présente un taux de refus 2.4× supérieur à la moyenne. La feature dominante est <code style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">code_postal_2</code>.</div>
+            </div>
+            <a href="app-audit-m2.html#cluster-3" class="btn btn--sm btn--secondary" style="margin-left: 12px;">Examiner</a>
+          </div>
+
+          <div class="alert alert--info">
+            <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v.01M11 11h1v6h1"/></svg>
+            <div class="alert__body">
+              <div class="alert__title">AI Act — l'article 10 (qualité des données d'entraînement) entrera en vigueur le 02/08/2026.</div>
+              <div class="alert__text">Vos audits supervisés actuels couvrent 76% des exigences. Téléchargez le guide de mise en conformité.</div>
+            </div>
+            <a href="ai-act.html" class="btn btn--sm btn--secondary" style="margin-left: 12px;">Lire le guide</a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Two cols : Audits récents + Modules -->
+      <section style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 16px;">
+
+        <!-- Audits récents -->
+        <div class="card card--xl">
+          <div class="row row--between" style="margin-bottom: 14px;">
+            <div class="section-title" style="margin-bottom: 0;">
+              <h3>Audits récents</h3>
+              <span class="section-title__count">12</span>
+            </div>
+            <a href="app-historique.html" class="btn btn--ghost">Historique complet →</a>
+          </div>
+
+          <div class="row-card">
+            <div>
+              <div class="row-card__title">Recrutement Q2 2026 — Scoring CV</div>
+              <div class="row-card__subtitle">M1 supervisé · 412 dossiers · Cabinet Tessier RH</div>
+            </div>
+            <span class="status status--fail"><span class="status__dot"></span>Critique</span>
+            <span class="row-card__meta">Il y a 2 h</span>
+            <span class="row-card__meta">DP 0.72</span>
+            <a href="app-audit-m1.html" class="btn btn--sm btn--secondary">Ouvrir</a>
+          </div>
+
+          <div class="row-card">
+            <div>
+              <div class="row-card__title">Scoring crédit immobilier — Banque Loiret</div>
+              <div class="row-card__subtitle">M2 non supervisé · 8 240 dossiers · 2026-T1</div>
+            </div>
+            <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+            <span class="row-card__meta">Hier · 18 h</span>
+            <span class="row-card__meta">IM 0.82</span>
+            <a href="app-audit-m2.html" class="btn btn--sm btn--secondary">Ouvrir</a>
+          </div>
+
+          <div class="row-card">
+            <div>
+              <div class="row-card__title">Chatbot SAV — campagne fairness genre & origine</div>
+              <div class="row-card__subtitle">M3 LLM · 480 prompts pairs · Mathys SA</div>
+            </div>
+            <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+            <span class="row-card__meta">3 mai</span>
+            <span class="row-card__meta">Score 3.4 / 5</span>
+            <a href="app-audit-m3.html" class="btn btn--sm btn--secondary">Ouvrir</a>
+          </div>
+
+          <div class="row-card">
+            <div>
+              <div class="row-card__title">Plateforme onboarding — vérification de proxies</div>
+              <div class="row-card__subtitle">M2 non supervisé · 1 248 profils · 2026-T1</div>
+            </div>
+            <span class="status status--pass"><span class="status__dot"></span>Conforme</span>
+            <span class="row-card__meta">28 avr.</span>
+            <span class="row-card__meta">IM 0.94</span>
+            <a href="app-rapport.html" class="btn btn--sm btn--secondary">Rapport</a>
+          </div>
+
+          <div class="row-card">
+            <div>
+              <div class="row-card__title">Modèle attribution prime annuelle</div>
+              <div class="row-card__subtitle">M1 supervisé · 1 040 collaborateurs · RH groupe</div>
+            </div>
+            <span class="status status--pass"><span class="status__dot"></span>Conforme</span>
+            <span class="row-card__meta">22 avr.</span>
+            <span class="row-card__meta">DP 0.91</span>
+            <a href="app-rapport.html" class="btn btn--sm btn--secondary">Rapport</a>
+          </div>
+
+        </div>
+
+        <!-- Modules quick access -->
+        <div class="card card--xl">
+          <div class="section-title" style="margin-bottom: 14px;">
+            <h3>Lancer un audit</h3>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+
+            <a href="app-audit-m1.html" class="card card--interactive" style="padding: 16px; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600;">M1</span>
+              <div>
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Audit supervisé</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Dataset étiqueté · 4 métriques fairness</div>
+              </div>
+              <span style="color: var(--fg-muted);">→</span>
+            </a>
+
+            <a href="app-audit-m2.html" class="card card--interactive" style="padding: 16px; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600;">M2</span>
+              <div>
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Audit non supervisé</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Clustering · détection de proxies</div>
+              </div>
+              <span style="color: var(--fg-muted);">→</span>
+            </a>
+
+            <a href="app-audit-m3.html" class="card card--interactive" style="padding: 16px; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600;">M3</span>
+              <div>
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Audit LLM / chatbot</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Prompts pairs · 6 axes sensibles</div>
+              </div>
+              <span style="color: var(--fg-muted);">→</span>
+            </a>
+
+            <div class="divider"></div>
+
+            <div class="help-card">
+              <strong>Première fois ?</strong> Suivez le tutoriel guidé — premier audit en ~25 min.
+              <div style="margin-top: 10px;">
+                <a href="app-onboarding.html" class="btn btn--sm btn--secondary">Lancer le tutoriel →</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Rapports + Activity -->
+      <section style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+        <div class="card card--xl">
+          <div class="row row--between" style="margin-bottom: 14px;">
+            <div class="section-title" style="margin-bottom: 0;">
+              <h3>Rapports récents</h3>
+              <span class="section-title__count">7</span>
+            </div>
+            <a href="app-rapports.html" class="btn btn--ghost">Tout voir →</a>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="app-rapport.html" class="row" style="padding: 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--font-mono); font-size: 11px;">PDF</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Rapport Recrutement Q2 — vue réglementaire</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">RPT-2026-014 · 24 pages · Aujourd'hui · 10:42</div>
+              </div>
+              <span class="badge badge--mono">v2</span>
+            </a>
+            <a href="app-rapport.html" class="row" style="padding: 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--status-info); font-family: var(--font-mono); font-size: 11px;">XLS</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Export brut métriques — Banque Loiret</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">RPT-2026-013 · 8 onglets · Hier</div>
+              </div>
+              <span class="badge badge--mono">v1</span>
+            </a>
+            <a href="app-rapport.html" class="row" style="padding: 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); align-items: center;">
+              <span style="width: 36px; height: 36px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--font-mono); font-size: 11px;">PDF</span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: var(--fs-sm); font-weight: 500;">Synthèse executive — chatbot Mathys</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">RPT-2026-012 · 6 pages · 4 mai</div>
+              </div>
+              <span class="badge badge--mono">final</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card card--xl">
+          <div class="section-title" style="margin-bottom: 14px;">
+            <h3>Activité d'équipe</h3>
+          </div>
+          <ul class="timeline" style="list-style: none; padding: 0; margin: 0;">
+            <li class="tl-item">
+              <span class="tl-item__dot"></span>
+              <div class="tl-item__date">AUJ · 10:42</div>
+              <div class="tl-item__title">Claire Tessier a généré le rapport <strong>RPT-2026-014</strong></div>
+              <div class="tl-item__desc">Vue réglementaire AI Act · 24 pages · PDF signé électroniquement</div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-item__dot tl-item__dot--warn"></span>
+              <div class="tl-item__date">AUJ · 09:18</div>
+              <div class="tl-item__title">L'audit <strong>Recrutement Q2 2026</strong> a basculé en niveau critique</div>
+              <div class="tl-item__desc">DP est passé de 0.81 à 0.72 après l'ajout de 84 nouveaux dossiers</div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-item__dot tl-item__dot--info"></span>
+              <div class="tl-item__date">HIER · 17:54</div>
+              <div class="tl-item__title">Paul Mendy a invité 2 membres dans l'espace</div>
+              <div class="tl-item__desc">marc.benhamou@tessier.fr · noemie.r@tessier.fr — rôle Auditeur</div>
+            </li>
+            <li class="tl-item">
+              <span class="tl-item__dot"></span>
+              <div class="tl-item__date">HIER · 14:02</div>
+              <div class="tl-item__title">Audit M2 Banque Loiret terminé</div>
+              <div class="tl-item__desc">Cluster déviant identifié sur 8% des dossiers · code postal comme proxy possible</div>
+            </li>
+          </ul>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/app-partials.js"></script>
+</body>
+</html>

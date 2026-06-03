@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  .auth-shell { display: grid; grid-template-columns: 1fr 1fr; min-height: 100%; }
+  @media (max-width: 920px) { .auth-shell { grid-template-columns: 1fr; } .auth-side { display: none; } }
+  .auth-main { padding: clamp(40px, 6vw, 80px) clamp(24px, 5vw, 80px); display: flex; flex-direction: column; }
+  .auth-brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); letter-spacing: -0.01em; color: var(--fg); margin-bottom: clamp(40px, 6vw, 80px); width: max-content; }
+  .auth-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; color: #0b1410; font-family: var(--font-mono); font-weight: 600; font-size: 14px; }
+  .auth-form { max-width: 400px; width: 100%; margin: auto 0; display: flex; flex-direction: column; gap: 24px; }
+  .auth-form h1 { font-size: var(--fs-h2); letter-spacing: -0.02em; }
+  .auth-form > p.sub { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.5; margin-top: -16px; }
+  .auth-fields { display: flex; flex-direction: column; gap: 16px; }
+  .auth-form__sso { display: flex; flex-direction: column; gap: 8px; }
+  .sso-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 16px; font-size: var(--fs-sm); color: var(--fg); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: border-color var(--t-fast); }
+  .sso-btn:hover { border-color: var(--border-strong); }
+  .sso-btn__icon { width: 18px; height: 18px; border-radius: 4px; background: var(--surface-3); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
+  .auth-divider { display: flex; align-items: center; gap: 12px; color: var(--fg-muted); font-size: var(--fs-xs); font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; }
+  .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-subtle); }
+  .auth-form__bottom { font-size: var(--fs-sm); color: var(--fg-muted); text-align: center; margin-top: auto; padding-top: 32px; }
+  .auth-form__bottom a { color: var(--accent); }
+  .auth-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-xs); }
+  .auth-row a { color: var(--accent); }
+  .auth-checkbox { display: flex; gap: 8px; align-items: center; color: var(--fg-secondary); }
+  .auth-checkbox input { accent-color: var(--accent); }
+
+  /* Visual side */
+  .auth-side {
+    background: var(--surface);
+    border-left: 1px solid var(--border-subtle);
+    padding: clamp(40px, 6vw, 80px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-side__bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 80% 20%, var(--accent-soft), transparent 50%),
+      radial-gradient(circle at 20% 80%, var(--status-info-bg), transparent 60%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .auth-side__inner { position: relative; max-width: 440px; }
+  .auth-side h2 { font-size: clamp(28px, 3vw, 36px); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px; }
+  .auth-side p { color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.55; }
+  .auth-side__metrics { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
+  .auth-side__metric { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .auth-side__metric-label { font-size: var(--fs-sm); color: var(--fg-secondary); }
+
+  .auth-foot { padding: 24px clamp(24px, 5vw, 80px); font-size: var(--fs-xs); color: var(--fg-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); }
+  .auth-foot a { color: var(--fg-muted); }
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+  <main class="auth-main">
+    <a href="index.html" class="auth-brand">
+      <span class="auth-brand-mark">A</span>AuditIQ
+    </a>
+
+    <form class="auth-form" onsubmit="event.preventDefault(); alert('Connexion simulée');">
+      <div>
+        <h1>Connectez-vous</h1>
+        <p class="sub" style="margin-top: 8px;">Accédez à votre console AuditIQ pour lancer un audit, consulter vos rapports ou gérer votre équipe.</p>
+      </div>
+
+      <div class="auth-form__sso">
+        <button type="button" class="sso-btn"><span class="sso-btn__icon">G</span>Continuer avec Google</button>
+        <button type="button" class="sso-btn"><span class="sso-btn__icon">M</span>Continuer avec Microsoft</button>
+        <button type="button" class="sso-btn"><span class="sso-btn__icon">S</span>Connexion SSO entreprise (SAML)</button>
+      </div>
+
+      <div class="auth-divider">Ou avec votre email</div>
+
+      <div class="auth-fields">
+        <div class="field">
+          <label class="field__label" for="email">Email professionnel</label>
+          <input class="input" id="email" type="email" required placeholder="vous@entreprise.fr">
+        </div>
+        <div class="field">
+          <label class="field__label" for="pwd">Mot de passe</label>
+          <input class="input" id="pwd" type="password" required placeholder="••••••••">
+        </div>
+        <div class="auth-row">
+          <label class="auth-checkbox"><input type="checkbox">Rester connecté 30 jours</label>
+          <a href="mot-de-passe-oublie.html">Mot de passe oublié ?</a>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block btn--lg">Se connecter</button>
+
+      <p class="auth-form__bottom">Pas encore de compte ? <a href="inscription.html">Créer un compte gratuit</a></p>
+    </form>
+  </main>
+
+  <aside class="auth-side">
+    <div class="auth-side__bg"></div>
+    <div class="auth-side__inner">
+      <span class="eyebrow eyebrow--accent">Reprenez où vous en étiez</span>
+      <h2 style="margin-top: 12px;">Vos audits, vos rapports, votre conformité — en un seul endroit.</h2>
+      <p>AuditIQ centralise vos audits sur cinq ans. Comparez les scores entre deux exécutions, suivez la dérive, et restez prêt pour les contrôles.</p>
+
+      <div class="auth-side__metrics">
+        <div class="auth-side__metric">
+          <span class="auth-side__metric-label">Audits archivés (vous)</span>
+          <span class="status status--info"><span class="status__dot"></span>12</span>
+        </div>
+        <div class="auth-side__metric">
+          <span class="auth-side__metric-label">Score moyen 2026</span>
+          <span class="status status--pass"><span class="status__dot"></span>4,2 / 5</span>
+        </div>
+        <div class="auth-side__metric">
+          <span class="auth-side__metric-label">Alertes ouvertes</span>
+          <span class="status status--warn"><span class="status__dot"></span>2</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer class="auth-foot">
+  <span>© 2026 AuditIQ SAS</span>
+  <span style="display: flex; gap: 16px;">
+    <a href="#">Mentions légales</a>
+    <a href="#">Confidentialité</a>
+    <a href="#">Sécurité</a>
+  </span>
+</footer>
+
+</body>
+</html>

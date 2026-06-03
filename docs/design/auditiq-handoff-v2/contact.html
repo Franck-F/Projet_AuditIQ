@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact &amp; démo — AuditIQ</title>
+<meta name="description" content="Réservez une démo guidée de 30 minutes sur vos données. Ou contactez notre équipe commerciale et support.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<script src="assets/partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-7); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 16px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .contact-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 64px; align-items: start; padding-block: var(--sp-10); }
+  @media (max-width: 920px) { .contact-layout { grid-template-columns: 1fr; gap: 32px; } }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 40px; }
+  @media (max-width: 600px) { .form-card { padding: 28px; } }
+  .form-card h2 { font-size: var(--fs-h3); margin-bottom: 8px; letter-spacing: -0.015em; }
+  .form-card p.sub { color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 32px; line-height: 1.5; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-row { margin-bottom: 16px; }
+  .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 600px) { .checkbox-group { grid-template-columns: 1fr; } }
+  .check-pill {
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all var(--t-fast);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .check-pill input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .check-pill:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--fg); }
+  .form-card__consent {
+    font-size: var(--fs-xs);
+    color: var(--fg-muted);
+    line-height: 1.5;
+    margin: 20px 0 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .form-card__consent input { width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+  .form-card__consent a { color: var(--accent); }
+
+  .info-block { display: flex; flex-direction: column; gap: 28px; }
+  .info-block__item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .info-block__item h4 { font-size: var(--fs-h4); }
+  .info-block__item p { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55; }
+  .info-block__item__value {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--accent);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active=""></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Contact &amp; démo</span>
+    <h1 style="margin-top: 16px;">Une démo guidée de 30 minutes, sur vos données.</h1>
+    <p class="lede">Apportez un cas d'usage et idéalement un dataset (anonymisé si nécessaire). À la fin de la démo, vous repartez avec un rapport AuditIQ utilisable pour votre comité. Engagement zéro, durée fixe.</p>
+  </div>
+</header>
+
+<section class="container">
+  <div class="contact-layout">
+
+    <form class="form-card" onsubmit="event.preventDefault(); document.getElementById('thanks').style.display='block'; this.style.display='none';">
+      <h2>Réservez votre démo</h2>
+      <p class="sub">Un consultant AuditIQ vous recontacte sous 24h ouvrées. Champs <span style="color: var(--accent);">*</span> obligatoires.</p>
+
+      <div class="form-grid form-row">
+        <div class="field">
+          <label class="field__label" for="prenom">Prénom <span style="color: var(--accent);">*</span></label>
+          <input class="input" id="prenom" type="text" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="nom">Nom <span style="color: var(--accent);">*</span></label>
+          <input class="input" id="nom" type="text" required>
+        </div>
+      </div>
+
+      <div class="form-grid form-row">
+        <div class="field">
+          <label class="field__label" for="email">Email professionnel <span style="color: var(--accent);">*</span></label>
+          <input class="input" id="email" type="email" required placeholder="prenom.nom@entreprise.fr">
+        </div>
+        <div class="field">
+          <label class="field__label" for="phone">Téléphone</label>
+          <input class="input" id="phone" type="tel" placeholder="+33 ...">
+        </div>
+      </div>
+
+      <div class="form-grid form-row">
+        <div class="field">
+          <label class="field__label" for="entreprise">Entreprise <span style="color: var(--accent);">*</span></label>
+          <input class="input" id="entreprise" type="text" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="role">Votre fonction</label>
+          <select class="select" id="role">
+            <option>—</option>
+            <option>Responsable conformité / DPO</option>
+            <option>DRH / RH</option>
+            <option>Direction générale</option>
+            <option>Direction innovation</option>
+            <option>CTO / VP Engineering</option>
+            <option>Data / ML</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid form-row">
+        <div class="field">
+          <label class="field__label" for="taille">Taille de l'entreprise</label>
+          <select class="select" id="taille">
+            <option>—</option>
+            <option>1 - 49 collaborateurs</option>
+            <option>50 - 249 collaborateurs</option>
+            <option>250 - 999 collaborateurs</option>
+            <option>1 000 + collaborateurs</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" for="secteur">Secteur</label>
+          <select class="select" id="secteur">
+            <option>—</option>
+            <option>Banque / finance / assurance</option>
+            <option>RH / conseil / recrutement</option>
+            <option>SaaS / éditeur logiciel</option>
+            <option>Santé / médico-social</option>
+            <option>Industrie / manufacturing</option>
+            <option>Service public / collectivité</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="field__label" style="margin-bottom: 12px; display: block;">Quels modules vous intéressent ?</label>
+        <div class="checkbox-group">
+          <label class="check-pill"><input type="checkbox">Module 01 · Audit supervisé</label>
+          <label class="check-pill"><input type="checkbox">Module 02 · Non supervisé</label>
+          <label class="check-pill"><input type="checkbox">Module 03 · LLM / chatbot</label>
+          <label class="check-pill"><input type="checkbox">Couche transversale / rapports</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label class="field__label" for="message">Votre contexte (optionnel)</label>
+          <textarea class="textarea" id="message" placeholder="Décrivez brièvement votre IA, votre calendrier AI Act, ou toute question. 2-3 lignes suffisent."></textarea>
+        </div>
+      </div>
+
+      <label class="form-card__consent">
+        <input type="checkbox" required>
+        <span>J'accepte que mes données soient traitées par AuditIQ SAS pour me recontacter dans le cadre de cette demande, conformément à la <a href="#">politique de confidentialité</a>. Mes données ne seront pas transmises à des tiers.</span>
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block">Réserver ma démo</button>
+      <p style="font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 12px; text-align: center;">Réponse sous 24h ouvrées.</p>
+    </form>
+
+    <div id="thanks" style="display: none; padding: 48px 32px; background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--r-xl); text-align: center;">
+      <div style="width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 28px;">✓</div>
+      <h2 style="font-size: var(--fs-h3); margin-bottom: 12px;">Merci, votre demande est enregistrée.</h2>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); max-width: 40ch; margin: 0 auto;">Un consultant vous recontacte sous 24h ouvrées pour fixer un créneau de démo.</p>
+    </div>
+
+    <aside class="info-block">
+      <div class="info-block__item">
+        <span class="eyebrow eyebrow--accent">Vente</span>
+        <h4>Demande commerciale</h4>
+        <p>Pour les démos, devis, paliers Entreprise et Souverain, marchés publics.</p>
+        <div class="info-block__item__value">contact@auditiq.fr</div>
+        <div class="info-block__item__value">+33 1 89 86 02 14</div>
+      </div>
+      <div class="info-block__item">
+        <span class="eyebrow eyebrow--accent">Support</span>
+        <h4>Aide produit</h4>
+        <p>Clients existants — pour toute question fonctionnelle, bug ou demande d'évolution.</p>
+        <div class="info-block__item__value">support@auditiq.fr</div>
+        <p style="font-size: var(--fs-xs); margin-top: 6px;">Réponse sous 4h à 24h selon votre palier</p>
+      </div>
+      <div class="info-block__item">
+        <span class="eyebrow eyebrow--accent">DPO</span>
+        <h4>Données &amp; vie privée</h4>
+        <p>Exercice de vos droits RGPD, demandes de suppression, signalements.</p>
+        <div class="info-block__item__value">dpo@auditiq.fr</div>
+      </div>
+      <div class="info-block__item">
+        <span class="eyebrow eyebrow--accent">Presse</span>
+        <h4>Médias &amp; partenariats</h4>
+        <p>Journalistes, rédactions, partenaires (cabinets, intégrateurs).</p>
+        <div class="info-block__item__value">presse@auditiq.fr</div>
+        <div class="info-block__item__value">partners@auditiq.fr</div>
+      </div>
+      <div class="info-block__item">
+        <span class="eyebrow eyebrow--accent">Siège</span>
+        <h4>AuditIQ SAS</h4>
+        <p>Capital 64 000 €. RCS Paris 924 386 715. TVA FR12924386715.</p>
+        <p style="margin-top: 4px;">12 rue d'Aboukir, 75002 Paris, France</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

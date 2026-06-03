@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 2 — Audit non supervisé — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .m2-section { padding-top: 40px; scroll-margin-top: 80px; }
+  .m2-section + .m2-section { margin-top: 40px; border-top: 1px solid var(--border-subtle); }
+  .m2-section__head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .m2-section__head h2 { font-size: 22px; letter-spacing: -0.015em; font-weight: 600; }
+  .m2-section__head .label-mono { color: var(--accent); }
+
+  .feature-rank { display: flex; flex-direction: column; gap: 8px; }
+  .feature-rank__row {
+    display: grid;
+    grid-template-columns: 220px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .feature-rank__name { font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+  .feature-rank__bar { height: 10px; background: var(--surface-3); border-radius: var(--r-pill); overflow: hidden; }
+  .feature-rank__fill { height: 100%; border-radius: var(--r-pill); }
+  .feature-rank__value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
+
+  .cluster-list-item {
+    display: grid;
+    grid-template-columns: 56px 1fr 100px 100px 120px auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: border-color var(--t-base);
+  }
+  .cluster-list-item + .cluster-list-item { margin-top: 8px; }
+  .cluster-list-item:hover { border-color: var(--border-strong); }
+  .cluster-list-item--selected { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); }
+  .cluster-list-item__num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 600; font-size: 13px;
+    border: 1.5px solid;
+  }
+  .cluster-list-item__num--pass { background: var(--status-pass-bg); border-color: var(--status-pass); color: var(--status-pass); }
+  .cluster-list-item__num--warn { background: var(--status-warn-bg); border-color: var(--status-warn); color: var(--status-warn); }
+  .cluster-list-item__num--fail { background: var(--status-fail-bg); border-color: var(--status-fail); color: var(--status-fail); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="m2"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Audits · Module 2 · Scoring crédit immobilier" data-no-cta="true"></div>
+
+    <main class="app__content">
+
+      <!-- Page head -->
+      <div class="page-head">
+        <div>
+          <div class="row" style="gap: 10px; margin-bottom: 10px;">
+            <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Vigilance</span>
+            <span class="badge badge--mono">AUD-2026-013</span>
+            <span class="muted" style="font-size: 12px;">M2 non supervisé · Banque Loiret · Hier 18:02</span>
+          </div>
+          <h1 class="page-head__title">Scoring crédit immobilier — Banque Loiret</h1>
+          <p class="page-head__lede">Détection de clusters déviants sur <strong style="color: var(--fg);">8 240 dossiers</strong> · 24 variables sans attribut sensible déclaré · clustering K-Means + détection de proxies</p>
+        </div>
+        <div class="page-head__actions">
+          <a href="app-rapport.html" class="btn btn--secondary">Voir le rapport</a>
+          <button class="btn btn--primary">Exporter ↓</button>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- 1) Vue d'ensemble + clusters cartographiés -->
+      <!-- ============================================== -->
+      <section id="resultats">
+        <div class="result-hero" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden;">
+
+          <!-- Cluster canvas -->
+          <div style="padding: 24px; border-right: 1px solid var(--border-subtle);">
+            <div class="row row--between mb-4">
+              <span class="label-mono" style="color: var(--accent);">Carte des clusters · projection 2D</span>
+              <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>1 cluster déviant détecté</span>
+            </div>
+
+            <div class="cluster-canvas">
+              <div class="cluster-canvas__grid"></div>
+              <!-- normal clusters -->
+              <div class="cluster cluster--pass" style="width: 100px; height: 100px; left: 18%; top: 22%;">C1</div>
+              <div class="cluster cluster--pass" style="width: 130px; height: 130px; left: 38%; top: 50%;">C2</div>
+              <!-- deviant cluster -->
+              <div class="cluster cluster--fail cluster--selected" style="width: 80px; height: 80px; left: 64%; top: 24%;">C3</div>
+              <div class="cluster cluster--pass" style="width: 90px; height: 90px; left: 14%; top: 60%;">C4</div>
+              <div class="cluster cluster--warn" style="width: 70px; height: 70px; left: 72%; top: 62%;">C5</div>
+
+              <!-- Axis labels -->
+              <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.08em;">PC1 · 42% variance</div>
+              <div style="position: absolute; top: 50%; left: 8px; transform: translateY(-50%) rotate(-90deg); font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.08em;">PC2 · 28% variance</div>
+            </div>
+
+            <div class="row mt-4" style="gap: 16px; font-size: 12px; flex-wrap: wrap;">
+              <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-pass);"></span><span class="muted">Comportement normal</span></span>
+              <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-warn);"></span><span class="muted">Comportement atypique</span></span>
+              <span class="row" style="gap: 6px;"><span class="status__dot" style="background: var(--status-fail);"></span><span class="muted">Cluster déviant à examiner</span></span>
+            </div>
+          </div>
+
+          <!-- KPIs cluster -->
+          <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+            <span class="label-mono">Vue d'ensemble · 5 clusters</span>
+
+            <div class="kpi">
+              <span class="kpi__label">Indice de mixité (IM)</span>
+              <span class="kpi__value" style="color: var(--status-warn);">0.82</span>
+              <span class="kpi__delta" style="color: var(--fg-muted);">Seuil 0.85 · vigilance</span>
+              <div class="progress mt-2"><div class="progress__fill" style="width: 82%; background: var(--status-warn);"></div></div>
+            </div>
+
+            <div class="grid-2" style="gap: 8px;">
+              <div class="kpi" style="padding: 12px 14px;">
+                <span class="kpi__label" style="font-size: 10px;">Dossiers analysés</span>
+                <span class="kpi__value" style="font-size: 22px;">8 240</span>
+              </div>
+              <div class="kpi" style="padding: 12px 14px;">
+                <span class="kpi__label" style="font-size: 10px;">Variables</span>
+                <span class="kpi__value" style="font-size: 22px;">24</span>
+              </div>
+              <div class="kpi" style="padding: 12px 14px;">
+                <span class="kpi__label" style="font-size: 10px;">Clusters formés</span>
+                <span class="kpi__value" style="font-size: 22px;">5</span>
+              </div>
+              <div class="kpi" style="padding: 12px 14px;">
+                <span class="kpi__label" style="font-size: 10px;">Déviants</span>
+                <span class="kpi__value" style="font-size: 22px; color: var(--status-fail);">1</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Natural language summary -->
+        <div class="card card--xl mt-6">
+          <div class="row" style="gap: 14px; align-items: flex-start;">
+            <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 11h1v6h1"/></svg>
+            </span>
+            <div style="flex: 1;">
+              <h4 style="font-size: 16px; margin-bottom: 12px;">Lecture pédagogique du risque</h4>
+              <p style="color: var(--fg-secondary); line-height: 1.7; margin-bottom: 12px;">
+                Sur les 8 240 dossiers de crédit immobilier analysés, le clustering a identifié <strong style="color: var(--fg);">5 groupes naturels</strong>. Quatre d'entre eux présentent un taux de refus cohérent avec les variables explicatives attendues (revenu, apport, ancienneté). Mais le <strong style="color: var(--status-fail);">Cluster #3</strong> (8% des dossiers, soit 660 demandes) présente un taux de refus <strong style="color: var(--fg);">2,4× supérieur à la moyenne</strong>.
+              </p>
+              <p style="color: var(--fg-secondary); line-height: 1.7;">
+                La variable <code style="background: var(--surface-2); padding: 2px 6px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">code_postal_2</code> (premiers chiffres du code postal) explique <strong style="color: var(--fg);">61%</strong> de la formation de ce cluster. Comme les codes postaux en France sont fortement corrélés à l'origine géographique et socio-économique des résidents, cette variable agit potentiellement comme un <strong style="color: var(--status-fail);">proxy d'attributs protégés</strong> (origine, situation économique).
+              </p>
+              <div class="row mt-4" style="gap: 8px;">
+                <a href="#cluster-3" class="btn btn--primary btn--sm">Examiner le cluster #3 →</a>
+                <a href="app-recommandations.html" class="btn btn--secondary btn--sm">Voir les recommandations</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 2) Liste des clusters -->
+      <!-- ============================================== -->
+      <section class="m2-section">
+        <div class="m2-section__head">
+          <span class="label-mono">02 / 04</span>
+          <h2>Tous les clusters · classés par risque</h2>
+        </div>
+
+        <div class="cluster-list-item">
+          <span class="cluster-list-item__num cluster-list-item__num--pass">C1</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 500;">Primo-accédants jeunes urbains</div>
+            <div class="muted" style="font-size: 12px; margin-top: 2px;">25-34 ans · revenu médian 38k€ · zones tendues</div>
+          </div>
+          <span class="row-card__meta">2 240 dossiers</span>
+          <span class="row-card__meta" style="color: var(--fg);">12% refus</span>
+          <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Comportement normal</span>
+          <a href="#" class="btn btn--ghost btn--sm">→</a>
+        </div>
+
+        <div class="cluster-list-item">
+          <span class="cluster-list-item__num cluster-list-item__num--pass">C2</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 500;">Foyers établis périurbains</div>
+            <div class="muted" style="font-size: 12px; margin-top: 2px;">35-50 ans · revenu médian 52k€ · stable</div>
+          </div>
+          <span class="row-card__meta">3 120 dossiers</span>
+          <span class="row-card__meta" style="color: var(--fg);">8% refus</span>
+          <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Comportement normal</span>
+          <a href="#" class="btn btn--ghost btn--sm">→</a>
+        </div>
+
+        <div class="cluster-list-item cluster-list-item--selected" id="cluster-3">
+          <span class="cluster-list-item__num cluster-list-item__num--fail">C3</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 500;">Cluster déviant — codes postaux 93xxx / 95xxx</div>
+            <div class="muted" style="font-size: 12px; margin-top: 2px;">Profils variés en âge / revenu · feature dominante : code_postal_2</div>
+          </div>
+          <span class="row-card__meta">660 dossiers</span>
+          <span class="row-card__meta" style="color: var(--status-fail); font-weight: 500;">29% refus</span>
+          <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Déviant · 2.4× moyenne</span>
+          <a href="#examiner-c3" class="btn btn--primary btn--sm">Examiner</a>
+        </div>
+
+        <div class="cluster-list-item">
+          <span class="cluster-list-item__num cluster-list-item__num--pass">C4</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 500;">Investisseurs locatifs</div>
+            <div class="muted" style="font-size: 12px; margin-top: 2px;">45-65 ans · apport &gt; 30% · résidence secondaire</div>
+          </div>
+          <span class="row-card__meta">1 480 dossiers</span>
+          <span class="row-card__meta" style="color: var(--fg);">6% refus</span>
+          <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Comportement normal</span>
+          <a href="#" class="btn btn--ghost btn--sm">→</a>
+        </div>
+
+        <div class="cluster-list-item">
+          <span class="cluster-list-item__num cluster-list-item__num--warn">C5</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 500;">Dossiers atypiques · auto-entrepreneurs</div>
+            <div class="muted" style="font-size: 12px; margin-top: 2px;">Revenus irréguliers · ancienneté faible</div>
+          </div>
+          <span class="row-card__meta">740 dossiers</span>
+          <span class="row-card__meta" style="color: var(--status-warn);">22% refus</span>
+          <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Atypique · justifié</span>
+          <a href="#" class="btn btn--ghost btn--sm">→</a>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 3) Détail cluster déviant C3 -->
+      <!-- ============================================== -->
+      <section class="m2-section" id="examiner-c3">
+        <div class="m2-section__head">
+          <span class="label-mono">03 / 04</span>
+          <h2>Détail Cluster #3 · features dominantes</h2>
+          <span class="muted" style="font-size: 13px;">Pourquoi ce cluster s'est-il formé ?</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 24px;">
+
+          <!-- Feature importance -->
+          <div class="card card--xl">
+            <h4 style="font-size: 15px; margin-bottom: 4px;">Features dominantes du cluster #3</h4>
+            <p class="muted" style="font-size: 12px; margin-bottom: 20px;">Contribution à la formation du cluster (plus la barre est longue, plus la variable a poussé ce dossier dans ce cluster)</p>
+
+            <div class="feature-rank">
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">code_postal_2</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 61%; background: var(--status-fail);"></div></div>
+                <span class="feature-rank__value" style="color: var(--status-fail);">61.4%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">type_emploi</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 14%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value">14.2%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">revenu_net</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 11%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value">11.0%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">age</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 6%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value">6.1%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">anciennete_emploi</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 4%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value">3.8%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">apport_personnel</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 3%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value">2.5%</span>
+              </div>
+              <div class="feature-rank__row">
+                <span class="feature-rank__name">autre_credit_en_cours</span>
+                <div class="feature-rank__bar"><div class="feature-rank__fill" style="width: 1%; background: var(--accent);"></div></div>
+                <span class="feature-rank__value muted">1.0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Proxy alert -->
+          <div class="card card--xl" style="border-color: var(--status-fail-border); background: linear-gradient(180deg, var(--status-fail-bg), transparent 80%), var(--surface);">
+            <div class="row mb-4" style="gap: 10px;">
+              <span style="width: 36px; height: 36px; background: var(--status-fail-bg); color: var(--status-fail); border: 1px solid var(--status-fail-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.86a2 2 0 0 1 3.4 0l8.4 14.1a2 2 0 0 1-1.7 3H3.6a2 2 0 0 1-1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>
+              </span>
+              <h4 style="font-size: 15px;">Signalement proxy</h4>
+            </div>
+            <p style="color: var(--fg-secondary); font-size: 13px; line-height: 1.65;">
+              La variable <code style="background: var(--bg); padding: 2px 6px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">code_postal_2</code> domine massivement la formation du cluster.
+            </p>
+            <p style="color: var(--fg-secondary); font-size: 13px; line-height: 1.65; margin-top: 10px;">
+              En France, les premiers chiffres du code postal sont fortement corrélés à :
+            </p>
+            <ul style="margin: 10px 0 0; padding-left: 18px; color: var(--fg-secondary); font-size: 13px; line-height: 1.7;">
+              <li>l'origine géographique et migratoire</li>
+              <li>le revenu médian du quartier</li>
+              <li>la composition ethno-culturelle (INSEE 2023)</li>
+            </ul>
+            <p style="color: var(--fg-secondary); font-size: 13px; line-height: 1.65; margin-top: 10px;">
+              Cette variable agit donc comme un <strong style="color: var(--fg);">proxy possible</strong> de critères protégés au sens de l'article 225-1 du Code pénal.
+            </p>
+            <div class="divider mt-4 mb-4"></div>
+            <span class="label-mono" style="font-size: 10px;">Niveau de risque proxy</span>
+            <div class="row mt-2" style="gap: 4px; align-items: center;">
+              <span style="height: 10px; flex: 1; background: var(--status-pass); border-radius: 2px; opacity: 0.3;"></span>
+              <span style="height: 10px; flex: 1; background: var(--status-warn); border-radius: 2px; opacity: 0.3;"></span>
+              <span style="height: 10px; flex: 1; background: var(--status-fail); border-radius: 2px;"></span>
+              <span style="font-family: var(--font-mono); font-size: 11px; color: var(--status-fail); margin-left: 8px;">ÉLEVÉ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cluster composition -->
+        <div class="card card--xl">
+          <h4 style="font-size: 15px; margin-bottom: 16px;">Comparaison du Cluster #3 vs reste du portefeuille</h4>
+          <table class="table">
+            <thead>
+              <tr><th>Variable</th><th class="num">Cluster #3 (n=660)</th><th class="num">Autres clusters (n=7 580)</th><th>Écart</th><th>Lecture</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>code_postal_2</strong> · 93/95</td>
+                <td class="num">84%</td>
+                <td class="num">9%</td>
+                <td><span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>+75 pts</span></td>
+                <td class="muted" style="font-size: 12px;">Concentration extrême sur 2 départements</td>
+              </tr>
+              <tr>
+                <td>type_emploi · CDD/intérim</td>
+                <td class="num">42%</td>
+                <td class="num">22%</td>
+                <td><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>+20 pts</span></td>
+                <td class="muted" style="font-size: 12px;">Surreprésentation cohérente avec géographie</td>
+              </tr>
+              <tr>
+                <td>revenu_net · médian</td>
+                <td class="num">28 100 €</td>
+                <td class="num">36 800 €</td>
+                <td><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>−24%</span></td>
+                <td class="muted" style="font-size: 12px;">Inférieur à la moyenne</td>
+              </tr>
+              <tr>
+                <td>age · médian</td>
+                <td class="num">36 ans</td>
+                <td class="num">42 ans</td>
+                <td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>−6 ans</span></td>
+                <td class="muted" style="font-size: 12px;">Différence modérée</td>
+              </tr>
+              <tr>
+                <td>taux_refus</td>
+                <td class="num" style="color: var(--status-fail); font-weight: 500;">29%</td>
+                <td class="num">12%</td>
+                <td><span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>×2.4</span></td>
+                <td class="muted" style="font-size: 12px;">À justifier objectivement</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="legal-callout mt-6">
+          <strong>Article 225-1 du Code pénal :</strong> constitue une discrimination toute distinction opérée en raison de l'origine, du lieu de résidence ou de la situation économique. L'usage d'une variable proxy comme le code postal peut être qualifié de discrimination indirecte, même sans intention discriminatoire. La banque doit pouvoir <strong>justifier objectivement</strong> que cette variable est un indicateur de risque crédit légitime et qu'il n'existe pas de moyen moins discriminant d'atteindre le même objectif.
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 4) Configuration -->
+      <!-- ============================================== -->
+      <section class="m2-section" id="configuration">
+        <div class="m2-section__head">
+          <span class="label-mono">04 / 04</span>
+          <h2>Configuration de l'audit</h2>
+        </div>
+
+        <!-- Stepper completed -->
+        <div class="stepper">
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Upload</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Variables explicatives</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Clustering</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Audit terminé</span></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <span class="label-mono">Dataset</span>
+            <div class="file-pill mt-4">
+              <span class="file-pill__icon">CSV</span>
+              <div style="flex: 1;">
+                <div class="file-pill__name">portefeuille_credit_2026t1.csv</div>
+                <div class="file-pill__meta">8 240 lignes · 24 colonnes · 1.4 MB</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="label-mono">Algorithme</span>
+            <div class="mt-4" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="row" style="justify-content: space-between;"><span class="muted" style="font-size: 13px;">Méthode</span><span style="font-family: var(--font-mono); font-size: 13px;">K-Means + détection IQR</span></div>
+              <div class="row" style="justify-content: space-between;"><span class="muted" style="font-size: 13px;">Nombre de clusters</span><span style="font-family: var(--font-mono); font-size: 13px;">5 (auto · silhouette)</span></div>
+              <div class="row" style="justify-content: space-between;"><span class="muted" style="font-size: 13px;">Seuil de déviation</span><span style="font-family: var(--font-mono); font-size: 13px;">2.0× moyenne</span></div>
+              <div class="row" style="justify-content: space-between;"><span class="muted" style="font-size: 13px;">Détection proxies</span><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Activée</span></div>
+            </div>
+          </div>
+        </div>
+
+        <details style="margin-top: 24px;">
+          <summary style="font-size: 14px; color: var(--fg-secondary); cursor: pointer; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-md);">Voir les états du wizard (upload · audit en cours · erreur)</summary>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 20px;">
+
+            <div>
+              <span class="label-mono mb-4">État · Audit en cours</span>
+              <div class="card card--xl mt-4">
+                <div class="row" style="gap: 16px; align-items: center;">
+                  <div class="spinner"></div>
+                  <div style="flex: 1;">
+                    <h4 style="font-size: 16px;">Clustering en cours… 3 sur 4 · Recherche de proxies</h4>
+                    <p style="color: var(--fg-secondary); font-size: 13px; margin-top: 4px;">Temps écoulé : 4 min 22 s · estimation restante : 2 min</p>
+                  </div>
+                </div>
+                <div class="progress progress--striped mt-6"><div class="progress__fill" style="width: 75%;"></div></div>
+                <ul style="list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fg-secondary);">
+                  <li>✓ Lecture des 8 240 lignes et 24 variables</li>
+                  <li>✓ Standardisation des variables numériques</li>
+                  <li style="color: var(--fg);">→ Détection des proxies potentiels (corrélations avec INSEE 2023)…</li>
+                  <li class="muted">— Analyse des features dominantes par cluster</li>
+                </ul>
+              </div>
+            </div>
+
+            <div>
+              <span class="label-mono mb-4">État · Erreur · variables non numériques</span>
+              <div class="alert alert--fail mt-4">
+                <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                <div class="alert__body">
+                  <div class="alert__title">Le clustering nécessite au moins 5 variables exploitables — seulement 3 détectées</div>
+                  <div class="alert__text" style="margin-top: 6px;">Les colonnes <code style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">commentaire_libre</code>, <code style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">adresse_complete</code> et <code style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px;">photo_url</code> ont été ignorées car non numériques / non catégorielles. Convertissez-les ou activez l'encodage automatique.</div>
+                  <div class="row mt-4" style="gap: 8px;">
+                    <button class="btn btn--secondary btn--sm">Activer l'encodage automatique</button>
+                    <button class="btn btn--primary btn--sm">Modifier le mapping</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </details>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/app-partials.js"></script>
+</body>
+</html>

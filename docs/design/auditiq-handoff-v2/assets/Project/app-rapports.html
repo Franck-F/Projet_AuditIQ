@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapports — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="rapports"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Rapports"></div>
+
+    <main class="app__content">
+
+      <!-- Page head -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-head__title">Rapports</h1>
+          <p class="page-head__lede">Tous les rapports produits par votre espace · signés électroniquement · exportables PDF / Excel / JSON.</p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--secondary btn--sm">Comparer 2 rapports</button>
+          <button class="btn btn--primary">+ Nouveau rapport</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid-4 mb-6">
+        <div class="kpi">
+          <span class="kpi__label">Rapports cette année</span>
+          <span class="kpi__value">17</span>
+          <span class="kpi__delta" style="color: var(--fg-muted);">+5 vs 2025</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi__label">PDF signés eIDAS</span>
+          <span class="kpi__value">12</span>
+          <span class="kpi__delta" style="color: var(--fg-muted);">71% du total</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi__label">Rapports critiques</span>
+          <span class="kpi__value" style="color: var(--status-fail);">3</span>
+          <span class="kpi__delta" style="color: var(--status-fail);">À revoir avant déploiement</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi__label">Taille moyenne</span>
+          <span class="kpi__value">22<span style="font-size: 16px; color: var(--fg-muted);">p</span></span>
+          <span class="kpi__delta" style="color: var(--fg-muted);">PDF · 1.4 MB moyenne</span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card mb-6" style="padding: 14px 18px;">
+        <div class="row" style="gap: 12px; flex-wrap: wrap;">
+          <input class="input" placeholder="Rechercher par titre, identifiant, audit…" style="flex: 1; max-width: 340px;">
+          <select class="select" style="max-width: 200px;">
+            <option>Tous les modules</option>
+            <option>M1 supervisé</option>
+            <option>M2 non supervisé</option>
+            <option>M3 LLM</option>
+          </select>
+          <select class="select" style="max-width: 180px;">
+            <option>Tous les statuts</option>
+            <option>Conforme</option>
+            <option>Vigilance</option>
+            <option>Critique</option>
+          </select>
+          <select class="select" style="max-width: 160px;">
+            <option>90 derniers jours</option>
+            <option>30 derniers jours</option>
+            <option>Cette année</option>
+            <option>Période personnalisée</option>
+          </select>
+          <button class="btn btn--ghost btn--sm" style="margin-left: auto;">Réinitialiser</button>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div class="card card--xl" style="padding: 0;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="padding-left: 20px;"><input type="checkbox"></th>
+              <th>Rapport</th>
+              <th>Module</th>
+              <th>Statut</th>
+              <th class="num">Version</th>
+              <th class="num">Pages</th>
+              <th>Émis</th>
+              <th style="text-align: right; padding-right: 20px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Recrutement Q2 2026 — vue réglementaire</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-014 · 8af2c91d…e372</div>
+              </td>
+              <td><span class="badge badge--mono">M1</span></td>
+              <td><span class="status status--fail"><span class="status__dot"></span>Critique</span></td>
+              <td class="num">v2 · final</td>
+              <td class="num">24</td>
+              <td><div>Aujourd'hui</div><div class="muted" style="font-size: 11px;">10:42</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">PDF ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Banque Loiret — export brut métriques</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-013 · 4b21e88…1a90</div>
+              </td>
+              <td><span class="badge badge--mono">M2</span></td>
+              <td><span class="status status--warn"><span class="status__dot"></span>Vigilance</span></td>
+              <td class="num">v1</td>
+              <td class="num">8 onglets</td>
+              <td><div>Hier</div><div class="muted" style="font-size: 11px;">18:14</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">XLS ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Chatbot Mathys — synthèse executive</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-012 · 7e9a2b3…ce71</div>
+              </td>
+              <td><span class="badge badge--mono">M3</span></td>
+              <td><span class="status status--warn"><span class="status__dot"></span>Vigilance</span></td>
+              <td class="num">v1 · final</td>
+              <td class="num">6</td>
+              <td><div>4 mai</div><div class="muted" style="font-size: 11px;">09:21</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">PDF ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Plateforme onboarding — vue réglementaire</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-011 · 2c8f4e7…d2a3</div>
+              </td>
+              <td><span class="badge badge--mono">M2</span></td>
+              <td><span class="status status--pass"><span class="status__dot"></span>Conforme</span></td>
+              <td class="num">v1 · final</td>
+              <td class="num">18</td>
+              <td><div>28 avr.</div><div class="muted" style="font-size: 11px;">15:48</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">PDF ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Attribution prime annuelle — vue executive</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-010 · 9d6a3f2…b18c</div>
+              </td>
+              <td><span class="badge badge--mono">M1</span></td>
+              <td><span class="status status--pass"><span class="status__dot"></span>Conforme</span></td>
+              <td class="num">v3 · final</td>
+              <td class="num">20</td>
+              <td><div>22 avr.</div><div class="muted" style="font-size: 11px;">11:02</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">PDF ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Bot internal HR — vue réglementaire (brouillon)</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-009 · 1a7e8c5…0f44</div>
+              </td>
+              <td><span class="badge badge--mono">M3</span></td>
+              <td><span class="status status--neutral"><span class="status__dot"></span>Brouillon</span></td>
+              <td class="num">v0.4</td>
+              <td class="num">—</td>
+              <td><div>18 avr.</div><div class="muted" style="font-size: 11px;">14:30</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">Reprendre</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-left: 20px;"><input type="checkbox"></td>
+              <td>
+                <div style="font-weight: 500;"><a href="app-rapport.html" style="color: var(--fg);">Recrutement Q1 2026 — comparaison Q4 2025</a></div>
+                <div class="muted" style="font-size: 11px; font-family: var(--font-mono); margin-top: 2px;">RPT-2026-008 · 6e4b9a1…87f3</div>
+              </td>
+              <td><span class="badge badge--mono">M1</span></td>
+              <td><span class="status status--warn"><span class="status__dot"></span>Vigilance</span></td>
+              <td class="num">v1 · final</td>
+              <td class="num">22</td>
+              <td><div>14 avr.</div><div class="muted" style="font-size: 11px;">16:55</div></td>
+              <td style="text-align: right; padding-right: 20px;">
+                <a class="btn btn--ghost btn--sm">PDF ↓</a>
+                <a class="btn btn--ghost btn--sm">⋯</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="row row--between" style="padding: 14px 20px; border-top: 1px solid var(--border-subtle);">
+          <span class="muted" style="font-size: 12px;">7 sur 17 rapports affichés · filtré sur 90j</span>
+          <div class="row" style="gap: 6px;">
+            <button class="btn btn--ghost btn--sm">← Précédent</button>
+            <span class="badge badge--mono">1</span>
+            <span class="muted" style="font-size: 12px;">2</span>
+            <span class="muted" style="font-size: 12px;">3</span>
+            <button class="btn btn--ghost btn--sm">Suivant →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison panel -->
+      <div class="card mt-6">
+        <div class="row" style="gap: 14px; align-items: flex-start;">
+          <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 6h6M3 12h6M3 18h6M15 6h6M15 12h6M15 18h6"/></svg>
+          </span>
+          <div style="flex: 1;">
+            <h4 style="font-size: 15px;">Comparer 2 rapports côte à côte</h4>
+            <p style="color: var(--fg-secondary); font-size: 13px; margin-top: 4px; line-height: 1.55;">Sélectionnez deux rapports dans la liste pour voir l'évolution des métriques fairness dans le temps — utile pour mesurer l'impact d'une remédiation.</p>
+          </div>
+          <button class="btn btn--secondary btn--sm" style="flex-shrink: 0;">Sélectionner →</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app-partials.js"></script>
+</body>
+</html>

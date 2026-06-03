@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recommandations — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .reco-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 60px 1fr 200px;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .reco-card + .reco-card { margin-top: 12px; }
+  .reco-card--p1 { border-left: 3px solid var(--status-fail); }
+  .reco-card--p2 { border-left: 3px solid var(--status-warn); }
+  .reco-card--p3 { border-left: 3px solid var(--status-info); }
+  .reco-card__num {
+    width: 48px; height: 48px;
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .reco-card__num--p1 { background: var(--status-fail-bg); color: var(--status-fail); border: 1px solid var(--status-fail-border); }
+  .reco-card__num--p2 { background: var(--status-warn-bg); color: var(--status-warn); border: 1px solid var(--status-warn-border); }
+  .reco-card__num--p3 { background: var(--status-info-bg); color: var(--status-info); border: 1px solid var(--status-info-border); }
+  .reco-card__meta { display: flex; flex-direction: column; gap: 12px; padding-left: 16px; border-left: 1px solid var(--border-subtle); }
+  .reco-card__meta-row { display: flex; flex-direction: column; gap: 4px; }
+  .reco-card__meta-label { font-size: 11px; font-family: var(--font-mono); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .reco-card__meta-value { font-size: 13px; color: var(--fg); }
+
+  @media (max-width: 920px) {
+    .reco-card { grid-template-columns: 48px 1fr; }
+    .reco-card__meta { grid-column: 1 / -1; padding-left: 0; padding-top: 16px; border-left: 0; border-top: 1px solid var(--border-subtle); flex-direction: row; flex-wrap: wrap; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="recos"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Recommandations"></div>
+
+    <main class="app__content">
+
+      <div class="page-head">
+        <div>
+          <h1 class="page-head__title">Recommandations</h1>
+          <p class="page-head__lede">8 actions identifiées par AuditIQ sur l'ensemble de vos audits actifs · classées par priorité et par échéance AI Act.</p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--secondary btn--sm">Exporter en plan d'action</button>
+          <button class="btn btn--primary">Tout marquer comme lu</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4 mb-6">
+        <div class="kpi"><span class="kpi__label">Total ouvert</span><span class="kpi__value">8</span><span class="kpi__delta" style="color: var(--fg-muted);">3 fermées 30j</span></div>
+        <div class="kpi"><span class="kpi__label">Priorité 1 (critique)</span><span class="kpi__value" style="color: var(--status-fail);">3</span><span class="kpi__delta" style="color: var(--status-fail);">À traiter ≤ 30 j</span></div>
+        <div class="kpi"><span class="kpi__label">Priorité 2 (vigilance)</span><span class="kpi__value" style="color: var(--status-warn);">3</span><span class="kpi__delta" style="color: var(--fg-muted);">À traiter ≤ 90 j</span></div>
+        <div class="kpi"><span class="kpi__label">Ancrage AI Act</span><span class="kpi__value">6 / 8</span><span class="kpi__delta" style="color: var(--fg-muted);">Reliées à articles</span></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="row mb-6" style="gap: 12px; flex-wrap: wrap;">
+        <div class="tabs">
+          <a class="tab tab--active">Toutes · 8</a>
+          <a class="tab">Par module</a>
+          <a class="tab">Par article AI Act</a>
+          <a class="tab">Fermées · 3</a>
+        </div>
+        <select class="select" style="max-width: 200px; margin-left: auto;">
+          <option>Trier par priorité ▾</option>
+          <option>Trier par échéance</option>
+          <option>Trier par date</option>
+        </select>
+      </div>
+
+      <!-- Disclaimer top -->
+      <div class="legal-callout mb-6">
+        <strong>Disclaimer juridique :</strong> ces recommandations sont des pistes d'action issues d'une analyse statistique automatisée. Elles ne constituent pas un avis juridique. Pour toute décision opérationnelle ayant un impact RH ou contractuel, AuditIQ recommande de consulter un avocat spécialisé en droit social et droit numérique.
+      </div>
+
+      <!-- P1 #1 -->
+      <div class="reco-card reco-card--p1">
+        <div class="reco-card__num reco-card__num--p1">P1</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-018</span>
+            <span class="badge badge--mono">M1 · AUD-2026-014</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 10</span>
+            <span class="badge" style="background: var(--surface-2); border-color: var(--border); color: var(--fg-secondary);">Code travail · L.1132-1</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Suspendre le déploiement du modèle de scoring CV et rééquilibrer le jeu d'entraînement</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            Le jeu d'entraînement est composé à <strong style="color: var(--fg);">67% d'hommes</strong> (286 / 412), ce qui contribue au déséquilibre observé (DP 0.72). Procéder à un rééchantillonnage stratifié pour atteindre une parité 50/50, ou utiliser une pondération inverse à la fréquence du groupe. Re-auditer après remédiation.
+          </p>
+          <div class="row" style="gap: 8px;">
+            <a href="app-audit-m1.html" class="btn btn--secondary btn--sm">Voir l'audit source</a>
+            <button class="btn btn--ghost btn--sm">Marquer comme en cours</button>
+            <button class="btn btn--ghost btn--sm">Archiver</button>
+          </div>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row">
+            <span class="reco-card__meta-label">Échéance</span>
+            <span class="reco-card__meta-value">Sous 30 jours</span>
+          </div>
+          <div class="reco-card__meta-row">
+            <span class="reco-card__meta-label">Impact</span>
+            <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Élevé</span>
+          </div>
+          <div class="reco-card__meta-row">
+            <span class="reco-card__meta-label">Effort estimé</span>
+            <span class="reco-card__meta-value">~3 j data</span>
+          </div>
+          <div class="reco-card__meta-row">
+            <span class="reco-card__meta-label">Assignée à</span>
+            <span class="reco-card__meta-value">Non assignée</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- P1 #2 -->
+      <div class="reco-card reco-card--p1">
+        <div class="reco-card__num reco-card__num--p1">P1</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-017</span>
+            <span class="badge badge--mono">M2 · AUD-2026-013</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 10</span>
+            <span class="badge" style="background: var(--surface-2); border-color: var(--border); color: var(--fg-secondary);">Code pénal · 225-1</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Retirer la variable « code_postal_2 » du modèle de scoring crédit ou justifier formellement son usage</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            Cette variable est responsable à 61% de la formation du cluster déviant #3 (8% des dossiers, 2.4× le taux de refus moyen). En France, le code postal est fortement corrélé à l'origine géographique et socio-économique, ce qui en fait un <strong style="color: var(--fg);">proxy possible</strong> de critères protégés. Soit la retirer, soit produire une justification objective écrite acceptable par la DDD.
+          </p>
+          <div class="row" style="gap: 8px;">
+            <a href="app-audit-m2.html" class="btn btn--secondary btn--sm">Voir l'audit source</a>
+            <button class="btn btn--ghost btn--sm">Marquer comme en cours</button>
+          </div>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">Sous 30 jours</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Élevé</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Effort estimé</span><span class="reco-card__meta-value">~2 j data + juridique</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Assignée à</span><span class="reco-card__meta-value">Paul Mendy</span></div>
+        </div>
+      </div>
+
+      <!-- P1 #3 -->
+      <div class="reco-card reco-card--p1">
+        <div class="reco-card__num reco-card__num--p1">P1</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-016</span>
+            <span class="badge badge--mono">M3 · AUD-2026-012</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 13</span>
+            <span class="badge" style="background: var(--surface-2); border-color: var(--border); color: var(--fg-secondary);">Loi handicap 2005</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Réajuster le chatbot Mathys pour traiter explicitement les demandes mentionnant un handicap</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            Pattern récurrent identifié : le chatbot raccourcit ses réponses (−31%), refuse plus souvent (14%) et oriente vers un conseiller humain dès qu'un handicap est mentionné — sans répondre à la demande initiale. Cela peut être perçu comme un évitement de l'accessibilité numérique. Ajouter au prompt système des instructions explicites de traitement équitable, et tester en pre-déploiement.
+          </p>
+          <div class="row" style="gap: 8px;">
+            <a href="app-audit-m3.html" class="btn btn--secondary btn--sm">Voir l'audit source</a>
+            <button class="btn btn--ghost btn--sm">Marquer comme en cours</button>
+          </div>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">Sous 30 jours</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Élevé</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Effort estimé</span><span class="reco-card__meta-value">~5 j prompt eng.</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Assignée à</span><span class="reco-card__meta-value">Marc Benhamou</span></div>
+        </div>
+      </div>
+
+      <!-- P2 #1 -->
+      <div class="reco-card reco-card--p2">
+        <div class="reco-card__num reco-card__num--p2">P2</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-015</span>
+            <span class="badge badge--mono">M1 · AUD-2026-014</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 10</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Auditer le lexique d'évaluation du modèle de scoring CV</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            Une étude de Liu et al. 2024 montre que les verbes d'action codés positivement (« diriger », « négocier », « performer ») favorisent les CV utilisant un lexique masculin. Évaluer la pondération de ces tokens dans votre modèle et envisager un re-fine-tuning sur un lexique neutre.
+          </p>
+          <div class="row" style="gap: 8px;">
+            <button class="btn btn--ghost btn--sm">Marquer comme en cours</button>
+          </div>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">Sous 90 jours</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Modéré</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Effort estimé</span><span class="reco-card__meta-value">~10 j ML eng.</span></div>
+        </div>
+      </div>
+
+      <!-- P2 #2 -->
+      <div class="reco-card reco-card--p2">
+        <div class="reco-card__num reco-card__num--p2">P2</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-014</span>
+            <span class="badge badge--mono">M3 · AUD-2026-012</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 13</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Réviser le ton des réponses pour les prénoms perçus comme non-français</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            Écart de sentiment moyen de −0.18 entre les variantes avec prénoms perçus comme nord-africains (axe origine, score 2.6/5). Le ton est plus neutre / froid sans justification. Auditer les exemples de fine-tuning ou les ajustements de température.
+          </p>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">Sous 90 jours</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Modéré</span></div>
+        </div>
+      </div>
+
+      <!-- P2 #3 -->
+      <div class="reco-card reco-card--p2">
+        <div class="reco-card__num reco-card__num--p2">P2</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-013</span>
+            <span class="badge badge--mono">Couche transversale</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · annexe IV</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Compléter la documentation technique de vos 3 systèmes à haut risque</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            L'annexe IV du règlement (UE) 2024/1689 exige une documentation technique détaillée des systèmes IA à haut risque. AuditIQ détecte 4 sections manquantes : choix de conception, hypothèses, métriques d'évaluation, et plan de suivi post-marché.
+          </p>
+          <a href="app-support.html" class="btn btn--secondary btn--sm">Voir le modèle de documentation</a>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">Sous 90 jours</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Modéré</span></div>
+        </div>
+      </div>
+
+      <!-- P3 #1 -->
+      <div class="reco-card reco-card--p3">
+        <div class="reco-card__num reco-card__num--p3">P3</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-012</span>
+            <span class="badge badge--mono">Couche transversale</span>
+            <span class="badge" style="background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent);">AI Act · art. 17</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Configurer un audit récurrent mensuel sur les systèmes à haut risque</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65; margin-bottom: 12px;">
+            L'article 17 impose un système de gestion de la qualité incluant un suivi régulier. AuditIQ propose un audit programmable mensuel avec alerte automatique si DP &lt; 0.85. Cela aurait permis d'intercepter la dérive du modèle Recrutement Q2 avant qu'elle ne devienne critique.
+          </p>
+          <a href="app-parametres.html" class="btn btn--secondary btn--sm">Configurer →</a>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">À votre rythme</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--info"><span class="tl-pill__dot"></span>Faible</span></div>
+        </div>
+      </div>
+
+      <!-- P3 #2 -->
+      <div class="reco-card reco-card--p3">
+        <div class="reco-card__num reco-card__num--p3">P3</div>
+        <div>
+          <div class="row mb-2" style="gap: 8px; flex-wrap: wrap;">
+            <span class="badge badge--mono">RECO-2026-011</span>
+            <span class="badge badge--mono">Équipe</span>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Inviter un DPO ou un référent conformité en lecture seule</h3>
+          <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.65;">
+            Pour renforcer la traçabilité de vos audits, ajoutez un membre Spectateur (lecture seule des rapports et de l'historique) avec le rôle DPO ou référent conformité. Utile en cas de contrôle CNIL ou DDD.
+          </p>
+        </div>
+        <div class="reco-card__meta">
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Échéance</span><span class="reco-card__meta-value">À votre rythme</span></div>
+          <div class="reco-card__meta-row"><span class="reco-card__meta-label">Impact</span><span class="tl-pill tl-pill--info"><span class="tl-pill__dot"></span>Faible</span></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app-partials.js"></script>
+</body>
+</html>

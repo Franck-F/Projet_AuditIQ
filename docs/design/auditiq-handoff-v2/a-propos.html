@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>À propos — AuditIQ</title>
+<meta name="description" content="L'équipe, la mission, l'histoire d'AuditIQ. Plateforme française d'audit de fairness IA pour les PME.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<script src="assets/partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 18ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(20px, 1.5vw, 24px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.5; }
+
+  .manifesto { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  @media (max-width: 920px) { .manifesto { grid-template-columns: 1fr; gap: 32px; } }
+  .manifesto__points { display: flex; flex-direction: column; gap: 24px; }
+  .manifesto__point { display: grid; grid-template-columns: 40px 1fr; gap: 16px; }
+  .manifesto__point-num { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--accent); letter-spacing: 0.12em; padding-top: 6px; }
+  .manifesto__point h4 { font-size: var(--fs-h4); margin-bottom: 8px; }
+  .manifesto__point p { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.6; }
+
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 920px) { .team-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .team-grid { grid-template-columns: 1fr 1fr; } }
+  .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px; }
+  .team-card__avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 600; color: var(--fg-secondary); margin-bottom: 14px; font-size: 18px; }
+  .team-card h4 { font-size: 15px; margin-bottom: 4px; }
+  .team-card__role { font-size: var(--fs-xs); color: var(--fg-muted); margin-bottom: 10px; }
+  .team-card p { font-size: var(--fs-xs); color: var(--fg-secondary); line-height: 1.55; }
+
+  .timeline-row { display: grid; grid-template-columns: 120px 1fr; gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--border-subtle); }
+  .timeline-row__date { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--accent); letter-spacing: 0.04em; }
+  .timeline-row h4 { font-size: 15px; margin-bottom: 4px; }
+  .timeline-row p { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55; }
+  @media (max-width: 600px) { .timeline-row { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active=""></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">À propos</span>
+    <h1 style="margin-top: 16px;">Nous outillons la conformité IA des PME. Sans jargon, sans promesse.</h1>
+    <p class="lede">AuditIQ est une SAS française fondée à Paris en 2024 par trois cofondateurs venus de la statistique, du droit numérique et du design produit. Notre équipe compte 14 personnes au moment où nous écrivons ces lignes. Notre client le plus petit a 32 collaborateurs, le plus grand en a 1 200.</p>
+  </div>
+</header>
+
+<!-- MISSION -->
+<section class="section">
+  <div class="container">
+    <div class="manifesto">
+      <div>
+        <span class="eyebrow eyebrow--accent">Notre mission</span>
+        <h2 style="font-size: clamp(28px, 3vw, 36px); margin: 12px 0 24px; letter-spacing: -0.02em;">Rendre la fairness IA accessible aux 320 000 PME européennes qui en ont besoin.</h2>
+        <p style="color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.65; margin-bottom: 16px;">Les outils existants ont été conçus pour les grandes équipes data des géants tech américains. Les PME européennes, qui représentent 99 % des entreprises et 60 % de l'emploi, n'avaient rien à leur portée. Pourtant, ce sont elles que l'AI Act va le plus vite obliger à se mettre en règle.</p>
+        <p style="color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.65;">Notre conviction : la conformité ne doit ni coûter 50 k€ par audit, ni nécessiter un doctorat en statistique. Elle doit être routinière, abordable, traçable et compréhensible par les personnes qui en portent la responsabilité.</p>
+      </div>
+      <div>
+        <span class="eyebrow eyebrow--accent">Nos engagements</span>
+        <h3 style="font-size: var(--fs-h3); margin: 12px 0 24px; letter-spacing: -0.015em;">Six principes que nous tenons.</h3>
+        <div class="manifesto__points">
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">01</span>
+            <div>
+              <h4>Souveraineté</h4>
+              <p>Hébergement français. Données qui ne sortent pas d'Europe. Pas de dépendance à un cloud non européen, à aucune étape.</p>
+            </div>
+          </div>
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">02</span>
+            <div>
+              <h4>Lisibilité</h4>
+              <p>Chaque métrique technique est traduite en deux à trois phrases compréhensibles. Pas de jargon par défaut.</p>
+            </div>
+          </div>
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">03</span>
+            <div>
+              <h4>Honnêteté méthodologique</h4>
+              <p>Nous documentons nos méthodes, nos seuils par défaut et leurs limites. Pas de magie noire.</p>
+            </div>
+          </div>
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">04</span>
+            <div>
+              <h4>Modération du périmètre</h4>
+              <p>Nous ne sommes pas un certificateur. Nous ne sommes pas un cabinet d'avocats. Nous outillons une chaîne, sans la confisquer.</p>
+            </div>
+          </div>
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">05</span>
+            <div>
+              <h4>Accessibilité tarifaire</h4>
+              <p>Un palier gratuit permanent. Pas de pricing « parlons-en » avant 1 000 €/mois. Transparence sur les coûts cachés.</p>
+            </div>
+          </div>
+          <div class="manifesto__point">
+            <span class="manifesto__point-num">06</span>
+            <div>
+              <h4>Stabilité de l'API</h4>
+              <p>Aucune modification rétroactive de schéma de rapport. Vos audits restent comparables sur 5 ans.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="section" style="background: var(--surface);">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">Équipe</span>
+      <h2 class="section-header__title">14 personnes, 3 cofondateurs, 1 mission.</h2>
+      <p class="section-header__lede">Statistique, droit numérique, design produit, ingénierie cloud. Notre équipe combine des profils rares en France et en Europe.</p>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-card__avatar">CL</div>
+        <h4>Camille Loiseau</h4>
+        <div class="team-card__role">Cofondatrice · CEO</div>
+        <p>Docteure en statistique inférentielle (ENS-Cachan). Ex-Data Lead à la CNAM. Membre du groupe d'experts français sur l'IA équitable.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">YB</div>
+        <h4>Yann Bertin</h4>
+        <div class="team-card__role">Cofondateur · CPO</div>
+        <p>Ex-Lead Product Designer à Doctolib. 12 ans en SaaS B2B. Design des outils de conformité aux normes.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">ZK</div>
+        <h4>Zineb Khelifi</h4>
+        <div class="team-card__role">Cofondatrice · Chief Legal Officer</div>
+        <p>Avocate au Barreau de Paris, spécialiste droit numérique. Ex-conseillère de la Présidente du CSA. Co-rédactrice d'une note Ministère.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">MR</div>
+        <h4>Marc Renaud</h4>
+        <div class="team-card__role">Head of Engineering</div>
+        <p>Ex-Staff Engineer à Datadog Paris. 15 ans en architecture distribuée. Responsable de la plateforme.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">FA</div>
+        <h4>Fatou Amadou</h4>
+        <div class="team-card__role">Head of ML</div>
+        <p>Docteure en apprentissage profond (Inria). Ex-Mistral AI. Responsable du Module 3 et de la banque de prompts.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">PG</div>
+        <h4>Pauline Galland</h4>
+        <div class="team-card__role">Head of Compliance Research</div>
+        <p>Docteure en droit international (Sciences Po). Ex-rapporteure au Conseil d'État. Suivi des évolutions AI Act.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-card__avatar">+8</div>
+        <h4>L'équipe étendue</h4>
+        <div class="team-card__role">Engineering · Customer · Sales</div>
+        <p>Huit autres personnes basées à Paris, Lyon et Nantes. Linguistes, ingénieurs full-stack, customer success, account executives.</p>
+      </div>
+      <div class="team-card" style="background: var(--surface-2); border-style: dashed; display: flex; flex-direction: column; justify-content: center;">
+        <h4>Nous recrutons</h4>
+        <div class="team-card__role" style="margin-bottom: 12px;">3 postes ouverts</div>
+        <p>Senior ML Engineer (Module 2), Account Executive secteur banque, Compliance Researcher.</p>
+        <a href="#" style="color: var(--accent); font-size: var(--fs-xs); margin-top: 12px;">Voir les offres →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="gap: 64px; align-items: start;">
+      <div>
+        <span class="eyebrow eyebrow--accent">Histoire</span>
+        <h2 style="font-size: var(--fs-h2); margin: 12px 0 24px; letter-spacing: -0.015em;">L'histoire courte.</h2>
+        <p style="color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.65;">Le projet a commencé fin 2023, autour d'un constat partagé : aucun outil français ne permettait à une PME d'auditer la fairness de son IA sans expertise statistique. La société a été immatriculée en mars 2024. Première version produit en septembre 2024, premier client payant en novembre 2024.</p>
+      </div>
+      <div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">MARS 2024</span>
+          <div><h4>Fondation</h4><p>Immatriculation de la SAS. Premiers financements famille et amis (180 k€).</p></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">SEPT 2024</span>
+          <div><h4>v1 Beta</h4><p>Première version produit, Module 1 uniquement. 12 PME pilotes.</p></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">NOV 2024</span>
+          <div><h4>Premier client payant</h4><p>Banque Loiret signe le palier PME annuel.</p></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">FEV 2025</span>
+          <div><h4>Levée Pre-seed</h4><p>1,8 M€ avec Elaia Partners et Iris Capital comme lead. Cofondateurs majoritaires.</p></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">JUIN 2025</span>
+          <div><h4>Module 2 + Module 3</h4><p>Lancement des modules non supervisé et LLM. 32 clients payants.</p></div>
+        </div>
+        <div class="timeline-row">
+          <span class="timeline-row__date">NOV 2025</span>
+          <div><h4>Référencement Bpifrance</h4><p>AuditIQ intégré au catalogue French Tech « IA &amp; conformité ».</p></div>
+        </div>
+        <div class="timeline-row" style="border-bottom: 0;">
+          <span class="timeline-row__date">2026</span>
+          <div><h4>Aujourd'hui</h4><p>47 clients payants. Préparation de l'expansion DACH et Benelux. Certification ISO 27001 en cours.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INVESTORS -->
+<section class="section section--sm" style="background: var(--surface);">
+  <div class="container">
+    <div class="text-center">
+      <span class="eyebrow eyebrow--accent">Soutenus par</span>
+    </div>
+    <div class="logo-cloud" style="margin-top: 24px; border-top: 0; border-bottom: 0;">
+      <div class="logo-cloud__item">Elaia Partners</div>
+      <div class="logo-cloud__item">Iris Capital</div>
+      <div class="logo-cloud__item">Bpifrance</div>
+      <div class="logo-cloud__item">French Tech</div>
+      <div class="logo-cloud__item">Région IDF</div>
+      <div class="logo-cloud__item">European AI Office</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Travaillons ensemble</span>
+        <h2 style="margin-top: 12px;">Client, partenaire ou candidat ?</h2>
+        <p>Nous accompagnons des PME, des cabinets de conseil, des intégrateurs. Et nous recrutons.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Nous contacter</a>
+        <a class="btn btn--secondary" href="#">Voir les offres d'emploi</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>
