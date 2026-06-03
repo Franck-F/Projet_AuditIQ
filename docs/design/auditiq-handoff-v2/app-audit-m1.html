@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 1 — Audit supervisé — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  /* Section anchors with extra top spacing */
+  .m1-section { padding-top: 40px; scroll-margin-top: 80px; }
+  .m1-section + .m1-section { margin-top: 40px; border-top: 1px solid var(--border-subtle); }
+  .m1-section__head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .m1-section__head h2 { font-size: 22px; letter-spacing: -0.015em; font-weight: 600; }
+  .m1-section__head .label-mono { color: var(--accent); }
+
+  /* Result hero (the signature feu tricolore moment) */
+  .result-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+  }
+  .result-hero__left {
+    padding: 32px;
+    border-right: 1px solid var(--border-subtle);
+  }
+  .result-hero__right {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  @media (max-width: 920px) {
+    .result-hero { grid-template-columns: 1fr; }
+    .result-hero__left { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  }
+  .result-hero__verdict {
+    font-size: 48px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .result-hero__verdict mark { background: var(--status-fail-bg); color: var(--status-fail); padding: 2px 8px; border-radius: 4px; }
+  .result-hero__lede { color: var(--fg-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+
+  /* Metric mini-cards inside result */
+  .metric-quad { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .metric-mini {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .metric-mini__head { display: flex; justify-content: space-between; align-items: center; }
+  .metric-mini__name { font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.06em; color: var(--fg-muted); }
+  .metric-mini__value { font-family: var(--font-mono); font-size: 24px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .metric-mini__threshold { font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); }
+  .metric-mini__bar { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; position: relative; margin-top: 4px; }
+  .metric-mini__fill { height: 100%; border-radius: 2px; }
+  .metric-mini__th-line { position: absolute; top: -4px; bottom: -4px; width: 1.5px; background: var(--fg-secondary); opacity: 0.5; }
+
+  /* Group comparison */
+  .group-comp {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .group-comp__pane {
+    padding: 20px;
+    background: var(--surface);
+  }
+  .group-comp__pane + .group-comp__pane { border-left: 1px solid var(--border-subtle); }
+  .group-comp__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .group-comp__name { font-size: 14px; font-weight: 500; }
+  .group-comp__pop { font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); }
+  .group-comp__rate { font-family: var(--font-mono); font-size: 32px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; }
+  .group-comp__rate-suffix { font-size: 14px; color: var(--fg-muted); margin-left: 4px; font-family: var(--font-body); }
+
+  /* Confusion matrix */
+  .conf {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .conf > div {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+  }
+  .conf > div:last-child, .conf > div:nth-child(3n) { border-right: 0; }
+  .conf__corner { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; background: var(--surface-2); }
+  .conf__head { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; background: var(--surface-2); }
+  .conf__row-head { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; background: var(--surface-2); }
+  .conf__num { font-family: var(--font-mono); font-size: 22px; font-weight: 500; }
+  .conf__pct { font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px; }
+
+  /* Setup wizard sticky steps */
+  .wizard-steps {
+    position: sticky; top: var(--topbar-h);
+    background: var(--bg);
+    padding: 14px 0;
+    z-index: 30;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="m1"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Audits · Module 1 · Recrutement Q2 2026" data-no-cta="true"></div>
+
+    <main class="app__content">
+
+      <!-- ============================================== -->
+      <!-- Page head with status -->
+      <!-- ============================================== -->
+      <div class="page-head">
+        <div>
+          <div class="row" style="gap: 10px; margin-bottom: 10px;">
+            <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Risque critique</span>
+            <span class="badge badge--mono">AUD-2026-014</span>
+            <span class="muted" style="font-size: 12px;">M1 supervisé · v2 · Aujourd'hui 10:42</span>
+          </div>
+          <h1 class="page-head__title">Audit — Recrutement Q2 2026</h1>
+          <p class="page-head__lede">Scoring de candidatures · attribut sensible analysé : <strong style="color: var(--fg);">genre</strong> · dataset recrutement.csv (412 lignes)</p>
+        </div>
+        <div class="page-head__actions">
+          <a href="#configuration" class="btn btn--secondary btn--sm">Voir la configuration</a>
+          <a href="app-rapport.html" class="btn btn--secondary">Voir le rapport</a>
+          <button class="btn btn--primary">Exporter ↓</button>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- 1) RÉSULTATS — Hero (le pivot signature) -->
+      <!-- ============================================== -->
+      <section id="resultats">
+
+        <div class="result-hero">
+          <!-- Left: verdict + traffic light -->
+          <div class="result-hero__left">
+            <span class="label-mono" style="color: var(--accent);">Résultat global · feu tricolore</span>
+
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 24px; margin-top: 16px; align-items: center;">
+              <div>
+                <div class="result-hero__verdict">
+                  L'audit signale un <mark>risque de discrimination</mark> sur l'attribut « genre ».
+                </div>
+                <div class="result-hero__lede">
+                  La règle des 4/5 n'est pas respectée (DP = 0.72, en dessous du seuil 0.80 recommandé par l'AI Act). Les candidatures Femmes sont sélectionnées 28% moins souvent que les Hommes à compétences équivalentes.
+                </div>
+              </div>
+
+              <!-- Traffic light vertical -->
+              <div class="traffic-light">
+                <div class="traffic-light__lamp"></div>
+                <div class="traffic-light__lamp"></div>
+                <div class="traffic-light__lamp traffic-light__lamp--on traffic-light__lamp--fail"></div>
+              </div>
+            </div>
+
+            <div class="divider" style="margin: 24px 0;"></div>
+
+            <!-- Quick stats -->
+            <div class="stat-split" style="border: 0; padding: 0;">
+              <div class="stat-split__cell"><span class="stat-split__num">412</span><span class="stat-split__lbl">Lignes analysées</span></div>
+              <div class="stat-split__cell"><span class="stat-split__num">2</span><span class="stat-split__lbl">Groupes (Hommes · Femmes)</span></div>
+              <div class="stat-split__cell"><span class="stat-split__num" style="color: var(--status-fail);">3 / 4</span><span class="stat-split__lbl">Métriques échouées</span></div>
+              <div class="stat-split__cell"><span class="stat-split__num">12 min</span><span class="stat-split__lbl">Durée de calcul</span></div>
+            </div>
+          </div>
+
+          <!-- Right: 4 fairness metrics -->
+          <div class="result-hero__right">
+            <span class="label-mono">Détail par métrique</span>
+
+            <div class="metric-quad">
+              <!-- Demographic Parity -->
+              <div class="metric-mini">
+                <div class="metric-mini__head">
+                  <span class="metric-mini__name">Demographic Parity</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Fail</span>
+                </div>
+                <span class="metric-mini__value">0.72</span>
+                <span class="metric-mini__threshold">Seuil 0.80–1.25 · règle des 4/5</span>
+                <div class="metric-mini__bar">
+                  <div class="metric-mini__fill" style="width: 72%; background: var(--status-fail);"></div>
+                  <div class="metric-mini__th-line" style="left: 80%;"></div>
+                </div>
+              </div>
+
+              <!-- Equal Opportunity -->
+              <div class="metric-mini">
+                <div class="metric-mini__head">
+                  <span class="metric-mini__name">Equal Opportunity</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Fail</span>
+                </div>
+                <span class="metric-mini__value">0.74</span>
+                <span class="metric-mini__threshold">Seuil 0.85–1.15</span>
+                <div class="metric-mini__bar">
+                  <div class="metric-mini__fill" style="width: 74%; background: var(--status-fail);"></div>
+                  <div class="metric-mini__th-line" style="left: 85%;"></div>
+                </div>
+              </div>
+
+              <!-- Equalized Odds -->
+              <div class="metric-mini">
+                <div class="metric-mini__head">
+                  <span class="metric-mini__name">Equalized Odds</span>
+                  <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Warn</span>
+                </div>
+                <span class="metric-mini__value">0.84</span>
+                <span class="metric-mini__threshold">Seuil 0.85–1.15</span>
+                <div class="metric-mini__bar">
+                  <div class="metric-mini__fill" style="width: 84%; background: var(--status-warn);"></div>
+                  <div class="metric-mini__th-line" style="left: 85%;"></div>
+                </div>
+              </div>
+
+              <!-- Four-fifths rule -->
+              <div class="metric-mini">
+                <div class="metric-mini__head">
+                  <span class="metric-mini__name">Règle 4/5</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Fail</span>
+                </div>
+                <span class="metric-mini__value">0.72</span>
+                <span class="metric-mini__threshold">Seuil 0.80 · US EEOC</span>
+                <div class="metric-mini__bar">
+                  <div class="metric-mini__fill" style="width: 72%; background: var(--status-fail);"></div>
+                  <div class="metric-mini__th-line" style="left: 80%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Natural language explanation -->
+        <div class="card card--xl mt-6">
+          <div class="row" style="gap: 14px; align-items: flex-start;">
+            <span style="width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 11h1v6h1"/></svg>
+            </span>
+            <div style="flex: 1;">
+              <h4 style="font-size: 16px; margin-bottom: 12px;">Explication en langage naturel</h4>
+              <p style="color: var(--fg-secondary); line-height: 1.7; margin-bottom: 12px;">
+                Sur les 412 candidatures analysées, <strong style="color: var(--fg);">126 Femmes</strong> et <strong style="color: var(--fg);">286 Hommes</strong> ont été évalués par le modèle de scoring. <strong style="color: var(--fg);">37,5%</strong> des candidatures Hommes ont franchi le seuil de présélection, contre seulement <strong style="color: var(--status-fail);">27,0%</strong> des Femmes — soit un écart absolu de 10,5 points et un ratio de 0,72.
+              </p>
+              <p style="color: var(--fg-secondary); line-height: 1.7; margin-bottom: 12px;">
+                Ce ratio est en dessous du seuil de 0,80 retenu par la règle des 4/5 (origine US EEOC) et largement référencé dans la jurisprudence française et européenne sur les discriminations indirectes. Les écarts persistent même en contrôlant pour le niveau d'expérience et le diplôme — ce qui suggère une discrimination indirecte non justifiée par un besoin légitime.
+              </p>
+              <p style="color: var(--fg-secondary); line-height: 1.7;">
+                <strong style="color: var(--fg);">Recommandations prioritaires</strong> : revoir le pipeline de scoring CV (notamment la pondération des verbes d'action, où une étude récente montre un biais en faveur du lexique masculin) ; appliquer un re-balancing du jeu d'entraînement ; documenter la décision avant tout déploiement.
+              </p>
+            </div>
+            <a href="app-recommandations.html" class="btn btn--secondary btn--sm" style="flex-shrink: 0;">Voir les 3 recommandations →</a>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 2) DÉTAIL PAR GROUPE -->
+      <!-- ============================================== -->
+      <section id="par-groupe" class="m1-section">
+        <div class="m1-section__head">
+          <span class="label-mono">02 / 04</span>
+          <h2>Détail par groupe</h2>
+          <span class="muted" style="font-size: 13px;">Décomposition Hommes / Femmes pour chaque métrique</span>
+        </div>
+
+        <!-- Selection rate comparison -->
+        <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 12px;">Taux de sélection (Demographic Parity)</h4>
+        <div class="ratio-bar mb-6">
+          <div class="ratio-bar__left" style="border-color: var(--status-pass-border); background: linear-gradient(180deg, var(--status-pass-bg), transparent 80%), var(--surface);">
+            <span class="ratio-bar__group">Groupe favorisé · Hommes</span>
+            <span class="ratio-bar__pct">37.5%</span>
+            <span class="muted" style="font-size: 12px;">107 sélectionnés sur 286 · n = 286</span>
+          </div>
+          <span class="ratio-bar__divider">vs</span>
+          <div class="ratio-bar__right" style="border-color: var(--status-fail-border); background: linear-gradient(180deg, var(--status-fail-bg), transparent 80%), var(--surface);">
+            <span class="ratio-bar__group">Groupe défavorisé · Femmes</span>
+            <span class="ratio-bar__pct" style="color: var(--status-fail);">27.0%</span>
+            <span class="muted" style="font-size: 12px;">34 sélectionnés sur 126 · n = 126</span>
+          </div>
+        </div>
+
+        <!-- Bar comparison detailed -->
+        <div class="card mb-6">
+          <h4 style="font-size: 14px; margin-bottom: 16px;">Comparaison détaillée — tous les indicateurs</h4>
+          <div>
+            <div class="bar-row">
+              <span class="bar-row__label">Taux de sélection · Hommes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill" style="width: 37.5%;"></div></div>
+              <span class="bar-row__value">37.5%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-row__label">Taux de sélection · Femmes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill bar-row__fill--fail" style="width: 27.0%;"></div></div>
+              <span class="bar-row__value">27.0%</span>
+            </div>
+            <div class="divider" style="margin: 12px 0;"></div>
+            <div class="bar-row">
+              <span class="bar-row__label">Vrais positifs · Hommes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill" style="width: 78%;"></div></div>
+              <span class="bar-row__value">78%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-row__label">Vrais positifs · Femmes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill bar-row__fill--warn" style="width: 58%;"></div></div>
+              <span class="bar-row__value">58%</span>
+            </div>
+            <div class="divider" style="margin: 12px 0;"></div>
+            <div class="bar-row">
+              <span class="bar-row__label">Faux négatifs · Hommes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill bar-row__fill--warn" style="width: 22%;"></div></div>
+              <span class="bar-row__value">22%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-row__label">Faux négatifs · Femmes</span>
+              <div class="bar-row__bar"><div class="bar-row__fill bar-row__fill--fail" style="width: 42%;"></div></div>
+              <span class="bar-row__value">42%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confusion matrices side by side -->
+        <h4 style="font-size: 14px; margin-bottom: 12px;">Matrices de confusion par groupe</h4>
+        <div class="grid-2">
+          <div>
+            <div class="row" style="margin-bottom: 8px;">
+              <span class="badge">Hommes · n = 286</span>
+              <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Référence</span>
+            </div>
+            <div class="conf" style="grid-template-columns: 64px 1fr 1fr;">
+              <div class="conf__corner"></div>
+              <div class="conf__head" style="text-align: center;">Prédit positif</div>
+              <div class="conf__head" style="text-align: center;">Prédit négatif</div>
+              <div class="conf__row-head">Réel +</div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-pass);">84</span><div class="conf__pct">29.4%</div></div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-fail);">24</span><div class="conf__pct">8.4%</div></div>
+              <div class="conf__row-head">Réel −</div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-warn);">23</span><div class="conf__pct">8.0%</div></div>
+              <div style="text-align: center;"><span class="conf__num">155</span><div class="conf__pct">54.2%</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="row" style="margin-bottom: 8px;">
+              <span class="badge">Femmes · n = 126</span>
+              <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Défavorisé</span>
+            </div>
+            <div class="conf" style="grid-template-columns: 64px 1fr 1fr;">
+              <div class="conf__corner"></div>
+              <div class="conf__head" style="text-align: center;">Prédit positif</div>
+              <div class="conf__head" style="text-align: center;">Prédit négatif</div>
+              <div class="conf__row-head">Réel +</div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-pass);">25</span><div class="conf__pct">19.8%</div></div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-fail);">18</span><div class="conf__pct">14.3%</div></div>
+              <div class="conf__row-head">Réel −</div>
+              <div style="text-align: center;"><span class="conf__num" style="color: var(--status-warn);">9</span><div class="conf__pct">7.1%</div></div>
+              <div style="text-align: center;"><span class="conf__num">74</span><div class="conf__pct">58.7%</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-callout mt-6">
+          <strong>Lecture juridique :</strong> Un écart de taux de sélection de cette ampleur (10,5 points, ratio 0,72) constitue un indicateur de discrimination indirecte au sens de l'article L.1132-1 du Code du travail français et de l'article 23 de la directive 2006/54/CE. La charge de la preuve s'inverse : l'employeur doit pouvoir justifier objectivement et raisonnablement la différence par un but légitime et des moyens proportionnés.
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 3) DÉTAIL PAR MÉTRIQUE -->
+      <!-- ============================================== -->
+      <section id="par-metrique" class="m1-section">
+        <div class="m1-section__head">
+          <span class="label-mono">03 / 04</span>
+          <h2>Détail par métrique</h2>
+          <span class="muted" style="font-size: 13px;">Définition, formule, calcul, interprétation</span>
+        </div>
+
+        <!-- Tabs to switch between metrics -->
+        <div class="tabbar">
+          <a class="tabbar__tab tabbar__tab--active">Demographic Parity</a>
+          <a class="tabbar__tab">Equal Opportunity</a>
+          <a class="tabbar__tab">Equalized Odds</a>
+          <a class="tabbar__tab">Règle des 4/5</a>
+        </div>
+
+        <div class="card card--xl">
+          <div class="row row--between" style="margin-bottom: 20px;">
+            <div>
+              <span class="label-mono">Métrique sélectionnée</span>
+              <h3 style="margin-top: 6px;">Demographic Parity (DP)</h3>
+            </div>
+            <div class="row" style="gap: 12px;">
+              <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>0.72 / seuil 0.80</span>
+              <button class="btn btn--ghost btn--sm">Ajuster les seuils →</button>
+            </div>
+          </div>
+
+          <div class="grid-2" style="gap: 32px;">
+            <div>
+              <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 10px;">Définition</h4>
+              <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.7;">
+                Le Demographic Parity compare le taux de prédictions positives entre groupes. Une valeur de 1.0 signifie que les deux groupes sont sélectionnés exactement au même taux. Une valeur inférieure à 1 indique que le groupe minoritaire est moins souvent sélectionné.
+              </p>
+              <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 10px; margin-top: 20px;">Formule</h4>
+              <div class="code">
+DP = <span class="code__token--accent">P(Ŷ=1 | A=femme)</span> / <span class="code__token--accent">P(Ŷ=1 | A=homme)</span>
+   = 0.270 / 0.375
+   = <span class="code__token--var">0.72</span>
+              </div>
+
+              <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 10px; margin-top: 20px;">Sensibilité</h4>
+              <ul style="list-style: none; padding: 0; margin: 0; font-size: 13px; color: var(--fg-secondary); line-height: 1.7;">
+                <li>· Ne tient pas compte du mérite réel — mesure l'égalité brute</li>
+                <li>· Sensible aux différences de population de base</li>
+                <li>· Métrique préférée par le droit français pour les indicateurs de discrimination indirecte</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 10px;">Calcul détaillé</h4>
+              <table class="table">
+                <thead>
+                  <tr><th>Groupe</th><th class="num">Pop.</th><th class="num">Pred. +</th><th class="num">Taux</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Hommes (référence)</td><td class="num">286</td><td class="num">107</td><td class="num">37.5%</td></tr>
+                  <tr><td>Femmes</td><td class="num">126</td><td class="num">34</td><td class="num" style="color: var(--status-fail);">27.0%</td></tr>
+                </tbody>
+              </table>
+
+              <h4 style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 10px; margin-top: 20px;">Distribution dans le temps</h4>
+              <svg viewBox="0 0 400 120" style="width: 100%; height: 120px;">
+                <!-- grid -->
+                <line x1="0" y1="20" x2="400" y2="20" stroke="var(--border-subtle)" stroke-dasharray="2,4"/>
+                <line x1="0" y1="60" x2="400" y2="60" stroke="var(--border-subtle)" stroke-dasharray="2,4"/>
+                <line x1="0" y1="100" x2="400" y2="100" stroke="var(--border-subtle)"/>
+                <!-- threshold -->
+                <line x1="0" y1="24" x2="400" y2="24" stroke="var(--accent)" stroke-dasharray="4,3" opacity="0.7"/>
+                <text x="396" y="20" text-anchor="end" font-family="var(--font-mono)" font-size="9" fill="var(--accent)">Seuil 0.80</text>
+                <!-- DP line -->
+                <polyline points="20,40 70,42 120,38 170,46 220,52 270,58 320,68 370,76"
+                          fill="none" stroke="var(--status-fail)" stroke-width="2"/>
+                <!-- dots -->
+                <circle cx="370" cy="76" r="4" fill="var(--status-fail)"/>
+                <text x="370" y="92" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--fg-muted)">10/05</text>
+                <text x="20" y="92" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--fg-muted)">15/03</text>
+              </svg>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">DP en baisse progressive sur les 8 dernières semaines, passée sous le seuil le 22 avril.</p>
+            </div>
+          </div>
+
+          <div class="alert alert--warn mt-6">
+            <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.86a2 2 0 0 1 3.4 0l8.4 14.1a2 2 0 0 1-1.7 3H3.6a2 2 0 0 1-1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>
+            <div class="alert__body">
+              <div class="alert__title">Interprétation pour Cabinet Tessier</div>
+              <div class="alert__text">Avec un Demographic Parity de 0.72, le modèle de scoring CV sélectionne les femmes <strong style="color: var(--fg);">28%</strong> moins souvent que les hommes. Si vous déployez ce modèle en l'état, vous êtes exposée à un signalement par la DDD et à un risque contentieux selon l'article L.1132-1 du Code du travail.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 4) CONFIGURATION (collapsed by default, anchor only) -->
+      <!-- ============================================== -->
+      <section id="configuration" class="m1-section">
+        <div class="m1-section__head">
+          <span class="label-mono">04 / 04</span>
+          <h2>Configuration de l'audit</h2>
+          <span class="muted" style="font-size: 13px;">Étapes complétées · réutilisables pour un nouveau passage</span>
+        </div>
+
+        <!-- Stepper completed -->
+        <div class="stepper">
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Upload</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Mapping colonnes</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Variables</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Métriques</span></div>
+          <div class="step__connector step__connector--done"></div>
+          <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Audit terminé</span></div>
+        </div>
+
+        <div class="grid-2 mb-6">
+          <!-- Step 1: file -->
+          <div class="card">
+            <span class="label-mono">Étape 1 · Dataset importé</span>
+            <div class="file-pill mt-4">
+              <span class="file-pill__icon">CSV</span>
+              <div style="flex: 1;">
+                <div class="file-pill__name">recrutement_q2_2026.csv</div>
+                <div class="file-pill__meta">412 lignes · 18 colonnes · 84 KB · 10:30</div>
+              </div>
+              <button class="btn btn--ghost btn--sm">Remplacer</button>
+            </div>
+          </div>
+
+          <!-- Step 3: target + sensitive -->
+          <div class="card">
+            <span class="label-mono">Étape 3 · Variables choisies</span>
+            <div class="mt-4" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="col-map">
+                <code class="col-map__left">decision_finale</code>
+                <span class="col-map__arrow">→</span>
+                <div class="col-map__right">
+                  <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">Variable cible</span>
+                </div>
+              </div>
+              <div class="col-map">
+                <code class="col-map__left">genre</code>
+                <span class="col-map__arrow">→</span>
+                <div class="col-map__right">
+                  <span class="badge badge--mono" style="border-color: var(--status-info-border); background: var(--status-info-bg); color: var(--status-info);">Attribut sensible</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: mapping (collapsed-ish list) -->
+        <div class="card mb-6">
+          <span class="label-mono">Étape 2 · Mapping des colonnes (18)</span>
+          <table class="table mt-4">
+            <thead>
+              <tr><th>Colonne du fichier</th><th>Type détecté</th><th>Rôle</th><th>Validité</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">candidate_id</code></td><td class="muted">Identifiant</td><td>Identifiant unique</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">age</code></td><td class="muted">Numérique</td><td>Variable explicative</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">genre</code></td><td class="muted">Catégoriel · 2 valeurs</td><td>Attribut sensible</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">diplome</code></td><td class="muted">Catégoriel · 6 valeurs</td><td>Variable explicative</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">experience_annees</code></td><td class="muted">Numérique</td><td>Variable explicative</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">score_modele</code></td><td class="muted">Numérique · 0-1</td><td>Score continu</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td><code style="font-family: var(--font-mono); font-size: 12px;">decision_finale</code></td><td class="muted">Booléen</td><td>Variable cible</td><td><span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>OK</span></td></tr>
+              <tr><td colspan="4" class="muted" style="text-align: center; font-size: 12px;">+ 11 colonnes ignorées · <a href="#" style="color: var(--fg-secondary);">Voir tout →</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 4: metrics config -->
+        <div class="card mb-6">
+          <span class="label-mono">Étape 4 · Métriques activées</span>
+          <div class="grid-2 mt-4" style="gap: 12px;">
+            <div class="row" style="padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); justify-content: space-between;">
+              <div>
+                <div style="font-size: 13px; font-weight: 500;">Demographic Parity</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">Seuil 0.80 / 1.25</div>
+              </div>
+              <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Active</span>
+            </div>
+            <div class="row" style="padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); justify-content: space-between;">
+              <div>
+                <div style="font-size: 13px; font-weight: 500;">Equal Opportunity</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">Seuil 0.85 / 1.15</div>
+              </div>
+              <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Active</span>
+            </div>
+            <div class="row" style="padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); justify-content: space-between;">
+              <div>
+                <div style="font-size: 13px; font-weight: 500;">Equalized Odds</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">Seuil 0.85 / 1.15</div>
+              </div>
+              <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Active</span>
+            </div>
+            <div class="row" style="padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md); justify-content: space-between;">
+              <div>
+                <div style="font-size: 13px; font-weight: 500;">Règle des 4/5 (US EEOC)</div>
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--font-mono); margin-top: 2px;">Seuil 0.80 strict</div>
+              </div>
+              <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard examples — empty / loading / error -->
+        <details style="margin-top: 32px;">
+          <summary style="font-size: 14px; color: var(--fg-secondary); cursor: pointer; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-md);">Voir les états du wizard (upload · audit en cours · erreur · données invalides)</summary>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Dropzone empty -->
+            <div>
+              <span class="label-mono mb-4">État 1 · Upload — dropzone vide</span>
+              <div class="dropzone mt-4">
+                <span class="dropzone__icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                </span>
+                <div class="dropzone__title">Glissez votre dataset ici ou parcourez vos fichiers</div>
+                <div class="dropzone__hint">CSV, Excel (.xlsx), Parquet · jusqu'à 500 000 lignes · UTF-8</div>
+                <button class="btn btn--secondary">Choisir un fichier</button>
+                <div style="font-size: 11px; color: var(--fg-muted); margin-top: 8px;">Vos données restent dans l'UE · chiffrement AES-256 au repos</div>
+              </div>
+            </div>
+
+            <!-- Audit running -->
+            <div>
+              <span class="label-mono mb-4">État 2 · Audit en cours</span>
+              <div class="card card--xl mt-4">
+                <div class="row" style="gap: 16px; align-items: center;">
+                  <div class="spinner"></div>
+                  <div style="flex: 1;">
+                    <h4 style="font-size: 16px;">Audit en cours… étape 3 sur 5 · Calcul des métriques fairness</h4>
+                    <p style="color: var(--fg-secondary); font-size: 13px; margin-top: 4px;">Temps écoulé : 8 min 12 s · estimation restante : 3 min 50 s</p>
+                  </div>
+                  <button class="btn btn--secondary btn--sm">Annuler l'audit</button>
+                </div>
+                <div class="progress progress--striped mt-6"><div class="progress__fill" style="width: 65%;"></div></div>
+                <ul style="list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fg-secondary);">
+                  <li>✓ Vérification de l'intégrité du dataset (412 lignes lues)</li>
+                  <li>✓ Détection et imputation des valeurs manquantes (3 cellules)</li>
+                  <li style="color: var(--fg);">→ Calcul du Demographic Parity sur le groupe "genre"…</li>
+                  <li class="muted">— Calcul d'Equal Opportunity</li>
+                  <li class="muted">— Calcul d'Equalized Odds</li>
+                  <li class="muted">— Génération de l'explication en langage naturel</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Error -->
+            <div>
+              <span class="label-mono mb-4">État 3 · Erreur · données invalides</span>
+              <div class="alert alert--fail mt-4">
+                <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                <div class="alert__body">
+                  <div class="alert__title">Audit interrompu — La colonne "genre" contient 47 valeurs manquantes (38% du dataset)</div>
+                  <div class="alert__text" style="margin-top: 6px;">Au-delà de 20% de valeurs manquantes sur l'attribut sensible, AuditIQ ne peut pas garantir la fiabilité statistique des métriques fairness. Trois options :</div>
+                  <ul style="margin-top: 10px; padding-left: 18px; color: var(--fg-secondary); font-size: 13px; line-height: 1.7;">
+                    <li>Compléter manuellement les 47 valeurs et recharger le fichier</li>
+                    <li>Imputer automatiquement (mode déconseillé pour un attribut sensible)</li>
+                    <li>Passer en Module 2 non supervisé qui ne requiert pas d'attribut sensible explicite</li>
+                  </ul>
+                  <div class="row mt-4" style="gap: 8px;">
+                    <button class="btn btn--secondary btn--sm">Remplacer le fichier</button>
+                    <a href="app-audit-m2.html" class="btn btn--primary btn--sm">Passer en Module 2 →</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/app-partials.js"></script>
+</body>
+</html>

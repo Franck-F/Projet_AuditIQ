@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparatif — AuditIQ</title>
+<meta name="description" content="AuditIQ comparé aux alternatives : bibliothèques open source, plateformes anglo-saxonnes, audit Excel maison, cabinets de conseil.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .matrix { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .matrix th, .matrix td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; font-size: var(--fs-sm); }
+  .matrix th { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); font-weight: 500; background: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .matrix th.us { color: var(--accent); background: var(--accent-soft); border-bottom-color: var(--accent-border); }
+  .matrix .group-row td { background: var(--surface-2); font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+  .matrix td:not(:first-child) { text-align: center; }
+  .matrix-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
+  .matrix-wrap .matrix { min-width: 880px; }
+
+  .pos-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px; display: flex; flex-direction: column; gap: 16px; height: 100%; }
+  .pos-card h4 { font-size: var(--fs-h4); }
+  .pos-card__type { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+  .pos-card p { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6; }
+  .pos-card__verdict { display: flex; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border-subtle); margin-top: auto; }
+  .pos-card__price { font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="produit"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Comparatif</span>
+    <h1 style="margin-top: 16px;">Quelle solution choisir pour auditer la fairness de votre IA ?</h1>
+    <p class="lede">Quatre catégories d'alternatives existent. Aucune n'est mauvaise — elles répondent à des besoins différents. Voici quand chacune est pertinente, et où AuditIQ se positionne. Notre objectif : vous aider à faire le bon choix, pas à nous vendre par défaut.</p>
+  </div>
+</header>
+
+<!-- POSITIONING CARDS -->
+<section class="section section--sm">
+  <div class="container">
+    <div class="grid-3">
+      <div class="pos-card">
+        <span class="pos-card__type">Bibliothèques open source</span>
+        <h4>Fairlearn, AIF360, Aequitas</h4>
+        <p>Bibliothèques Python développées par Microsoft, IBM et l'Université de Chicago. Excellentes pour des data scientists. Requièrent du code, des notebooks, une expertise statistique.</p>
+        <div class="pos-card__verdict">
+          <span class="badge">Gratuit</span>
+          <span class="badge">Pour data teams</span>
+        </div>
+      </div>
+      <div class="pos-card">
+        <span class="pos-card__type">Plateformes anglo-saxonnes</span>
+        <h4>Fiddler AI, Holistic AI</h4>
+        <p>Plateformes SaaS US/UK. Surface produit moderne, fonctionnalités riches. Pensées pour de grandes équipes ML/MLOps. Interface anglaise, ancrage régulatoire US/UK.</p>
+        <div class="pos-card__verdict">
+          <span class="pos-card__price">$2k+ / mois</span>
+          <span class="badge">Pour grandes équipes</span>
+        </div>
+      </div>
+      <div class="pos-card">
+        <span class="pos-card__type">Cabinets de conseil</span>
+        <h4>Audit ponctuel</h4>
+        <p>Cabinets d'avocats, cabinets data ou compliance. Approche projet, livrable PDF. Pas d'outillage récurrent. Coût élevé, calendrier long, difficile à reproduire.</p>
+        <div class="pos-card__verdict">
+          <span class="pos-card__price">15–60 k€ / audit</span>
+          <span class="badge">Ponctuel</span>
+        </div>
+      </div>
+      <div class="pos-card" style="border-color: var(--accent-border); background: linear-gradient(180deg, var(--accent-soft), transparent 50%), var(--surface);">
+        <span class="pos-card__type" style="color: var(--accent);">AuditIQ</span>
+        <h4>SaaS spécialisé PME EU</h4>
+        <p>Plateforme française, sans code, alignée AI Act, conçue pour des PME sans data team dédiée. Interface en français, hébergement français, rapports opposables, conservation 5 ans.</p>
+        <div class="pos-card__verdict">
+          <span class="pos-card__price">À partir de 0 €</span>
+          <span class="badge" style="background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border);">Pour PME conformité</span>
+        </div>
+      </div>
+      <div class="pos-card">
+        <span class="pos-card__type">Audit Excel maison</span>
+        <h4>Tableurs internes</h4>
+        <p>Approche bricolée par les équipes data internes — extraction manuelle, calculs Excel, restitution PowerPoint. Coût caché élevé, traçabilité faible, non reproductible.</p>
+        <div class="pos-card__verdict">
+          <span class="pos-card__price">5–15 j-h / audit</span>
+          <span class="badge">Non viable AI Act</span>
+        </div>
+      </div>
+      <div class="pos-card">
+        <span class="pos-card__type">Plateformes généralistes</span>
+        <h4>MLflow, Vertex, SageMaker</h4>
+        <p>Plateformes ML qui incluent des modules de fairness en accessoire. Utiles pour les équipes déjà sur ces stacks. Pas pensées pour la conformité réglementaire EU spécifique.</p>
+        <div class="pos-card__verdict">
+          <span class="pos-card__price">Inclus dans le stack</span>
+          <span class="badge">Accessoire</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DETAILED MATRIX -->
+<section class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">Comparaison détaillée</span>
+      <h2 class="section-header__title">Critère par critère.</h2>
+      <p class="section-header__lede">Sept critères qui comptent pour une PME française en 2026.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="width: 28%;">Critère</th>
+            <th class="us">AuditIQ</th>
+            <th>Fairlearn / AIF360</th>
+            <th>Fiddler / Holistic AI</th>
+            <th>Audit Excel interne</th>
+            <th>Cabinet conseil</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group-row"><td colspan="6">Accessibilité</td></tr>
+          <tr><td>Sans code requis</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">~</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+          <tr><td>Interface en français</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td><td>—</td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+          <tr><td>Onboarding pour non-techniques</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+
+          <tr class="group-row"><td colspan="6">Ancrage réglementaire</td></tr>
+          <tr><td>Rattachement AI Act</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+          <tr><td>Rapport structuré Annexe IV</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+          <tr><td>Droit français référencé</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+
+          <tr class="group-row"><td colspan="6">Couverture technique</td></tr>
+          <tr><td>Module supervisé</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">~</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+          <tr><td>Module non supervisé</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">~</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">~</span></td></tr>
+          <tr><td>Module LLM / chatbot</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td></tr>
+          <tr><td>Détection de proxies</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">~</span></td></tr>
+
+          <tr class="group-row"><td colspan="6">Souveraineté</td></tr>
+          <tr><td>Hébergement EU / FR</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td>N/A</td><td><span style="color: var(--fg-muted);">—</span></td><td>Interne</td><td>Interne</td></tr>
+          <tr><td>Données qui restent en Europe</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td>N/A</td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td></tr>
+
+          <tr class="group-row"><td colspan="6">Reproductibilité</td></tr>
+          <tr><td>Audits récurrents</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span style="color: var(--fg-muted);">—</span></td></tr>
+          <tr><td>Conservation 5 ans</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">~</span></td><td><span style="color: var(--fg-muted);">~</span></td></tr>
+          <tr><td>Comparaison entre audits</td><td class="us"><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span class="check" style="color: var(--accent); font-family: var(--font-mono);">✓</span></td><td><span style="color: var(--fg-muted);">—</span></td><td><span style="color: var(--fg-muted);">—</span></td></tr>
+
+          <tr class="group-row"><td colspan="6">Coût total / an (PME 250 collaborateurs)</td></tr>
+          <tr><td>Coût annuel estimé</td><td class="us"><strong style="font-family: var(--font-mono);">~5 880 €</strong></td><td><strong style="font-family: var(--font-mono);">~25 k€</strong><br><span style="font-size: 11px; color: var(--fg-muted);">temps interne</span></td><td><strong style="font-family: var(--font-mono);">~36 k€</strong></td><td><strong style="font-family: var(--font-mono);">~45 k€</strong><br><span style="font-size: 11px; color: var(--fg-muted);">temps interne</span></td><td><strong style="font-family: var(--font-mono);">~60 k€</strong><br><span style="font-size: 11px; color: var(--fg-muted);">par audit</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size: var(--fs-xs); margin-top: 12px;">Légende : <strong style="color: var(--accent);">✓</strong> couvert · <span style="color: var(--fg-muted);">~</span> partiel · <span style="color: var(--fg-muted);">—</span> non couvert. Coûts estimés sur 4 audits/an, équipe de 5 personnes consultant la plateforme.</p>
+  </div>
+</section>
+
+<!-- WHEN NOT US -->
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="gap: 48px; align-items: start;">
+      <div>
+        <span class="eyebrow eyebrow--accent">Quand ne pas choisir AuditIQ</span>
+        <h2 style="font-size: var(--fs-h2); margin: 12px 0 16px; letter-spacing: -0.015em;">Notre franchise sur les cas où nous ne sommes pas le bon choix.</h2>
+        <p style="color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.65;">AuditIQ est pensé pour des PME et ETI françaises et européennes confrontées à l'AI Act. Certains contextes méritent un autre outil — voire un cabinet.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="card card--surface-2" style="padding: 20px;">
+          <h4 style="font-size: 15px; margin-bottom: 8px;">Vous êtes une grande équipe ML/MLOps américaine</h4>
+          <p style="font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55;">Fiddler ou Holistic AI seront mieux intégrés à votre stack ML, à votre langue de travail et à votre cadre régulatoire (NIST, EEOC).</p>
+        </div>
+        <div class="card card--surface-2" style="padding: 20px;">
+          <h4 style="font-size: 15px; margin-bottom: 8px;">Vous avez une équipe data dédiée et un cas très spécifique</h4>
+          <p style="font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55;">Fairlearn ou AIF360 vous donneront plus de contrôle pour des audits sur mesure ou de la recherche méthodologique.</p>
+        </div>
+        <div class="card card--surface-2" style="padding: 20px;">
+          <h4 style="font-size: 15px; margin-bottom: 8px;">Vous avez besoin d'un avis juridique opposable devant une autorité</h4>
+          <p style="font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55;">Un cabinet d'avocats spécialisé en droit numérique reste indispensable. AuditIQ outille la mesure technique ; il ne remplace pas l'expertise juridique.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Pas convaincu</span>
+        <h2 style="margin-top: 12px;">Faisons l'exercice ensemble.</h2>
+        <p>30 minutes : on regarde votre cas, on cite des alternatives honnêtes, on dit où AuditIQ s'inscrit.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver un échange</a>
+        <a class="btn btn--secondary" href="tarifs.html">Voir les tarifs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

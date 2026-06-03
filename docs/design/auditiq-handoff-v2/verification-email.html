@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification email — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  .auth-center { display: grid; place-items: center; padding: clamp(48px, 8vw, 96px) 24px; }
+  .auth-brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); margin-bottom: 40px; }
+  .auth-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; color: #0b1410; font-family: var(--font-mono); font-weight: 600; font-size: 14px; }
+
+  .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 48px; max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 24px; text-align: center; }
+  @media (max-width: 600px) { .auth-card { padding: 32px 24px; } }
+
+  .verify-icon { width: 72px; height: 72px; margin: 0 auto 8px; border-radius: 16px; background: var(--accent-soft); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 32px; }
+  .auth-card h1 { font-size: var(--fs-h3); letter-spacing: -0.015em; }
+  .auth-card > p.sub { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6; }
+  .auth-card .email-pill {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--fg);
+  }
+
+  .steps { text-align: left; display: flex; flex-direction: column; gap: 14px; padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); }
+  .steps__item { display: grid; grid-template-columns: 24px 1fr; gap: 12px; font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.5; }
+  .steps__num { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #0b1410; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 600; margin-top: 2px; }
+
+  .resend-row { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+  .resend-row .timer { font-size: var(--fs-xs); color: var(--fg-muted); }
+
+  .auth-foot { padding: 24px clamp(24px, 5vw, 80px); font-size: var(--fs-xs); color: var(--fg-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); }
+  .auth-foot a { color: var(--fg-muted); }
+</style>
+</head>
+<body>
+
+<main class="auth-center">
+  <div style="width: 100%; max-width: 480px;">
+    <div style="text-align: center;">
+      <a href="index.html" class="auth-brand">
+        <span class="auth-brand-mark">A</span>AuditIQ
+      </a>
+    </div>
+
+    <div class="auth-card">
+      <div class="verify-icon">✉</div>
+      <div>
+        <h1>Vérifiez votre adresse email.</h1>
+        <p class="sub" style="margin-top: 12px;">Nous venons d'envoyer un lien de vérification à</p>
+      </div>
+
+      <div class="email-pill">claire.tessier@tessier-associes.fr</div>
+
+      <p class="sub" style="margin-top: -8px;">Cliquez sur le lien dans l'email pour activer votre compte. Le lien expire dans 24 heures.</p>
+
+      <div class="steps">
+        <div class="steps__item">
+          <span class="steps__num">1</span>
+          <span>Ouvrez votre boîte mail (vérifiez les spams si nécessaire).</span>
+        </div>
+        <div class="steps__item">
+          <span class="steps__num">2</span>
+          <span>Cliquez sur le lien de vérification dans l'email d'AuditIQ.</span>
+        </div>
+        <div class="steps__item">
+          <span class="steps__num">3</span>
+          <span>Vous serez automatiquement connecté à votre console.</span>
+        </div>
+      </div>
+
+      <div class="resend-row">
+        <span class="timer">Vous n'avez rien reçu ?</span>
+        <button class="btn btn--secondary btn--sm" onclick="alert('Email renvoyé');">Renvoyer le lien de vérification</button>
+        <span class="timer" style="margin-top: 4px;">Mauvaise adresse ? <a href="inscription.html" style="color: var(--accent);">Modifier l'email</a></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="auth-foot">
+  <span>© 2026 AuditIQ SAS</span>
+  <span style="display: flex; gap: 16px;">
+    <a href="#">Mentions légales</a>
+    <a href="#">Confidentialité</a>
+    <a href="#">Sécurité</a>
+  </span>
+</footer>
+
+</body>
+</html>

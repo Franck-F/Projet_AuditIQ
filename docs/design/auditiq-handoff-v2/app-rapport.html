@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapport AUD-2026-014 — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .report-grid { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
+  @media (max-width: 920px) { .report-grid { grid-template-columns: 1fr; } }
+
+  .toc {
+    position: sticky;
+    top: 80px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md);
+  }
+  .toc__label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 12px; }
+  .toc__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+  .toc__item { display: block; padding: 6px 8px; font-size: 13px; color: var(--fg-secondary); border-radius: var(--r-sm); border-left: 2px solid transparent; }
+  .toc__item:hover { background: var(--surface-2); color: var(--fg); }
+  .toc__item--active { color: var(--fg); border-left-color: var(--accent); background: var(--surface-2); }
+  .toc__item-num { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); margin-right: 8px; }
+
+  .report-section { scroll-margin-top: 80px; padding-top: 32px; }
+  .report-section + .report-section { margin-top: 32px; border-top: 1px solid var(--border-subtle); }
+  .report-section__num { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.1em; }
+  .report-section__title { font-size: 24px; font-weight: 600; margin: 8px 0 12px; letter-spacing: -0.02em; }
+  .report-section__lede { color: var(--fg-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+
+  /* Article reference cell */
+  .art-card {
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .art-card__head { display: flex; justify-content: space-between; align-items: center; }
+  .art-card__ref { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.06em; }
+  .art-card__title { font-size: 14px; font-weight: 500; }
+  .art-card__quote {
+    padding: 12px 14px;
+    border-left: 2px solid var(--accent-border);
+    background: var(--surface-2);
+    color: var(--fg-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .art-card__status { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+
+  .signature-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md);
+    padding: 18px;
+    display: flex; gap: 16px;
+    align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="rapports"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Rapports · RPT-2026-014" data-no-cta="true"></div>
+
+    <main class="app__content">
+
+      <!-- Page head -->
+      <div class="page-head">
+        <div>
+          <div class="row" style="gap: 10px; margin-bottom: 10px;">
+            <span class="badge badge--mono">RPT-2026-014</span>
+            <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Critique</span>
+            <span class="badge badge--mono">v2 · final</span>
+            <span class="muted" style="font-size: 12px;">Signé électroniquement · 14 mai 2026 · 10:42</span>
+          </div>
+          <h1 class="page-head__title">Rapport — Recrutement Q2 2026</h1>
+          <p class="page-head__lede">Audit M1 supervisé sur 412 candidatures · attribut sensible analysé : <strong style="color: var(--fg);">genre</strong> · Cabinet Tessier & Associés</p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--secondary btn--sm">Comparer à v1</button>
+          <button class="btn btn--secondary btn--sm">Excel ↓</button>
+          <button class="btn btn--primary">PDF ↓</button>
+        </div>
+      </div>
+
+      <!-- Tabs : executive / regulatory / raw -->
+      <div class="tabbar">
+        <a class="tabbar__tab tabbar__tab--active">Vue executive</a>
+        <a class="tabbar__tab">Vue réglementaire</a>
+        <a class="tabbar__tab">Annexes techniques</a>
+        <a class="tabbar__tab">Historique versions <span class="tabbar__tab-count">2</span></a>
+      </div>
+
+      <div class="report-grid">
+
+        <!-- TOC -->
+        <aside>
+          <nav class="toc">
+            <div class="toc__label">Sommaire</div>
+            <ul class="toc__list">
+              <li><a href="#exec-summary" class="toc__item toc__item--active"><span class="toc__item-num">01</span>Résumé exécutif</a></li>
+              <li><a href="#contexte" class="toc__item"><span class="toc__item-num">02</span>Contexte & périmètre</a></li>
+              <li><a href="#methodologie" class="toc__item"><span class="toc__item-num">03</span>Méthodologie</a></li>
+              <li><a href="#resultats" class="toc__item"><span class="toc__item-num">04</span>Résultats fairness</a></li>
+              <li><a href="#regulatoire" class="toc__item"><span class="toc__item-num">05</span>Ancrage réglementaire</a></li>
+              <li><a href="#droit-fr" class="toc__item"><span class="toc__item-num">06</span>Droit français applicable</a></li>
+              <li><a href="#recos" class="toc__item"><span class="toc__item-num">07</span>Recommandations</a></li>
+              <li><a href="#disclaimer" class="toc__item"><span class="toc__item-num">08</span>Disclaimer juridique</a></li>
+              <li><a href="#signature" class="toc__item"><span class="toc__item-num">09</span>Signature & traçabilité</a></li>
+            </ul>
+          </nav>
+
+          <!-- Export panel -->
+          <div class="card mt-4" style="padding: 16px;">
+            <div class="toc__label" style="margin-bottom: 12px;">Exporter</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="btn btn--primary btn--sm btn--block">PDF signé · 24 p</button>
+              <button class="btn btn--secondary btn--sm btn--block">Excel · 8 onglets</button>
+              <button class="btn btn--secondary btn--sm btn--block">JSON · machine</button>
+            </div>
+            <p style="font-size: 11px; color: var(--fg-muted); margin-top: 12px; line-height: 1.5;">Le PDF inclut signature électronique horodatée et hachage du dataset audité.</p>
+          </div>
+        </aside>
+
+        <!-- Report content -->
+        <article>
+
+          <!-- 1. Executive summary -->
+          <section id="exec-summary" class="report-section" style="padding-top: 0;">
+            <span class="report-section__num">01</span>
+            <h2 class="report-section__title">Résumé exécutif</h2>
+            <p class="report-section__lede">
+              Synthèse en une page · destinée aux décideurs · sans jargon technique.
+            </p>
+
+            <!-- Verdict block -->
+            <div class="card card--xl mb-6" style="border-color: var(--status-fail-border); background: linear-gradient(180deg, var(--status-fail-bg), transparent 70%), var(--surface);">
+              <div class="row" style="gap: 16px; align-items: flex-start;">
+                <span style="width: 44px; height: 44px; background: var(--status-fail-bg); border: 1px solid var(--status-fail-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; color: var(--status-fail); flex-shrink: 0;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.86a2 2 0 0 1 3.4 0l8.4 14.1a2 2 0 0 1-1.7 3H3.6a2 2 0 0 1-1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>
+                </span>
+                <div>
+                  <span class="label-mono" style="color: var(--status-fail);">Verdict</span>
+                  <h3 style="margin-top: 6px; font-size: 22px;">Risque critique de discrimination indirecte fondée sur le genre</h3>
+                  <p style="color: var(--fg-secondary); line-height: 1.65; margin-top: 12px;">
+                    Le modèle de scoring de candidatures CV présente un déséquilibre statistique significatif : il sélectionne les femmes <strong style="color: var(--fg);">28% moins souvent</strong> que les hommes (Demographic Parity = 0.72, en dessous du seuil 0.80 recommandé par la règle des 4/5 et largement référencé par la CNIL et la Défenseure des droits).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key numbers -->
+            <div class="stat-split mb-6" style="border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 24px 0;">
+              <div class="stat-split__cell">
+                <span class="stat-split__num" style="color: var(--status-fail);">0.72</span>
+                <span class="stat-split__lbl">Demographic Parity</span>
+              </div>
+              <div class="stat-split__cell">
+                <span class="stat-split__num">412</span>
+                <span class="stat-split__lbl">Dossiers analysés</span>
+              </div>
+              <div class="stat-split__cell">
+                <span class="stat-split__num">28<span style="font-size: 16px; color: var(--fg-muted);">%</span></span>
+                <span class="stat-split__lbl">Écart entre groupes</span>
+              </div>
+              <div class="stat-split__cell">
+                <span class="stat-split__num" style="color: var(--status-fail);">3/4</span>
+                <span class="stat-split__lbl">Métriques non conformes</span>
+              </div>
+            </div>
+
+            <h4 style="font-size: 16px; margin-bottom: 12px;">Constats principaux</h4>
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+              <li style="display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: flex-start;">
+                <span style="width: 6px; height: 6px; background: var(--status-fail); border-radius: 50%; margin-top: 8px;"></span>
+                <span style="font-size: 14px; color: var(--fg-secondary); line-height: 1.6;">
+                  Sur 412 candidatures (286 hommes, 126 femmes), 37,5% des hommes franchissent le seuil de présélection contre 27,0% des femmes — écart absolu de 10,5 points.
+                </span>
+              </li>
+              <li style="display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: flex-start;">
+                <span style="width: 6px; height: 6px; background: var(--status-fail); border-radius: 50%; margin-top: 8px;"></span>
+                <span style="font-size: 14px; color: var(--fg-secondary); line-height: 1.6;">
+                  L'écart persiste après contrôle par diplôme et expérience, ce qui suggère que le modèle code des biais non liés au mérite.
+                </span>
+              </li>
+              <li style="display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: flex-start;">
+                <span style="width: 6px; height: 6px; background: var(--status-warn); border-radius: 50%; margin-top: 8px;"></span>
+                <span style="font-size: 14px; color: var(--fg-secondary); line-height: 1.6;">
+                  La tendance s'aggrave dans le temps : DP en baisse continue depuis 8 semaines, passée sous le seuil le 22 avril après ajout de 84 nouveaux dossiers.
+                </span>
+              </li>
+              <li style="display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: flex-start;">
+                <span style="width: 6px; height: 6px; background: var(--status-info); border-radius: 50%; margin-top: 8px;"></span>
+                <span style="font-size: 14px; color: var(--fg-secondary); line-height: 1.6;">
+                  Le déploiement de ce modèle en l'état exposerait Cabinet Tessier à un signalement par la Défenseure des droits (article L.1132-1 du Code du travail) et à un risque contentieux selon l'article 225-1 du Code pénal.
+                </span>
+              </li>
+            </ul>
+
+            <h4 style="font-size: 16px; margin: 24px 0 12px;">Action recommandée</h4>
+            <p style="color: var(--fg-secondary); line-height: 1.65;">
+              <strong style="color: var(--fg);">Suspendre le déploiement</strong> du modèle de scoring CV en l'état. Revoir le pipeline d'entraînement (rééquilibrage du jeu de données, audit du lexique d'évaluation), réauditer avec AuditIQ, puis documenter le processus de décision avant mise en production. AuditIQ propose 3 recommandations prioritaires détaillées dans la section 7.
+            </p>
+          </section>
+
+          <!-- 2. Context -->
+          <section id="contexte" class="report-section">
+            <span class="report-section__num">02</span>
+            <h2 class="report-section__title">Contexte & périmètre</h2>
+
+            <div class="grid-2 mb-6">
+              <div class="card">
+                <span class="label-mono">Demandeur</span>
+                <h4 style="font-size: 15px; margin-top: 8px;">Cabinet Tessier & Associés</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); margin-top: 4px;">SIREN 824 561 832 · Conseil RH · Paris (75)</p>
+                <p style="font-size: 13px; color: var(--fg-secondary); margin-top: 8px;">Auditeur : Claire Tessier · responsable conformité</p>
+              </div>
+              <div class="card">
+                <span class="label-mono">Système audité</span>
+                <h4 style="font-size: 15px; margin-top: 8px;">Scoring CV Q2 2026</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); margin-top: 4px;">Modèle interne · classification binaire</p>
+                <p style="font-size: 13px; color: var(--fg-secondary); margin-top: 8px;">Période couverte : 15 mars - 10 mai 2026</p>
+              </div>
+            </div>
+
+            <h4 style="font-size: 16px; margin-bottom: 12px;">Objectifs de l'audit</h4>
+            <ul style="color: var(--fg-secondary); line-height: 1.7; padding-left: 20px; margin-bottom: 24px;">
+              <li>Vérifier la conformité du modèle de scoring CV au regard du règlement (UE) 2024/1689 (AI Act), notamment des articles 10 (qualité des données), 13 (transparence) et 15 (exactitude et robustesse).</li>
+              <li>Détecter d'éventuels biais sur l'attribut sensible "genre", au sens de l'article L.1132-1 du Code du travail.</li>
+              <li>Documenter le processus pour produire une trace exploitable en cas de contrôle CNIL ou DDD.</li>
+            </ul>
+
+            <h4 style="font-size: 16px; margin-bottom: 12px;">Limites & hors périmètre</h4>
+            <p style="color: var(--fg-secondary); line-height: 1.65;">
+              Cet audit porte exclusivement sur l'attribut sensible <strong>genre</strong>. Il ne couvre pas les biais d'âge, d'origine, de handicap ou d'orientation, qui devront faire l'objet d'audits séparés. L'audit ne corrige pas le modèle : il documente l'état du modèle au moment de l'analyse.
+            </p>
+          </section>
+
+          <!-- 3. Méthodologie -->
+          <section id="methodologie" class="report-section">
+            <span class="report-section__num">03</span>
+            <h2 class="report-section__title">Méthodologie</h2>
+
+            <div class="card mb-4">
+              <h4 style="font-size: 15px; margin-bottom: 12px;">Métriques utilisées</h4>
+              <table class="table">
+                <thead>
+                  <tr><th>Métrique</th><th>Définition courte</th><th>Seuil retenu</th><th>Origine</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Demographic Parity</td><td class="muted">Égalité de taux de sélection</td><td class="num">0.80–1.25</td><td class="muted">Doctrine CNIL · AI Act</td></tr>
+                  <tr><td>Equal Opportunity</td><td class="muted">Égalité de TPR (vrais positifs)</td><td class="num">0.85–1.15</td><td class="muted">Hardt et al. 2016</td></tr>
+                  <tr><td>Equalized Odds</td><td class="muted">Égalité TPR & FPR</td><td class="num">0.85–1.15</td><td class="muted">Hardt et al. 2016</td></tr>
+                  <tr><td>Règle des 4/5</td><td class="muted">Seuil EEOC US 80%</td><td class="num">0.80 strict</td><td class="muted">29 CFR §1607</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <h4 style="font-size: 15px; margin-bottom: 12px;">Outil & méthode</h4>
+              <p style="font-size: 14px; color: var(--fg-secondary); line-height: 1.7;">
+                Calcul effectué par AuditIQ v1.4.0 (audit-engine 2026.05.001). Hachage SHA-256 du dataset : <code style="font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); padding: 2px 6px; border-radius: 3px;">8af2c91...e372</code>. Aucune donnée n'a quitté l'Union européenne pendant le calcul. Le détail des étapes est traçable dans le journal d'audit (annexe technique 1).
+              </p>
+            </div>
+          </section>
+
+          <!-- 5. Regulatory anchoring -->
+          <section id="regulatoire" class="report-section">
+            <span class="report-section__num">05</span>
+            <h2 class="report-section__title">Ancrage réglementaire — AI Act</h2>
+            <p class="report-section__lede">
+              Articles du règlement (UE) 2024/1689 pertinents pour ce système. Le scoring CV est classé <strong style="color: var(--status-fail);">système à haut risque</strong> selon l'annexe III §4.a.
+            </p>
+
+            <div class="grid-2" style="gap: 12px; margin-bottom: 24px;">
+
+              <div class="art-card" style="border-color: var(--status-fail-border);">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Article 10 · Données et gouvernance</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Non conforme</span>
+                </div>
+                <div class="art-card__title">Qualité, représentativité et absence de biais des données d'entraînement</div>
+                <p class="art-card__quote">
+                  « Les jeux de données d'entraînement, de validation et d'essai […] examinent l'existence de possibles biais […] susceptibles d'avoir une incidence sur la santé et la sécurité des personnes, d'avoir une incidence négative sur les droits fondamentaux ou d'entraîner une discrimination interdite par le droit de l'Union. »
+                </p>
+                <div class="art-card__status">
+                  <span class="muted">Constat AuditIQ</span>
+                  <span style="color: var(--status-fail);">Biais détecté · DP 0.72</span>
+                </div>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Article 13 · Transparence</span>
+                  <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Partiel</span>
+                </div>
+                <div class="art-card__title">Information des utilisateurs et explicabilité des résultats</div>
+                <p class="art-card__quote">
+                  « Les systèmes d'IA à haut risque sont conçus et développés […] pour permettre aux utilisateurs d'interpréter le résultat […] et de l'utiliser de manière appropriée. »
+                </p>
+                <div class="art-card__status">
+                  <span class="muted">Constat AuditIQ</span>
+                  <span style="color: var(--status-warn);">Explications partielles</span>
+                </div>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Article 15 · Exactitude et robustesse</span>
+                  <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Conforme</span>
+                </div>
+                <div class="art-card__title">Niveau d'exactitude approprié et résistance aux erreurs</div>
+                <p class="art-card__quote">
+                  « Les systèmes d'IA à haut risque sont conçus […] de manière à atteindre, compte tenu de leur finalité, un niveau d'exactitude, de robustesse et de cybersécurité appropriés. »
+                </p>
+                <div class="art-card__status">
+                  <span class="muted">Constat AuditIQ</span>
+                  <span style="color: var(--status-pass);">F1 = 0.81 · acceptable</span>
+                </div>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Annexe IV · Documentation technique</span>
+                  <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>À compléter</span>
+                </div>
+                <div class="art-card__title">Description détaillée du système et des choix de conception</div>
+                <p class="art-card__quote">
+                  « Une description générale du système d'IA, y compris […] sa finalité prévue […], les principaux choix de conception […], les hypothèses faites concernant les personnes ou groupes de personnes auxquels le système est destiné. »
+                </p>
+                <div class="art-card__status">
+                  <span class="muted">Constat AuditIQ</span>
+                  <span style="color: var(--status-warn);">Documentation à enrichir</span>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 6. Droit français -->
+          <section id="droit-fr" class="report-section">
+            <span class="report-section__num">06</span>
+            <h2 class="report-section__title">Droit français applicable</h2>
+
+            <div class="grid-2" style="gap: 12px;">
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Art. L.1132-1 Code du travail</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Risque élevé</span>
+                </div>
+                <div class="art-card__title">Principe de non-discrimination à l'embauche</div>
+                <p class="art-card__quote">
+                  « Aucune personne ne peut être écartée d'une procédure de recrutement […] en raison de son […] sexe, de son orientation sexuelle, de son identité de genre, de son âge, de sa situation de famille […] »
+                </p>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Art. 225-1 Code pénal</span>
+                  <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Risque pénal</span>
+                </div>
+                <div class="art-card__title">Discrimination — sanction pénale possible</div>
+                <p class="art-card__quote">
+                  « Constitue une discrimination toute distinction opérée entre les personnes physiques sur le fondement de leur origine, de leur sexe […] » — peine encourue : 3 ans d'emprisonnement et 45 000 € d'amende.
+                </p>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">RGPD · Art. 22</span>
+                  <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>À documenter</span>
+                </div>
+                <div class="art-card__title">Décision individuelle automatisée</div>
+                <p class="art-card__quote">
+                  « La personne concernée a le droit de ne pas faire l'objet d'une décision fondée exclusivement sur un traitement automatisé […] produisant des effets juridiques la concernant ou l'affectant de manière significative. »
+                </p>
+              </div>
+
+              <div class="art-card">
+                <div class="art-card__head">
+                  <span class="art-card__ref">Recommandation DDD 2024-23</span>
+                  <span class="tl-pill tl-pill--info"><span class="tl-pill__dot"></span>Cadre</span>
+                </div>
+                <div class="art-card__title">Référentiel défenseur des droits — IA & emploi</div>
+                <p class="art-card__quote">
+                  Recommandation de la Défenseure des droits sur l'utilisation des systèmes algorithmiques dans les processus de recrutement — exigence d'audit régulier et de documentation.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. Recommandations -->
+          <section id="recos" class="report-section">
+            <span class="report-section__num">07</span>
+            <h2 class="report-section__title">Recommandations</h2>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+
+              <div class="card" style="border-color: var(--status-fail-border);">
+                <div class="row" style="gap: 12px; margin-bottom: 12px;">
+                  <span class="badge" style="background: var(--status-fail-bg); color: var(--status-fail); border-color: var(--status-fail-border);">PRIORITÉ 1</span>
+                  <span class="badge badge--mono">Court terme · ≤ 30 j</span>
+                  <span class="muted" style="font-size: 12px;">Liée à l'article 10 AI Act</span>
+                </div>
+                <h4 style="font-size: 15px; margin-bottom: 8px;">Suspendre le déploiement et rééquilibrer le jeu d'entraînement</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); line-height: 1.65;">
+                  Le jeu d'entraînement est composé à 67% d'hommes (286 / 412). Procéder à un rééchantillonnage stratifié pour atteindre une parité 50/50, ou utiliser une pondération inverse à la fréquence du groupe.
+                </p>
+              </div>
+
+              <div class="card">
+                <div class="row" style="gap: 12px; margin-bottom: 12px;">
+                  <span class="badge" style="background: var(--status-warn-bg); color: var(--status-warn); border-color: var(--status-warn-border);">PRIORITÉ 2</span>
+                  <span class="badge badge--mono">Moyen terme · 30–90 j</span>
+                </div>
+                <h4 style="font-size: 15px; margin-bottom: 8px;">Auditer le lexique d'évaluation du modèle de scoring</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); line-height: 1.65;">
+                  Une étude récente (Liu et al. 2024) montre que les verbes d'action codés positivement (« diriger », « négocier », « performer ») favorisent les CV utilisant un lexique masculin. Évaluer la pondération de ces tokens et envisager un re-fine-tuning sur lexique neutre.
+                </p>
+              </div>
+
+              <div class="card">
+                <div class="row" style="gap: 12px; margin-bottom: 12px;">
+                  <span class="badge" style="background: var(--status-info-bg); color: var(--status-info); border-color: var(--status-info-border);">PRIORITÉ 3</span>
+                  <span class="badge badge--mono">Permanent</span>
+                </div>
+                <h4 style="font-size: 15px; margin-bottom: 8px;">Mettre en place un audit récurrent (mensuel) et un seuil d'alerte</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); line-height: 1.65;">
+                  Configurer un audit AuditIQ programmé mensuellement, avec alerte automatique si DP &lt; 0.85 (seuil intermédiaire). Cela permettra d'intercepter les dérives avant qu'elles ne deviennent critiques, comme c'est le cas ici (DP a glissé de 0.81 à 0.72 en 8 semaines).
+                </p>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 8. Disclaimer -->
+          <section id="disclaimer" class="report-section">
+            <span class="report-section__num">08</span>
+            <h2 class="report-section__title">Disclaimer juridique</h2>
+
+            <div class="legal-callout" style="border-left-width: 3px; padding: 20px;">
+              <p style="line-height: 1.7; margin-bottom: 12px;">
+                <strong>Nature de ce rapport.</strong> Ce rapport est un outil d'aide à la détection et à la documentation des biais — il n'est pas un certificat de conformité au sens de l'article 43 du règlement (UE) 2024/1689 (AI Act).
+              </p>
+              <p style="line-height: 1.7; margin-bottom: 12px;">
+                <strong>Limites des métriques.</strong> Les métriques de fairness statistique ne capturent pas toutes les formes de discrimination. Un score conforme n'exonère pas d'un risque légal, et un score non conforme n'établit pas à lui seul une discrimination au sens du droit pénal — qui requiert d'autres éléments (intentionnalité ou caractère systémique).
+              </p>
+              <p style="line-height: 1.7; margin-bottom: 12px;">
+                <strong>Pas un avis juridique.</strong> Les références au droit français, européen et à la jurisprudence sont fournies à titre informatif. Elles ne constituent pas un avis juridique. AuditIQ recommande de consulter un avocat spécialisé en droit social et en droit numérique pour toute décision opérationnelle découlant de ce rapport.
+              </p>
+              <p style="line-height: 1.7;">
+                <strong>Responsabilité de la décision.</strong> La responsabilité finale du déploiement, du maintien ou de la suspension d'un système d'IA appartient au déployeur (Cabinet Tessier & Associés). AuditIQ ne se substitue à aucune autorité de contrôle (CNIL, DDD, Autorité européenne de l'IA).
+              </p>
+            </div>
+          </section>
+
+          <!-- 9. Signature -->
+          <section id="signature" class="report-section">
+            <span class="report-section__num">09</span>
+            <h2 class="report-section__title">Signature & traçabilité</h2>
+
+            <div class="signature-card mb-4">
+              <span style="width: 40px; height: 40px; background: var(--accent); color: #0b1410; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5a9 3 0 0 0 18 0"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>
+              </span>
+              <div>
+                <h4 style="font-size: 15px;">Signature électronique horodatée</h4>
+                <p style="font-size: 13px; color: var(--fg-secondary); margin-top: 6px; line-height: 1.6;">
+                  Rapport signé via le certificat eIDAS qualifié AuditIQ (DocuSign EU). Horodatage : <strong style="color: var(--fg);">14 mai 2026, 10:42:18 UTC</strong>. La signature couvre l'intégralité de ce document et du dataset audité (hachage SHA-256).
+                </p>
+              </div>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr><th>Élément</th><th>Hachage / référence</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Dataset audité</td><td><code style="font-family: var(--font-mono); font-size: 12px;">8af2c91d3b...e372</code></td></tr>
+                <tr><td>Moteur AuditIQ</td><td><code style="font-family: var(--font-mono); font-size: 12px;">audit-engine 2026.05.001</code></td></tr>
+                <tr><td>Auditeur</td><td>Claire Tessier · claire.tessier@tessier.fr</td></tr>
+                <tr><td>Identifiant rapport</td><td><code style="font-family: var(--font-mono); font-size: 12px;">RPT-2026-014 · v2 · final</code></td></tr>
+                <tr><td>Empreinte du PDF</td><td><code style="font-family: var(--font-mono); font-size: 12px;">a3f1d5...9c8b</code></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+        </article>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/app-partials.js"></script>
+</body>
+</html>

@@ -130,8 +130,8 @@ export default function ConnexionPage() {
   return (
     <AuthShell
       activeTab="login"
-      heading="Content de vous revoir"
-      intro="Accédez à votre espace de conformité."
+      heading="Connectez-vous"
+      intro="Accédez à votre console AuditIQ pour lancer un audit, consulter vos rapports ou gérer votre équipe."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         <div className="flex flex-col gap-2">

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mot de passe oublié — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  .auth-center { display: grid; place-items: center; padding: clamp(48px, 8vw, 96px) 24px; }
+  .auth-brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); margin-bottom: 40px; }
+  .auth-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; color: #0b1410; font-family: var(--font-mono); font-weight: 600; font-size: 14px; }
+
+  .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 48px; max-width: 460px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+  @media (max-width: 600px) { .auth-card { padding: 32px 24px; } }
+  .auth-card h1 { font-size: var(--fs-h3); letter-spacing: -0.015em; }
+  .auth-card > p { color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.55; }
+  .auth-form__bottom { font-size: var(--fs-sm); color: var(--fg-muted); text-align: center; margin-top: 8px; }
+  .auth-form__bottom a { color: var(--accent); }
+
+  .state-sent {
+    text-align: center;
+    padding: 16px 0;
+  }
+  .state-sent__icon { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent-border); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 26px; }
+  .state-sent h2 { font-size: var(--fs-h4); margin-bottom: 8px; }
+  .state-sent p { font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.55; max-width: 36ch; margin: 0 auto; }
+
+  .auth-foot { padding: 24px clamp(24px, 5vw, 80px); font-size: var(--fs-xs); color: var(--fg-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); }
+  .auth-foot a { color: var(--fg-muted); }
+</style>
+</head>
+<body>
+
+<main class="auth-center">
+  <div style="width: 100%; max-width: 460px;">
+    <a href="index.html" class="auth-brand">
+      <span class="auth-brand-mark">A</span>AuditIQ
+    </a>
+
+    <!-- État initial -->
+    <form class="auth-card" id="form-state" onsubmit="event.preventDefault(); document.getElementById('form-state').style.display='none'; document.getElementById('sent-state').style.display='flex';">
+      <h1>Mot de passe oublié ?</h1>
+      <p>Entrez l'email professionnel associé à votre compte. Nous vous envoyons un lien sécurisé valable 30 minutes pour définir un nouveau mot de passe.</p>
+      <div class="field">
+        <label class="field__label" for="email">Email professionnel</label>
+        <input class="input" id="email" type="email" required placeholder="vous@entreprise.fr" autofocus>
+      </div>
+      <button type="submit" class="btn btn--primary btn--block btn--lg">Envoyer le lien de réinitialisation</button>
+      <p class="auth-form__bottom"><a href="connexion.html">← Retour à la connexion</a></p>
+    </form>
+
+    <!-- État envoyé -->
+    <div class="auth-card" id="sent-state" style="display: none; flex-direction: column;">
+      <div class="state-sent">
+        <div class="state-sent__icon">✓</div>
+        <h2>Lien envoyé.</h2>
+        <p>Si un compte existe avec cette adresse, vous avez reçu un email contenant un lien de réinitialisation. Le lien expire dans 30 minutes.</p>
+      </div>
+      <div style="text-align: center; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+        <p style="font-size: var(--fs-xs); color: var(--fg-muted); margin-bottom: 12px;">Vous ne recevez rien sous 5 minutes ?</p>
+        <button type="button" class="btn btn--secondary btn--sm" onclick="alert('Renvoyé');">Renvoyer le lien</button>
+      </div>
+      <p class="auth-form__bottom"><a href="connexion.html">← Retour à la connexion</a></p>
+    </div>
+  </div>
+</main>
+
+<footer class="auth-foot">
+  <span>© 2026 AuditIQ SAS</span>
+  <span style="display: flex; gap: 16px;">
+    <a href="#">Mentions légales</a>
+    <a href="#">Confidentialité</a>
+    <a href="#">Sécurité</a>
+  </span>
+</footer>
+
+</body>
+</html>

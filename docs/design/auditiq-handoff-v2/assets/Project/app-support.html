@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aide & support — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .help-search {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 36px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .help-search__title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .help-search__lede { color: var(--fg-secondary); font-size: 15px; margin-bottom: 24px; }
+  .help-search__field {
+    max-width: 600px; margin: 0 auto;
+    display: flex; gap: 12px; align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-pill);
+    padding: 6px 6px 6px 18px;
+  }
+  .help-search__input { flex: 1; background: transparent; border: 0; color: var(--fg); font-size: 14px; outline: none; padding: 8px 0; }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color var(--t-base);
+  }
+  .topic-card:hover { border-color: var(--border-strong); }
+  .topic-card__icon {
+    width: 40px; height: 40px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topic-card__title { font-size: 16px; font-weight: 500; }
+  .topic-card__count { font-size: 12px; color: var(--fg-muted); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .topic-card__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .topic-card__link { font-size: 13px; color: var(--fg-secondary); padding: 4px 0; display: flex; gap: 8px; align-items: center; }
+  .topic-card__link:hover { color: var(--fg); }
+  .topic-card__link::before { content: "→"; color: var(--fg-muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="support"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Aide & support" data-no-cta="true"></div>
+
+    <main class="app__content">
+
+      <!-- Search hero -->
+      <div class="help-search">
+        <h1 class="help-search__title">Comment pouvons-nous vous aider, Claire ?</h1>
+        <p class="help-search__lede">Documentation produit · réponses aux questions fréquentes · contact équipe experte AuditIQ</p>
+        <div class="help-search__field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="help-search__input" placeholder="Tapez votre question · « Comment configurer un seuil ? »">
+          <button class="btn btn--primary btn--sm">Rechercher</button>
+        </div>
+      </div>
+
+      <!-- Topic cards -->
+      <div class="grid-3 mb-6">
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+          <span class="topic-card__count">22 articles</span>
+          <h4 class="topic-card__title">Bien démarrer</h4>
+          <ul class="topic-card__list">
+            <li><a href="#" class="topic-card__link">Créer son premier audit en 5 minutes</a></li>
+            <li><a href="#" class="topic-card__link">Préparer son dataset (M1)</a></li>
+            <li><a href="#" class="topic-card__link">Choisir entre M1 et M2</a></li>
+            <li><a href="#" class="topic-card__link">Inviter son équipe et attribuer les rôles</a></li>
+          </ul>
+        </div>
+
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 12h3l3-7 4 14 3-7h5"/></svg></span>
+          <span class="topic-card__count">34 articles</span>
+          <h4 class="topic-card__title">Modules d'audit</h4>
+          <ul class="topic-card__list">
+            <li><a href="#" class="topic-card__link">Comprendre les 4 métriques fairness</a></li>
+            <li><a href="#" class="topic-card__link">Module 2 : détecter un proxy</a></li>
+            <li><a href="#" class="topic-card__link">Configurer une API LLM (M3)</a></li>
+            <li><a href="#" class="topic-card__link">Interpréter le feu tricolore global</a></li>
+          </ul>
+        </div>
+
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v.01M11 11h1v6h1"/></svg></span>
+          <span class="topic-card__count">18 articles</span>
+          <h4 class="topic-card__title">AI Act & conformité</h4>
+          <ul class="topic-card__list">
+            <li><a href="ai-act.html" class="topic-card__link">Calendrier d'application AI Act</a></li>
+            <li><a href="#" class="topic-card__link">Article 10 : qualité des données</a></li>
+            <li><a href="#" class="topic-card__link">Annexe IV : documentation technique</a></li>
+            <li><a href="#" class="topic-card__link">Articulation avec le droit français</a></li>
+          </ul>
+        </div>
+
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16"/></svg></span>
+          <span class="topic-card__count">12 articles</span>
+          <h4 class="topic-card__title">Rapports & exports</h4>
+          <ul class="topic-card__list">
+            <li><a href="#" class="topic-card__link">Vue executive vs vue réglementaire</a></li>
+            <li><a href="#" class="topic-card__link">Signature électronique eIDAS</a></li>
+            <li><a href="#" class="topic-card__link">Comparer 2 rapports</a></li>
+            <li><a href="#" class="topic-card__link">Personnaliser le PDF</a></li>
+          </ul>
+        </div>
+
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M12 22s-8-4.5-8-12V5l8-3 8 3v5c0 7.5-8 12-8 12z"/></svg></span>
+          <span class="topic-card__count">9 articles</span>
+          <h4 class="topic-card__title">Sécurité & RGPD</h4>
+          <ul class="topic-card__list">
+            <li><a href="#" class="topic-card__link">Où sont stockées mes données ?</a></li>
+            <li><a href="#" class="topic-card__link">Chiffrement et certifications</a></li>
+            <li><a href="#" class="topic-card__link">Demander l'export RGPD</a></li>
+            <li><a href="#" class="topic-card__link">Activer la 2FA</a></li>
+          </ul>
+        </div>
+
+        <div class="topic-card">
+          <span class="topic-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3"/></svg></span>
+          <span class="topic-card__count">15 articles</span>
+          <h4 class="topic-card__title">Paramétrage avancé</h4>
+          <ul class="topic-card__list">
+            <li><a href="#" class="topic-card__link">Ajuster les seuils par défaut</a></li>
+            <li><a href="#" class="topic-card__link">Audit récurrent automatique</a></li>
+            <li><a href="#" class="topic-card__link">Configurer Slack ou Teams</a></li>
+            <li><a href="#" class="topic-card__link">API & webhooks (MLOps)</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Two cols : ticket + expert -->
+      <div class="grid-2">
+
+        <div class="card card--xl">
+          <span class="label-mono mb-4">Ouvrir un ticket support</span>
+          <h3 style="font-size: 18px; margin-top: 8px; margin-bottom: 8px;">Vous n'avez pas trouvé votre réponse ?</h3>
+          <p style="color: var(--fg-secondary); font-size: 14px; margin-bottom: 20px;">Notre équipe vous répond en moins de 4h en jours ouvrés (plan Équipe).</p>
+
+          <div class="field mb-4">
+            <label class="field__label">Sujet</label>
+            <input class="input" placeholder="Ex. : Le module M2 ne détecte pas mon attribut sensible">
+          </div>
+          <div class="field mb-4">
+            <label class="field__label">Catégorie</label>
+            <select class="select">
+              <option>Question d'utilisation</option>
+              <option>Bug / problème technique</option>
+              <option>Question de conformité / AI Act</option>
+              <option>Facturation</option>
+              <option>Demande de fonctionnalité</option>
+            </select>
+          </div>
+          <div class="field mb-4">
+            <label class="field__label">Audit ou rapport concerné (optionnel)</label>
+            <select class="select">
+              <option>Aucun</option>
+              <option>AUD-2026-014 · Recrutement Q2</option>
+              <option>AUD-2026-013 · Banque Loiret</option>
+              <option>AUD-2026-012 · Chatbot Mathys</option>
+            </select>
+          </div>
+          <div class="field mb-4">
+            <label class="field__label">Description</label>
+            <textarea class="textarea" placeholder="Décrivez votre problème avec autant de détails que possible…"></textarea>
+            <span class="field__hint">Vous pouvez joindre une capture d'écran ou un export d'audit.</span>
+          </div>
+
+          <button class="btn btn--primary">Envoyer le ticket</button>
+        </div>
+
+        <div class="card card--xl">
+          <span class="label-mono mb-4">Contact expert AuditIQ</span>
+          <h3 style="font-size: 18px; margin-top: 8px; margin-bottom: 8px;">Besoin d'un accompagnement plus poussé ?</h3>
+          <p style="color: var(--fg-secondary); font-size: 14px; margin-bottom: 24px;">Réservez un échange de 30 minutes avec un de nos experts conformité IA et fairness.</p>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+
+            <div class="row" style="gap: 14px; align-items: center; padding: 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md);">
+              <span class="avatar avatar--lg" style="background: oklch(54% 0.14 200); color: #fff;">SL</span>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 500;">Sophie Lévêque</div>
+                <div class="muted" style="font-size: 12px;">Lead conformité · AI Act, RGPD</div>
+              </div>
+              <button class="btn btn--secondary btn--sm">Réserver</button>
+            </div>
+
+            <div class="row" style="gap: 14px; align-items: center; padding: 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md);">
+              <span class="avatar avatar--lg" style="background: oklch(54% 0.14 280); color: #fff;">YK</span>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 500;">Yacine Kherbache</div>
+                <div class="muted" style="font-size: 12px;">Expert fairness ML · M1 / M2</div>
+              </div>
+              <button class="btn btn--secondary btn--sm">Réserver</button>
+            </div>
+
+            <div class="row" style="gap: 14px; align-items: center; padding: 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--r-md);">
+              <span class="avatar avatar--lg" style="background: oklch(54% 0.14 30); color: #fff;">FP</span>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 500;">François Petit</div>
+                <div class="muted" style="font-size: 12px;">Expert LLM / chatbots · M3</div>
+              </div>
+              <button class="btn btn--secondary btn--sm">Réserver</button>
+            </div>
+
+          </div>
+
+          <div class="divider mt-6 mb-4"></div>
+
+          <h4 style="font-size: 14px; margin-bottom: 8px;">Audit accompagné par un expert</h4>
+          <p style="font-size: 13px; color: var(--fg-secondary); line-height: 1.6;">Pour les cas complexes (système IA à haut risque, contrôle CNIL prévu, contentieux), nos experts peuvent mener un audit avec vous. Sur devis · à partir de 4 800 € HT.</p>
+          <a href="contact.html" class="btn btn--primary btn--sm mt-4">Demander un devis →</a>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app-partials.js"></script>
+</body>
+</html>

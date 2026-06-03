@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarifs — AuditIQ</title>
+<meta name="description" content="Tarification AuditIQ adaptée à la maturité de votre PME. Quatre paliers, du gratuit à l'enterprise. Engagement annuel sans pénalité.">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<script src="assets/partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .billing-toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 4px; gap: 2px; margin-top: 32px; }
+  .billing-toggle button { padding: 8px 18px; border-radius: var(--r-pill); font-size: var(--fs-sm); font-weight: 500; color: var(--fg-secondary); transition: background var(--t-fast), color var(--t-fast); }
+  .billing-toggle button.is-active { background: var(--surface-3); color: var(--fg); }
+  .billing-toggle__save { padding: 2px 8px; background: var(--accent-soft); color: var(--accent); border-radius: 4px; font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.08em; margin-left: 6px; }
+
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 1080px) { .pricing-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+
+  .matrix { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .matrix th, .matrix td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+  .matrix th { font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); font-weight: 500; background: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .matrix th:first-child { border-top-left-radius: var(--r-md); }
+  .matrix th:last-child { border-top-right-radius: var(--r-md); }
+  .matrix .group-row td {
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .matrix .check { color: var(--accent); font-family: var(--font-mono); }
+  .matrix .dash { color: var(--fg-muted); font-family: var(--font-mono); }
+  .matrix td:not(:first-child) { text-align: center; }
+  .matrix .feature-name { font-size: var(--fs-sm); }
+  .matrix .feature-desc { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+
+  .matrix-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
+  .matrix-wrap .matrix { min-width: 720px; }
+
+  .faq-list { display: flex; flex-direction: column; gap: 12px; max-width: 800px; }
+  .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; }
+  .faq-item summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; font-size: var(--fs-h4); font-weight: 500; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; font-family: var(--font-mono); font-size: 24px; color: var(--fg-muted); }
+  .faq-item[open] summary::after { content: "−"; }
+  .faq-item p { margin-top: 12px; color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="tarifs"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Tarifs</span>
+    <h1 style="margin-top: 16px;">Une tarification claire, calée sur la maturité de votre PME.</h1>
+    <p class="lede">Démarrez gratuitement, sans carte bancaire. Passez en payant le jour où vos audits deviennent récurrents. Pas d'engagement caché, pas de pénalité de sortie. Tarifs HT, applicables aux organisations établies en Europe.</p>
+    <div class="billing-toggle">
+      <button class="is-active">Mensuel</button>
+      <button>Annuel<span class="billing-toggle__save">−15 %</span></button>
+    </div>
+  </div>
+</header>
+
+<!-- PRICING -->
+<section class="section section--sm">
+  <div class="container">
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div>
+          <span class="price-card__name">Découverte</span>
+          <div class="price-card__tagline">Un premier audit pour cadrer le besoin.</div>
+        </div>
+        <div>
+          <div class="price-card__price">0&nbsp;€<span class="price-card__price-period">/ pour toujours</span></div>
+        </div>
+        <ul>
+          <li>1 audit Module 1 / mois</li>
+          <li>Dataset jusqu'à 5 000 lignes</li>
+          <li>Rapport PDF basique</li>
+          <li>3 utilisateurs</li>
+          <li>Support communautaire</li>
+          <li>Conservation 3 mois</li>
+        </ul>
+        <a class="btn btn--secondary btn--block" href="inscription.html">Créer un compte</a>
+      </div>
+
+      <div class="price-card price-card--featured">
+        <span class="price-card__badge">Recommandé PME</span>
+        <div>
+          <span class="price-card__name">PME</span>
+          <div class="price-card__tagline">Pour une routine de conformité.</div>
+        </div>
+        <div>
+          <div class="price-card__price">490&nbsp;€<span class="price-card__price-period">/ mois</span></div>
+        </div>
+        <ul>
+          <li>Audits illimités · 3 modules</li>
+          <li>Dataset jusqu'à 1M lignes</li>
+          <li>Module LLM · 1000 prompts/mois</li>
+          <li>Rapports PDF &amp; Excel structurés AI Act</li>
+          <li>15 utilisateurs · permissions par rôle</li>
+          <li>Historique 5 ans · comparaison d'audits</li>
+          <li>Support sous 24h ouvrées</li>
+          <li>Onboarding accompagné 4h</li>
+        </ul>
+        <a class="btn btn--primary btn--block" href="contact.html">Demander une démo</a>
+      </div>
+
+      <div class="price-card">
+        <div>
+          <span class="price-card__name">Entreprise</span>
+          <div class="price-card__tagline">Multi-entité, sécurité renforcée.</div>
+        </div>
+        <div>
+          <div class="price-card__price">1 490&nbsp;€<span class="price-card__price-period">/ mois</span></div>
+        </div>
+        <ul>
+          <li>Tout PME +</li>
+          <li>Datasets illimités · LLM illimité</li>
+          <li>SSO SAML 2.0 · audit log avancé</li>
+          <li>50 utilisateurs · multi-entités</li>
+          <li>Recommandations expert AI Act 4h/mois</li>
+          <li>SLA 99,9 % · support sous 4h</li>
+          <li>API d'intégration GRC</li>
+        </ul>
+        <a class="btn btn--secondary btn--block" href="contact.html">Demander un devis</a>
+      </div>
+
+      <div class="price-card">
+        <div>
+          <span class="price-card__name">Souverain</span>
+          <div class="price-card__tagline">Hébergement dédié, données isolées.</div>
+        </div>
+        <div>
+          <div class="price-card__price">Sur devis</div>
+        </div>
+        <ul>
+          <li>Tout Entreprise +</li>
+          <li>Hébergement souverain dédié (SecNumCloud)</li>
+          <li>Chiffrement clé client (BYOK)</li>
+          <li>Audit log inviolable horodaté</li>
+          <li>Consultants AI Act dédiés</li>
+          <li>Formation équipe 2 jours</li>
+          <li>Engagement &amp; SLA personnalisés</li>
+        </ul>
+        <a class="btn btn--secondary btn--block" href="contact.html">Nous contacter</a>
+      </div>
+    </div>
+
+    <p class="muted text-center" style="font-size: var(--fs-xs); margin-top: 24px;">Tarifs HT. TVA 20 % applicable en France. Engagement mensuel sans durée minimale. Annulation effective au mois suivant.</p>
+  </div>
+</section>
+
+<!-- MATRIX -->
+<section class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">Comparaison détaillée</span>
+      <h2 class="section-header__title">Toutes les fonctionnalités, palier par palier.</h2>
+      <p class="section-header__lede">Pour les décisions d'achat — DPO, direction financière, RSSI.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="width: 40%;">Fonctionnalité</th>
+            <th>Découverte</th>
+            <th>PME</th>
+            <th>Entreprise</th>
+            <th>Souverain</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group-row"><td colspan="5">Audits</td></tr>
+          <tr><td><div class="feature-name">Audit Module 1 (supervisé)</div><div class="feature-desc">Métriques fairness canoniques</div></td><td>1 / mois</td><td>Illimité</td><td>Illimité</td><td>Illimité</td></tr>
+          <tr><td><div class="feature-name">Audit Module 2 (non supervisé)</div><div class="feature-desc">Clustering, proxies</div></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Audit Module 3 (LLM)</div><div class="feature-desc">Prompts pairs, scoring</div></td><td><span class="dash">—</span></td><td>1 000 prompts/mois</td><td>Illimité</td><td>Illimité</td></tr>
+          <tr><td><div class="feature-name">Banque de prompts personnalisée</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Taille de dataset max</div></td><td>5 000 lignes</td><td>1M lignes</td><td>Illimité</td><td>Illimité</td></tr>
+
+          <tr class="group-row"><td colspan="5">Rapports &amp; documentation</td></tr>
+          <tr><td><div class="feature-name">Rapport PDF executive</div></td><td>Basique</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Rapport Excel Annexe IV</div></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Comparaison entre audits</div></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Personnalisation du rapport</div><div class="feature-desc">Logo, charte, sections</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Conservation des audits</div></td><td>3 mois</td><td>5 ans</td><td>5 ans</td><td>Illimitée</td></tr>
+
+          <tr class="group-row"><td colspan="5">Équipe &amp; gouvernance</td></tr>
+          <tr><td><div class="feature-name">Utilisateurs inclus</div></td><td>3</td><td>15</td><td>50</td><td>Illimité</td></tr>
+          <tr><td><div class="feature-name">Permissions par rôle</div><div class="feature-desc">Admin · Auditeur · Lecteur</div></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Journal d'activité</div></td><td>30 jours</td><td>1 an</td><td>5 ans</td><td>Illimité</td></tr>
+          <tr><td><div class="feature-name">Multi-entités / multi-pays</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+
+          <tr class="group-row"><td colspan="5">Sécurité</td></tr>
+          <tr><td><div class="feature-name">Hébergement</div></td><td>OVH FR</td><td>OVH FR</td><td>OVH FR + DRP</td><td>SecNumCloud dédié</td></tr>
+          <tr><td><div class="feature-name">SSO SAML 2.0 / OIDC</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">BYOK (clé client)</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
+          <tr><td><div class="feature-name">Audit log inviolable horodaté</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td>Standard</td><td>Notarié</td></tr>
+
+          <tr class="group-row"><td colspan="5">Support &amp; accompagnement</td></tr>
+          <tr><td><div class="feature-name">Support</div></td><td>Communautaire</td><td>24h ouvrées</td><td>4h</td><td>SLA dédié</td></tr>
+          <tr><td><div class="feature-name">Onboarding accompagné</div></td><td><span class="dash">—</span></td><td>4h</td><td>1 jour</td><td>2 jours + formation</td></tr>
+          <tr><td><div class="feature-name">Consultant AI Act dédié</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td>4h/mois</td><td>Dédié</td></tr>
+          <tr><td><div class="feature-name">API d'intégration GRC</div></td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ PRICING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">Questions sur le pricing</span>
+      <h2 class="section-header__title">Avant de signer.</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Le palier Découverte est-il vraiment gratuit, sans limite de temps ?</summary>
+        <p>Oui. Le palier Découverte n'a aucune date d'expiration. Vous y restez tant que vos besoins se limitent à un audit Module 1 par mois sur des datasets ≤ 5 000 lignes. Aucune carte bancaire requise à l'inscription.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Y a-t-il une période d'essai sur les paliers payants ?</summary>
+        <p>Oui — 14 jours d'essai gratuit sur le palier PME, sans engagement et sans carte bancaire. Vous accédez à toutes les fonctionnalités, sur vos propres données.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Comment se passe la facturation ?</summary>
+        <p>Facturation mensuelle ou annuelle par carte bancaire (SEPA disponible pour l'annuel). Les factures sont émises automatiquement au 1ᵉʳ de chaque mois et envoyées par email. L'annuel offre 15 % de remise sur l'année.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Puis-je changer de palier en cours d'abonnement ?</summary>
+        <p>Oui, sans pénalité. Une montée de palier est immédiate avec un prorata calculé à la journée. Une descente de palier prend effet à la fin de la période en cours.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Existe-t-il des tarifs spécifiques associations / éducation / secteur public ?</summary>
+        <p>Oui. Tarifs réduits de 40 % pour les associations reconnues d'intérêt général, les laboratoires de recherche publique et les établissements d'enseignement supérieur. Contactez-nous avec un justificatif officiel.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Que se passe-t-il si je dépasse le quota de prompts LLM ?</summary>
+        <p>Vous recevez une alerte à 80 % et 100 % du quota. Au-delà, deux options : passer au palier supérieur ou acheter un pack additionnel de 1 000 prompts à 80 € HT, valable 90 jours.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Acceptez-vous les bons de commande publics ?</summary>
+        <p>Oui sur les paliers Entreprise et Souverain. Notre direction financière émet des devis sur 30 ou 60 jours et accepte les bons de commande émis par les collectivités, hôpitaux et établissements publics.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Pas sûr du palier</span>
+        <h2 style="margin-top: 12px;">Discutons-en. 15 minutes, pas plus.</h2>
+        <p>On vous aide à choisir le palier adapté à votre maturité de conformité et à votre volume d'audits prévisionnel.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver un appel</a>
+        <a class="btn btn--secondary" href="comparatif.html">Comparer aux alternatives</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

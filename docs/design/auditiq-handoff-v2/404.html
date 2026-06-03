@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page introuvable — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<script src="assets/partials.js" defer></script>
+<style>
+  .err-hero { padding: clamp(64px, 10vw, 120px) 0; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; min-height: calc(100vh - var(--nav-h) - 120px); }
+  @media (max-width: 920px) { .err-hero { grid-template-columns: 1fr; gap: 40px; min-height: auto; padding: 64px 0; } }
+  .err-num {
+    font-family: var(--font-mono);
+    font-size: clamp(120px, 18vw, 240px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 24px;
+  }
+  .err-text h1 { font-size: clamp(28px, 3vw, 36px); letter-spacing: -0.02em; margin-bottom: 16px; }
+  .err-text p { color: var(--fg-secondary); font-size: var(--fs-body); line-height: 1.6; margin-bottom: 32px; max-width: 50ch; }
+  .err-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+
+  .err-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 480px; }
+  @media (max-width: 600px) { .err-shortcuts { grid-template-columns: 1fr; } }
+  .err-shortcut {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--t-fast);
+  }
+  .err-shortcut:hover { border-color: var(--border-strong); }
+  .err-shortcut__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--fg-muted); text-transform: uppercase; }
+  .err-shortcut__title { font-size: var(--fs-sm); font-weight: 500; color: var(--fg); }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active=""></div>
+
+<main class="container">
+  <div class="err-hero">
+    <div>
+      <span class="eyebrow eyebrow--accent">Erreur · 404</span>
+      <div class="err-num">404</div>
+    </div>
+    <div class="err-text">
+      <h1>Cette page n'existe pas — ou n'existe plus.</h1>
+      <p>L'URL que vous avez suivie ne correspond à aucune page de notre site. Peut-être un lien obsolète, une faute de frappe, ou un déplacement de contenu. Voici quelques pistes pour retrouver votre chemin.</p>
+
+      <div class="err-actions">
+        <a class="btn btn--primary" href="index.html">Retour à l'accueil</a>
+        <a class="btn btn--secondary" href="contact.html">Contacter notre équipe</a>
+      </div>
+
+      <div class="err-shortcuts">
+        <a class="err-shortcut" href="produit.html">
+          <span class="err-shortcut__label">Découvrir</span>
+          <span class="err-shortcut__title">Le produit en 3 modules →</span>
+        </a>
+        <a class="err-shortcut" href="ai-act.html">
+          <span class="err-shortcut__label">Conformité</span>
+          <span class="err-shortcut__title">AI Act &amp; obligations PME →</span>
+        </a>
+        <a class="err-shortcut" href="tarifs.html">
+          <span class="err-shortcut__label">Pricing</span>
+          <span class="err-shortcut__title">Voir les tarifs →</span>
+        </a>
+        <a class="err-shortcut" href="blog.html">
+          <span class="err-shortcut__label">Lecture</span>
+          <span class="err-shortcut__title">Blog &amp; ressources →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

@@ -9,7 +9,7 @@ const SHORTCUTS = [
   { label: 'Découvrir', title: 'Le produit en 3 modules →', href: '/produit' },
   { label: 'Conformité', title: 'AI Act & obligations PME →', href: '/ai-act' },
   { label: 'Pricing', title: 'Voir les tarifs →', href: '/tarifs' },
-  { label: 'Lecture', title: 'Blog & ressources →', href: '/ressources' },
+  { label: 'Lecture', title: 'Blog & ressources →', href: '/blog' },
 ];
 
 export default function NotFound() {

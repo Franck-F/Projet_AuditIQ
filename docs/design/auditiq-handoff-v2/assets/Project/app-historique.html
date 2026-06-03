@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historique des audits — AuditIQ</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 0;
+  }
+  .timeline-date {
+    padding: 18px 16px 18px 0;
+    border-right: 1px solid var(--border-subtle);
+    text-align: right;
+    position: relative;
+  }
+  .timeline-date__year { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); letter-spacing: 0.06em; }
+  .timeline-date__month { font-size: 13px; font-weight: 500; color: var(--fg); margin-top: 2px; }
+  .timeline-card { padding: 14px 16px 14px 24px; position: relative; }
+  .timeline-card::before {
+    content: ""; position: absolute; left: -7px; top: 24px;
+    width: 14px; height: 14px;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+  }
+  .timeline-card--warn::before { border-color: var(--status-warn); }
+  .timeline-card--fail::before { border-color: var(--status-fail); }
+  .timeline-card--info::before { border-color: var(--status-info); }
+
+  .filter-chip {
+    display: inline-flex; gap: 6px; align-items: center;
+    padding: 5px 10px;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--fg-secondary);
+  }
+  .filter-chip--active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div data-app-partial="sidebar" data-active="audits"></div>
+
+  <div class="app__main">
+    <div data-app-partial="topbar" data-crumbs="Audits · Historique"></div>
+
+    <main class="app__content">
+
+      <div class="page-head">
+        <div>
+          <h1 class="page-head__title">Historique des audits</h1>
+          <p class="page-head__lede">Tous les audits lancés depuis la création de votre espace · 47 sessions · 38 finalisés · 6 brouillons · 3 erreurs.</p>
+        </div>
+        <div class="page-head__actions">
+          <button class="btn btn--secondary btn--sm">Exporter le journal</button>
+          <a href="app-audit-m1.html" class="btn btn--primary">+ Nouvel audit</a>
+        </div>
+      </div>
+
+      <!-- View toggle -->
+      <div class="row mb-6" style="gap: 12px; flex-wrap: wrap;">
+        <div class="tabs">
+          <a class="tab tab--active">Timeline</a>
+          <a class="tab">Liste</a>
+          <a class="tab">Calendrier</a>
+        </div>
+        <input class="input" placeholder="Rechercher…" style="max-width: 280px;">
+        <select class="select" style="max-width: 160px;">
+          <option>Tous les modules</option>
+          <option>M1 · supervisé</option>
+          <option>M2 · non supervisé</option>
+          <option>M3 · LLM</option>
+        </select>
+      </div>
+
+      <!-- Quick filter chips -->
+      <div class="row mb-6" style="gap: 8px; flex-wrap: wrap;">
+        <span class="filter-chip filter-chip--active">Tous · 47</span>
+        <span class="filter-chip">Conforme · 18</span>
+        <span class="filter-chip">Vigilance · 14</span>
+        <span class="filter-chip">Critique · 6</span>
+        <span class="filter-chip">Brouillons · 6</span>
+        <span class="filter-chip">Erreurs · 3</span>
+        <span class="filter-chip" style="margin-left: auto; color: var(--fg-muted);">Période · 90 j ▾</span>
+      </div>
+
+      <!-- Timeline grid -->
+      <div class="card card--xl" style="padding: 16px 0;">
+        <div class="timeline-grid">
+
+          <!-- Date row -->
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">14 mai</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--fail">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-014</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M1</span>
+                <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Critique</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">10:42</span>
+              </div>
+              <h4 style="font-size: 14px;"><a href="app-audit-m1.html" style="color: var(--fg);">Recrutement Q2 2026 — Scoring CV</a></h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">412 dossiers · DP 0.72 · 3/4 métriques non conformes · Claire Tessier</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">13 mai</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--warn">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-013</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M2</span>
+                <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Vigilance</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">18:02</span>
+              </div>
+              <h4 style="font-size: 14px;"><a href="app-audit-m2.html" style="color: var(--fg);">Banque Loiret — Scoring crédit immobilier</a></h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">8 240 dossiers · IM 0.82 · cluster déviant détecté · Paul Mendy</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">10 mai</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--info">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-012b</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M3</span>
+                <span class="tl-pill tl-pill--neutral"><span class="tl-pill__dot"></span>Repris</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">14:48</span>
+              </div>
+              <h4 style="font-size: 14px;">Chatbot Mathys · audit M3 repris après timeout (312/480 → 480/480)</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">Reprise automatique après échec API · 168 paires restantes</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">3 mai</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--warn">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-012</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M3</span>
+                <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Vigilance</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">09:21</span>
+              </div>
+              <h4 style="font-size: 14px;"><a href="app-audit-m3.html" style="color: var(--fg);">Chatbot Mathys SAV — campagne fairness 6 axes</a></h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">480 prompts pairs · score 3.4/5 · 2 axes critiques (handicap, origine) · Marc Benhamou</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">28 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-011</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M2</span>
+                <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Conforme</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">15:48</span>
+              </div>
+              <h4 style="font-size: 14px;">Plateforme onboarding — vérification de proxies</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">1 248 profils · IM 0.94 · aucun cluster déviant · Noémie Roussel</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">22 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-010</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M1</span>
+                <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Conforme</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">11:02</span>
+              </div>
+              <h4 style="font-size: 14px;">Modèle attribution prime annuelle</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">1 040 collaborateurs · DP 0.91 · toutes métriques OK · Claire Tessier</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">18 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--info">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-009</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M3</span>
+                <span class="tl-pill tl-pill--neutral"><span class="tl-pill__dot"></span>Brouillon</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">14:30</span>
+              </div>
+              <h4 style="font-size: 14px;">Bot internal HR — configuration sauvegardée, audit non lancé</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">Configuration sauvegardée · à reprendre · Paul Mendy</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">14 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--warn">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-008</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M1</span>
+                <span class="tl-pill tl-pill--warn"><span class="tl-pill__dot"></span>Vigilance</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">16:55</span>
+              </div>
+              <h4 style="font-size: 14px;">Recrutement Q1 2026 — Scoring CV (référence)</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">388 dossiers · DP 0.81 · état précédent à comparer · Claire Tessier</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">8 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card timeline-card--fail">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-007</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M2</span>
+                <span class="tl-pill tl-pill--fail"><span class="tl-pill__dot"></span>Erreur</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">09:48</span>
+              </div>
+              <h4 style="font-size: 14px;">Audit interrompu · 47 valeurs manquantes sur attribut sensible</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">credit_jan_2026.csv · valeurs manquantes 38% · audit non terminé</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">2 avr.</div>
+          </div>
+          <div>
+            <div class="timeline-card">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-006</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M1</span>
+                <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Conforme</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">12:14</span>
+              </div>
+              <h4 style="font-size: 14px;">Promotion interne 2026 — modèle d'évaluation</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">624 collaborateurs · DP 0.93 · toutes métriques OK · Noémie Roussel</p>
+            </div>
+          </div>
+
+          <div class="timeline-date">
+            <div class="timeline-date__year">2026</div>
+            <div class="timeline-date__month">27 mars</div>
+          </div>
+          <div>
+            <div class="timeline-card">
+              <div class="row" style="gap: 10px; margin-bottom: 8px;">
+                <span class="badge badge--mono">AUD-2026-005</span>
+                <span class="badge badge--mono" style="border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent);">M2</span>
+                <span class="tl-pill tl-pill--pass"><span class="tl-pill__dot"></span>Conforme</span>
+                <span class="muted" style="font-size: 11px; margin-left: auto;">10:33</span>
+              </div>
+              <h4 style="font-size: 14px;">Audit pre-déploiement chatbot SAV Mathys (référence)</h4>
+              <p class="muted" style="font-size: 12px; margin-top: 4px;">Aucun proxy détecté · IM 0.97 · à comparer avec audit M3 · Paul Mendy</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row" style="padding: 16px 24px; border-top: 1px solid var(--border-subtle); justify-content: center; gap: 12px;">
+          <span class="muted" style="font-size: 12px;">11 audits récents affichés sur 47</span>
+          <button class="btn btn--secondary btn--sm">Charger 11 audits suivants</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app-partials.js"></script>
+</body>
+</html>

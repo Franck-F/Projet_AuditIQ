@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding — AuditIQ</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .ob-shell { min-height: 100vh; display: grid; grid-template-rows: 60px 1fr; background: var(--bg); }
+  .ob-bar {
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    display: flex; align-items: center; padding: 0 24px; gap: 16px;
+  }
+  .ob-bar__brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-family: var(--font-display); }
+  .ob-bar__step { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .ob-bar__skip { margin-left: auto; }
+  .ob-main { display: grid; place-items: start center; padding: 48px 24px 64px; }
+  .ob-card { max-width: 760px; width: 100%; }
+
+  .ob-screen { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border-subtle); }
+  .ob-screen:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+  .ob-screen__label {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+  }
+  .ob-screen__title { font-size: 36px; letter-spacing: -0.02em; margin-bottom: 14px; line-height: 1.1; font-weight: 600; }
+  .ob-screen__lede { font-size: 18px; color: var(--fg-secondary); line-height: 1.5; margin-bottom: 36px; max-width: 60ch; }
+
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .profile-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: border-color var(--t-base), background var(--t-base);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .profile-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .profile-card--selected { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 80%), var(--surface); }
+  .profile-card__head { display: flex; align-items: center; justify-content: space-between; }
+  .profile-card__icon {
+    width: 36px; height: 36px;
+    background: var(--surface-2); color: var(--accent);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .profile-card__title { font-size: 16px; font-weight: 500; }
+  .profile-card__desc { font-size: 13px; color: var(--fg-secondary); line-height: 1.55; }
+  .profile-card__radio {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    position: relative;
+  }
+  .profile-card--selected .profile-card__radio { border-color: var(--accent); background: var(--accent); }
+  .profile-card--selected .profile-card__radio::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px; height: 6px; background: var(--bg); border-radius: 50%;
+  }
+
+  .usecase-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) {
+    .profile-grid, .usecase-grid { grid-template-columns: 1fr; }
+  }
+  .uc-card { padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+  .uc-card:hover { border-color: var(--border-strong); }
+  .uc-card--selected { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 80%), var(--surface); }
+  .uc-card__module { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+  .uc-card__title { font-size: var(--fs-sm); font-weight: 500; }
+  .uc-card__desc { font-size: 12px; color: var(--fg-muted); line-height: 1.5; }
+
+  .ob-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 32px;
+    margin-top: 32px;
+    border-top: 1px solid var(--border-subtle);
+  }
+</style>
+</head>
+<body>
+
+<div class="ob-shell">
+
+  <header class="ob-bar">
+    <a href="index.html" class="ob-bar__brand">
+      <span class="nav__brand-mark">A</span>
+      AuditIQ
+    </a>
+    <span class="ob-bar__step">Configuration · 1 sur 5</span>
+    <div class="ob-bar__skip">
+      <a href="app-dashboard.html" class="btn btn--ghost btn--sm">Passer pour l'instant</a>
+    </div>
+  </header>
+
+  <main class="ob-main">
+    <div class="ob-card">
+
+      <!-- Stepper visible permanently for context -->
+      <div class="stepper">
+        <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Bienvenue</span></div>
+        <div class="step__connector step__connector--done"></div>
+        <div class="step step--active"><span class="step__num">2</span><span class="step__label">Profil</span></div>
+        <div class="step__connector"></div>
+        <div class="step"><span class="step__num">3</span><span class="step__label">Cas d'usage</span></div>
+        <div class="step__connector"></div>
+        <div class="step"><span class="step__num">4</span><span class="step__label">Premier dataset</span></div>
+        <div class="step__connector"></div>
+        <div class="step"><span class="step__num">5</span><span class="step__label">Démarrer</span></div>
+      </div>
+
+      <!-- ============= ÉCRAN 1 — Bienvenue ============= -->
+      <section class="ob-screen" id="welcome">
+        <div class="ob-screen__label">Étape 1 / 5 · Bienvenue</div>
+        <h1 class="ob-screen__title">Bienvenue chez AuditIQ, Claire.</h1>
+        <p class="ob-screen__lede">Nous allons configurer votre premier audit de fairness IA en 5 étapes. Comptez environ 8 minutes pour la configuration, puis 25 minutes pour le premier audit complet.</p>
+
+        <div class="card card--xl mb-6" style="border: 1px solid var(--accent-border); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface);">
+          <div class="row" style="align-items: flex-start; gap: 16px;">
+            <span style="width: 44px; height: 44px; background: var(--accent); color: #0b1410; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/></svg>
+            </span>
+            <div>
+              <h4 style="margin-bottom: 6px;">Vous êtes au bon endroit pour démarrer un audit conforme AI Act.</h4>
+              <p style="color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6;">
+                AuditIQ détecte, explique et documente les biais — sans modifier vos modèles. Vous obtiendrez un rapport exploitable, signé, exportable en PDF / Excel, aligné sur le règlement (UE) 2024/1689.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom: 32px;">
+          <div class="card">
+            <span class="label-mono" style="color: var(--accent);">M1</span>
+            <h4 style="margin-top: 8px; font-size: 16px;">Audit supervisé</h4>
+            <p style="font-size: 13px; color: var(--fg-muted); margin-top: 8px; line-height: 1.5;">Vous avez un dataset avec la décision réelle et une variable sensible (genre, origine, âge…)</p>
+          </div>
+          <div class="card">
+            <span class="label-mono" style="color: var(--accent);">M2</span>
+            <h4 style="margin-top: 8px; font-size: 16px;">Non supervisé</h4>
+            <p style="font-size: 13px; color: var(--fg-muted); margin-top: 8px; line-height: 1.5;">Vous n'avez pas d'attribut sensible explicite — on cherche des proxies.</p>
+          </div>
+          <div class="card">
+            <span class="label-mono" style="color: var(--accent);">M3</span>
+            <h4 style="margin-top: 8px; font-size: 16px;">Audit LLM</h4>
+            <p style="font-size: 13px; color: var(--fg-muted); margin-top: 8px; line-height: 1.5;">Vous testez un chatbot ou un assistant IA via prompts pairs sur 6 axes sensibles.</p>
+          </div>
+        </div>
+
+        <div class="ob-foot">
+          <a href="connexion.html" class="btn btn--ghost">← Se déconnecter</a>
+          <a href="#profil" class="btn btn--primary btn--lg">Commencer la configuration →</a>
+        </div>
+      </section>
+
+      <!-- ============= ÉCRAN 2 — Profil entreprise ============= -->
+      <section class="ob-screen" id="profil">
+        <div class="ob-screen__label">Étape 2 / 5 · Profil entreprise</div>
+        <h1 class="ob-screen__title">Quelle est la taille de votre organisation ?</h1>
+        <p class="ob-screen__lede">Ces informations adaptent les exigences AI Act recommandées dans vos rapports et nous permettent d'ajuster les seuils par défaut.</p>
+
+        <div class="profile-grid mb-6">
+          <div class="profile-card">
+            <div class="profile-card__head">
+              <span class="profile-card__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-7h6v7"/></svg>
+              </span>
+              <span class="profile-card__radio"></span>
+            </div>
+            <div class="profile-card__title">TPE — moins de 10 salariés</div>
+            <div class="profile-card__desc">Pas de DPO interne. Seuils plus tolérants par défaut, focus sur la documentation.</div>
+          </div>
+          <div class="profile-card profile-card--selected">
+            <div class="profile-card__head">
+              <span class="profile-card__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-7h6v7"/><path d="M5 11h2M5 14h2M5 17h2M17 11h2M17 14h2M17 17h2"/></svg>
+              </span>
+              <span class="profile-card__radio"></span>
+            </div>
+            <div class="profile-card__title">PME — 10 à 250 salariés</div>
+            <div class="profile-card__desc">Cible principale AuditIQ. Seuils alignés AI Act, recommandations adaptées aux équipes data limitées.</div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-card__head">
+              <span class="profile-card__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 21h18"/><path d="M5 21V3h14v18"/><path d="M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2M13 15h2"/></svg>
+              </span>
+              <span class="profile-card__radio"></span>
+            </div>
+            <div class="profile-card__title">ETI — 251 à 5 000 salariés</div>
+            <div class="profile-card__desc">Plusieurs lignes métier. Recommandations multi-équipes, gouvernance centralisée.</div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-card__head">
+              <span class="profile-card__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="6" width="20" height="14" rx="1.5"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              </span>
+              <span class="profile-card__radio"></span>
+            </div>
+            <div class="profile-card__title">Grande entreprise — 5 000+ salariés</div>
+            <div class="profile-card__desc">Périmètre groupe, multi-pays. Contactez-nous pour un déploiement enterprise.</div>
+          </div>
+        </div>
+
+        <div class="card mb-6">
+          <h4 style="font-size: 15px; margin-bottom: 16px;">Informations entreprise</h4>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field__label">Raison sociale</label>
+              <input class="input" value="Cabinet Tessier & Associés" type="text">
+            </div>
+            <div class="field">
+              <label class="field__label">SIREN</label>
+              <input class="input" value="824 561 832" type="text">
+              <span class="field__hint">Utilisé sur les rapports de conformité signés</span>
+            </div>
+            <div class="field">
+              <label class="field__label">Secteur</label>
+              <select class="select">
+                <option>Conseil en ressources humaines</option>
+                <option>Banque & finance</option>
+                <option>Industrie / fabrication</option>
+                <option>Santé</option>
+                <option>Service client / SAV</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label">Pays</label>
+              <select class="select">
+                <option>France</option>
+                <option>Belgique</option>
+                <option>Luxembourg</option>
+                <option>Allemagne</option>
+              </select>
+              <span class="field__hint">Influence le droit applicable cité dans les rapports</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-foot">
+          <a href="#welcome" class="btn btn--secondary">← Retour</a>
+          <a href="#cas-usage" class="btn btn--primary btn--lg">Continuer →</a>
+        </div>
+      </section>
+
+      <!-- ============= ÉCRAN 3 — Cas d'usage ============= -->
+      <section class="ob-screen" id="cas-usage">
+        <div class="ob-screen__label">Étape 3 / 5 · Cas d'usage prioritaire</div>
+        <h1 class="ob-screen__title">Quel système d'IA voulez-vous auditer en premier ?</h1>
+        <p class="ob-screen__lede">Choisissez le cas qui vous concerne le plus aujourd'hui. Vous pourrez en ajouter d'autres ensuite. Ce choix oriente le module recommandé.</p>
+
+        <div class="usecase-grid mb-6">
+          <div class="uc-card uc-card--selected">
+            <span class="uc-card__module">M1 supervisé</span>
+            <span class="uc-card__title">Scoring de candidatures (CV / recrutement)</span>
+            <span class="uc-card__desc">Détection de biais par genre, âge, origine. Dataset attendu : 1 ligne / candidature.</span>
+          </div>
+          <div class="uc-card">
+            <span class="uc-card__module">M1 supervisé</span>
+            <span class="uc-card__title">Attribution prime / promotion</span>
+            <span class="uc-card__desc">Audit d'un modèle de décision RH interne.</span>
+          </div>
+          <div class="uc-card">
+            <span class="uc-card__module">M2 non supervisé</span>
+            <span class="uc-card__title">Scoring de crédit / acceptation</span>
+            <span class="uc-card__desc">Détection de proxies (code postal, nom, prénom) sans accès aux attributs sensibles.</span>
+          </div>
+          <div class="uc-card">
+            <span class="uc-card__module">M2 non supervisé</span>
+            <span class="uc-card__title">Tarification assurance</span>
+            <span class="uc-card__desc">Identification de clusters tarifaires déviants.</span>
+          </div>
+          <div class="uc-card">
+            <span class="uc-card__module">M3 LLM</span>
+            <span class="uc-card__title">Chatbot SAV ou support client</span>
+            <span class="uc-card__desc">Test de l'équité des réponses selon le genre, l'origine, le handicap.</span>
+          </div>
+          <div class="uc-card">
+            <span class="uc-card__module">M3 LLM</span>
+            <span class="uc-card__title">Assistant IA interne (RH, juridique)</span>
+            <span class="uc-card__desc">Audit d'un copilote sur 6 axes sensibles.</span>
+          </div>
+        </div>
+
+        <div class="legal-callout mb-6">
+          <strong>À noter :</strong> Le module recommandé dépend du dataset disponible. Si vous n'avez pas la variable sensible (genre, origine…), AuditIQ vous orientera automatiquement vers le Module 2 (non supervisé) qui cherche des proxies.
+        </div>
+
+        <div class="ob-foot">
+          <a href="#profil" class="btn btn--secondary">← Retour</a>
+          <a href="#premier-dataset" class="btn btn--primary btn--lg">Continuer →</a>
+        </div>
+      </section>
+
+      <!-- ============= ÉCRAN 4 — Premier dataset / checklist démarrage ============= -->
+      <section class="ob-screen" id="premier-dataset">
+        <div class="ob-screen__label">Étape 4 / 5 · Préparation</div>
+        <h1 class="ob-screen__title">Préparons votre premier audit.</h1>
+        <p class="ob-screen__lede">Voici la checklist de démarrage. Vous pouvez la compléter dans l'ordre — chaque élément débloque le suivant. Comptez environ 8 minutes pour tout valider.</p>
+
+        <div class="checklist mb-6">
+          <div class="checklist__item checklist__item--done">
+            <span class="checklist__check">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg>
+            </span>
+            <div>
+              <div class="checklist__title">Profil entreprise configuré</div>
+              <div class="checklist__desc">PME · Conseil RH · France</div>
+            </div>
+            <span class="checklist__action"><span class="badge">Fait</span></span>
+          </div>
+
+          <div class="checklist__item checklist__item--done">
+            <span class="checklist__check">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg>
+            </span>
+            <div>
+              <div class="checklist__title">Cas d'usage choisi</div>
+              <div class="checklist__desc">Scoring CV — Module 1 supervisé</div>
+            </div>
+            <span class="checklist__action"><span class="badge">Fait</span></span>
+          </div>
+
+          <div class="checklist__item" style="border-color: var(--accent-border); background: linear-gradient(180deg, var(--accent-soft), transparent 50%), var(--surface);">
+            <span class="checklist__check" style="border-color: var(--accent); background: transparent;"></span>
+            <div>
+              <div class="checklist__title">Importer votre premier dataset</div>
+              <div class="checklist__desc">CSV, Excel ou Parquet · jusqu'à 500 000 lignes en plan Équipe</div>
+            </div>
+            <a href="app-audit-m1.html" class="btn btn--primary btn--sm checklist__action">Importer →</a>
+          </div>
+
+          <div class="checklist__item">
+            <span class="checklist__check"></span>
+            <div>
+              <div class="checklist__title">Inviter votre équipe (optionnel)</div>
+              <div class="checklist__desc">Vous pourrez ajouter Auditeurs et Spectateurs ensuite</div>
+            </div>
+            <a href="app-equipe.html" class="btn btn--ghost btn--sm checklist__action">Inviter</a>
+          </div>
+
+          <div class="checklist__item">
+            <span class="checklist__check"></span>
+            <div>
+              <div class="checklist__title">Lancer votre premier audit</div>
+              <div class="checklist__desc">Compte environ 25 min pour 10 000 lignes</div>
+            </div>
+            <span class="checklist__action muted" style="font-size: 11px; font-family: var(--font-mono);">À débloquer</span>
+          </div>
+        </div>
+
+        <div class="card card--surface-2 mb-6">
+          <div class="row" style="gap: 14px; align-items: flex-start;">
+            <span style="width: 36px; height: 36px; background: var(--bg); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4M17 4v16"/><path d="M3 8h10M3 12h10M3 16h7"/></svg>
+            </span>
+            <div style="flex: 1;">
+              <h4 style="font-size: 15px;">Pas encore prêt ? Téléchargez un dataset d'exemple.</h4>
+              <p style="color: var(--fg-secondary); font-size: 13px; margin-top: 6px; line-height: 1.55;">
+                Nous fournissons trois datasets d'entraînement : recrutement (412 lignes), crédit (8 240 lignes) et journal de chatbot (480 prompts). Idéal pour découvrir le produit sans données réelles.
+              </p>
+              <div class="row" style="gap: 8px; margin-top: 12px;">
+                <a class="btn btn--secondary btn--sm">recrutement.csv</a>
+                <a class="btn btn--secondary btn--sm">credit.csv</a>
+                <a class="btn btn--secondary btn--sm">chatbot.jsonl</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-foot">
+          <a href="#cas-usage" class="btn btn--secondary">← Retour</a>
+          <a href="#demarrer" class="btn btn--primary btn--lg">Continuer →</a>
+        </div>
+      </section>
+
+      <!-- ============= ÉCRAN 5 — Tutoriel guidé + démarrer ============= -->
+      <section class="ob-screen" id="demarrer">
+        <div class="ob-screen__label">Étape 5 / 5 · Tutoriel guidé</div>
+        <h1 class="ob-screen__title">Vous êtes prête à lancer votre premier audit.</h1>
+        <p class="ob-screen__lede">Suivez le tutoriel guidé qui démarre dans le Module 1 — ou allez directement au dashboard. Vous pourrez retrouver le tutoriel à tout moment depuis le menu Aide.</p>
+
+        <div class="card card--xl mb-6" style="border-color: var(--accent-border);">
+          <div class="row" style="gap: 16px; align-items: center;">
+            <span style="width: 56px; height: 56px; background: var(--accent); color: #0b1410; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+            </span>
+            <div style="flex: 1;">
+              <h4 style="font-size: 18px; margin-bottom: 4px;">Tutoriel guidé — Mon premier audit M1</h4>
+              <p style="color: var(--fg-secondary); font-size: 14px;">8 étapes commentées · ~25 min · données d'exemple recrutement.csv</p>
+            </div>
+            <a href="app-audit-m1.html" class="btn btn--primary btn--lg">Démarrer le tutoriel →</a>
+          </div>
+
+          <div class="divider mt-4 mb-4"></div>
+
+          <ol style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: tut;">
+            <li style="display: flex; gap: 14px; align-items: flex-start; counter-increment: tut;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">01</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Importer le dataset CSV</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">412 lignes · 18 colonnes · format détecté automatiquement</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">02</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Mapper les colonnes du dataset</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Identifier ID, variables explicatives, décision et attribut sensible</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">03</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Choisir la variable cible et l'attribut sensible</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Cible : décision_finale · Attribut : genre</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">04</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Configurer les métriques fairness</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">4 métriques activées par défaut : DP, EO, EOdds, règle 4/5</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">05</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Lancer l'audit (environ 12 min)</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Vous pouvez fermer l'onglet, vous serez notifiée par email</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">06</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Lire les résultats — feu tricolore</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Comprendre le score global et le détail par métrique</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">07</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Examiner les écarts par groupe</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">Voir les graphiques de répartition Hommes / Femmes</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span style="font-family: var(--font-mono); color: var(--fg-muted); font-size: 13px; min-width: 24px;">08</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">Générer et exporter le rapport</div>
+                <div style="font-size: 12px; color: var(--fg-muted); margin-top: 2px;">PDF signé · Excel détaillé · partageable avec votre conseil</div>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="row" style="gap: 12px; margin-bottom: 24px;">
+          <a href="app-dashboard.html" class="btn btn--secondary">Aller au dashboard sans tutoriel</a>
+          <a href="app-audit-m1.html" class="btn btn--primary">Lancer le tutoriel guidé →</a>
+        </div>
+
+        <div class="legal-callout">
+          <strong>Confidentialité :</strong> vos données restent dans l'Union Européenne (hébergement OVH, Roubaix). Aucune donnée n'est envoyée à des modèles tiers (OpenAI, Anthropic) sauf activation explicite du Module 3 LLM.
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

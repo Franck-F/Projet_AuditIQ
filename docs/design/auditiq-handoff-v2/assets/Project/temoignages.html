@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Témoignages &amp; études de cas — AuditIQ</title>
+<meta name="description" content="Témoignages de PME françaises ayant audité leur IA avec AuditIQ. RH, banque, industrie, santé.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .case-study { padding-block: var(--sp-11); border-top: 1px solid var(--border-subtle); display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 64px; align-items: start; }
+  .case-study:first-of-type { border-top: 0; }
+  @media (max-width: 920px) { .case-study { grid-template-columns: 1fr; gap: 32px; } }
+
+  .case-study__head { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+  .case-study__logo { width: 56px; height: 56px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 600; font-size: 22px; color: var(--fg-secondary); letter-spacing: -0.02em; }
+  .case-study__org { font-size: var(--fs-h4); font-weight: 500; }
+  .case-study__org-meta { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+  .case-study h2 { font-size: clamp(28px, 3vw, 36px); margin-bottom: 20px; letter-spacing: -0.02em; line-height: 1.15; }
+  .case-study > div > p.lede { font-size: var(--fs-h4); color: var(--fg-secondary); line-height: 1.5; margin-bottom: 24px; }
+
+  .case-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 24px; }
+  .case-stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .case-stat__label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 4px; }
+  .case-stat__value { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; color: var(--accent); }
+
+  .case-quote {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .case-quote blockquote { margin: 0; font-family: var(--font-display); font-size: clamp(20px, 2vw, 24px); line-height: 1.4; letter-spacing: -0.015em; color: var(--fg); font-style: italic; }
+  .case-quote__attr { display: flex; gap: 12px; align-items: center; padding-top: 24px; border-top: 1px solid var(--border-subtle); }
+  .case-quote__avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 16px; color: var(--fg-secondary); }
+  .case-quote__name { font-size: var(--fs-sm); font-weight: 500; }
+  .case-quote__role { font-size: var(--fs-xs); color: var(--fg-muted); }
+
+  .compact-quotes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 820px) { .compact-quotes { grid-template-columns: 1fr; } }
+  .compact-quote { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .compact-quote blockquote { margin: 0; font-size: 15px; line-height: 1.5; color: var(--fg-secondary); }
+  .compact-quote__attr { display: flex; gap: 10px; align-items: center; }
+  .compact-quote__avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--fg-secondary); }
+
+  .logos-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 32px; align-items: center; padding: 32px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); opacity: 0.75; }
+  .logos-row__item { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-sm); color: var(--fg-muted); text-align: center; letter-spacing: -0.01em; }
+  @media (max-width: 820px) { .logos-row { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="ressources"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Témoignages &amp; preuves</span>
+    <h1 style="margin-top: 16px;">Six PME, six audits, six rapports opposables.</h1>
+    <p class="lede">Comment des responsables conformité, RH ou innovation utilisent AuditIQ dans leur routine. Les noms et identifiants ont été modifiés à la demande des organisations ; les chiffres sont réels.</p>
+    <div class="logos-row" style="margin-top: 48px;">
+      <div class="logos-row__item">Tessier &amp; Associés</div>
+      <div class="logos-row__item">Banque Loiret</div>
+      <div class="logos-row__item">Mathys SA</div>
+      <div class="logos-row__item">Crédit Régional</div>
+      <div class="logos-row__item">Hôpital Saint-Marc</div>
+      <div class="logos-row__item">Groupe Verlaine</div>
+    </div>
+  </div>
+</header>
+
+<!-- CASE 1 -->
+<section class="container">
+  <div class="case-study">
+    <div>
+      <div class="case-study__head">
+        <div class="case-study__logo">T&amp;A</div>
+        <div>
+          <div class="case-study__org">Cabinet Tessier &amp; Associés</div>
+          <div class="case-study__org-meta">Conseil RH · 180 collaborateurs · Lyon</div>
+        </div>
+      </div>
+      <span class="eyebrow eyebrow--accent">Étude de cas — RH &amp; recrutement</span>
+      <h2 style="margin-top: 12px;">Comment T&amp;A a remplacé trois jours d'audit interne par 50 minutes sur AuditIQ.</h2>
+      <p class="lede">Le cabinet utilisait depuis 18 mois un outil de scoring automatique des CV. Le besoin : documenter formellement l'absence de biais avant le contrôle annuel.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le défi</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Personne en interne n'avait la compétence statistique pour produire un audit fairness reconnu. Le précédent audit, mené sur Excel, avait pris 3 jours de travail répartis sur deux semaines, et n'était ni structuré annexe IV ni signé numériquement.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">La solution</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Audit Module 1 sur 412 candidatures de l'année. Trois attributs sensibles audités simultanément (genre, âge, origine présumée). Rapport produit en 50 minutes, dont 30 minutes de configuration.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le résultat</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6;">Detection d'un écart de 12 % sur l'axe genre, lié au poids du critère « expérience continue » dans le scoring. Recommandation appliquée : pondération réduite. Audit de suivi 3 mois plus tard : score remonté de 3/5 à 4,5/5.</p>
+
+      <div class="case-stats">
+        <div class="case-stat">
+          <div class="case-stat__label">Temps gagné</div>
+          <div class="case-stat__value">3 j → 50 min</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Score audit 1</div>
+          <div class="case-stat__value">3 / 5</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Score après correction</div>
+          <div class="case-stat__value">4,5 / 5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-quote">
+      <blockquote>« Notre outil de scoring CV avait dérivé sans qu'on le sache. AuditIQ nous a montré l'écart entre les profils en moins de quinze minutes, avec un vocabulaire que mon CODIR pouvait comprendre. Et le rapport Excel structuré, c'est ce qui a fini de convaincre la directrice juridique. »</blockquote>
+      <div class="case-quote__attr">
+        <div class="case-quote__avatar">CT</div>
+        <div>
+          <div class="case-quote__name">Claire Tessier</div>
+          <div class="case-quote__role">DRH · Cabinet Tessier &amp; Associés</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE 2 -->
+<section class="container">
+  <div class="case-study">
+    <div>
+      <div class="case-study__head">
+        <div class="case-study__logo">BL</div>
+        <div>
+          <div class="case-study__org">Banque Loiret</div>
+          <div class="case-study__org-meta">Banque régionale · 420 collaborateurs · Orléans</div>
+        </div>
+      </div>
+      <span class="eyebrow eyebrow--accent">Étude de cas — Crédit</span>
+      <h2 style="margin-top: 12px;">Comment Banque Loiret a identifié un proxy géographique et tenu la deadline AI Act.</h2>
+      <p class="lede">La banque utilisait un modèle de scoring crédit entraîné en 2024 sur des données historiques internes. Aucun audit préalable n'avait été conduit. Le calendrier : 7 mois pour être conforme avant août 2026.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le défi</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Le périmètre haut risque AI Act s'applique au scoring crédit (annexe III, point 5.b). Documenter et corriger les éventuels biais devenait critique. Le département data interne ne disposait pas d'outillage spécialisé pour la fairness.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">La solution</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Audit combiné Module 2 + Module 1 sur 2 840 demandes de crédit Q3 2025. Clustering DBSCAN pour identifier les regroupements naturels, puis audit fairness sur les attributs déclarés.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le résultat</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6;">Identification d'un cluster déviant représentant 18 % de l'échantillon et 60 % des refus. Information mutuelle entre code postal et origine présumée : 0,82. Diagnostic : proxy géographique. Re-développement du modèle conduit en 4 mois, validation en 1,5 mois, documentation finale en 1,5 mois. Mise en production conforme en juillet 2026.</p>
+
+      <div class="case-stats">
+        <div class="case-stat">
+          <div class="case-stat__label">Demandes auditées</div>
+          <div class="case-stat__value">2 840</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Score audit initial</div>
+          <div class="case-stat__value" style="color: var(--status-fail);">1 / 5</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Délai mise en conformité</div>
+          <div class="case-stat__value">7 mois</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-quote">
+      <blockquote>« Le rapport généré par AuditIQ a remplacé trois jours de travail interne. Et surtout, il parle la langue de l'AI Act, ce qui n'est pas une évidence dans notre métier. Si on avait attendu juin, on n'aurait jamais tenu. »</blockquote>
+      <div class="case-quote__attr">
+        <div class="case-quote__avatar">RM</div>
+        <div>
+          <div class="case-quote__name">Romain Mathys</div>
+          <div class="case-quote__role">Responsable conformité · Banque Loiret</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE 3 -->
+<section class="container">
+  <div class="case-study">
+    <div>
+      <div class="case-study__head">
+        <div class="case-study__logo">MS</div>
+        <div>
+          <div class="case-study__org">Mathys SA</div>
+          <div class="case-study__org-meta">Équipement industriel · 240 collaborateurs · Strasbourg</div>
+        </div>
+      </div>
+      <span class="eyebrow eyebrow--accent">Étude de cas — Chatbot SAV</span>
+      <h2 style="margin-top: 12px;">Comment Mathys SA a corrigé son chatbot SAV après audit LLM.</h2>
+      <p class="lede">L'entreprise opérait un chatbot Mistral-7B fine-tuné, traitant 12 000 sollicitations par mois. Une plainte client interne avait évoqué un traitement différencié selon le profil.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le défi</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Vérifier de manière documentée si le chatbot traitait équitablement les sollicitations, et corriger si nécessaire avant qu'un signalement RGPD soit déposé.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">La solution</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); margin-bottom: 20px; line-height: 1.6;">Audit Module 3 sur 412 prompts pairs, sur six axes. Test mené en condition de production, sans modification de l'endpoint. Durée totale 2h, dont 90 minutes d'exécution automatique.</p>
+
+      <h4 style="font-size: var(--fs-h4); margin-bottom: 8px;">Le résultat</h4>
+      <p style="color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6;">Score global 3,2/5. Axe handicap : 2,1/5 — le chatbot redirigeait systématiquement les sollicitations mentionnant un handicap vers un « service spécialisé », sans répondre directement. Recommandation : ajouter aux exemples de fine-tuning des sollicitations avec mention de handicap correctement traitées. Audit de suivi : 4/5 sur tous les axes.</p>
+
+      <div class="case-stats">
+        <div class="case-stat">
+          <div class="case-stat__label">Prompts pairs</div>
+          <div class="case-stat__value">412</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Axe le plus touché</div>
+          <div class="case-stat__value" style="color: var(--status-fail);">Handicap</div>
+        </div>
+        <div class="case-stat">
+          <div class="case-stat__label">Score après correction</div>
+          <div class="case-stat__value">4 / 5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-quote">
+      <blockquote>« Sans AuditIQ, on aurait dû refaire toute notre banque d'évaluation maison, et on n'aurait jamais eu un rapport opposable. Là, on a un rapport signé, daté, prêt à montrer si la CNIL pose la question. »</blockquote>
+      <div class="case-quote__attr">
+        <div class="case-quote__avatar">EM</div>
+        <div>
+          <div class="case-quote__name">Élise Maréchal</div>
+          <div class="case-quote__role">Responsable produit digital · Mathys SA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPACT QUOTES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">D'autres voix</span>
+      <h2 class="section-header__title">Trois témoignages courts.</h2>
+    </div>
+    <div class="compact-quotes">
+      <div class="compact-quote">
+        <blockquote>« Le score de risque global affiché à l'écran est devenu un point d'agenda mensuel dans notre comité de direction. C'est rare qu'un outil change aussi vite une habitude de gouvernance. »</blockquote>
+        <div class="compact-quote__attr">
+          <div class="compact-quote__avatar">PD</div>
+          <div>
+            <div style="font-size: var(--fs-sm); font-weight: 500;">Pierre Duval</div>
+            <div style="font-size: var(--fs-xs); color: var(--fg-muted);">DG · Crédit Régional Méditerranée</div>
+          </div>
+        </div>
+      </div>
+      <div class="compact-quote">
+        <blockquote>« Nous avons fait un audit pilote sur notre triage de patients avant déploiement. Le rapport produit nous a permis de cocher la case "fairness" du dossier MDR avec un livrable réel — pas un document de promesse. »</blockquote>
+        <div class="compact-quote__attr">
+          <div class="compact-quote__avatar">SA</div>
+          <div>
+            <div style="font-size: var(--fs-sm); font-weight: 500;">Dr Samia Aliotti</div>
+            <div style="font-size: var(--fs-xs); color: var(--fg-muted);">Directrice médicale · Hôpital Saint-Marc</div>
+          </div>
+        </div>
+      </div>
+      <div class="compact-quote">
+        <blockquote>« Nos donneurs d'ordre nous demandent désormais un audit fairness annuel. AuditIQ nous l'a rendu opérationnel en 6 semaines, alors qu'on n'avait jamais touché à ces sujets. »</blockquote>
+        <div class="compact-quote__attr">
+          <div class="compact-quote__avatar">JV</div>
+          <div>
+            <div style="font-size: var(--fs-sm); font-weight: 500;">Julien Verlaine</div>
+            <div style="font-size: var(--fs-xs); color: var(--fg-muted);">CTO · Groupe Verlaine SaaS</div>
+          </div>
+        </div>
+      </div>
+      <div class="compact-quote">
+        <blockquote>« L'export Excel structuré annexe IV est ce qui a convaincu notre DPO. Plus besoin d'écrire une note de synthèse à la main : tout est déjà au bon format. »</blockquote>
+        <div class="compact-quote__attr">
+          <div class="compact-quote__avatar">AB</div>
+          <div>
+            <div style="font-size: var(--fs-sm); font-weight: 500;">Amélie Bénard</div>
+            <div style="font-size: var(--fs-xs); color: var(--fg-muted);">DPO · Mutuelle Verte</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Votre histoire</span>
+        <h2 style="margin-top: 12px;">Devenez le prochain cas client.</h2>
+        <p>Nous accompagnons 6 à 8 nouvelles PME par mois pour leur premier audit. Réservez un créneau.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver une démo</a>
+        <a class="btn btn--secondary" href="cas-usage.html">Voir les cas d'usage</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

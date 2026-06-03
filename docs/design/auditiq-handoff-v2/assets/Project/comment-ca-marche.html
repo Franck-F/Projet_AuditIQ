@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comment ça marche — AuditIQ</title>
+<meta name="description" content="Le parcours AuditIQ en 4 étapes : importer, configurer, analyser, exporter. Une heure de travail, aucune ligne de code.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="partials.js" defer></script>
+<style>
+  .page-hero { padding: clamp(64px, 8vw, 96px) 0 var(--sp-9); border-bottom: 1px solid var(--border-subtle); }
+  .page-hero h1 { max-width: 22ch; margin-bottom: 20px; }
+  .page-hero p.lede { font-size: clamp(18px, 1.3vw, 20px); color: var(--fg-secondary); max-width: 60ch; line-height: 1.55; }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .stage {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
+    gap: 48px;
+    padding-block: var(--sp-9);
+    border-top: 1px solid var(--border-subtle);
+    align-items: start;
+  }
+  .stage:first-of-type { border-top: 0; }
+  @media (max-width: 920px) { .stage { grid-template-columns: 1fr; gap: 24px; } }
+  .stage__num {
+    font-family: var(--font-mono);
+    font-size: 64px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .stage__text h2 { font-size: var(--fs-h2); margin-bottom: 12px; letter-spacing: -0.015em; }
+  .stage__text > p { font-size: var(--fs-h4); color: var(--fg-secondary); line-height: 1.55; margin-bottom: 20px; }
+  .stage__text ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .stage__text li { font-size: var(--fs-sm); color: var(--fg-secondary); display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+  .stage__text li::before { content: ""; width: 14px; height: 14px; margin-top: 4px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364c89a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.5l3 3 7-7'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+  .stage__time { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+
+  .stage__mock {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .upload-area {
+    border: 1px dashed var(--border-strong);
+    background: var(--surface-2);
+    border-radius: var(--r-md);
+    padding: 32px;
+    text-align: center;
+    color: var(--fg-secondary);
+    font-size: var(--fs-sm);
+  }
+  .upload-area__icon { width: 36px; height: 36px; margin: 0 auto 12px; border-radius: 8px; background: var(--accent-soft); border: 1px solid var(--accent-border); color: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 18px; }
+  .upload-area strong { color: var(--fg); font-weight: 500; }
+
+  .field-mock { display: flex; flex-direction: column; gap: 6px; }
+  .field-mock__label { font-size: 12px; color: var(--fg-muted); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .field-mock__select {
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .field-mock__select span:last-child { color: var(--fg-muted); }
+  .field-mock__select strong { font-weight: 400; color: var(--fg); }
+
+  .faq-list { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 20px 24px;
+  }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: var(--fs-h4);
+    font-weight: 500;
+    align-items: start;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; font-family: var(--font-mono); font-size: 24px; color: var(--fg-muted); transition: transform 0.2s; line-height: 1; }
+  .faq-item[open] summary::after { transform: rotate(45deg); }
+  .faq-item p { margin-top: 12px; color: var(--fg-secondary); font-size: var(--fs-sm); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div data-partial="nav" data-active="produit"></div>
+
+<header class="page-hero">
+  <div class="container">
+    <span class="eyebrow eyebrow--accent">Comment ça marche</span>
+    <h1 style="margin-top: 16px;">Un parcours pensé pour des responsables, pas pour des data scientists.</h1>
+    <p class="lede">Quatre étapes. Trois personae : conformité, RH, dirigeant. Une seule heure entre la première connexion et le rapport d'audit téléchargé. Voici exactement ce qui se passe.</p>
+    <div style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap;">
+      <a class="btn btn--primary" href="contact.html">Demander une démo</a>
+      <a class="btn btn--secondary" href="produit.html">Voir le produit</a>
+    </div>
+  </div>
+</header>
+
+<section class="container section--sm">
+  <div class="timeline">
+    <!-- ÉTAPE 1 -->
+    <div class="stage">
+      <span class="stage__num">01</span>
+      <div class="stage__text">
+        <span class="stage__time">⏱ 10 minutes</span>
+        <h2>Importez vos données ou connectez votre IA.</h2>
+        <p>CSV, Excel, Google Sheets, ou intégration directe à votre base via clé API. Pour un audit LLM, une simple clé d'API OpenAI, Mistral ou Anthropic suffit. Aucune installation locale.</p>
+        <ul>
+          <li>Formats supportés : CSV, XLSX, Parquet, JSON. Jusqu'à 5 millions de lignes en standard.</li>
+          <li>Connecteurs natifs : Workday, BambooHR, Snowflake, BigQuery, PostgreSQL.</li>
+          <li>Validation automatique : taille, encodage, schéma, valeurs manquantes signalées.</li>
+          <li>Données stockées en France, chiffrées, supprimables sur demande sous 72h.</li>
+        </ul>
+      </div>
+      <div class="stage__mock">
+        <div class="upload-area">
+          <div class="upload-area__icon">↑</div>
+          <p><strong>Recrutement_2024.csv</strong></p>
+          <p style="font-size: var(--fs-xs); margin-top: 4px;">412 lignes · 18 colonnes · validation OK</p>
+          <div style="margin-top: 12px; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden;">
+            <div style="height: 100%; width: 100%; background: var(--status-pass);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 2 -->
+    <div class="stage">
+      <span class="stage__num">02</span>
+      <div class="stage__text">
+        <span class="stage__time">⏱ 15 minutes</span>
+        <h2>Configurez l'audit en quelques clics.</h2>
+        <p>Désignez la variable de décision que votre IA produit (par exemple : « short-listé », « accepté », « score ≥ 60 »). Identifiez les attributs sensibles à surveiller. AuditIQ propose des paramètres par défaut adaptés à votre secteur, ajustables par votre responsable conformité.</p>
+        <ul>
+          <li>Suggestions automatiques de colonnes sensibles, validées manuellement.</li>
+          <li>Seuils par défaut basés sur les standards académiques et l'article 10 de l'AI Act.</li>
+          <li>Configuration sauvegardée — re-applicable sur de futurs audits du même modèle.</li>
+          <li>Mode expert pour ajuster les métriques, agrégations et intervalles de confiance.</li>
+        </ul>
+      </div>
+      <div class="stage__mock">
+        <div class="field-mock">
+          <span class="field-mock__label">Variable cible (target)</span>
+          <div class="field-mock__select"><strong>short_listed</strong><span>▾</span></div>
+        </div>
+        <div class="field-mock">
+          <span class="field-mock__label">Attribut sensible</span>
+          <div class="field-mock__select"><strong>genre</strong><span>▾</span></div>
+        </div>
+        <div class="field-mock">
+          <span class="field-mock__label">Métriques</span>
+          <div class="field-mock__select"><strong>4 sélectionnées</strong><span>▾</span></div>
+        </div>
+        <div class="field-mock">
+          <span class="field-mock__label">Seuil règle 4/5</span>
+          <div class="field-mock__select"><strong>0.80</strong><span>▾</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 3 -->
+    <div class="stage">
+      <span class="stage__num">03</span>
+      <div class="stage__text">
+        <span class="stage__time">⏱ 20–30 minutes</span>
+        <h2>Analysez les résultats — comme un dossier qu'on parcourt.</h2>
+        <p>Feu tricolore global. Détail par métrique. Visualisation des écarts entre groupes. Chaque résultat est expliqué en deux à trois phrases compréhensibles, avec un lien direct vers le ou les articles de l'AI Act concernés. Votre responsable conformité peut commenter, valider, demander un complément.</p>
+        <ul>
+          <li>Vue executive (1 écran) pour la direction et le CODIR.</li>
+          <li>Vue détaillée par métrique pour le responsable conformité et le DPO.</li>
+          <li>Vue technique avancée pour les équipes data (intervalles, agrégations alternatives).</li>
+          <li>Commentaires internes et historique des annotations.</li>
+        </ul>
+      </div>
+      <div class="stage__mock">
+        <div class="row row--between">
+          <div>
+            <span class="eyebrow">Audit terminé</span>
+            <div style="font-size: 15px; margin-top: 4px; font-weight: 500;">Score 3 / 5</div>
+          </div>
+          <span class="status status--warn"><span class="status__dot"></span>Vigilance</span>
+        </div>
+        <div class="metric" style="padding: 14px;">
+          <div class="metric__head">
+            <span class="metric__label">Demographic Parity</span>
+            <span class="status status--warn"><span class="status__dot"></span>0.78</span>
+          </div>
+          <div class="metric__bar"><div class="metric__bar__fill metric__bar__fill--warn" style="width: 78%;"></div><div class="metric__threshold" style="left: 80%;"></div></div>
+        </div>
+        <div class="metric" style="padding: 14px;">
+          <div class="metric__head">
+            <span class="metric__label">Equal Opportunity</span>
+            <span class="status status--pass"><span class="status__dot"></span>0.92</span>
+          </div>
+          <div class="metric__bar"><div class="metric__bar__fill" style="width: 92%;"></div><div class="metric__threshold" style="left: 80%;"></div></div>
+        </div>
+        <p style="font-size: var(--fs-sm); color: var(--fg-secondary); line-height: 1.6; padding: 12px; background: var(--surface-2); border-radius: 6px;">
+          <strong style="color: var(--fg); font-weight: 500;">Lecture.</strong> L'écart de présélection entre groupes est de 12 %. La règle des 4/5 n'est pas respectée (0.78 &lt; 0.80). Cette situation relève de l'article 10 du règlement (UE) 2024/1689.
+        </p>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 4 -->
+    <div class="stage">
+      <span class="stage__num">04</span>
+      <div class="stage__text">
+        <span class="stage__time">⏱ 5 minutes</span>
+        <h2>Exportez une trace opposable.</h2>
+        <p>Deux exports prêts à transmettre : un PDF executive summary pour les décideurs et un Excel structuré conformément à l'annexe IV de l'AI Act, prêt à intégrer dans votre registre des systèmes d'IA. L'historique est conservé cinq ans.</p>
+        <ul>
+          <li>PDF executive — 1 à 2 pages, signé numériquement, audit ID horodaté.</li>
+          <li>Excel réglementaire — 10 à 25 pages selon le module, structure annexe IV.</li>
+          <li>API export pour intégration GRC (Governance, Risk, Compliance).</li>
+          <li>Archive zippée des données analysées, conservée chiffrée 5 ans.</li>
+        </ul>
+      </div>
+      <div class="stage__mock">
+        <div class="card card--surface-2" style="padding: 16px;">
+          <div class="row" style="gap: 12px; align-items: center;">
+            <div style="width: 32px; height: 40px; background: var(--status-fail-bg); border: 1px solid var(--status-fail-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--status-fail); font-family: var(--font-mono); font-size: 10px;">PDF</div>
+            <div style="flex: 1;">
+              <div style="font-size: var(--fs-sm); font-weight: 500;">rapport-A-2026-0314.pdf</div>
+              <div style="font-size: 11px; color: var(--fg-muted);">Executive summary · 2 pages</div>
+            </div>
+            <a href="#" class="btn btn--ghost btn--sm">↓</a>
+          </div>
+        </div>
+        <div class="card card--surface-2" style="padding: 16px;">
+          <div class="row" style="gap: 12px; align-items: center;">
+            <div style="width: 32px; height: 40px; background: var(--status-pass-bg); border: 1px solid var(--status-pass-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--status-pass); font-family: var(--font-mono); font-size: 10px;">XLSX</div>
+            <div style="flex: 1;">
+              <div style="font-size: var(--fs-sm); font-weight: 500;">annexe-IV-2026-0314.xlsx</div>
+              <div style="font-size: 11px; color: var(--fg-muted);">Structure AI Act · 14 onglets</div>
+            </div>
+            <a href="#" class="btn btn--ghost btn--sm">↓</a>
+          </div>
+        </div>
+        <div class="card card--surface-2" style="padding: 16px;">
+          <div class="row" style="gap: 12px; align-items: center;">
+            <div style="width: 32px; height: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--fg-muted); font-family: var(--font-mono); font-size: 10px;">ZIP</div>
+            <div style="flex: 1;">
+              <div style="font-size: var(--fs-sm); font-weight: 500;">archive-A-2026-0314.zip</div>
+              <div style="font-size: 11px; color: var(--fg-muted);">Données analysées · chiffrée AES-256</div>
+            </div>
+            <a href="#" class="btn btn--ghost btn--sm">↓</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOTAL TIME -->
+<section class="section section--sm">
+  <div class="container">
+    <div class="card card--xl" style="text-align: center; background: var(--surface);">
+      <span class="eyebrow eyebrow--accent">Temps total</span>
+      <h2 style="font-size: clamp(48px, 5vw, 64px); margin-top: 12px; letter-spacing: -0.02em;">50 minutes</h2>
+      <p style="color: var(--fg-secondary); max-width: 50ch; margin: 16px auto 0; font-size: var(--fs-body); line-height: 1.6;">Pour un premier audit supervisé classique. Comptez deux heures pour un audit LLM complet sur 400 prompts pairs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- OPS FAQ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header" style="max-width: 720px;">
+      <span class="eyebrow eyebrow--accent">Questions opérationnelles</span>
+      <h2 class="section-header__title">Avant de commencer.</h2>
+      <p class="section-header__lede">Les questions qu'on nous pose le plus avant la première démo.</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Combien de temps faut-il pour démarrer ?</summary>
+        <p>Compter une demi-journée pour mettre la plateforme en main, avec un de nos consultants en accompagnement (palier PME et Entreprise). Le premier audit est généralement bouclé le jour de la démo, sur vos propres données.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Faut-il une équipe data interne ?</summary>
+        <p>Non. AuditIQ est conçu pour des responsables RH, conformité ou innovation sans bagage statistique. Une équipe data est utile pour les audits techniques avancés mais n'est pas un prérequis.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Qu'est-ce qui distingue AuditIQ d'un outil open source comme Fairlearn ?</summary>
+        <p>Fairlearn est une bibliothèque Python utilisée par des data scientists. AuditIQ est un produit SaaS : pas de code, interface en français, ancrage AI Act, rapports opposables, gestion d'équipe, conservation 5 ans. Voir la <a href="comparatif.html" style="color: var(--accent);">page comparatif</a> pour le détail.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Que se passe-t-il si un audit révèle un biais important ?</summary>
+        <p>AuditIQ documente l'écart, propose des recommandations hiérarchisées, et rattache la situation aux articles applicables. La décision de remédiation reste votre prérogative. AuditIQ n'effectue pas de correction automatique du modèle.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Mes données sortent-elles d'Europe ?</summary>
+        <p>Non. Hébergement OVHcloud Roubaix, traitement et stockage sur sol français. Aucun transfert hors UE. Voir la <a href="produit.html#securite" style="color: var(--accent);">section sécurité</a>.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Puis-je tester AuditIQ avant de m'engager ?</summary>
+        <p>Oui. Le palier Découverte est gratuit et permanent : un audit supervisé par mois, jusqu'à trois utilisateurs. Aucune carte bancaire requise.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sm">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <span class="eyebrow eyebrow--accent">Prêt à essayer</span>
+        <h2 style="margin-top: 12px;">Faites votre premier audit sur vos données.</h2>
+        <p>Notre équipe vous guide pas à pas pendant la démo. Vous repartez avec un rapport.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <a class="btn btn--primary btn--lg" href="contact.html">Réserver une démo</a>
+        <a class="btn btn--secondary" href="inscription.html">Démarrer en autonomie</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-partial="footer"></div>
+
+</body>
+</html>

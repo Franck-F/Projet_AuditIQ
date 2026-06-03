@@ -11,6 +11,10 @@ import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Meter } from '@/components/product/Meter';
 import { Tabs } from '@/components/product/Tabs';
 import { InlineNote } from '@/components/product/InlineNote';
+import { RatioBar } from '@/components/product/RatioBar';
+import { ClusterMap } from '@/components/product/ClusterMap';
+import { HeatMap6Axes } from '@/components/product/HeatMap6Axes';
+import { DiffViewer } from '@/components/product/DiffViewer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/ui/icons';
@@ -650,6 +654,57 @@ function MetriquesTab({
 
 /* ─── Tab content — Groupes / Clusters / Catégories ─────────────────── */
 
+/**
+ * Builds RatioBar groups from M1MetricsOut.groups, mapping selection_rate as
+ * the bar value. The RatioBar automatically treats the highest value as
+ * reference, which matches our reference_value group.
+ */
+function buildRatioBarGroups(m1: M1MetricsOut): Array<{ label: string; value: number; n: number }> {
+  return m1.groups.map((g) => ({
+    label: g.value,
+    value: g.selection_rate,
+    n: g.n,
+  }));
+}
+
+/**
+ * Synthesizes 2D ClusterMap points from ClusterStatOut data.
+ * The engine returns no true 2D projection, so we lay out clusters on a
+ * pseudo-scatter: x = clusterId * 80 (spread horizontally), y = positive_rate * 100
+ * (vertical axis mirrors the acceptance rate). Adding a small jitter per
+ * cluster so not all points land on the same spot.
+ */
+function buildClusterMapPoints(m2: M2MetricsOut): Array<{ x: number; y: number; clusterId: string; isDeviant: boolean }> {
+  return m2.clusters.map((c) => ({
+    x: c.id * 80 + 40,
+    y: c.positive_rate * 100,
+    clusterId: String(c.id),
+    isDeviant: c.is_deviant,
+  }));
+}
+
+/**
+ * Maps M3 categories to exactly 6 HeatMap6Axes entries.
+ * Each category uses its score (0–1) scaled to (0–5) for the score/5 display.
+ * If fewer than 6 categories exist, pads with neutral entries (score=5, status='info').
+ * If more than 6, takes the first 6.
+ */
+type HeatMap6AxesEntry = { key: string; label: string; score: number; status: 'pass' | 'warn' | 'fail' | 'info' };
+
+function buildHeatMap6AxesEntries(m3: M3MetricsOut): [HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry] {
+  const cats: HeatMap6AxesEntry[] = m3.categories.slice(0, 6).map((c) => ({
+    key: c.name,
+    label: c.name,
+    score: c.score * 5, // scale 0–1 → 0–5
+    status: c.verdict as 'pass' | 'warn' | 'fail',
+  }));
+  // Pad with neutral axes if fewer than 6 categories
+  while (cats.length < 6) {
+    cats.push({ key: `neutral-${cats.length}`, label: '—', score: 5, status: 'info' });
+  }
+  return cats as [HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry, HeatMap6AxesEntry];
+}
+
 function GroupesTab({
   metrics,
   module,
@@ -661,72 +716,29 @@ function GroupesTab({
   const isM2 = 'clusters' in metrics;
   const isM3 = module === 'M3' && 'categories' in metrics;
 
+  // M2 cluster selection state
+  const [selectedClusterId, setSelectedClusterId] = React.useState<string | null>(null);
+
   if (isM1) {
     const m1 = metrics as M1MetricsOut;
-    const refGroup = m1.groups.find((g) => g.value === m1.reference_value);
-    const refRate = refGroup?.selection_rate ?? 1;
+    const ratioBarGroups = buildRatioBarGroups(m1);
     return (
       <Card className="overflow-hidden p-0">
         <div className="border-b border-border-subtle px-5 py-4">
-          <h3 className="text-base font-medium text-fg">Taux d&apos;acceptation par groupe</h3>
+          <h3 className="text-base font-medium text-fg">Comparaison des groupes · Règle des 4/5</h3>
           <p className="mt-0.5 text-[13px] text-fg-muted">
-            Proportion de décisions favorables. Le groupe de référence est le plus favorisé.
+            Taux d&apos;acceptation par groupe. Le groupe de référence est le plus favorisé.
           </p>
         </div>
         <div className="px-6 py-5">
-          {m1.groups.map((g: GroupStatOut) => {
-            const ratio = refRate > 0 ? g.selection_rate / refRate : 0;
-            const isRef = g.value === m1.reference_value;
-            const barStatus: Verdict = isRef ? 'pass' : ratio >= 0.8 ? 'pass' : 'fail';
-            return (
-              <div
-                key={g.value}
-                style={{ display: 'grid', gridTemplateColumns: '150px 1fr 70px', gap: 18, alignItems: 'center', padding: '13px 0' }}
-              >
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-fg">
-                    {g.value}
-                    {isRef && <StatusBadge tone="info">Référence</StatusBadge>}
-                  </div>
-                  <div className="mt-0.5 font-mono text-[11.5px] text-fg-muted">
-                    {g.n.toLocaleString('fr-FR')} décisions
-                  </div>
-                </div>
-                <div className="relative h-7 overflow-hidden rounded-lg bg-surface-3">
-                  <div
-                    className="absolute inset-y-0 left-0 flex items-center justify-end rounded-lg pr-2.5 transition-[width] duration-700"
-                    style={{
-                      width: `${g.selection_rate * 100}%`,
-                      background: isRef
-                        ? 'var(--status-info)'
-                        : barStatus === 'pass'
-                          ? 'var(--status-pass)'
-                          : 'var(--status-fail)',
-                    }}
-                  >
-                    <span className="font-mono text-[12px] font-semibold text-white">
-                      {(g.selection_rate * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className="text-right font-mono text-[13px] tabular-nums"
-                  style={{
-                    color: isRef
-                      ? 'var(--fg-muted)'
-                      : barStatus === 'pass'
-                        ? 'var(--status-pass)'
-                        : 'var(--status-fail)',
-                  }}
-                >
-                  {isRef ? '—' : `${(ratio * 100).toFixed(0)}%`}
-                </div>
-              </div>
-            );
-          })}
-          <hr className="my-3 border-border-subtle" />
+          <RatioBar
+            groups={ratioBarGroups}
+            threshold={0.8}
+            format={(v) => `${(v * 100).toFixed(1)}%`}
+          />
+          <hr className="my-4 border-border-subtle" />
           <InlineNote icon={Scale}>
-            Ratio de la dernière colonne = taux du groupe ÷ taux de référence. En dessous de 80 %, la règle des 4/5 est enfreinte.
+            Règle des 4/5 : le taux du groupe défavorisé doit atteindre au moins 80 % du taux de référence.
           </InlineNote>
         </div>
       </Card>
@@ -735,83 +747,158 @@ function GroupesTab({
 
   if (isM2) {
     const m2 = metrics as M2MetricsOut;
-    const deviantClusters = m2.clusters.filter((c) => c.is_deviant);
+    const clusterPoints = buildClusterMapPoints(m2);
+    const selectedCluster = selectedClusterId !== null
+      ? m2.clusters.find((c) => String(c.id) === selectedClusterId)
+      : null;
+
     return (
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-border-subtle px-5 py-4">
-          <h3 className="text-base font-medium text-fg">Clusters déviants</h3>
-          <p className="mt-0.5 text-[13px] text-fg-muted">
-            Sous-populations présentant un taux d&apos;acceptation significativement différent du global.
-          </p>
-        </div>
-        <div className="px-6 py-5">
-          {deviantClusters.length === 0 ? (
-            <p className="text-sm text-fg-muted">Aucun cluster déviant détecté.</p>
-          ) : (
-            deviantClusters.map((c) => (
-              <div key={c.id} className="mb-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-sm font-medium text-fg">Cluster #{c.id}</span>
-                  <StatusBadge tone="fail">Déviant</StatusBadge>
-                </div>
-                <div className="mb-1 text-[13px] text-fg-secondary">
-                  {c.n} décisions · taux favorable : {(c.positive_rate * 100).toFixed(1)} % · écart : {c.deviation_pp > 0 ? '+' : ''}{c.deviation_pp} pts
-                </div>
-                <Meter
-                  value={c.positive_rate}
-                  threshold={m2.global_positive_rate}
-                  max={1}
-                  status="fail"
-                  format={(v) => `${(v * 100).toFixed(1)} %`}
-                />
-                {c.top_features.length > 0 && (
-                  <div className="mt-2 text-[12.5px] text-fg-muted">
-                    Caractéristiques : {c.top_features.map((f) => `${f.name} (${f.direction === 'above' ? '↑' : '↓'} ${f.std_diff})`).join(', ')}
+      <div className="flex flex-col gap-4">
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-border-subtle px-5 py-4">
+            <h3 className="text-base font-medium text-fg">Projection des clusters · carte 2D</h3>
+            <p className="mt-0.5 text-[13px] text-fg-muted">
+              Les clusters sont projetés selon leur taux d&apos;acceptation (axe Y) et leur identifiant (axe X).
+              Les clusters déviants apparaissent en rouge.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-4 px-6 py-5 sm:flex-row">
+            {/* Cluster scatter map */}
+            <ClusterMap
+              points={clusterPoints}
+              selectedClusterId={selectedClusterId ?? undefined}
+              onClusterSelect={(id) => setSelectedClusterId((prev) => (prev === id ? null : id))}
+              className="shrink-0"
+            />
+            {/* Selected cluster details or legend */}
+            <div className="flex-1 min-w-0">
+              {selectedCluster ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-fg">Cluster #{selectedCluster.id}</span>
+                    {selectedCluster.is_deviant && <StatusBadge tone="fail">Déviant</StatusBadge>}
                   </div>
-                )}
+                  <p className="text-[13px] text-fg-secondary">
+                    {selectedCluster.n.toLocaleString('fr-FR')} décisions ·{' '}
+                    taux favorable : {(selectedCluster.positive_rate * 100).toFixed(1)} % ·{' '}
+                    écart : {selectedCluster.deviation_pp > 0 ? '+' : ''}{selectedCluster.deviation_pp} pts
+                  </p>
+                  <Meter
+                    value={selectedCluster.positive_rate}
+                    threshold={m2.global_positive_rate}
+                    max={1}
+                    status={selectedCluster.is_deviant ? 'fail' : 'pass'}
+                    format={(v) => `${(v * 100).toFixed(1)} %`}
+                  />
+                  {selectedCluster.top_features.length > 0 && (
+                    <div className="mt-2">
+                      <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-fg-muted">
+                        Features dominantes
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {selectedCluster.top_features.map((f) => (
+                          <div key={f.name} className="flex items-center gap-2 text-[12.5px] text-fg-secondary">
+                            <span className="font-mono">{f.name}</span>
+                            <span>{f.direction === 'above' ? '↑' : '↓'} {f.std_diff.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-fg-muted">
+                  Cliquez sur un cluster pour voir ses caractéristiques.
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Feature rank list — shows all clusters sorted by risk */}
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-border-subtle px-5 py-4">
+            <h3 className="text-base font-medium text-fg">Classement des clusters par risque</h3>
+          </div>
+          <div className="px-6 py-4 flex flex-col gap-3">
+            {[...m2.clusters].sort((a, b) => (b.is_deviant ? 1 : 0) - (a.is_deviant ? 1 : 0) || Math.abs(b.deviation_pp) - Math.abs(a.deviation_pp)).map((c) => (
+              <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '56px 1fr 80px', gap: 12, alignItems: 'center' }}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-fg">C{c.id}</span>
+                  {c.is_deviant && <StatusBadge tone="fail">!</StatusBadge>}
+                </div>
+                <div>
+                  <Meter
+                    value={c.positive_rate}
+                    threshold={m2.global_positive_rate}
+                    max={1}
+                    status={c.is_deviant ? 'fail' : 'pass'}
+                    format={(v) => `${(v * 100).toFixed(1)} %`}
+                  />
+                  <div className="mt-1 font-mono text-[11.5px] text-fg-muted">
+                    {c.n.toLocaleString('fr-FR')} décisions
+                  </div>
+                </div>
+                <div className="text-right font-mono text-[13px] tabular-nums" style={{ color: c.is_deviant ? 'var(--status-fail)' : 'var(--fg-muted)' }}>
+                  {(c.positive_rate * 100).toFixed(1)} %
+                </div>
               </div>
-            ))
-          )}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (isM3) {
     const m3 = metrics as M3MetricsOut;
+    const axes = buildHeatMap6AxesEntries(m3);
+    const firstExample = m3.divergent_examples[0];
+
     return (
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-border-subtle px-5 py-4">
-          <h3 className="text-base font-medium text-fg">Catégories analysées</h3>
-          <p className="mt-0.5 text-[13px] text-fg-muted">
-            Résultats par catégorie de biais testée.
-          </p>
-        </div>
-        <div className="px-6 py-5 flex flex-col gap-4">
-          {m3.categories.map((c) => (
-            <div key={c.name}>
-              <div className="mb-1.5 flex items-center gap-2">
-                <span className="text-sm font-medium text-fg">{c.name}</span>
-                <StatusBadge tone={c.verdict as StatusTone} />
+      <div className="flex flex-col gap-4">
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-border-subtle px-5 py-4">
+            <h3 className="text-base font-medium text-fg">Scores par axe sensible</h3>
+            <p className="mt-0.5 text-[13px] text-fg-muted">
+              Chaque catégorie est évaluée sur une échelle de 0 à 5. Un score de 5 indique l&apos;équité la plus forte.
+            </p>
+          </div>
+          <div className="p-5">
+            <HeatMap6Axes axes={axes} />
+          </div>
+        </Card>
+
+        {/* DiffViewer for the most divergent example */}
+        {firstExample && (
+          <Card className="overflow-hidden p-0">
+            <div className="border-b border-border-subtle px-5 py-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-medium text-fg">Exemple représentatif · {firstExample.category}</h3>
+                <StatusBadge tone="fail">Divergent</StatusBadge>
               </div>
-              <Meter
-                value={c.score}
-                threshold={0.8}
-                max={1}
-                status={c.verdict as 'pass' | 'warn' | 'fail'}
-                format={(v) => `${(v * 100).toFixed(0)} %`}
+              <p className="mt-0.5 text-[13px] text-fg-muted">
+                La paire la plus divergente détectée. {firstExample.reason}
+              </p>
+            </div>
+            <div className="p-5">
+              <DiffViewer
+                neutral={{ prompt: firstExample.variant_a, response: firstExample.excerpt_a }}
+                marked={{ prompt: firstExample.variant_b, response: firstExample.excerpt_b }}
+                delta={{
+                  length_chars: firstExample.excerpt_b.length - firstExample.excerpt_a.length,
+                }}
               />
             </div>
-          ))}
-          {m3.divergent_examples.length > 0 && (
-            <div className="mt-2">
-              <InlineNote>
-                {m3.divergent_examples.length} exemple(s) divergent(s) — consultez l&apos;onglet Métriques détaillées pour le détail.
-              </InlineNote>
-            </div>
-          )}
-        </div>
-      </Card>
+          </Card>
+        )}
+
+        {m3.divergent_examples.length === 0 && (
+          <InlineNote>
+            Aucun exemple divergent détecté dans cet audit.
+          </InlineNote>
+        )}
+      </div>
     );
   }
 
