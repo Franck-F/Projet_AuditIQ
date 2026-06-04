@@ -34,7 +34,7 @@ describe('connexion', () => {
   it('signs in then redirects to /app', async () => {
     signInWithPassword.mockResolvedValue({ error: null });
     render(<Wrapped />);
-    await userEvent.type(screen.getByLabelText(/email/i), 'claire@acme.fr');
+    await userEvent.type(screen.getByLabelText(/e.?mail/i), 'claire@acme.fr');
     await userEvent.type(screen.getByLabelText(/mot de passe/i), 'secret123');
     await userEvent.click(
       screen.getByRole('button', { name: /se connecter/i }),
@@ -54,7 +54,7 @@ describe('connexion', () => {
     });
     push.mockClear();
     render(<Wrapped />);
-    await userEvent.type(screen.getByLabelText(/email/i), 'x@y.fr');
+    await userEvent.type(screen.getByLabelText(/e.?mail/i), 'x@y.fr');
     await userEvent.type(screen.getByLabelText(/mot de passe/i), 'bad');
     await userEvent.click(
       screen.getByRole('button', { name: /se connecter/i }),

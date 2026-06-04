@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
@@ -139,22 +139,28 @@ export default function ConnexionPage() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium text-fg-secondary">
-              Email professionnel
+              E-mail professionnel
             </label>
-            <input
-              id="email"
-              type="email"
-              required
-              placeholder="vous@entreprise.fr"
-              autoComplete="email"
-              className={cn(
-                'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
-                'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
-                errors.email ? 'border-status-fail' : 'border-border-default',
-              )}
-              aria-invalid={errors.email ? true : undefined}
-              {...register('email')}
-            />
+            <div className="relative">
+              <Mail
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-fg-muted"
+                aria-hidden
+              />
+              <input
+                id="email"
+                type="email"
+                required
+                placeholder="vous@entreprise.fr"
+                autoComplete="email"
+                className={cn(
+                  'w-full rounded-md border bg-surface py-2.5 pr-3.5 pl-10 text-sm text-fg placeholder:text-fg-muted',
+                  'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
+                  errors.email ? 'border-status-fail' : 'border-border-default',
+                )}
+                aria-invalid={errors.email ? true : undefined}
+                {...register('email')}
+              />
+            </div>
             {errors.email && (
               <span className="text-xs text-status-fail">{errors.email.message}</span>
             )}
@@ -165,6 +171,10 @@ export default function ConnexionPage() {
               Mot de passe
             </label>
             <div className="relative">
+              <Lock
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-fg-muted"
+                aria-hidden
+              />
               <input
                 id="pwd"
                 type={showPassword ? 'text' : 'password'}
@@ -172,8 +182,7 @@ export default function ConnexionPage() {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 className={cn(
-                  // pr-11 reserves room for the eye toggle so the bullets don't overlap
-                  'w-full rounded-md border bg-surface px-3.5 py-2.5 pr-11 text-sm text-fg placeholder:text-fg-muted',
+                  'w-full rounded-md border bg-surface py-2.5 pr-11 pl-10 text-sm text-fg placeholder:text-fg-muted',
                   'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
                   errors.password ? 'border-status-fail' : 'border-border-default',
                 )}
@@ -185,10 +194,6 @@ export default function ConnexionPage() {
                 aria-pressed={showPassword}
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-fg"
               >
-                {/* sr-only (instead of aria-label) avoids interfering with
-                    Testing Library's getByLabelText(/mot de passe/i) match
-                    on the input above — same accessible name for AT, but
-                    the matcher walks text content rather than aria-label. */}
                 <span className="sr-only">
                   {showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                 </span>
@@ -219,6 +224,7 @@ export default function ConnexionPage() {
 
         <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Connexion…' : 'Se connecter'}
+          {!isSubmitting && <ArrowRight className="size-4" aria-hidden />}
         </Button>
       </form>
     </AuthShell>

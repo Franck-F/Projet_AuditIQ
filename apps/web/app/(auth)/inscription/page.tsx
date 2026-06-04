@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
@@ -40,13 +40,22 @@ const InputField = React.forwardRef<
     error?: string;
   }
 >(function InputField({ id, label, hint, error, type, ...props }, ref) {
-  // For `type="password"` we render the input wrapped with an eye toggle.
   const isPassword = type === 'password';
   const [reveal, setReveal] = React.useState(false);
   const effectiveType = isPassword && reveal ? 'text' : type;
+
+  // Pick a leading icon based on the input id (no extra prop needed)
+  const LeadIcon =
+    isPassword ? Lock
+    : type === 'email' ? Mail
+    : id === 'prenom' || id === 'nom' || id === 'entreprise' || id === 'role'
+      ? User
+      : null;
+
   const inputClass = cn(
-    'w-full rounded-md border bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted',
+    'w-full rounded-md border bg-surface py-2.5 pr-3.5 text-sm text-fg placeholder:text-fg-muted',
     'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]',
+    LeadIcon ? 'pl-10' : 'pl-3.5',
     isPassword && 'pr-11',
     error ? 'border-status-fail' : 'border-border-default',
   );
@@ -56,44 +65,35 @@ const InputField = React.forwardRef<
       <label htmlFor={id} className="text-sm font-medium text-fg-secondary">
         {label}
       </label>
-      {isPassword ? (
-        <div className="relative">
-          <input
-            ref={ref}
-            id={id}
-            type={effectiveType}
-            className={inputClass}
-            aria-invalid={error ? true : undefined}
-            {...props}
+      <div className="relative">
+        {LeadIcon && (
+          <LeadIcon
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-fg-muted"
+            aria-hidden
           />
+        )}
+        <input
+          ref={ref}
+          id={id}
+          type={effectiveType}
+          className={inputClass}
+          aria-invalid={error ? true : undefined}
+          {...props}
+        />
+        {isPassword && (
           <button
             type="button"
             onClick={() => setReveal((v) => !v)}
             aria-pressed={reveal}
             className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-fg"
           >
-            {/* sr-only (rather than aria-label) keeps the same accessible
-                name without polluting RTL's getByLabelText queries. */}
             <span className="sr-only">
               {reveal ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             </span>
-            {reveal ? (
-              <EyeOff className="size-4" aria-hidden />
-            ) : (
-              <Eye className="size-4" aria-hidden />
-            )}
+            {reveal ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
           </button>
-        </div>
-      ) : (
-        <input
-          ref={ref}
-          id={id}
-          type={type}
-          className={inputClass}
-          aria-invalid={error ? true : undefined}
-          {...props}
-        />
-      )}
+        )}
+      </div>
       {hint && !error && <span className="text-xs text-fg-muted">{hint}</span>}
       {error && <span className="text-xs text-status-fail">{error}</span>}
     </div>
@@ -263,6 +263,7 @@ export default function InscriptionPage() {
 
         <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Création…' : 'Créer mon compte'}
+          {!isSubmitting && <ArrowRight className="size-4" aria-hidden />}
         </Button>
       </form>
     </AuthShell>
