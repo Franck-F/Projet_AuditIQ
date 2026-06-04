@@ -1,466 +1,263 @@
-import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Container } from '@/components/layout/Container';
-import { Reveal } from '@/components/layout/Reveal';
-import { Button } from '@/components/ui/button';
-import { Eyebrow } from '@/components/marketing/Eyebrow';
-import { StatusPill } from '@/components/marketing/StatusPill';
-import { AnchorNav } from '@/components/marketing/AnchorNav';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: "Cas d'usage",
+  title: "Cas d'usage — AuditIQ",
   description:
-    "Cas d'usage AuditIQ : RH et recrutement, scoring crédit, finance, chatbot SAV, scoring marketing, service client.",
+    "Six scénarios concrets d'audit de fairness IA : RH & recrutement, scoring crédit, chatbot SAV, assurance, marketing, service client.",
 };
 
 /* ============================================================================
-   Page-local components
-   ============================================================================ */
-
-function StoryBlock({ title, body }: { title: string; body: React.ReactNode }) {
-  return (
-    <div>
-      <h4 className="mb-1.5 text-h4 font-medium text-fg">{title}</h4>
-      <p className="text-sm leading-relaxed text-fg-secondary">{body}</p>
-    </div>
-  );
-}
-
-function MetricRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: 'pass' | 'warn' | 'fail';
-}) {
-  return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-border-subtle py-3 last:border-b-0">
-      <span className="text-sm text-fg">{label}</span>
-      <StatusPill tone={tone}>{value}</StatusPill>
-    </div>
-  );
-}
-
-function ScenarioCard({
-  name,
-  org,
-  pill,
-  what,
-  children,
-  disclaimer,
-}: {
-  name: string;
-  org: string;
-  pill: React.ReactNode;
-  what?: string;
-  children: React.ReactNode;
-  disclaimer: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border-default bg-surface p-7">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-h4 font-medium text-fg">{name}</div>
-          <div className="text-xs text-fg-muted">{org}</div>
-        </div>
-        {pill}
-      </div>
-      {what && (
-        <div className="rounded-lg bg-surface-2 px-4 py-3 text-sm leading-relaxed text-fg-secondary">
-          {what}
-        </div>
-      )}
-      {children}
-      <div className="rounded-md border border-status-info-border bg-status-info-bg p-4 text-xs leading-relaxed text-fg-secondary">
-        {disclaimer}
-      </div>
-    </div>
-  );
-}
-
-function AxisMini({
-  axis,
-  score,
-  label,
-  tone,
-}: {
-  axis: string;
-  score: string;
-  label: string;
-  tone: 'pass' | 'warn' | 'fail';
-}) {
-  const labelColor: Record<typeof tone, string> = {
-    pass: 'text-status-pass',
-    warn: 'text-status-warn',
-    fail: 'text-status-fail',
-  };
-  const borderHl = tone === 'fail' ? 'border-status-fail-border' : 'border-border-default';
-  return (
-    <div className={`rounded-md border ${borderHl} bg-surface-2 p-3`}>
-      <Eyebrow>{axis}</Eyebrow>
-      <div className={`mt-1 font-mono text-[18px] tabular-nums ${tone === 'fail' ? 'text-status-fail' : 'text-fg'}`}>
-        {score} / 5
-      </div>
-      <div className={`text-xs ${labelColor[tone]}`}>{label}</div>
-    </div>
-  );
-}
-
-function UseCard({
-  sector,
-  title,
-  body,
-  module,
-  id,
-}: {
-  sector: string;
-  title: string;
-  body: string;
-  module: string;
-  id?: string;
-}) {
-  return (
-    <div
-      id={id}
-      className="flex flex-col gap-2.5 rounded-xl border border-border-default bg-surface p-6 scroll-mt-32"
-    >
-      <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">{sector}</span>
-      <h4 className="text-h4 font-medium text-fg">{title}</h4>
-      <p className="text-sm leading-relaxed text-fg-secondary">{body}</p>
-      <div className="mt-auto border-t border-border-subtle pt-3 text-xs text-fg-muted">
-        {module}
-      </div>
-    </div>
-  );
-}
-
-const ANCHORS = [
-  { href: '#rh', label: 'RH & recrutement' },
-  { href: '#credit', label: 'Crédit & scoring' },
-  { href: '#chatbot', label: 'Chatbot SAV' },
-  { href: '#assurance', label: 'Assurance' },
-  { href: '#marketing', label: 'Marketing & ciblage' },
-  { href: '#service', label: 'Service client' },
-];
-
-/* ============================================================================
-   Page
+   Cas d'usage — R8a rewrite per maquette docs/design/auditiq-vitrine-v3/cas-usage.html
+   Styles: ./vitrine.css (imported in layout.tsx)
    ============================================================================ */
 
 export default function CasUsagePage() {
   return (
     <>
-      <header className="border-b border-border-subtle pt-[clamp(64px,8vw,96px)] pb-12">
-        <Container>
-          <Reveal>
-            <Eyebrow accent>Cas d&apos;usage</Eyebrow>
-            <h1 className="mt-4 max-w-[22ch] font-display text-[clamp(36px,4vw,48px)] font-semibold leading-[1.1] tracking-[-0.02em] text-fg">
-              Six scénarios concrets, six fois où la fairness compte.
-            </h1>
-            <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.3vw,20px)] leading-relaxed text-fg-secondary">
-              AuditIQ a été conçu pour les IA réellement déployées en PME : scoring CV, scoring
-              crédit, chatbot SAV, scoring d&apos;assurance, ciblage marketing, triage service
-              client. Voici comment ça se passe en pratique, dossier par dossier.
-            </p>
-          </Reveal>
-        </Container>
+      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
+      <header className="page-head">
+        <div className="wrap">
+          <p className="kicker">Cas d&apos;usage</p>
+          <h1>Six scénarios concrets où la fairness compte.</h1>
+          <p className="lead">
+            AuditIQ a été conçu pour les IA réellement déployées en PME : tri de CV, scoring
+            crédit, chatbot SAV, tarification d&apos;assurance, ciblage marketing, routage de
+            tickets. Voici comment ça se passe en pratique, dossier par dossier.
+          </p>
+        </div>
       </header>
 
-      <AnchorNav items={ANCHORS} />
+      {/* ── ANCHOR NAV ───────────────────────────────────────────────────── */}
+      <div style={{ position: 'sticky', top: '65px', zIndex: 40, background: 'var(--surface-glass)', backdropFilter: 'blur(14px) saturate(1.4)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="wrap" style={{ display: 'flex', gap: '4px', overflowX: 'auto', padding: '10px 28px' }}>
+          <a href="#rh" style={{ padding: '7px 13px', borderRadius: '8px', fontSize: '13px', fontWeight: 450, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>RH &amp; recrutement</a>
+          <a href="#credit" style={{ padding: '7px 13px', borderRadius: '8px', fontSize: '13px', fontWeight: 450, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>Crédit &amp; scoring</a>
+          <a href="#chatbot" style={{ padding: '7px 13px', borderRadius: '8px', fontSize: '13px', fontWeight: 450, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>Chatbot SAV</a>
+          <a href="#autres" style={{ padding: '7px 13px', borderRadius: '8px', fontSize: '13px', fontWeight: 450, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>Autres cas</a>
+        </div>
+      </div>
 
-      {/* RH */}
-      <section id="rh" className="py-20 scroll-mt-32">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-            <Reveal>
-              <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">
-                Ressources humaines
-              </span>
-              <h2 className="mt-3 mb-4 text-[clamp(28px,3.5vw,36px)] font-display font-medium tracking-[-0.02em] text-fg">
-                IA de tri de CV en PME du conseil.
-              </h2>
-              <p className="mb-6 text-h4 leading-relaxed text-fg-secondary">
-                Cabinet Tessier &amp; Associés — 180 collaborateurs, recrute 60 personnes/an avec
-                un outil IA de présélection.
-              </p>
-              <div className="flex flex-col gap-5">
-                <StoryBlock
-                  title="Le contexte"
-                  body={
-                    <>
-                      Depuis 18 mois, Claire Tessier utilise un outil de présélection automatique
-                      des CV intégré à son ATS. Le système score chaque candidature ; les 20 % les
-                      mieux scorés passent en entretien. Personne, en interne, n&apos;a la capacité
-                      technique de vérifier les biais éventuels.
-                    </>
-                  }
-                />
-                <StoryBlock
-                  title="L'audit AuditIQ"
-                  body={
-                    <>
-                      Module 1 (supervisé). Variable cible :{' '}
-                      <code className="font-mono text-[0.9em] text-accent">short_listed</code>.
-                      Attribut sensible : genre déduit du prénom + revalidation manuelle. 412
-                      candidatures sur 2024 analysées. Calcul des 4 métriques fairness canoniques.
-                    </>
-                  }
-                />
-                <StoryBlock
-                  title="Le résultat"
-                  body={
-                    <>
-                      Demographic Parity à 0,78 — sous le seuil de 0,80. L&apos;écart de
-                      présélection entre profils Hommes et Femmes est de 12 points. Equal
-                      Opportunity à 0,92 : le modèle ne pénalise pas les profils qualifiés, mais
-                      sur-sélectionne les profils Hommes en amont. Recommandation AuditIQ : revoir
-                      le poids du critère « expérience continue » dans le scoring.
-                    </>
-                  }
-                />
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.08}>
-              <ScenarioCard
-                name="Recrutement_2024.csv"
-                org="Tessier & Associés · audit du 14 mars 2026"
-                pill={<StatusPill tone="warn">Score 3/5</StatusPill>}
-                what="412 candidatures · variable cible : short_listed · attribut : genre · 4 métriques"
-                disclaimer={
-                  <>
-                    <strong className="font-medium text-fg">Recommandation prioritaire.</strong>{' '}
-                    Revoir le poids du critère « expérience continue » dans le modèle de scoring.
-                    Ce critère pénalise mécaniquement les profils ayant pris un congé parental.
-                  </>
-                }
-              >
+      {/* ── RH ───────────────────────────────────────────────────────────── */}
+      <section id="rh" style={{ scrollMarginTop: '130px' }}>
+        <div className="wrap">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+            <div>
+              <span className="eyebrow acc">Ressources humaines</span>
+              <h2 className="title" style={{ marginTop: '12px', marginBottom: '6px' }}>IA de tri de CV en cabinet de conseil.</h2>
+              <p className="lede" style={{ fontSize: '17px', marginBottom: '24px' }}>180 collaborateurs, 60 recrutements par an, présélection automatique des candidatures.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 <div>
-                  <MetricRow label="Demographic Parity" value="0.78" tone="warn" />
-                  <MetricRow label="Equal Opportunity" value="0.92" tone="pass" />
-                  <MetricRow label="Equalized Odds" value="0.81" tone="warn" />
-                  <MetricRow label="Règle 4/5" value="0.73" tone="fail" />
-                </div>
-              </ScenarioCard>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
-
-      {/* CRÉDIT */}
-      <section id="credit" className="border-t border-border-subtle py-20 scroll-mt-32">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-            <Reveal className="order-1 lg:order-2">
-              <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">
-                Crédit &amp; scoring
-              </span>
-              <h2 className="mt-3 mb-4 text-[clamp(28px,3.5vw,36px)] font-display font-medium tracking-[-0.02em] text-fg">
-                Modèle de scoring crédit en banque régionale.
-              </h2>
-              <p className="mb-6 text-h4 leading-relaxed text-fg-secondary">
-                Banque Loiret — 420 collaborateurs, 38 000 demandes de crédit par an, modèle de
-                scoring entraîné en interne.
-              </p>
-              <div className="flex flex-col gap-5">
-                <StoryBlock
-                  title="Le contexte"
-                  body="Romain Mathys, responsable conformité, doit produire avant juillet 2026 une preuve de fairness sur le modèle de scoring crédit auto-déployé. Le modèle a été entraîné il y a deux ans sur des données historiques internes, sans audit préalable."
-                />
-                <StoryBlock
-                  title="L'audit AuditIQ"
-                  body="Module 2 (non supervisé) + Module 1 (supervisé). Clustering du jeu d'entraînement pour détecter d'éventuels proxies, puis audit complet de la fonction de décision. 2 840 demandes Q3 2025 analysées."
-                />
-                <StoryBlock
-                  title="Le résultat"
-                  body="Cluster C4 détecté avec sur-représentation de refus (60 % des refus pour 18 % de l'échantillon). Feature dominante : code postal. Information mutuelle avec origine présumée : 0,82. Le code postal agit comme proxy. Module 1 confirme : Demographic Parity à 0,71 sur l'axe origine présumée."
-                />
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.08} className="order-2 lg:order-1">
-              <ScenarioCard
-                name="Demandes_credit_Q3.csv"
-                org="Banque Loiret · audit du 22 mars 2026"
-                pill={<StatusPill tone="fail">Score 1/5</StatusPill>}
-                what="2 840 demandes · clustering DBSCAN · 4 clusters · proxy détecté"
-                disclaimer={
-                  <>
-                    <strong className="font-medium text-fg">Article AI Act 10 § 2.f.</strong>{' '}
-                    Risque élevé. Une remédiation est nécessaire avant la date de mise en
-                    application (août 2026).
-                  </>
-                }
-              >
-                <div className="rounded-lg border border-border-default bg-surface-2 p-4">
-                  <Eyebrow>Cluster déviant C4</Eyebrow>
-                  <h4 className="mt-1.5 text-[15px] font-medium text-fg">
-                    60 % des refus pour 18 % de l&apos;échantillon
-                  </h4>
-                  <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
-                    Feature dominante : code postal (information mutuelle = 0,82 avec origine
-                    présumée).
-                  </p>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le contexte</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Depuis 18 mois, un outil de présélection score chaque CV ; les 20&nbsp;% les mieux notés passent en entretien. Personne en interne n&apos;a la capacité technique de vérifier d&apos;éventuels biais.</p>
                 </div>
                 <div>
-                  <MetricRow label="Demographic Parity (origine)" value="0.71" tone="fail" />
-                  <MetricRow label="Règle 4/5" value="0.69" tone="fail" />
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 1 (supervisé). Variable cible&nbsp;: <span className="mono" style={{ color: 'var(--accent)' }}>short_listed</span>. Attribut sensible&nbsp;: genre. 412 candidatures de 2024 analysées, quatre métriques calculées.</p>
                 </div>
-              </ScenarioCard>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
-
-      {/* CHATBOT */}
-      <section id="chatbot" className="border-t border-border-subtle py-20 scroll-mt-32">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-            <Reveal>
-              <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">
-                Chatbot service client
-              </span>
-              <h2 className="mt-3 mb-4 text-[clamp(28px,3.5vw,36px)] font-display font-medium tracking-[-0.02em] text-fg">
-                Assistant LLM pour le SAV.
-              </h2>
-              <p className="mb-6 text-h4 leading-relaxed text-fg-secondary">
-                Mathys SA — équipement industriel, 240 collaborateurs, chatbot Mistral-7B
-                fine-tuné déployé sur le portail client B2B.
-              </p>
-              <div className="flex flex-col gap-5">
-                <StoryBlock
-                  title="Le contexte"
-                  body="Le chatbot répond à 12 000 sollicitations/mois sur le portail. Une plainte client interne a signalé un traitement « plus court et moins pédagogique » selon le type d'interlocuteur. L'équipe veut documenter et corriger."
-                />
-                <StoryBlock
-                  title="L'audit AuditIQ"
-                  body="Module 3 (LLM). 412 prompts pairs sur six axes. Métriques par axe : longueur, sentiment, taux de refus. Test mené en condition de production, sans modification de l'endpoint."
-                />
-                <StoryBlock
-                  title="Le résultat"
-                  body={
-                    <>
-                      Score global 3,2/5. Axe handicap : 2,1/5 — écarts significatifs. Le chatbot
-                      redirige plus fréquemment vers un « service spécialisé » lorsque le prompt
-                      évoque un handicap, sans fournir la réponse directe. Recommandation : revoir
-                      l&apos;instruction système et les exemples de fine-tuning.
-                    </>
-                  }
-                />
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.08}>
-              <ScenarioCard
-                name="Chatbot SAV · Mistral-7B"
-                org="Mathys SA · audit du 8 avril 2026"
-                pill={<StatusPill tone="warn">Score 3.2/5</StatusPill>}
-                disclaimer={
-                  <>
-                    <strong className="font-medium text-fg">Extrait significatif.</strong> Profil A
-                    (handicap non mentionné) : 142 mots, ton informatif. Profil B (handicap
-                    mentionné) : 38 mots, redirection systématique.
-                  </>
-                }
-              >
-                <div className="grid grid-cols-2 gap-2">
-                  <AxisMini axis="Genre" score="4,1" label="Faibles écarts" tone="pass" />
-                  <AxisMini axis="Origine" score="2,8" label="Écarts modérés" tone="warn" />
-                  <AxisMini axis="Âge" score="3,5" label="Acceptable" tone="warn" />
-                  <AxisMini axis="Handicap" score="2,1" label="Écarts significatifs" tone="fail" />
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Demographic Parity à 0,78, sous le seuil de 0,80&nbsp;: 12 points d&apos;écart de présélection entre profils. Equal Opportunity à 0,92 — le modèle ne pénalise pas les profils qualifiés, mais sur-sélectionne en amont. Recommandation&nbsp;: revoir le poids du critère «&nbsp;expérience continue&nbsp;».</p>
                 </div>
-              </ScenarioCard>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
-
-      {/* AUTRES CAS */}
-      <section className="border-t border-border-subtle bg-surface py-24">
-        <Container>
-          <Reveal className="mb-12 max-w-[760px]">
-            <Eyebrow accent>Autres cas d&apos;usage</Eyebrow>
-            <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-              AuditIQ s&apos;adapte à toutes vos IA productives.
-            </h2>
-            <p className="mt-4 text-h4 leading-relaxed text-fg-secondary">
-              Trois exemples complémentaires de mise en œuvre, sur des cas vus chez nos clients
-              pilotes.
-            </p>
-          </Reveal>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <UseCard
-              id="assurance"
-              sector="Assurance"
-              title="Tarification d'assurance auto"
-              body="Modèle de tarification ML utilisé par une mutuelle régionale. Audit Module 1 sur l'attribut âge, avec décomposition par tranches de 5 ans. Détection d'une sur-tarification non justifiée sur la tranche 18-22 ans."
-              module="Module 01 · Audit supervisé"
-            />
-            <UseCard
-              id="marketing"
-              sector="Marketing"
-              title="Ciblage publicitaire B2C"
-              body="Algorithme de scoring d'appétence pour une e-commerce mode. Audit Module 2 pour détecter d'éventuels proxies de genre dans les features comportementales (URL parsing, schéma de navigation, panier moyen)."
-              module="Module 02 · Non supervisé"
-            />
-            <UseCard
-              id="service"
-              sector="Service client"
-              title="Routage automatique de tickets"
-              body="IA de classification de tickets entre niveau 1, 2 et 3 chez un éditeur SaaS. Audit Module 1 sur la cible « niveau de priorité » avec attributs sensibles déduits du contenu textuel — détection d'un sous-traitement systématique."
-              module="Module 01 · Audit supervisé"
-            />
-            <UseCard
-              sector="Santé"
-              title="Triage de patients en téléconsultation"
-              body="Système de triage symptômes-vers-urgence d'une plateforme de téléconsultation. Audit Module 3 avec banque de prompts médicaux personnalisée, sur les axes genre et origine."
-              module="Module 03 · LLM"
-            />
-            <UseCard
-              sector="RH"
-              title="IA d'évaluation annuelle"
-              body="Outil de synthèse automatique d'évaluation d'objectifs annuels chez un éditeur SaaS. Audit Module 3 sur les commentaires générés, axes genre et âge."
-              module="Module 03 · LLM"
-            />
-            <UseCard
-              sector="Logistique"
-              title="Modèle de churn client B2B"
-              body="Prédiction de churn pour une PME logistique B2B. Audit Module 2 sur le dataset CRM, recherche de clusters déviants sur la taille d'entreprise et le secteur."
-              module="Module 02 · Non supervisé"
-            />
-          </div>
-        </Container>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Votre cas d&apos;usage</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Et le vôtre, on en parle ?
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  Demandez une démo. On configure ensemble un audit pilote sur l&apos;une de vos
-                  IA productives.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/temoignages">Lire les études de cas</Link>
-                </Button>
               </div>
             </div>
-          </Reveal>
-        </Container>
+            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '130px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Recrutement_2024.csv</div>
+                  <div className="mono" style={{ fontSize: '11.5px', color: 'var(--fg-muted)', marginTop: '2px' }}>Audit du 14 mars 2026</div>
+                </div>
+                <span className="pill warn">Score 3/5</span>
+              </div>
+              <div style={{ padding: '12px 14px', borderRadius: '9px', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--fg-secondary)', lineHeight: 1.5 }}>412 candidatures · cible&nbsp;: short_listed · attribut&nbsp;: genre · 4 métriques</div>
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px' }}><span>Demographic Parity</span><span className="pill warn">0.78</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px' }}><span>Equal Opportunity</span><span className="pill pass">0.92</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px' }}><span>Equalized Odds</span><span className="pill warn">0.81</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', fontSize: '14px' }}><span>Règle des 4/5</span><span className="pill fail">0.73</span></div>
+              </div>
+              <div style={{ padding: '13px 15px', borderRadius: '9px', background: 'var(--info-bg)', border: '1px solid var(--info-border)', fontSize: '12.5px', color: 'var(--fg-secondary)', lineHeight: 1.55 }}>
+                <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Recommandation prioritaire.</strong> Revoir le poids du critère «&nbsp;expérience continue&nbsp;»&nbsp;: il pénalise mécaniquement les profils ayant pris un congé parental.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CRÉDIT ───────────────────────────────────────────────────────── */}
+      <section id="credit" style={{ borderTop: '1px solid var(--border-subtle)', scrollMarginTop: '130px' }}>
+        <div className="wrap">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '130px', order: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Demandes_credit_Q3.csv</div>
+                  <div className="mono" style={{ fontSize: '11.5px', color: 'var(--fg-muted)', marginTop: '2px' }}>Audit du 22 mars 2026</div>
+                </div>
+                <span className="pill fail">Score 1/5</span>
+              </div>
+              <div style={{ padding: '12px 14px', borderRadius: '9px', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--fg-secondary)', lineHeight: 1.5 }}>2 840 demandes · clustering DBSCAN · 4 clusters · proxy détecté</div>
+              <div style={{ padding: '15px', borderRadius: '11px', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <span className="eyebrow">Cluster déviant C4</span>
+                <h4 style={{ fontSize: '15px', marginTop: '6px' }}>60&nbsp;% des refus pour 18&nbsp;% de l&apos;échantillon</h4>
+                <p className="lede" style={{ fontSize: '13px', marginTop: '7px' }}>Feature dominante&nbsp;: code postal — information mutuelle de 0,82 avec l&apos;origine présumée. Le code postal agit comme proxy.</p>
+              </div>
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '14px' }}><span>Demographic Parity (origine)</span><span className="pill fail">0.71</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', padding: '11px 0', fontSize: '14px' }}><span>Règle des 4/5</span><span className="pill fail">0.69</span></div>
+              </div>
+              <div style={{ padding: '13px 15px', borderRadius: '9px', background: 'var(--fail-bg)', border: '1px solid var(--fail-border)', fontSize: '12.5px', color: 'var(--fg-secondary)', lineHeight: 1.55 }}>
+                <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>AI Act, article 10 §&nbsp;2.f.</strong> Risque élevé. Une remédiation est nécessaire avant la mise en application (août 2026).
+              </div>
+            </div>
+            <div style={{ order: 1 }}>
+              <span className="eyebrow acc">Crédit &amp; scoring</span>
+              <h2 className="title" style={{ marginTop: '12px', marginBottom: '6px' }}>Scoring crédit en banque régionale.</h2>
+              <p className="lede" style={{ fontSize: '17px', marginBottom: '24px' }}>420 collaborateurs, 38&nbsp;000 demandes par an, modèle de scoring entraîné en interne.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le contexte</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Le responsable conformité doit produire avant juillet 2026 une preuve de fairness sur un modèle déployé il y a deux ans, entraîné sur des données historiques sans audit préalable.</p>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 2 (non supervisé) pour détecter d&apos;éventuels proxies, puis Module 1 (supervisé) sur la fonction de décision. 2 840 demandes du Q3 2025 analysées.</p>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Un cluster sur-représenté dans les refus (60&nbsp;% des refus pour 18&nbsp;% de l&apos;échantillon), tiré par le code postal. Module 1 confirme&nbsp;: Demographic Parity à 0,71 sur l&apos;axe origine présumée.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHATBOT ──────────────────────────────────────────────────────── */}
+      <section id="chatbot" style={{ borderTop: '1px solid var(--border-subtle)', scrollMarginTop: '130px' }}>
+        <div className="wrap">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+            <div>
+              <span className="eyebrow acc">Chatbot service client</span>
+              <h2 className="title" style={{ marginTop: '12px', marginBottom: '6px' }}>Assistant LLM pour le SAV.</h2>
+              <p className="lede" style={{ fontSize: '17px', marginBottom: '24px' }}>Équipement industriel, 240 collaborateurs, chatbot Mistral-7B déployé sur le portail client B2B.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le contexte</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Le chatbot traite 12&nbsp;000 sollicitations par mois. Une remontée interne signale un traitement «&nbsp;plus court et moins pédagogique&nbsp;» selon l&apos;interlocuteur. L&apos;équipe veut documenter et corriger.</p>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 3 (LLM). 412 prompts pairs sur six axes, métriques par axe&nbsp;: longueur, sentiment, taux de refus. Test en condition de production, sans modifier l&apos;endpoint.</p>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Score global 3,2/5. Axe handicap à 2,1/5&nbsp;: le chatbot redirige plus souvent vers un «&nbsp;service spécialisé&nbsp;» quand le prompt évoque un handicap, sans répondre directement. Recommandation&nbsp;: revoir l&apos;instruction système et les exemples de fine-tuning.</p>
+                </div>
+              </div>
+            </div>
+            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '130px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Chatbot SAV · Mistral-7B</div>
+                  <div className="mono" style={{ fontSize: '11.5px', color: 'var(--fg-muted)', marginTop: '2px' }}>Audit du 8 avril 2026</div>
+                </div>
+                <span className="pill warn">Score 3.2/5</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ padding: '13px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="eyebrow">Genre</span>
+                  <div className="mono" style={{ fontSize: '18px', fontWeight: 600, marginTop: '4px', color: 'var(--pass)' }}>4,1<span style={{ color: 'var(--fg-muted)', fontSize: '13px' }}> / 5</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--pass)' }}>Faibles écarts</div>
+                </div>
+                <div style={{ padding: '13px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="eyebrow">Origine</span>
+                  <div className="mono" style={{ fontSize: '18px', fontWeight: 600, marginTop: '4px', color: 'var(--warn)' }}>2,8<span style={{ color: 'var(--fg-muted)', fontSize: '13px' }}> / 5</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--warn)' }}>Écarts modérés</div>
+                </div>
+                <div style={{ padding: '13px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="eyebrow">Âge</span>
+                  <div className="mono" style={{ fontSize: '18px', fontWeight: 600, marginTop: '4px', color: 'var(--warn)' }}>3,5<span style={{ color: 'var(--fg-muted)', fontSize: '13px' }}> / 5</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--warn)' }}>Acceptable</div>
+                </div>
+                <div style={{ padding: '13px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--fail-border)' }}>
+                  <span className="eyebrow">Handicap</span>
+                  <div className="mono" style={{ fontSize: '18px', fontWeight: 600, marginTop: '4px', color: 'var(--fail)' }}>2,1<span style={{ color: 'var(--fg-muted)', fontSize: '13px' }}> / 5</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--fail)' }}>Écarts significatifs</div>
+                </div>
+              </div>
+              <div style={{ padding: '13px 15px', borderRadius: '9px', background: 'var(--info-bg)', border: '1px solid var(--info-border)', fontSize: '12.5px', color: 'var(--fg-secondary)', lineHeight: 1.55 }}>
+                <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Extrait significatif.</strong> Profil A (handicap non mentionné)&nbsp;: 142 mots, ton informatif. Profil B (handicap mentionné)&nbsp;: 38 mots, redirection systématique.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── AUTRES CAS ───────────────────────────────────────────────────── */}
+      <section id="autres" style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--surface)', scrollMarginTop: '130px' }}>
+        <div className="wrap">
+          <div style={{ maxWidth: '760px' }}>
+            <p className="eyebrow acc">Autres cas d&apos;usage</p>
+            <h2 className="title" style={{ marginTop: '12px' }}>AuditIQ s&apos;adapte à toutes vos IA en production.</h2>
+            <p className="lede" style={{ marginTop: '14px', fontSize: '17px' }}>Trois exemples complémentaires de mise en œuvre, sur des cas vus chez nos clients pilotes.</p>
+          </div>
+          <div className="g3" style={{ marginTop: '32px' }}>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">Assurance</span>
+              <h4 style={{ fontSize: '16px' }}>Tarification d&apos;assurance auto</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Modèle de tarification ML d&apos;une mutuelle régionale. Audit Module 1 sur l&apos;âge, par tranches de 5 ans. Détection d&apos;une sur-tarification non justifiée sur les 18–22 ans.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Audit supervisé</div>
+            </div>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">Marketing</span>
+              <h4 style={{ fontSize: '16px' }}>Ciblage publicitaire B2C</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Scoring d&apos;appétence pour un e-commerce mode. Audit Module 2 pour détecter des proxies de genre dans les features comportementales (navigation, panier moyen).</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Non supervisé</div>
+            </div>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">Service client</span>
+              <h4 style={{ fontSize: '16px' }}>Routage automatique de tickets</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Classification de tickets entre niveaux 1, 2 et 3 chez un éditeur SaaS. Audit Module 1 sur la priorité, attributs déduits du contenu — sous-traitement systématique détecté.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Audit supervisé</div>
+            </div>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">Santé</span>
+              <h4 style={{ fontSize: '16px' }}>Triage en téléconsultation</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Système de triage symptômes-vers-urgence d&apos;une plateforme de téléconsultation. Audit Module 3 avec banque de prompts médicaux, axes genre et origine.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · LLM</div>
+            </div>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">RH</span>
+              <h4 style={{ fontSize: '16px' }}>IA d&apos;évaluation annuelle</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Synthèse automatique d&apos;évaluation d&apos;objectifs chez un éditeur SaaS. Audit Module 3 sur les commentaires générés, axes genre et âge.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · LLM</div>
+            </div>
+            <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
+              <span className="eyebrow acc">Logistique</span>
+              <h4 style={{ fontSize: '16px' }}>Modèle de churn client B2B</h4>
+              <p className="lede" style={{ fontSize: '13.5px' }}>Prédiction de churn pour une PME logistique. Audit Module 2 sur le dataset CRM, recherche de clusters déviants sur la taille d&apos;entreprise et le secteur.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Non supervisé</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <section style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <div className="wrap">
+          <div className="card" style={{ padding: 'clamp(32px,5vw,52px)', display: 'grid', gridTemplateColumns: '1fr auto', gap: '32px', alignItems: 'center', background: 'linear-gradient(110deg, var(--accent-softer), transparent 58%)' }}>
+            <div>
+              <p className="eyebrow acc">Votre cas d&apos;usage</p>
+              <h2 className="title" style={{ marginTop: '12px' }}>Et le vôtre, on en parle&nbsp;?</h2>
+              <p className="lede" style={{ marginTop: '12px', maxWidth: '52ch' }}>Lancez un audit pilote gratuit sur l&apos;une de vos IA en production, ou échangez avec notre équipe sur votre périmètre.</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link className="btn btn-primary lg" href="/sign-up">Essayer gratuitement</Link>
+              <Link className="btn btn-outline lg" href="/contact">Nous contacter</Link>
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );

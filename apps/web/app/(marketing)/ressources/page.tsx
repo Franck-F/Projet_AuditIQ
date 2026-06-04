@@ -1,16 +1,17 @@
-import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Container } from '@/components/layout/Container';
-import { Reveal } from '@/components/layout/Reveal';
-import { Button } from '@/components/ui/button';
-import { Eyebrow } from '@/components/marketing/Eyebrow';
-import { NewsletterForm } from '@/components/marketing/NewsletterForm';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Ressources & blog',
+  title: 'Ressources — AuditIQ',
   description:
-    'Articles, guides AI Act, livres blancs, études sectorielles sur la fairness IA et la conformité européenne.',
+    'Articles, guides AI Act, livres blancs, études sectorielles sur la fairness IA et la conformité européenne. Rédigés en français par notre équipe.',
 };
+
+/* ============================================================================
+   Ressources — R8a rewrite per maquette docs/design/auditiq-vitrine-v3/ressources.html
+   Article slugs hardcoded to match R8b blog routes.
+   Styles: ./vitrine.css (imported in layout.tsx)
+   ============================================================================ */
 
 const CATEGORIES = [
   { label: 'Tous', count: 42, active: true },
@@ -21,7 +22,8 @@ const CATEGORIES = [
   { label: 'Produit', count: 3 },
 ];
 
-type ArtArt = {
+type Article = {
+  slug: string;
   cat: string;
   meta: string;
   title: string;
@@ -29,291 +31,224 @@ type ArtArt = {
   mediaBg: string;
   mediaFg: string;
   mediaLabel: string;
-  mediaSize?: string;
-  mediaFont?: 'mono' | 'display';
-  href: string;
 };
 
-const ARTICLES: ArtArt[] = [
+const ARTICLES: Article[] = [
   {
-    cat: 'MÉTHODE',
+    slug: 'regle-4-5',
+    cat: 'Méthode',
     meta: '8 mai · 8 min',
     title: 'La règle des quatre cinquièmes, expliquée concrètement.',
-    excerpt:
-      'Origines (EEOC, US, 1978), application dans la jurisprudence européenne, limites méthodologiques, alternatives modernes. Une fiche de référence.',
-    mediaBg: 'from-status-warn-bg to-surface-3',
-    mediaFg: 'text-status-warn',
+    excerpt: "Origines (EEOC, 1978), application dans la jurisprudence européenne, limites méthodologiques, alternatives modernes. Une fiche de référence.",
+    mediaBg: 'linear-gradient(140deg,var(--warn-bg),var(--surface-3))',
+    mediaFg: 'var(--warn)',
     mediaLabel: '4/5',
-    mediaSize: 'text-2xl',
-    mediaFont: 'mono',
-    href: '/ressources/regle-quatre-cinquiemes',
   },
   {
-    cat: 'SECTEUR',
+    slug: 'audit-tri-cv',
+    cat: 'Secteur',
     meta: '5 mai · 10 min',
-    title: "Audit fairness des outils de tri de CV : comment s'y prendre concrètement.",
-    excerpt:
-      "Cinq étapes pour une DRH qui veut auditer son ATS sans équipe data. Avec les écueils typiques et un modèle de cahier des charges fournisseur.",
-    mediaBg: 'from-accent-soft to-surface-3',
-    mediaFg: 'text-accent',
+    title: "Auditer un outil de tri de CV, concrètement.",
+    excerpt: "Cinq étapes pour une DRH qui veut auditer son ATS sans équipe data, avec les écueils typiques et un modèle de cahier des charges fournisseur.",
+    mediaBg: 'linear-gradient(140deg,var(--accent-soft),var(--surface-3))',
+    mediaFg: 'var(--accent)',
     mediaLabel: 'RH',
-    mediaSize: 'text-2xl',
-    mediaFont: 'display',
-    href: '/ressources/audit-cv',
   },
   {
-    cat: 'SECTEUR',
+    slug: 'scoring-credit-proxies',
+    cat: 'Secteur',
     meta: '2 mai · 12 min',
-    title: 'Scoring crédit et proxies géographiques : ce que dit la jurisprudence française.',
-    excerpt:
-      "Le code postal comme proxy d'origine présumée : analyse de trois décisions clés de la cour d'appel de Paris (2018, 2022, 2024) et leurs conséquences pratiques.",
-    mediaBg: 'from-status-info-bg to-surface-3',
-    mediaFg: 'text-status-info',
+    title: "Scoring crédit et proxies géographiques : le risque du code postal.",
+    excerpt: "Le code postal comme proxy d'origine présumée : comment une variable neutre crée une discrimination indirecte, ce que dit le cadre juridique, et comment la détecter.",
+    mediaBg: 'linear-gradient(140deg,var(--info-bg),var(--surface-3))',
+    mediaFg: 'var(--info)',
     mediaLabel: '€',
-    mediaSize: 'text-2xl',
-    mediaFont: 'display',
-    href: '/ressources/scoring-credit',
   },
   {
-    cat: 'MÉTHODE',
+    slug: 'counterfactual-prompt-pairs',
+    cat: 'Méthode',
     meta: '28 avr · 6 min',
-    title: 'Counterfactual prompt pairs : la méthode de référence pour auditer un LLM.',
-    excerpt:
-      "Pourquoi cette méthode, comment construire ses prompts pairs, quels biais elle met en évidence et lesquels elle ne voit pas. Pour les responsables produits IA.",
-    mediaBg: 'from-surface-3 to-surface',
-    mediaFg: 'text-fg-secondary',
+    title: "Counterfactual prompt pairs : la méthode de référence pour auditer un LLM.",
+    excerpt: "Pourquoi cette méthode, comment construire ses prompts pairs, quels biais elle révèle et lesquels elle ne voit pas.",
+    mediaBg: 'linear-gradient(140deg,var(--surface-3),var(--surface))',
+    mediaFg: 'var(--fg-secondary)',
     mediaLabel: 'LLM',
-    mediaFont: 'mono',
-    href: '/ressources/counterfactual',
   },
   {
-    cat: 'AI ACT',
+    slug: 'article-10-gouvernance-donnees',
+    cat: 'AI Act',
     meta: '24 avr · 9 min',
-    title: "Article 10 de l'AI Act : ce que « gouvernance des données » signifie en pratique.",
-    excerpt:
-      'Lecture article par paragraphe avec analyse des notions clés : pertinence, représentativité, exactitude, exhaustivité, biais.',
-    mediaBg: 'from-accent-soft to-surface-2',
-    mediaFg: 'text-accent',
-    mediaLabel: 'Art. 10',
-    mediaFont: 'mono',
-    href: '/ressources/article-10',
+    title: "Article 10 : ce que « gouvernance des données » signifie en pratique.",
+    excerpt: "Lecture paragraphe par paragraphe : pertinence, représentativité, exactitude, exhaustivité, biais.",
+    mediaBg: 'linear-gradient(140deg,var(--accent-soft),var(--surface-2))',
+    mediaFg: 'var(--accent)',
+    mediaLabel: 'Art.10',
   },
   {
-    cat: "RETOUR D'EXP",
+    slug: 'corriger-proxy-geographique',
+    cat: "Retour d'exp.",
     meta: '20 avr · 11 min',
-    title: 'Comment Banque Loiret a corrigé un proxy géographique en 7 mois.',
-    excerpt:
-      "Récit détaillé d'une mise en conformité réelle. Calendrier précis, choix techniques, coûts cachés, et leçons retenues.",
-    mediaBg: 'from-status-fail-bg to-surface-3',
-    mediaFg: 'text-status-fail',
+    title: "Corriger un proxy géographique en sept mois : récit d'une mise en conformité.",
+    excerpt: "Calendrier précis, choix techniques, coûts cachés et leçons retenues d'un cas réel en banque régionale.",
+    mediaBg: 'linear-gradient(140deg,var(--fail-bg),var(--surface-3))',
+    mediaFg: 'var(--fail)',
     mediaLabel: '!',
-    mediaSize: 'text-[28px]',
-    mediaFont: 'display',
-    href: '/ressources/banque-loiret',
   },
   {
-    cat: 'LIVRE BLANC',
+    slug: 'livre-blanc-audit-ai-act',
+    cat: 'Livre blanc',
     meta: '15 avr · 64 pages',
-    title: 'Livre blanc : Préparer son audit AI Act en PME, en six mois.',
-    excerpt:
-      'Méthodologie complète, modèles de documents, check-lists, références jurisprudentielles. Téléchargement gratuit contre adresse email.',
-    mediaBg: 'from-surface-2 to-surface-2',
-    mediaFg: 'text-fg-muted',
-    mediaLabel: 'PDF GUIDE',
-    mediaFont: 'mono',
-    href: '/ressources/livre-blanc',
+    title: "Préparer son audit AI Act en PME, en six mois.",
+    excerpt: "Méthodologie complète, modèles de documents, check-lists, références jurisprudentielles. Téléchargement gratuit.",
+    mediaBg: 'var(--surface-2)',
+    mediaFg: 'var(--fg-muted)',
+    mediaLabel: 'PDF',
   },
   {
-    cat: 'MÉTHODE',
+    slug: 'dp-vs-eo',
+    cat: 'Méthode',
     meta: '10 avr · 7 min',
-    title: 'Demographic Parity vs Equal Opportunity : laquelle choisir, et quand ?',
-    excerpt:
-      'Les deux métriques peuvent donner des conclusions opposées sur le même modèle. Comprendre leurs hypothèses, leur usage en jurisprudence et leur articulation pratique.',
-    mediaBg: 'from-status-pass-bg to-surface-3',
-    mediaFg: 'text-status-pass',
+    title: "Demographic Parity vs Equal Opportunity : laquelle choisir, et quand ?",
+    excerpt: "Deux métriques qui peuvent conclure l'inverse sur le même modèle. Comprendre leurs hypothèses et leur articulation pratique.",
+    mediaBg: 'linear-gradient(140deg,var(--pass-bg),var(--surface-3))',
+    mediaFg: 'var(--pass)',
     mediaLabel: 'DP/EO',
-    mediaFont: 'mono',
-    href: '/ressources/dp-vs-eo',
   },
   {
-    cat: 'PRODUIT',
+    slug: 'auditiq-v2',
+    cat: 'Produit',
     meta: '6 avr · 5 min',
-    title: 'AuditIQ v2 : comparaison entre audits et alertes de dérive.',
-    excerpt:
-      'Nouveautés produit du printemps : vue de comparaison longitudinale, alertes de dérive automatiques, et amélioration des recommandations.',
-    mediaBg: 'from-surface-2 to-surface-2',
-    mediaFg: 'text-accent',
+    title: "AuditIQ v2 : comparaison entre audits et alertes de dérive.",
+    excerpt: "Vue de comparaison longitudinale, alertes de dérive automatiques, et amélioration des recommandations.",
+    mediaBg: 'var(--surface-2)',
+    mediaFg: 'var(--accent)',
     mediaLabel: 'v2',
-    mediaSize: 'text-[28px]',
-    mediaFont: 'display',
-    href: '/ressources/auditiq-v2',
   },
 ];
-
-function ArticleMedia({
-  bg,
-  fg,
-  label,
-  size = 'text-xl',
-  font = 'mono',
-}: {
-  bg: string;
-  fg: string;
-  label: string;
-  size?: string;
-  font?: 'mono' | 'display';
-}) {
-  return (
-    <div
-      className={`mb-3 flex aspect-[16/9] items-center justify-center rounded-md bg-gradient-to-br ${bg} ${fg} font-semibold ${size} ${font === 'mono' ? 'font-mono' : 'font-display'}`}
-    >
-      {label}
-    </div>
-  );
-}
 
 export default function RessourcesPage() {
   return (
     <>
-      <header className="border-b border-border-subtle pt-[clamp(64px,8vw,96px)] pb-12">
-        <Container>
-          <Reveal>
-            <Eyebrow accent>Ressources &amp; blog</Eyebrow>
-            <h1 className="mt-4 max-w-[22ch] font-display text-[clamp(36px,4vw,48px)] font-semibold leading-[1.1] tracking-[-0.02em] text-fg">
-              Comprendre la fairness IA, sans détour.
-            </h1>
-            <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.3vw,20px)] leading-relaxed text-fg-secondary">
-              Guides AI Act, études sectorielles, fiches méthodologiques, retours
-              d&apos;expérience. Tout est rédigé en français, par notre équipe, avec mention
-              explicite des sources et des limites.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <span
-                  key={c.label}
-                  className={
-                    c.active
-                      ? 'inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-3 px-3.5 py-1.5 text-sm text-fg'
-                      : 'inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-3.5 py-1.5 text-sm text-fg-secondary'
-                  }
-                >
-                  {c.label}
-                  <span className="font-mono text-[11px] text-fg-muted">{c.count}</span>
-                </span>
-              ))}
-            </div>
-          </Reveal>
-        </Container>
-      </header>
-
-      {/* FEATURED */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <Link
-              href="/ressources/ai-act-pme-2026"
-              className="grid grid-cols-1 overflow-hidden rounded-2xl border border-border-default bg-surface md:grid-cols-2"
-            >
-              <div className="flex min-h-[220px] items-center justify-center border-b border-border-default bg-gradient-to-br from-accent-soft to-surface-3 md:min-h-[320px] md:border-b-0 md:border-r">
-                <div className="p-10 text-center font-mono text-[clamp(48px,6vw,80px)] font-semibold leading-none tracking-[-0.02em] text-accent">
-                  AI
-                  <br />
-                  Act
-                </div>
-              </div>
-              <div className="flex flex-col gap-4 p-10 md:p-12">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">
-                    Guide · AI Act
-                  </span>
-                  <span className="text-xs text-fg-muted">12 mai 2026 · 14 min de lecture</span>
-                </div>
-                <h2 className="text-[clamp(24px,2.5vw,32px)] font-display font-medium leading-[1.2] tracking-[-0.015em]">
-                  AI Act pour PME : ce qui change le 2 août 2026 (et comment s&apos;y préparer).
-                </h2>
-                <p className="text-base leading-relaxed text-fg-secondary">
-                  Le guide le plus consulté de notre blog : 14 minutes pour comprendre exactement
-                  quelles obligations s&apos;appliquent à votre PME, ce que vous devez documenter,
-                  et comment cadrer votre plan de mise en conformité.
-                </p>
-                <div className="mt-auto flex items-center gap-3 border-t border-border-subtle pt-5">
-                  <div className="flex size-8 items-center justify-center rounded-full border border-border-default bg-surface-3 text-xs text-fg-secondary">
-                    ZK
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Zineb Khelifi</div>
-                    <div className="text-xs text-fg-muted">Chief Legal Officer · AuditIQ</div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </Reveal>
-        </Container>
-      </section>
-
-      {/* GRID */}
-      <section className="py-16">
-        <Container>
-          <Reveal className="mb-10">
-            <Eyebrow accent>Articles récents</Eyebrow>
-            <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-              Lectures récentes.
-            </h2>
-          </Reveal>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {ARTICLES.map((a, i) => (
-              <Reveal key={a.title} delay={(i % 3) * 0.04}>
-                <Link
-                  href={a.href}
-                  className="flex h-full flex-col gap-3 rounded-lg border border-border-default bg-surface p-6 transition-colors hover:border-border-strong"
-                >
-                  <ArticleMedia
-                    bg={a.mediaBg}
-                    fg={a.mediaFg}
-                    label={a.mediaLabel}
-                    size={a.mediaSize}
-                    font={a.mediaFont}
-                  />
-                  <div className="flex items-center gap-2 text-xs text-fg-muted">
-                    <span className="font-mono uppercase tracking-[0.08em] text-accent">
-                      {a.cat}
-                    </span>
-                    <span aria-hidden>·</span>
-                    <span>{a.meta}</span>
-                  </div>
-                  <h3 className="text-h4 font-medium leading-[1.3] text-fg">{a.title}</h3>
-                  <p className="text-sm leading-[1.55] text-fg-secondary">{a.excerpt}</p>
-                </Link>
-              </Reveal>
+      {/* ── PAGE HEADER ──────────────────────────────────────────────────── */}
+      <header className="page-head">
+        <div className="wrap">
+          <p className="kicker">Ressources</p>
+          <h1>Comprendre la fairness IA, sans détour.</h1>
+          <p className="lead">
+            Guides AI Act, études sectorielles, fiches méthodologiques, retours d&apos;expérience.
+            Rédigés en français par notre équipe, avec mention explicite des sources et des limites.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '24px' }}>
+            {CATEGORIES.map((c) => (
+              <span
+                key={c.label}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '7px',
+                  padding: '6px 13px', borderRadius: '99px', fontSize: '13.5px',
+                  color: c.active ? 'var(--fg)' : 'var(--fg-secondary)',
+                  background: c.active ? 'var(--surface-3)' : 'var(--surface-2)',
+                  border: `1px solid ${c.active ? 'var(--border-strong)' : 'var(--border)'}`,
+                  cursor: 'pointer',
+                }}
+              >
+                {c.label}
+                <span className="mono" style={{ fontSize: '11px', color: 'var(--fg-muted)' }}>{c.count}</span>
+              </span>
             ))}
           </div>
+        </div>
+      </header>
 
-          <Reveal className="mt-12 text-center" delay={0.1}>
-            <Button variant="secondary" disabled>
-              Voir tous les articles (42)
-            </Button>
-          </Reveal>
-        </Container>
+      {/* ── FEATURED ─────────────────────────────────────────────────────── */}
+      <section style={{ paddingBottom: 'clamp(28px,4vw,40px)' }}>
+        <div className="wrap">
+          <Link
+            href="/blog/ai-act-pme"
+            className="card"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', overflow: 'hidden', borderRadius: '18px' }}
+          >
+            <div style={{ minHeight: '260px', display: 'grid', placeItems: 'center', borderRight: '1px solid var(--border-subtle)', background: 'linear-gradient(140deg, var(--accent-soft), var(--surface-3))' }}>
+              <span className="mono" style={{ fontSize: 'clamp(44px,5vw,72px)', fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--accent)', lineHeight: 0.95, textAlign: 'center' }}>
+                AI<br />Act
+              </span>
+            </div>
+            <div style={{ padding: 'clamp(28px,3.5vw,44px)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--fg-muted)' }}>
+                <span className="mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)' }}>Guide · AI Act</span>
+                <span aria-hidden>·</span>
+                <span>12 mai 2026 · 14 min</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(22px,2.4vw,30px)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                AI Act pour PME&nbsp;: ce qui change le 2 août 2026, et comment s&apos;y préparer.
+              </h2>
+              <p className="lede" style={{ fontSize: '15px' }}>
+                Quatorze minutes pour comprendre exactement quelles obligations s&apos;appliquent à votre PME, ce que vous devez documenter, et comment cadrer votre plan de mise en conformité.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '11px', marginTop: 'auto', paddingTop: '18px', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '8px', display: 'grid', placeItems: 'center', fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: 500, background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--fg-secondary)' }}>FF</div>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 500 }}>Franck FAMBOU</div>
+                  <div style={{ fontSize: '12px', color: 'var(--fg-muted)' }}>CEO · AuditIQ</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
       </section>
 
-      {/* NEWSLETTER */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="rounded-2xl border border-border-default bg-surface p-12 text-center">
-              <Eyebrow accent>Newsletter</Eyebrow>
-              <h2 className="mt-3 mb-3 text-h2 font-display font-medium tracking-[-0.015em] text-fg">
-                Une lettre tous les quinze jours, sur la conformité IA en Europe.
-              </h2>
-              <p className="mx-auto mb-6 max-w-[50ch] text-base leading-relaxed text-fg-secondary">
-                Pas de promo produit. Juste l&apos;actualité réglementaire, les décisions
-                jurisprudentielles marquantes, et les méthodes que nous testons en interne.
-              </p>
-              <NewsletterForm />
-            </div>
-          </Reveal>
-        </Container>
+      {/* ── GRID ─────────────────────────────────────────────────────────── */}
+      <section style={{ paddingTop: 'clamp(28px,4vw,40px)' }}>
+        <div className="wrap">
+          <div style={{ marginBottom: '26px' }}>
+            <p className="eyebrow acc">Articles récents</p>
+            <h2 className="title" style={{ marginTop: '10px' }}>Lectures récentes.</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '18px' }}>
+            {ARTICLES.map((a) => (
+              <Link
+                key={a.slug}
+                href={`/blog/${a.slug}`}
+                className="card"
+                style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', height: '100%' }}
+              >
+                <div style={{ aspectRatio: '16/9', borderRadius: '9px', display: 'grid', placeItems: 'center', background: a.mediaBg, color: a.mediaFg, fontWeight: 600, fontSize: '22px', fontFamily: 'var(--mono)' }}>
+                  {a.mediaLabel}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--fg-muted)' }}>
+                  <span className="mono" style={{ textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)' }}>{a.cat}</span>
+                  <span aria-hidden>·</span>
+                  <span>{a.meta}</span>
+                </div>
+                <h3 style={{ fontSize: '16px', lineHeight: 1.3, color: 'var(--fg)' }}>{a.title}</h3>
+                <p className="lede" style={{ fontSize: '13.5px', lineHeight: 1.55 }}>{a.excerpt}</p>
+              </Link>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <button className="btn btn-outline" disabled>Voir tous les articles (42)</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEWSLETTER ───────────────────────────────────────────────────── */}
+      <section style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <div className="wrap">
+          <div className="card" style={{ padding: 'clamp(32px,5vw,52px)', textAlign: 'center' }}>
+            <p className="eyebrow acc">Newsletter</p>
+            <h2 className="title" style={{ marginTop: '12px', maxWidth: '24ch', marginInline: 'auto' }}>Une lettre tous les quinze jours sur la conformité IA en Europe.</h2>
+            <p className="lede" style={{ margin: '14px auto 0', maxWidth: '50ch', fontSize: '15px' }}>
+              Pas de promo produit. L&apos;actualité réglementaire, les décisions jurisprudentielles marquantes et les méthodes que nous testons en interne.
+            </p>
+            <form
+              style={{ display: 'flex', gap: '10px', maxWidth: '440px', margin: '22px auto 0' }}
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <input className="input" type="email" placeholder="vous@entreprise.fr" style={{ flex: 1 }} />
+              <button className="btn btn-primary" type="submit">S&apos;abonner</button>
+            </form>
+            <p className="lede" style={{ fontSize: '12px', marginTop: '12px' }}>Désinscription en un clic. Aucune donnée revendue.</p>
+          </div>
+        </div>
       </section>
     </>
   );
