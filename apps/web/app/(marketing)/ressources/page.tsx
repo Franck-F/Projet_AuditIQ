@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { NewsletterInline } from '@/components/marketing/NewsletterInline';
 
 export const metadata: Metadata = {
   title: 'Ressources — AuditIQ',
@@ -239,14 +240,7 @@ export default function RessourcesPage() {
             <p className="lede" style={{ margin: '14px auto 0', maxWidth: '50ch', fontSize: '15px' }}>
               Pas de promo produit. L&apos;actualité réglementaire, les décisions jurisprudentielles marquantes et les méthodes que nous testons en interne.
             </p>
-            <form
-              style={{ display: 'flex', gap: '10px', maxWidth: '440px', margin: '22px auto 0' }}
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input className="input" type="email" placeholder="vous@entreprise.fr" style={{ flex: 1 }} />
-              <button className="btn btn-primary" type="submit">S&apos;abonner</button>
-            </form>
-            <p className="lede" style={{ fontSize: '12px', marginTop: '12px' }}>Désinscription en un clic. Aucune donnée revendue.</p>
+            <NewsletterInline />
           </div>
         </div>
       </section>
