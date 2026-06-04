@@ -1,22 +1,22 @@
 import Link from 'next/link';
-import { MarketingHeader } from '@/components/layout/MarketingHeader';
-import { MarketingFooter } from '@/components/layout/MarketingFooter';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+
+// Header + Footer come from the surrounding (marketing) layout when this 404
+// is triggered from inside a marketing route. Rendering them here too caused
+// a duplicate navbar (see /blog/<unknown-slug>).
 
 const SHORTCUTS = [
   { label: 'Découvrir', title: 'Le produit en 3 modules →', href: '/produit' },
   { label: 'Conformité', title: 'AI Act & obligations PME →', href: '/ai-act' },
   { label: 'Pricing', title: 'Voir les tarifs →', href: '/tarifs' },
-  { label: 'Lecture', title: 'Blog & ressources →', href: '/blog' },
+  { label: 'Lecture', title: 'Blog & ressources →', href: '/ressources' },
 ];
 
 export default function NotFound() {
   return (
-    <>
-      <MarketingHeader />
-      <main>
+    <main>
         <Container>
           <div className="grid min-h-[calc(100vh-var(--nav-h)-120px)] grid-cols-1 items-center gap-10 py-[clamp(64px,10vw,120px)] lg:grid-cols-2 lg:gap-16">
             <div>
@@ -63,8 +63,6 @@ export default function NotFound() {
             </div>
           </div>
         </Container>
-      </main>
-      <MarketingFooter />
-    </>
+    </main>
   );
 }
