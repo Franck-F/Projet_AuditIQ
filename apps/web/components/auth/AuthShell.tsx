@@ -28,6 +28,14 @@ const BULLETS = [
 
 export function AuthShell({ activeTab, heading, intro, children }: AuthShellProps) {
   const { theme, toggle } = useTheme();
+  // Theme is read from localStorage on mount → server can't know the user's
+  // preference. Render a neutral placeholder until after hydration to avoid
+  // a Sun/Moon mismatch (hydration error #1).
+  const [mounted, setMounted] = React.useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional mount-only flag
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2" style={{ height: '100dvh', overflow: 'hidden' }}>
@@ -116,10 +124,15 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
           aria-label="Basculer le thème"
           className="absolute top-6 right-6 flex size-9 items-center justify-center rounded-md border border-border-default bg-surface text-fg-muted transition-colors hover:border-border-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         >
-          {theme === 'dark' ? (
-            <Sun size={16} aria-hidden />
+          {mounted ? (
+            theme === 'dark' ? (
+              <Sun size={16} aria-hidden />
+            ) : (
+              <Moon size={16} aria-hidden />
+            )
           ) : (
-            <Moon size={16} aria-hidden />
+            // Neutral placeholder matching the toggle's bounding box during SSR / pre-hydration
+            <span aria-hidden style={{ width: 16, height: 16, display: 'inline-block' }} />
           )}
         </button>
 
