@@ -201,7 +201,10 @@ body {
 html { -webkit-text-size-adjust: 100%; }
 
 img, svg, video { display: block; max-width: 100%; }
-button { font-family: inherit; background: none; border: 0; cursor: pointer; padding: 0; color: inherit; }
+/* Bare-button reset — only buttons WITHOUT a class inherit a flat look.
+   Classed buttons (Tailwind utilities, .btn variants) keep their styling intact. */
+button { font-family: inherit; cursor: pointer; color: inherit; }
+button:not([class]) { background: none; border: 0; padding: 0; }
 input, textarea, select { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 600; letter-spacing: -0.018em; line-height: 1.15; }

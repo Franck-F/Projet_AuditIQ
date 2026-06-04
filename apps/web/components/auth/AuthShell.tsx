@@ -30,11 +30,11 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
   const { theme, toggle } = useTheme();
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      {/* ---- Left brand panel (hidden on mobile) ---- */}
+    <div className="grid grid-cols-1 md:grid-cols-2" style={{ height: '100dvh', overflow: 'hidden' }}>
+      {/* ---- Left brand panel (hidden on mobile, fixed-height on desktop) ---- */}
       <aside
         className="hidden md:flex flex-col justify-between overflow-hidden border-r border-border-subtle bg-surface"
-        style={{ padding: '44px 56px' }}
+        style={{ padding: '44px 56px', height: '100dvh' }}
       >
         {/* Radial gradient overlay */}
         <div
@@ -104,8 +104,11 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
         </div>
       </aside>
 
-      {/* ---- Right form column ---- */}
-      <div className="relative grid place-items-center bg-bg p-10">
+      {/* ---- Right form column — only this scrolls when content overflows ---- */}
+      <div
+        className="relative grid place-items-center bg-bg p-10"
+        style={{ height: '100dvh', overflowY: 'auto' }}
+      >
         {/* Theme toggle */}
         <button
           type="button"
@@ -121,18 +124,19 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
         </button>
 
         {/* Form container */}
-        <div className="w-full max-w-[380px]">
-          {/* Tab strip */}
-          <div className="mb-6 flex rounded-lg border border-border-default bg-surface p-1">
+        <div className="w-full max-w-[440px]">
+          {/* Tab strip — underline-style per maquette (active = accent underline) */}
+          <div className="mb-7 flex gap-0 border-b border-border-subtle">
             <Link
               href="/connexion"
               aria-current={activeTab === 'login' ? 'page' : undefined}
               className={[
-                'flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors',
+                'flex-1 py-3 text-center text-[14px] font-medium transition-colors',
                 activeTab === 'login'
-                  ? 'bg-bg text-fg shadow-sm'
-                  : 'text-fg-muted hover:text-fg',
+                  ? 'border-b-2 border-accent text-fg'
+                  : 'border-b-2 border-transparent text-fg-muted hover:text-fg-secondary',
               ].join(' ')}
+              style={{ marginBottom: -1 }}
             >
               Connexion
             </Link>
@@ -140,26 +144,27 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
               href="/inscription"
               aria-current={activeTab === 'signup' ? 'page' : undefined}
               className={[
-                'flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors',
+                'flex-1 py-3 text-center text-[14px] font-medium transition-colors',
                 activeTab === 'signup'
-                  ? 'bg-bg text-fg shadow-sm'
-                  : 'text-fg-muted hover:text-fg',
+                  ? 'border-b-2 border-accent text-fg'
+                  : 'border-b-2 border-transparent text-fg-muted hover:text-fg-secondary',
               ].join(' ')}
+              style={{ marginBottom: -1 }}
             >
               Créer un compte
             </Link>
           </div>
 
-          {/* Heading + intro — centered to match the maquette layout */}
+          {/* Heading + intro — left-aligned per maquette */}
           <h1
-            className="text-center font-display font-medium text-fg"
-            style={{ fontSize: 22, letterSpacing: '-0.025em', marginBottom: 6 }}
+            className="font-display font-medium text-fg"
+            style={{ fontSize: 26, letterSpacing: '-0.025em', marginBottom: 6, lineHeight: 1.15 }}
           >
             {heading}
           </h1>
           <p
-            className="text-center text-[13.5px] leading-relaxed text-fg-muted"
-            style={{ marginBottom: 32 }}
+            className="text-[14px] leading-relaxed text-fg-muted"
+            style={{ marginBottom: 28 }}
           >
             {intro}
           </p>
