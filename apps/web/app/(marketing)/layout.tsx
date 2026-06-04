@@ -1,3 +1,4 @@
+import './vitrine.css';
 import { MarketingHeader } from '@/components/layout/MarketingHeader';
 import { MarketingFooter } from '@/components/layout/MarketingFooter';
 
@@ -5,7 +6,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <>
       <MarketingHeader />
-      <main id="main">{children}</main>
+      <main id="top">{children}</main>
       <MarketingFooter />
     </>
   );
