@@ -57,6 +57,13 @@ export function Sidebar() {
   const router = useRouter();
   const { theme, toggle } = useTheme();
   const [user, setUser] = React.useState<SessionUser | null>(null);
+  // Defer theme-dependent rendering until after hydration to avoid Sun/Moon
+  // mismatch (server can't know the localStorage value).
+  const [mounted, setMounted] = React.useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional mount-only flag
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     const supabase = createClient();
@@ -152,11 +159,15 @@ export function Sidebar() {
           aria-label="Basculer le thème"
         >
           <span className="sb-theme-track">
-            <span className={`sb-theme-thumb ${theme}`}>
-              {theme === 'dark' ? <Icons.moon size={10} /> : <Icons.sun size={10} />}
+            <span className={`sb-theme-thumb ${mounted ? theme : 'dark'}`}>
+              {mounted ? (
+                theme === 'dark' ? <Icons.moon size={10} /> : <Icons.sun size={10} />
+              ) : (
+                <Icons.moon size={10} />
+              )}
             </span>
           </span>
-          <span>{theme === 'dark' ? 'Mode sombre' : 'Mode clair'}</span>
+          <span>{mounted ? (theme === 'dark' ? 'Mode sombre' : 'Mode clair') : 'Mode sombre'}</span>
         </button>
 
         <div className="sb-user">
