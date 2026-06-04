@@ -192,7 +192,8 @@ function RecommandationsPageContent() {
   return (
     <>
       <Topbar
-        crumbs={[{ label: 'Recommandations' }]}
+        title="Recommandations"
+        crumbs={[{ label: 'AuditIQ' }, { label: 'Recommandations' }]}
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href="/app/audits">

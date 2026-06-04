@@ -630,6 +630,7 @@ export default function ParametresPage() {
   return (
     <>
       <Topbar
+        title="Paramètres"
         crumbs={[
           { label: 'AuditIQ' },
           { label: 'Paramètres' },

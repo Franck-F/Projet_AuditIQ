@@ -60,7 +60,8 @@ export default function AuditsListPage() {
   return (
     <>
       <Topbar
-        crumbs={[{ label: 'Audits' }]}
+        title="Mes audits"
+        crumbs={[{ label: 'AuditIQ' }, { label: 'Audits' }]}
         actions={
           <Button asChild variant="primary" size="sm">
             <Link href="/app/audits/nouveau">

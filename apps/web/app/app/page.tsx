@@ -67,7 +67,8 @@ export default function DashboardPage() {
   return (
     <>
       <Topbar
-        crumbs={[{ label: "Vue d'ensemble" }]}
+        title="Vue d'ensemble"
+        crumbs={[{ label: 'AuditIQ' }, { label: "Vue d'ensemble" }]}
         actions={
           <Button asChild variant="primary">
             <Link href="/app/audits/nouveau">+ Lancer un audit</Link>

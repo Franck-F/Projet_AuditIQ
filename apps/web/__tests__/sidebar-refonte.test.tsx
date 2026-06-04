@@ -55,16 +55,18 @@ describe('Sidebar (refonte)', () => {
     expect(screen.getByText(/AuditIQ/i)).toBeInTheDocument();
   });
 
-  it('renders nav sections (Espace de travail, Organisation)', () => {
+  it('renders nav sections (Audits, Pilotage, Organisation)', () => {
     render(wrap(<Sidebar />));
-    expect(screen.getByText(/Espace de travail/i)).toBeInTheDocument();
-    expect(screen.getByText(/Organisation/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Audits$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Pilotage$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Organisation$/i)).toBeInTheDocument();
   });
 
-  it("renders nav items (Vue d'ensemble, Audits, Rapports, Recommandations)", () => {
+  it("renders nav items (Vue d'ensemble, Mes audits, Nouvel audit, Rapports, Recommandations)", () => {
     render(wrap(<Sidebar />));
     expect(screen.getByText(/Vue d.ensemble/i)).toBeInTheDocument();
-    expect(screen.getByText(/Audits/)).toBeInTheDocument();
+    expect(screen.getByText(/Mes audits/)).toBeInTheDocument();
+    expect(screen.getByText(/Nouvel audit/)).toBeInTheDocument();
     expect(screen.getByText(/Rapports/)).toBeInTheDocument();
     expect(screen.getByText(/Recommandations/)).toBeInTheDocument();
   });
