@@ -15,7 +15,6 @@ import { cn } from '@/lib/utils';
 const ConnexionSchema = z.object({
   email: z.string().email('Email invalide'),
   password: z.string().min(1, 'Requis'),
-  remember: z.boolean().optional(),
 });
 
 type ConnexionValues = z.infer<typeof ConnexionSchema>;
@@ -44,22 +43,13 @@ function GoogleLogo({ className }: { className?: string }) {
   );
 }
 
-// GitHub octocat mark, monochrome — uses currentColor so it adapts to the surrounding text colour.
-function GitHubLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-    </svg>
-  );
-}
-
 function OAuthButton({
   provider,
   label,
   onClick,
   children,
 }: {
-  provider: 'google' | 'github';
+  provider: 'google';
   label: string;
   onClick: () => void;
   children: React.ReactNode;
@@ -107,7 +97,7 @@ export default function ConnexionPage() {
     router.push('/app');
   };
 
-  const handleOAuth = async (provider: 'google' | 'github') => {
+  const handleOAuth = async (provider: 'google') => {
     setAuthError(null);
     const supabase = createClient();
     // signInWithOAuth triggers a top-level browser redirect to the provider.
@@ -122,7 +112,7 @@ export default function ConnexionPage() {
     });
     if (error) {
       setAuthError(
-        `Connexion ${provider === 'google' ? 'Google' : 'GitHub'} indisponible. Vérifiez que le provider est activé dans Supabase.`,
+        'Connexion Google indisponible. Vérifiez que le provider est activé dans Supabase.',
       );
     }
   };
@@ -130,29 +120,20 @@ export default function ConnexionPage() {
   return (
     <AuthShell
       activeTab="login"
-      heading="Connectez-vous"
-      intro="Accédez à votre console AuditIQ pour lancer un audit, consulter vos rapports ou gérer votre équipe."
+      heading="Content de vous revoir"
+      intro="Accédez à votre espace de conformité."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
-        <div className="flex flex-col gap-2">
-          <OAuthButton
-            provider="google"
-            label="Google"
-            onClick={() => handleOAuth('google')}
-          >
-            <GoogleLogo className="size-5" />
-          </OAuthButton>
-          <OAuthButton
-            provider="github"
-            label="GitHub"
-            onClick={() => handleOAuth('github')}
-          >
-            <GitHubLogo className="size-5" />
-          </OAuthButton>
-        </div>
+        <OAuthButton
+          provider="google"
+          label="Google"
+          onClick={() => handleOAuth('google')}
+        >
+          <GoogleLogo className="size-5" />
+        </OAuthButton>
 
         <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] text-fg-muted before:h-px before:flex-1 before:bg-border-subtle after:h-px after:flex-1 after:bg-border-subtle">
-          Ou avec votre email
+          OU
         </div>
 
         <div className="flex flex-col gap-4">
@@ -223,11 +204,7 @@ export default function ConnexionPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-fg-secondary">
-              <input type="checkbox" className="size-4 accent-accent" {...register('remember')} />
-              Rester connecté 30 jours
-            </label>
+          <div className="flex justify-end text-xs">
             <Link href="/mot-de-passe-oublie" className="text-accent hover:underline">
               Mot de passe oublié ?
             </Link>
