@@ -43,6 +43,7 @@ export default function EquipePage() {
   return (
     <>
       <Topbar
+        title="Équipe & accès"
         crumbs={[
           { label: 'AuditIQ' },
           { label: 'Organisation' },

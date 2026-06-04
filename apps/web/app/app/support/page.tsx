@@ -83,6 +83,7 @@ export default function SupportPage() {
   return (
     <>
       <Topbar
+        title="Aide & support"
         crumbs={[
           { label: 'AuditIQ' },
           { label: 'Support' },

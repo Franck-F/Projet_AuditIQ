@@ -11,6 +11,10 @@ interface Crumb {
 }
 
 interface TopbarProps {
+  /** Optional page title rendered as h1 (21px) below the breadcrumbs. */
+  title?: string;
+  /** Optional element rendered to the right of the title (e.g. a Badge). */
+  sub?: React.ReactNode;
   crumbs?: ReadonlyArray<Crumb>;
   searchPlaceholder?: string;
   onSearch?: (q: string) => void;
@@ -18,6 +22,8 @@ interface TopbarProps {
 }
 
 export function Topbar({
+  title,
+  sub,
   crumbs = [],
   searchPlaceholder = 'Rechercher un audit, une page…',
   onSearch,
@@ -25,21 +31,46 @@ export function Topbar({
 }: TopbarProps): React.ReactElement {
   return (
     <div className="topbar">
-      <nav aria-label="Fil d'Ariane" style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        {crumbs.map((c, idx) => {
-          const isLast = idx === crumbs.length - 1;
-          return (
-            <React.Fragment key={`${c.label}-${idx}`}>
-              {idx > 0 && <Icons.chevronDown size={14} style={{ transform: 'rotate(-90deg)', color: 'var(--fg-muted)' }} />}
-              {c.href && !isLast ? (
-                <Link href={c.href} style={{ color: 'var(--fg-muted)', fontSize: 13 }}>{c.label}</Link>
-              ) : (
-                <span style={{ color: isLast ? 'var(--fg)' : 'var(--fg-muted)', fontSize: 13, fontWeight: isLast ? 500 : 400 }}>{c.label}</span>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </nav>
+      <div style={{ minWidth: 0 }}>
+        {crumbs.length > 0 && (
+          <nav
+            aria-label="Fil d'Ariane"
+            className="mono"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              fontSize: 11.5,
+              color: 'var(--fg-muted)',
+              marginBottom: title ? 5 : 0,
+            }}
+          >
+            {crumbs.map((c, idx) => {
+              const isLast = idx === crumbs.length - 1;
+              return (
+                <React.Fragment key={`${c.label}-${idx}`}>
+                  {idx > 0 && (
+                    <Icons.chevronDown size={12} style={{ transform: 'rotate(-90deg)', color: 'var(--fg-disabled)' }} />
+                  )}
+                  {c.href && !isLast ? (
+                    <Link href={c.href} style={{ color: 'var(--fg-muted)' }}>
+                      {c.label}
+                    </Link>
+                  ) : (
+                    <span style={{ color: isLast ? 'var(--fg-secondary)' : 'var(--fg-muted)' }}>{c.label}</span>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </nav>
+        )}
+        {title && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ fontSize: 21, letterSpacing: '-0.025em', fontWeight: 600, margin: 0 }}>{title}</h1>
+            {sub}
+          </div>
+        )}
+      </div>
 
       <div className="topbar-actions">
         <div className="searchbox">

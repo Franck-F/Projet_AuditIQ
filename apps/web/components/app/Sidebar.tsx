@@ -32,12 +32,33 @@ interface SessionUser {
 
 type NavEntry =
   | { type: 'section'; label: string }
-  | { type: 'item'; key: string; label: string; href: string; icon: React.FC<{ size?: number }> };
+  | {
+      type: 'item';
+      key: string;
+      label: string;
+      href: string;
+      icon: React.FC<{ size?: number }>;
+      kbd?: string;
+      accent?: boolean;
+    };
 
+// Maquette grouping (pages_core.jsx + components.jsx NAV) — keep Vue d'ensemble
+// section-less at the top, group audits flow under "Audits", reporting under
+// "Pilotage", admin under "Organisation".
 const NAV: NavEntry[] = [
-  { type: 'section' as const, label: 'Espace de travail' },
   { type: 'item' as const, key: 'dashboard', label: "Vue d'ensemble", href: '/app', icon: Icons.home },
-  { type: 'item' as const, key: 'audits', label: 'Audits', href: '/app/audits', icon: Icons.activity },
+  { type: 'section' as const, label: 'Audits' },
+  { type: 'item' as const, key: 'audits', label: 'Mes audits', href: '/app/audits', icon: Icons.activity },
+  {
+    type: 'item' as const,
+    key: 'wizard',
+    label: 'Nouvel audit',
+    href: '/app/audits/nouveau',
+    icon: Icons.plus,
+    kbd: '⌘N',
+    accent: true,
+  },
+  { type: 'section' as const, label: 'Pilotage' },
   { type: 'item' as const, key: 'rapports', label: 'Rapports', href: '/app/rapports', icon: Icons.fileText },
   { type: 'item' as const, key: 'recos', label: 'Recommandations', href: '/app/recommandations', icon: Icons.lightbulb },
   { type: 'section' as const, label: 'Organisation' },
@@ -140,11 +161,16 @@ export function Sidebar() {
             <Link
               key={entry.key}
               href={entry.href}
-              className={`sb-item${active ? ' active' : ''}`}
+              className={`sb-item${active ? ' active' : ''}${entry.accent ? ' sb-item--accent' : ''}`}
               aria-current={active ? 'page' : undefined}
             >
               <Icon size={17} />
               <span>{entry.label}</span>
+              {entry.kbd && !active && (
+                <span className="sb-kbd mono" aria-hidden>
+                  {entry.kbd}
+                </span>
+              )}
               {active && <span className="sb-active-bar" aria-hidden />}
             </Link>
           );

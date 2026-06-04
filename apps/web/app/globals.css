@@ -274,6 +274,8 @@ p, ul, ol { margin: 0; }
 .sb-item:hover svg { color: var(--fg-secondary); }
 .sb-item.active { background: var(--surface-3); color: var(--fg); font-weight: 500; }
 .sb-item.active svg { color: var(--accent); }
+.sb-item--accent svg { color: var(--accent); }
+.sb-item--accent { color: var(--fg); }
 .sb-item.sub { padding-left: 32px; font-size: 13px; }
 .sb-item.sub::before {
   content: ""; position: absolute; left: 19px; top: 50%; width: 5px; height: 5px;
