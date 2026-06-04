@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AuditIQ — Cas d'usage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;450;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="site.css" rel="stylesheet" />
+<style>
+.pill.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-border); }
+.pill.fail { color: var(--fail); background: var(--fail-bg); border-color: var(--fail-border); }
+.pill.pass { color: var(--pass); background: var(--pass-bg); border-color: var(--pass-border); }
+.anchornav { position: sticky; top: 65px; z-index: 40; background: var(--surface-glass); backdrop-filter: blur(14px) saturate(1.4); border-bottom: 1px solid var(--border-subtle); }
+.anchornav-in { max-width: var(--maxw); margin: 0 auto; padding: 10px 28px; display: flex; gap: 4px; overflow-x: auto; }
+.anchornav a { padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 450; color: var(--fg-muted); white-space: nowrap; transition: background-color .14s; }
+.anchornav a:hover { color: var(--fg); background: var(--surface-2); }
+.scenario { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+.story { display: flex; flex-direction: column; gap: 18px; }
+.story-block h4 { font-size: 15px; margin-bottom: 5px; }
+.story-block p { font-size: 14px; color: var(--fg-secondary); line-height: 1.6; }
+.sc-card { padding: 24px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 130px; }
+.sc-what { padding: 12px 14px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--border-subtle); font-size: 13px; color: var(--fg-secondary); line-height: 1.5; }
+.metric-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; }
+.metric-row:last-child { border-bottom: 0; }
+.note { padding: 13px 15px; border-radius: 9px; background: var(--info-bg); border: 1px solid var(--info-border); font-size: 12.5px; color: var(--fg-secondary); line-height: 1.55; }
+.note.fail { background: var(--fail-bg); border-color: var(--fail-border); }
+.axis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.axis { padding: 13px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border-subtle); }
+.axis.bad { border-color: var(--fail-border); }
+.axis .v { font-family: var(--mono); font-size: 18px; font-weight: 600; margin-top: 4px; }
+.cluster { padding: 15px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--border); }
+.use { padding: 22px; display: flex; flex-direction: column; gap: 9px; height: 100%; }
+.use .mod { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--fg-muted); }
+@media (max-width: 820px) { .scenario { grid-template-columns: 1fr; gap: 28px; } .sc-card { position: static; } }
+</style>
+</head>
+<body data-theme="dark">
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="Site Vitrine.html">
+      <span class="brand-logo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.8 8 9 4.8-1.2 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+      <span class="brand-name">AuditIQ</span>
+    </a>
+    <div class="nav-links">
+      <a href="Site Vitrine.html#produit">Pourquoi AuditIQ</a>
+      <a href="Site Vitrine.html#modules">Modules</a>
+      <a href="Site Vitrine.html#tarifs">Tarifs</a>
+      <a href="Site Vitrine.html#conformite">AI Act</a>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="theme-toggle" title="Thème" aria-label="Changer de thème"></button>
+      <a class="btn btn-ghost" href="index.html">Connexion</a>
+      <a class="btn btn-primary" href="index.html">Essayer gratuitement</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+<header class="page-head">
+  <div class="wrap">
+    <p class="kicker">Cas d'usage</p>
+    <h1>Six scénarios concrets où la fairness compte.</h1>
+    <p class="lead">AuditIQ a été conçu pour les IA réellement déployées en PME : tri de CV, scoring crédit, chatbot SAV, tarification d'assurance, ciblage marketing, routage de tickets. Voici comment ça se passe en pratique, dossier par dossier.</p>
+  </div>
+</header>
+
+<div class="anchornav">
+  <div class="anchornav-in">
+    <a href="#rh">RH &amp; recrutement</a>
+    <a href="#credit">Crédit &amp; scoring</a>
+    <a href="#chatbot">Chatbot SAV</a>
+    <a href="#autres">Autres cas</a>
+  </div>
+</div>
+
+<!-- RH -->
+<section id="rh" style="scroll-margin-top:130px">
+  <div class="wrap">
+    <div class="scenario">
+      <div>
+        <span class="eyebrow acc">Ressources humaines</span>
+        <h2 class="title" style="margin-top:12px; margin-bottom:6px">IA de tri de CV en cabinet de conseil.</h2>
+        <p class="lede" style="font-size:17px; margin-bottom:24px">180 collaborateurs, 60 recrutements par an, présélection automatique des candidatures.</p>
+        <div class="story">
+          <div class="story-block"><h4>Le contexte</h4><p>Depuis 18 mois, un outil de présélection score chaque CV ; les 20 % les mieux notés passent en entretien. Personne en interne n'a la capacité technique de vérifier d'éventuels biais.</p></div>
+          <div class="story-block"><h4>L'audit AuditIQ</h4><p>Module 1 (supervisé). Variable cible : <span class="mono" style="color:var(--accent)">short_listed</span>. Attribut sensible : genre. 412 candidatures de 2024 analysées, quatre métriques calculées.</p></div>
+          <div class="story-block"><h4>Le résultat</h4><p>Demographic Parity à 0,78, sous le seuil de 0,80 : 12 points d'écart de présélection entre profils. Equal Opportunity à 0,92 — le modèle ne pénalise pas les profils qualifiés, mais sur-sélectionne en amont. Recommandation : revoir le poids du critère « expérience continue ».</p></div>
+        </div>
+      </div>
+      <div class="card sc-card">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+          <div><div style="font-weight:500">Recrutement_2024.csv</div><div class="mono" style="font-size:11.5px; color:var(--fg-muted); margin-top:2px">Audit du 14 mars 2026</div></div>
+          <span class="pill warn">Score 3/5</span>
+        </div>
+        <div class="sc-what">412 candidatures · cible : short_listed · attribut : genre · 4 métriques</div>
+        <div>
+          <div class="metric-row"><span>Demographic Parity</span><span class="pill warn">0.78</span></div>
+          <div class="metric-row"><span>Equal Opportunity</span><span class="pill pass">0.92</span></div>
+          <div class="metric-row"><span>Equalized Odds</span><span class="pill warn">0.81</span></div>
+          <div class="metric-row"><span>Règle des 4/5</span><span class="pill fail">0.73</span></div>
+        </div>
+        <div class="note"><strong style="color:var(--fg); font-weight:500">Recommandation prioritaire.</strong> Revoir le poids du critère « expérience continue » : il pénalise mécaniquement les profils ayant pris un congé parental.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CRÉDIT -->
+<section id="credit" style="border-top:1px solid var(--border-subtle); scroll-margin-top:130px">
+  <div class="wrap">
+    <div class="scenario">
+      <div class="card sc-card" style="order:2">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+          <div><div style="font-weight:500">Demandes_credit_Q3.csv</div><div class="mono" style="font-size:11.5px; color:var(--fg-muted); margin-top:2px">Audit du 22 mars 2026</div></div>
+          <span class="pill fail">Score 1/5</span>
+        </div>
+        <div class="sc-what">2 840 demandes · clustering DBSCAN · 4 clusters · proxy détecté</div>
+        <div class="cluster">
+          <span class="eyebrow">Cluster déviant C4</span>
+          <h4 style="font-size:15px; margin-top:6px">60 % des refus pour 18 % de l'échantillon</h4>
+          <p class="lede" style="font-size:13px; margin-top:7px">Feature dominante : code postal — information mutuelle de 0,82 avec l'origine présumée. Le code postal agit comme proxy.</p>
+        </div>
+        <div>
+          <div class="metric-row"><span>Demographic Parity (origine)</span><span class="pill fail">0.71</span></div>
+          <div class="metric-row"><span>Règle des 4/5</span><span class="pill fail">0.69</span></div>
+        </div>
+        <div class="note fail"><strong style="color:var(--fg); font-weight:500">AI Act, article 10 § 2.f.</strong> Risque élevé. Une remédiation est nécessaire avant la mise en application (août 2026).</div>
+      </div>
+      <div style="order:1">
+        <span class="eyebrow acc">Crédit &amp; scoring</span>
+        <h2 class="title" style="margin-top:12px; margin-bottom:6px">Scoring crédit en banque régionale.</h2>
+        <p class="lede" style="font-size:17px; margin-bottom:24px">420 collaborateurs, 38 000 demandes par an, modèle de scoring entraîné en interne.</p>
+        <div class="story">
+          <div class="story-block"><h4>Le contexte</h4><p>Le responsable conformité doit produire avant juillet 2026 une preuve de fairness sur un modèle déployé il y a deux ans, entraîné sur des données historiques sans audit préalable.</p></div>
+          <div class="story-block"><h4>L'audit AuditIQ</h4><p>Module 2 (non supervisé) pour détecter d'éventuels proxies, puis Module 1 (supervisé) sur la fonction de décision. 2 840 demandes du Q3 2025 analysées.</p></div>
+          <div class="story-block"><h4>Le résultat</h4><p>Un cluster sur-représenté dans les refus (60 % des refus pour 18 % de l'échantillon), tiré par le code postal. Module 1 confirme : Demographic Parity à 0,71 sur l'axe origine présumée.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHATBOT -->
+<section id="chatbot" style="border-top:1px solid var(--border-subtle); scroll-margin-top:130px">
+  <div class="wrap">
+    <div class="scenario">
+      <div>
+        <span class="eyebrow acc">Chatbot service client</span>
+        <h2 class="title" style="margin-top:12px; margin-bottom:6px">Assistant LLM pour le SAV.</h2>
+        <p class="lede" style="font-size:17px; margin-bottom:24px">Équipement industriel, 240 collaborateurs, chatbot Mistral-7B déployé sur le portail client B2B.</p>
+        <div class="story">
+          <div class="story-block"><h4>Le contexte</h4><p>Le chatbot traite 12 000 sollicitations par mois. Une remontée interne signale un traitement « plus court et moins pédagogique » selon l'interlocuteur. L'équipe veut documenter et corriger.</p></div>
+          <div class="story-block"><h4>L'audit AuditIQ</h4><p>Module 3 (LLM). 412 prompts pairs sur six axes, métriques par axe : longueur, sentiment, taux de refus. Test en condition de production, sans modifier l'endpoint.</p></div>
+          <div class="story-block"><h4>Le résultat</h4><p>Score global 3,2/5. Axe handicap à 2,1/5 : le chatbot redirige plus souvent vers un « service spécialisé » quand le prompt évoque un handicap, sans répondre directement. Recommandation : revoir l'instruction système et les exemples de fine-tuning.</p></div>
+        </div>
+      </div>
+      <div class="card sc-card">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+          <div><div style="font-weight:500">Chatbot SAV · Mistral-7B</div><div class="mono" style="font-size:11.5px; color:var(--fg-muted); margin-top:2px">Audit du 8 avril 2026</div></div>
+          <span class="pill warn">Score 3.2/5</span>
+        </div>
+        <div class="axis-grid">
+          <div class="axis"><span class="eyebrow">Genre</span><div class="v" style="color:var(--pass)">4,1<span style="color:var(--fg-muted); font-size:13px"> / 5</span></div><div style="font-size:12px; color:var(--pass)">Faibles écarts</div></div>
+          <div class="axis"><span class="eyebrow">Origine</span><div class="v" style="color:var(--warn)">2,8<span style="color:var(--fg-muted); font-size:13px"> / 5</span></div><div style="font-size:12px; color:var(--warn)">Écarts modérés</div></div>
+          <div class="axis"><span class="eyebrow">Âge</span><div class="v" style="color:var(--warn)">3,5<span style="color:var(--fg-muted); font-size:13px"> / 5</span></div><div style="font-size:12px; color:var(--warn)">Acceptable</div></div>
+          <div class="axis bad"><span class="eyebrow">Handicap</span><div class="v" style="color:var(--fail)">2,1<span style="color:var(--fg-muted); font-size:13px"> / 5</span></div><div style="font-size:12px; color:var(--fail)">Écarts significatifs</div></div>
+        </div>
+        <div class="note"><strong style="color:var(--fg); font-weight:500">Extrait significatif.</strong> Profil A (handicap non mentionné) : 142 mots, ton informatif. Profil B (handicap mentionné) : 38 mots, redirection systématique.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTRES -->
+<section id="autres" style="border-top:1px solid var(--border-subtle); background:var(--surface); scroll-margin-top:130px">
+  <div class="wrap">
+    <div style="max-width:760px">
+      <p class="eyebrow acc">Autres cas d'usage</p>
+      <h2 class="title" style="margin-top:12px">AuditIQ s'adapte à toutes vos IA en production.</h2>
+      <p class="lede" style="margin-top:14px; font-size:17px">Trois exemples complémentaires de mise en œuvre, sur des cas vus chez nos clients pilotes.</p>
+    </div>
+    <div class="g3" style="margin-top:32px">
+      <div class="card use"><span class="eyebrow acc">Assurance</span><h4 style="font-size:16px">Tarification d'assurance auto</h4><p class="lede" style="font-size:13.5px">Modèle de tarification ML d'une mutuelle régionale. Audit Module 1 sur l'âge, par tranches de 5 ans. Détection d'une sur-tarification non justifiée sur les 18–22 ans.</p><div class="mod">Module 01 · Audit supervisé</div></div>
+      <div class="card use"><span class="eyebrow acc">Marketing</span><h4 style="font-size:16px">Ciblage publicitaire B2C</h4><p class="lede" style="font-size:13.5px">Scoring d'appétence pour un e-commerce mode. Audit Module 2 pour détecter des proxies de genre dans les features comportementales (navigation, panier moyen).</p><div class="mod">Module 02 · Non supervisé</div></div>
+      <div class="card use"><span class="eyebrow acc">Service client</span><h4 style="font-size:16px">Routage automatique de tickets</h4><p class="lede" style="font-size:13.5px">Classification de tickets entre niveaux 1, 2 et 3 chez un éditeur SaaS. Audit Module 1 sur la priorité, attributs déduits du contenu — sous-traitement systématique détecté.</p><div class="mod">Module 01 · Audit supervisé</div></div>
+      <div class="card use"><span class="eyebrow acc">Santé</span><h4 style="font-size:16px">Triage en téléconsultation</h4><p class="lede" style="font-size:13.5px">Système de triage symptômes-vers-urgence d'une plateforme de téléconsultation. Audit Module 3 avec banque de prompts médicaux, axes genre et origine.</p><div class="mod">Module 03 · LLM</div></div>
+      <div class="card use"><span class="eyebrow acc">RH</span><h4 style="font-size:16px">IA d'évaluation annuelle</h4><p class="lede" style="font-size:13.5px">Synthèse automatique d'évaluation d'objectifs chez un éditeur SaaS. Audit Module 3 sur les commentaires générés, axes genre et âge.</p><div class="mod">Module 03 · LLM</div></div>
+      <div class="card use"><span class="eyebrow acc">Logistique</span><h4 style="font-size:16px">Modèle de churn client B2B</h4><p class="lede" style="font-size:13.5px">Prédiction de churn pour une PME logistique. Audit Module 2 sur le dataset CRM, recherche de clusters déviants sur la taille d'entreprise et le secteur.</p><div class="mod">Module 02 · Non supervisé</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="border-top:1px solid var(--border-subtle)">
+  <div class="wrap">
+    <div class="card" style="padding:clamp(32px,5vw,52px); display:grid; grid-template-columns:1fr auto; gap:32px; align-items:center; background:linear-gradient(110deg, var(--accent-softer), transparent 58%)">
+      <div>
+        <p class="eyebrow acc">Votre cas d'usage</p>
+        <h2 class="title" style="margin-top:12px">Et le vôtre, on en parle ?</h2>
+        <p class="lede" style="margin-top:12px; max-width:52ch">Lancez un audit pilote gratuit sur l'une de vos IA en production, ou échangez avec notre équipe sur votre périmètre.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <a class="btn btn-primary lg" href="index.html">Essayer gratuitement</a>
+        <a class="btn btn-outline lg" href="contact.html">Nous contacter</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <a class="brand" href="Site Vitrine.html" style="margin-bottom:14px">
+          <span class="brand-logo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.8 8 9 4.8-1.2 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <span class="brand-name">AuditIQ</span>
+        </a>
+        <p class="lede" style="font-size:13.5px; max-width:34ch">La plateforme française d'audit de fairness des systèmes d'IA. Hébergement européen.</p>
+      </div>
+      <div class="foot-col"><h5>Produit</h5><a href="Site Vitrine.html#produit">Aperçu</a><a href="Site Vitrine.html#modules">Modules</a><a href="cas-usage.html">Cas d'usage</a><a href="Site Vitrine.html#tarifs">Tarifs</a><a href="index.html">L'application</a></div>
+      <div class="foot-col"><h5>Ressources</h5><a href="ressources.html">Articles &amp; guides</a><a href="Site Vitrine.html#conformite">AI Act</a><a href="securite.html">Sécurité &amp; RGPD</a></div>
+      <div class="foot-col"><h5>Entreprise</h5><a href="contact.html">Contact</a><a href="mentions-legales.html">Mentions légales</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 AuditIQ. Tous droits réservés.</span>
+      <span class="mono">Conforme AI Act · SOC 2 · ISO 27001 · Hébergé en UE</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var SUN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  var MOON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
+  var root = document.documentElement, btn = document.getElementById('theme-toggle');
+  function apply(t) { root.setAttribute('data-theme', t); document.body.setAttribute('data-theme', t); btn.innerHTML = t === 'dark' ? SUN : MOON; localStorage.setItem('aiq-theme', t); }
+  apply(localStorage.getItem('aiq-theme') || 'dark');
+  btn.addEventListener('click', function () { apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); });
+})();
+</script>
+</body>
+</html>
