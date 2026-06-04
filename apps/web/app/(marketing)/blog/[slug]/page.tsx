@@ -1,428 +1,406 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import '../../article.css';
+import { ARTICLES, getArticleBySlug } from '@/lib/articles/data';
+import type { Article, ArticleBlock } from '@/lib/articles/data';
 import { Container } from '@/components/layout/Container';
-import { Eyebrow } from '@/components/marketing/Eyebrow';
-import { Button } from '@/components/ui/button';
 
 /* ============================================================================
-   Static params — hardcoded until CMS integration
+   Static params — one per article
    ============================================================================ */
 
-const ARTICLE_SLUGS = [
-  'ai-act-pme-2026',
-  'regle-quatre-cinquiemes',
-  'audit-fairness-outils-cv',
-  'scoring-credit-proxies-geographiques',
-  'counterfactual-prompt-pairs-llm',
-  'article-10-ai-act-gouvernance-donnees',
-  'banque-loiret-proxy-geographique',
-  'livre-blanc-audit-ai-act-pme',
-  'demographic-parity-vs-equal-opportunity',
-  'auditiq-v2-comparaison-audits',
-];
-
 export function generateStaticParams() {
-  return ARTICLE_SLUGS.map((slug) => ({ slug }));
+  return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
-}): Metadata {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = getArticleBySlug(slug);
+  if (!article) return { title: 'Article introuvable · AuditIQ' };
   return {
-    title: `Article — ${params.slug.replace(/-/g, ' ')} · AuditIQ`,
-    description:
-      "Guide, étude sectorielle ou fiche méthodologique sur la fairness IA et la conformité AI Act européen.",
+    title: `${article.title} — AuditIQ`,
+    description: article.lede,
   };
 }
 
 /* ============================================================================
-   Fixture content — lorem-style, AI Act themed
+   Block renderer
    ============================================================================ */
 
-const TOC = [
-  { id: 'perimetre', label: 'Quel périmètre vous concerne' },
-  { id: 'obligations', label: 'Obligations concrètes' },
-  { id: 'calendrier', label: 'Calendrier à respecter' },
-  { id: 'charge-preuve', label: 'Charge de la preuve' },
-  { id: 'sanctions', label: 'Sanctions encourues' },
-  { id: 'plan-action', label: "Plan d'action en six mois" },
-];
+function renderInline(text: string): string {
+  // Simple inline markdown: **bold**, *italic*, `code`
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+}
 
-const RELATED = [
-  {
-    slug: 'article-10-ai-act-gouvernance-donnees',
-    category: 'AI ACT',
-    readTime: '9 min',
-    title: "Article 10 de l'AI Act : ce que « gouvernance des données » signifie en pratique.",
-  },
-  {
-    slug: 'demographic-parity-vs-equal-opportunity',
-    category: 'MÉTHODE',
-    readTime: '7 min',
-    title: 'Demographic Parity vs Equal Opportunity : laquelle choisir, et quand ?',
-  },
-  {
-    slug: 'banque-loiret-proxy-geographique',
-    category: "RETOUR D'EXP",
-    readTime: '11 min',
-    title: 'Comment Banque Loiret a corrigé un proxy géographique en 7 mois.',
-  },
-];
+function Block({ block }: { block: ArticleBlock }) {
+  switch (block.kind) {
+    case 'p':
+      return (
+        <p dangerouslySetInnerHTML={{ __html: renderInline(block.text) }} />
+      );
 
-const PLAN_STEPS = [
-  {
-    title: 'Mois 1 — Cartographie',
-    body: "Inventoriez tous vos systèmes d'IA en production. Identifiez ceux qui tombent en haut risque. Désignez un responsable conformité IA (peut être le DPO).",
-  },
-  {
-    title: 'Mois 2 — Audit fairness initial',
-    body: 'Pour chaque système à haut risque, lancez un audit (Module 1, 2 ou 3 selon le système). Identifiez les écarts. Documentez les seuils utilisés.',
-  },
-  {
-    title: 'Mois 3 — Remédiation prioritaire',
-    body: "Hiérarchisez les remédiations. Une PME ne peut généralement pas tout corriger d'un coup. Concentrez-vous sur les écarts les plus significatifs.",
-  },
-  {
-    title: 'Mois 4 — Documentation annexe IV',
-    body: 'Produisez ou complétez votre dossier technique. AuditIQ génère la section 2.f. Les autres sections restent à produire en parallèle.',
-  },
-  {
-    title: 'Mois 5 — Mise en production de la supervision',
-    body: "Mettez en place la supervision humaine effective. Logguez les décisions. Définissez les seuils d'alerte. Formez les équipes.",
-  },
-  {
-    title: 'Mois 6 — Audit de validation',
-    body: 'Re-lancez un audit après remédiation pour valider la conformité. Comparez les scores avant/après. Archivez le tout. Vous êtes conforme.',
-  },
-];
+    case 'h2':
+      return <h2 dangerouslySetInnerHTML={{ __html: block.text }} />;
+
+    case 'h3':
+      return <h3 dangerouslySetInnerHTML={{ __html: block.text }} />;
+
+    case 'ul':
+      return (
+        <ul>
+          {block.items.map((item, i) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: renderInline(item) }} />
+          ))}
+        </ul>
+      );
+
+    case 'ol':
+      return (
+        <ol>
+          {block.items.map((item, i) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: renderInline(item) }} />
+          ))}
+        </ol>
+      );
+
+    case 'callout':
+      return (
+        <div className="callout">
+          <p dangerouslySetInnerHTML={{ __html: renderInline(block.text) }} />
+        </div>
+      );
+
+    case 'note-info':
+      return (
+        <div
+          className="note-info"
+          dangerouslySetInnerHTML={{ __html: renderInline(block.text) }}
+        />
+      );
+
+    case 'note-warn':
+      return (
+        <div
+          className="note-warn"
+          dangerouslySetInnerHTML={{ __html: renderInline(block.text) }}
+        />
+      );
+
+    case 'kpi':
+      return (
+        <div className="kpi">
+          {block.values.map((kv, i) => (
+            <div key={i} className="k">
+              <div className="v">{kv.value}</div>
+              <div className="l">{kv.label}</div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case 'sources':
+      return (
+        <div className="sources">
+          {block.items.map((src, i) => (
+            <a
+              key={i}
+              className="source"
+              href={src.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="ic">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 3v5h5" />
+                  <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-5Z" />
+                </svg>
+              </span>
+              <div>
+                <div className="t">{src.title}</div>
+                <div className="u">{new URL(src.url).hostname}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      );
+
+    case 'disclaimer':
+      return (
+        <div
+          className="disclaimer"
+          dangerouslySetInnerHTML={{ __html: renderInline(block.text) }}
+        />
+      );
+
+    case 'compare':
+      return (
+        <div className="compare">
+          <div className="col">
+            <h4>{block.left.title}</h4>
+            {block.left.items.map((item, i) => (
+              <p key={i} dangerouslySetInnerHTML={{ __html: renderInline(item) }} />
+            ))}
+          </div>
+          <div className="col">
+            <h4>{block.right.title}</h4>
+            {block.right.items.map((item, i) => (
+              <p key={i} dangerouslySetInnerHTML={{ __html: renderInline(item) }} />
+            ))}
+          </div>
+        </div>
+      );
+
+    case 'timeline':
+      return (
+        <div className="timeline">
+          {block.items.map((item, i) => (
+            <div key={i} className={`tl${item.current ? ' on' : ''}`}>
+              <div className="d">{item.date}</div>
+              <h4>{item.title}</h4>
+              <p>{item.body}</p>
+            </div>
+          ))}
+        </div>
+      );
+
+    default:
+      return null;
+  }
+}
+
+/* ============================================================================
+   Related articles (3 cards, same-category or any if < 3 available)
+   ============================================================================ */
+
+function RelatedArticles({ current }: { current: Article }) {
+  const sameCat = ARTICLES.filter(
+    (a) => a.slug !== current.slug && a.category === current.category,
+  );
+  const others = ARTICLES.filter(
+    (a) => a.slug !== current.slug && a.category !== current.category,
+  );
+  const related = [...sameCat, ...others].slice(0, 3);
+
+  if (related.length === 0) return null;
+
+  return (
+    <section style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 'clamp(40px,6vw,72px)', padding: 'clamp(32px,4vw,56px) 0' }}>
+      <Container>
+        <h2 style={{ fontSize: 'clamp(20px,2.2vw,26px)', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 24 }}>
+          À lire aussi
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 16 }}>
+          {related.map((art) => (
+            <Link
+              key={art.slug}
+              href={`/blog/${art.slug}`}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                padding: '18px 20px',
+                borderRadius: 12,
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--surface)',
+                textDecoration: 'none',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--accent)',
+                }}
+              >
+                {art.category}
+              </span>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  lineHeight: 1.45,
+                  color: 'var(--fg)',
+                }}
+              >
+                {art.title}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: 11.5,
+                  color: 'var(--fg-muted)',
+                }}
+              >
+                {art.readMinutes} min
+              </span>
+            </Link>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
 
 /* ============================================================================
    Page
    ============================================================================ */
 
-export default function ArticlePage() {
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const article = getArticleBySlug(slug);
+  if (!article) notFound();
+
+  const toc = article.body
+    .filter((b): b is { kind: 'h2'; text: string } => b.kind === 'h2')
+    .map((b) => ({
+      label: b.text.replace(/<[^>]+>/g, ''),
+      id: b.text
+        .toLowerCase()
+        .replace(/<[^>]+>/g, '')
+        .replace(/^0\d\s*—\s*/, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, ''),
+    }));
+
+  const authorInitials = article.author
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const dateFormatted = new Date(article.date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <>
-      {/* ARTICLE HERO */}
-      <header className="border-b border-border-subtle pt-[clamp(48px,6vw,80px)] pb-10">
-        <Container className="max-w-[880px]">
-          <span className="font-mono text-xs uppercase tracking-[0.12em] text-accent">
-            Guide · AI Act
-          </span>
-          <h1 className="mt-4 max-w-[22ch] text-[clamp(32px,4vw,48px)] font-display font-medium leading-[1.15] tracking-[-0.02em] text-fg">
-            AI Act pour PME : ce qui change le 2 août 2026 (et comment s&apos;y préparer).
-          </h1>
-          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-fg-muted">
-            <span>
-              Par{' '}
-              <strong className="font-medium text-fg">Zineb Khelifi</strong>
+      {/* PAGE HEAD */}
+      <header className="page-head">
+        <div className="wrap">
+          {/* Back + category */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+            <Link
+              href="/ressources"
+              className="mono"
+              style={{ fontSize: 12.5, color: 'var(--fg-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+              Ressources
+            </Link>
+            <span style={{ color: 'var(--fg-disabled)' }}>·</span>
+            <span className="mono" style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+              {article.category}
             </span>
-            <span aria-hidden className="inline-block size-1 rounded-full bg-fg-muted" />
-            <span>12 mai 2026</span>
-            <span aria-hidden className="inline-block size-1 rounded-full bg-fg-muted" />
-            <span>14 min de lecture</span>
-            <span aria-hidden className="inline-block size-1 rounded-full bg-fg-muted" />
-            <span>v3 — révision après publication du décret d&apos;application</span>
           </div>
-        </Container>
+
+          <h1 style={{ maxWidth: '22ch' }}>{article.title}</h1>
+          <p className="lead" style={{ maxWidth: '62ch' }}>{article.lede}</p>
+
+          {/* Author chip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginTop: 24 }}>
+            <span style={{ width: 38, height: 38, borderRadius: 9, display: 'grid', placeItems: 'center', fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 500, background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--fg-secondary)' }}>
+              {authorInitials}
+            </span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>{article.author}</div>
+              <div className="mono" style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+                {article.role} — {dateFormatted} · {article.readMinutes} min
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
 
-      {/* ARTICLE BODY + TOC */}
-      <section className="py-16">
-        <Container>
-          <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_240px]">
-            {/* Main content */}
-            <article className="max-w-[720px] text-[17px] leading-[1.7] text-fg-secondary">
-              <p className="text-[19px] text-fg-secondary">
-                Le 2 août 2026, les obligations de l&apos;AI Act sur les systèmes d&apos;IA à haut
-                risque deviennent contraignantes.{' '}
-                <strong className="font-medium text-fg">
-                  Pour une PME française, cela peut signifier devoir produire, sous 90 jours, une
-                  documentation technique exhaustive (annexe IV)
-                </strong>{' '}
-                sur chaque système d&apos;IA déployé. Voici, en six points, ce que ça implique
-                concrètement.
-              </p>
+      {/* ARTICLE BODY */}
+      <section style={{ paddingTop: 'clamp(36px,5vw,52px)' }}>
+        <div className="wrap">
+          <div className="article">
+            {/* TOC */}
+            {toc.length > 0 && (
+              <nav className="toc">
+                <span className="toc-h">Sommaire</span>
+                {toc.map((item) => (
+                  <a key={item.id} href={`#${item.id}`}>
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            )}
 
-              <h2
-                id="perimetre"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                01 — Quel périmètre vous concerne ?
-              </h2>
-              <p>
-                L&apos;AI Act applique une approche par les risques. Pour une PME, le seuil
-                critique est le périmètre{' '}
-                <strong className="font-medium text-fg">« haut risque »</strong>, défini à
-                l&apos;annexe III du règlement. Les usages concernés en pratique :
-              </p>
-              <ul className="my-4 space-y-2 pl-6">
-                <li>
-                  Recrutement et gestion RH avec IA (tri de CV, scoring de performance, sélection
-                  promotion).
-                </li>
-                <li>
-                  Évaluation de la solvabilité ou des risques de crédit (scoring crédit,
-                  anti-fraude).
-                </li>
-                <li>Tarification ou sélection des risques en assurance santé et vie.</li>
-                <li>Accès aux services publics essentiels (énergie, eau, transport).</li>
-                <li>Justice et exécution des peines.</li>
-                <li>
-                  Éducation et formation professionnelle (notation, accès, expulsion).
-                </li>
-                <li>Biométrie d&apos;identification.</li>
-              </ul>
-
-              {/* Callout */}
-              <div className="my-6 rounded-md border border-accent-border bg-accent-soft p-5 text-sm leading-relaxed text-fg">
-                <strong className="mb-1.5 block font-medium">À retenir.</strong>
-                68&nbsp;% des PME françaises de plus de 50 salariés utilisent au moins un outil IA
-                en production en 2025 (source : Bpifrance Le Lab). Toutes ne sont pas dans le
-                périmètre haut risque, mais celles qui font du tri de CV, du scoring crédit ou de
-                la tarification le sont mécaniquement.
-              </div>
-
-              <h2
-                id="obligations"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                02 — Quelles obligations concrètes ?
-              </h2>
-              <p>
-                L&apos;article 26 liste les obligations du déployeur. Les plus structurantes pour
-                une PME :
-              </p>
-              <ol className="my-4 space-y-2 pl-6">
-                <li>
-                  <strong className="font-medium text-fg">
-                    Documentation technique tenue à jour
-                  </strong>{' '}
-                  (annexe IV) — disponible sur demande de l&apos;autorité.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">Supervision humaine effective</strong> —
-                  un humain doit pouvoir comprendre et contester la décision IA.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">Surveillance du fonctionnement</strong>{' '}
-                  — y compris des performances par sous-groupe et des biais possibles.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">Logs conservés</strong> — au moins 6
-                  mois, parfois 5 ans selon le système.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">Notification d&apos;incident</strong> —
-                  sous 15 jours en cas d&apos;incident grave.
-                </li>
-              </ol>
-
-              <h2
-                id="calendrier"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                03 — Quel calendrier respecter ?
-              </h2>
-              <ul className="my-4 space-y-2 pl-6">
-                <li>
-                  <strong className="font-medium text-fg">2 février 2025</strong> — pratiques
-                  interdites en vigueur.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">2 août 2025</strong> — obligations GPAI
-                  et gouvernance européenne.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">2 août 2026</strong> —{' '}
-                  <strong className="font-medium text-fg">
-                    obligations haut risque applicables
-                  </strong>{' '}
-                  (le point d&apos;attention pour les PME).
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">2 août 2027</strong> — extension aux IA
-                  intégrées dans des produits régulés.
-                </li>
-              </ul>
-              <blockquote className="my-6 border-l-2 border-accent py-3 pl-6 font-display text-[20px] italic leading-[1.5] text-fg">
-                « Le calendrier paraît lointain. Mais une remédiation, en pratique, prend 6 à 9
-                mois. Commencer en juin 2026 pour une mise en conformité en août, c&apos;est déjà
-                trop tard. »
-              </blockquote>
-
-              <h2
-                id="charge-preuve"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                04 — Charge de la preuve : ce qui change vraiment
-              </h2>
-              <p>
-                L&apos;AI Act, comme le RGPD, inverse la charge de la preuve. En cas de plainte ou
-                de contrôle, ce n&apos;est pas à l&apos;autorité de prouver que votre IA discrimine
-                — c&apos;est à vous de prouver qu&apos;elle ne discrimine pas.
-              </p>
-
-              <h2
-                id="sanctions"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                05 — Quelles sanctions encourues ?
-              </h2>
-              <ul className="my-4 space-y-2 pl-6">
-                <li>
-                  <strong className="font-medium text-fg">Pratiques interdites</strong> (article
-                  5) : jusqu&apos;à 35&nbsp;M€ ou 7&nbsp;% du CA mondial.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">
-                    Manquements aux obligations haut risque
-                  </strong>{' '}
-                  (articles 8 à 27) : jusqu&apos;à 15&nbsp;M€ ou 3&nbsp;% du CA mondial.
-                </li>
-                <li>
-                  <strong className="font-medium text-fg">
-                    Information inexacte ou incomplète aux autorités
-                  </strong>{' '}
-                  : jusqu&apos;à 7,5&nbsp;M€ ou 1&nbsp;% du CA mondial.
-                </li>
-              </ul>
-
-              <h2
-                id="plan-action"
-                className="mb-4 mt-10 text-[clamp(24px,2.5vw,32px)] font-display font-medium tracking-[-0.015em] text-fg"
-              >
-                06 — Un plan d&apos;action en six mois
-              </h2>
-              <p>
-                Voici une trame réaliste pour une PME qui démarre en mai 2026 et veut être conforme
-                en novembre 2026 :
-              </p>
-              {PLAN_STEPS.map((step) => (
-                <div key={step.title} className="mt-6">
-                  <h3 className="mb-2 text-h3 font-display font-medium text-fg">{step.title}</h3>
-                  <p>{step.body}</p>
-                </div>
+            {/* Prose */}
+            <article className="prose">
+              {article.body.map((block, i) => (
+                <Block key={i} block={block} />
               ))}
-
-              <hr className="my-10 border-border-subtle" />
-
-              {/* CTA callout */}
-              <div className="rounded-md border border-accent-border bg-accent-soft p-5 text-sm leading-relaxed text-fg">
-                <strong className="mb-1.5 block font-medium">Comment AuditIQ vous aide.</strong>
-                Notre plateforme couvre les étapes 2, 3 (recommandations), 4 (section 2.f) et 6.
-                Elle ne remplace ni votre DPO, ni votre responsable conformité, ni un cabinet
-                d&apos;avocats — mais elle outille l&apos;essentiel du travail technique.{' '}
-                <Link href="/contact" className="text-accent underline underline-offset-[3px]">
-                  Demandez une démo
-                </Link>{' '}
-                pour voir l&apos;audit sur vos propres données.
-              </div>
-
-              {/* Disclaimer */}
-              <div className="mt-8 rounded-md border border-status-info-border bg-status-info-bg p-4 text-sm leading-relaxed text-fg-secondary">
-                <strong className="font-medium text-fg">Disclaimer.</strong> Cet article est rédigé
-                à titre informatif. Il ne constitue pas un avis juridique. AuditIQ n&apos;est pas
-                un organisme notifié au sens de l&apos;article 43 du règlement (UE) 2024/1689.
-                Consultez un professionnel du droit pour toute décision de conformité.
-              </div>
             </article>
-
-            {/* TOC sidebar */}
-            <aside className="lg:sticky lg:top-[calc(var(--nav-h)+24px)] lg:self-start">
-              <div className="rounded-xl border border-border-default bg-surface p-6">
-                <h5 className="mb-4 font-mono text-xs uppercase tracking-[0.12em] text-fg-muted">
-                  Au sommaire
-                </h5>
-                <ol className="flex list-none flex-col gap-1.5 p-0">
-                  {TOC.map((item, i) => (
-                    <li key={item.id} className="relative pl-7">
-                      <span className="absolute left-0 top-1 font-mono text-[11px] text-fg-muted">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <a
-                        href={`#${item.id}`}
-                        className="block py-1 text-sm leading-snug text-fg-secondary transition-colors hover:text-fg"
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-                <div className="mt-4 flex items-center gap-2.5 border-t border-border-subtle pt-4">
-                  <div
-                    aria-hidden
-                    className="flex size-8 items-center justify-center rounded-full border border-border-default bg-surface-3 text-xs text-fg-secondary"
-                  >
-                    ZK
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-fg">Zineb Khelifi</div>
-                    <div className="text-[11px] text-fg-muted">CLO · AuditIQ</div>
-                  </div>
-                </div>
-              </div>
-            </aside>
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* RELATED ARTICLES */}
-      <section className="border-t border-border-subtle py-16">
-        <Container>
-          <h2 className="mb-8 text-h2 font-display font-medium tracking-tight text-fg">
-            À lire aussi
-          </h2>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {RELATED.map((rel) => (
-              <Link
-                key={rel.slug}
-                href={`/blog/${rel.slug}`}
-                className="group flex flex-col gap-3 rounded-xl border border-border-default bg-surface p-5 transition-colors hover:border-border-strong"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-accent">
-                    {rel.category}
-                  </span>
-                  <span className="text-fg-muted">&middot;</span>
-                  <span className="text-xs text-fg-muted">{rel.readTime}</span>
-                </div>
-                <h3 className="text-[15px] font-medium leading-snug text-fg transition-colors group-hover:text-accent">
-                  {rel.title}
-                </h3>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {/* RELATED */}
+      <RelatedArticles current={article} />
 
-      {/* CTA STRIP */}
-      <section className="border-t border-border-subtle py-16">
-        <Container>
-          <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
+      {/* CTA */}
+      <section style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 'clamp(40px,6vw,72px)' }}>
+        <div className="wrap">
+          <div
+            className="card"
+            style={{ padding: 'clamp(32px,5vw,52px)', display: 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'center', background: 'linear-gradient(110deg, var(--accent-softer), transparent 58%)' }}
+          >
             <div>
-              <Eyebrow accent>Prochaine étape</Eyebrow>
-              <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                Lancez votre audit AI Act sur vos données.
-              </h2>
-              <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                30 minutes de démo guidée pour identifier vos systèmes à haut risque et lancer un
-                premier audit pilote.
-              </p>
+              <p className="eyebrow acc">Passez à la pratique</p>
+              <h2 className="title" style={{ marginTop: 12 }}>Auditez la fairness de votre IA dès maintenant.</h2>
+              <p className="lede" style={{ marginTop: 12, maxWidth: '52ch' }}>Lancez un premier audit gratuit et obtenez un rapport opposable en moins d&apos;une heure.</p>
             </div>
-            <div className="flex flex-col gap-3">
-              <Button asChild variant="primary" size="lg">
-                <Link href="/contact">Réserver une démo</Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/blog">Voir tous les articles</Link>
-              </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Link className="btn btn-primary lg" href="/blog">Voir tous les articles</Link>
+              <Link className="btn btn-outline lg" href="/contact">Nous contacter</Link>
             </div>
           </div>
-        </Container>
+        </div>
       </section>
+
+      {/* Back link */}
+      <div className="wrap" style={{ padding: 'clamp(24px,4vw,40px) var(--wrap-px)' }}>
+        <Link
+          href="/ressources"
+          className="mono"
+          style={{ fontSize: 13, color: 'var(--fg-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
+          Retour aux ressources
+        </Link>
+      </div>
     </>
   );
 }
