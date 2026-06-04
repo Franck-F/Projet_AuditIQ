@@ -150,14 +150,19 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
             </Link>
           </div>
 
-          {/* Heading + intro */}
+          {/* Heading + intro — centered to match the maquette layout */}
           <h1
-            className="font-display font-medium text-fg"
+            className="text-center font-display font-medium text-fg"
             style={{ fontSize: 22, letterSpacing: '-0.025em', marginBottom: 6 }}
           >
             {heading}
           </h1>
-          <p className="mb-6 text-[13.5px] leading-relaxed text-fg-muted">{intro}</p>
+          <p
+            className="text-center text-[13.5px] leading-relaxed text-fg-muted"
+            style={{ marginBottom: 32 }}
+          >
+            {intro}
+          </p>
 
           {/* Form slot */}
           {children}
