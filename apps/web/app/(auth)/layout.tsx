@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Link href="/mentions-legales" className="hover:text-fg-secondary">
             Mentions légales
           </Link>
-          <Link href="/confidentialite" className="hover:text-fg-secondary">
+          <Link href="/mentions-legales" className="hover:text-fg-secondary">
             Confidentialité
           </Link>
           <Link href="/securite" className="hover:text-fg-secondary">
