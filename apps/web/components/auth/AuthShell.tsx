@@ -188,11 +188,11 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
           {/* Terms */}
           <p className="mt-5 text-center text-xs leading-[1.5] text-fg-muted">
             En continuant, vous acceptez nos{' '}
-            <Link href="/cgu" className="text-fg-secondary underline hover:text-fg">
+            <Link href="/mentions-legales" className="text-fg-secondary underline hover:text-fg">
               conditions
             </Link>{' '}
             et notre{' '}
-            <Link href="/confidentialite" className="text-fg-secondary underline hover:text-fg">
+            <Link href="/mentions-legales" className="text-fg-secondary underline hover:text-fg">
               politique de confidentialité
             </Link>
             .

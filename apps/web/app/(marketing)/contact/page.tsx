@@ -92,7 +92,7 @@ export default function ContactPage() {
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: 500 }}>Pas besoin de nous attendre</div>
                     <p className="lede" style={{ fontSize: '13px', marginTop: '3px' }}>Créez un compte et lancez votre premier audit gratuitement, sans carte bancaire.</p>
-                    <Link className="btn btn-primary sm" href="/sign-up" style={{ marginTop: '11px', display: 'inline-flex' }}>Essayer gratuitement</Link>
+                    <Link className="btn btn-primary sm" href="/inscription" style={{ marginTop: '11px', display: 'inline-flex' }}>Essayer gratuitement</Link>
                   </div>
                 </div>
               </div>

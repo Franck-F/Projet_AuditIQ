@@ -253,7 +253,7 @@ export default function CasUsagePage() {
               <p className="lede" style={{ marginTop: '12px', maxWidth: '52ch' }}>Lancez un audit pilote gratuit sur l&apos;une de vos IA en production, ou échangez avec notre équipe sur votre périmètre.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link className="btn btn-primary lg" href="/sign-up">Essayer gratuitement</Link>
+              <Link className="btn btn-primary lg" href="/inscription">Essayer gratuitement</Link>
               <Link className="btn btn-outline lg" href="/contact">Nous contacter</Link>
             </div>
           </div>

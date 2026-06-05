@@ -418,7 +418,7 @@ export default async function ArticlePage({
             {RELATED.map((r) => (
               <Link
                 key={r.title}
-                href="/ressources/article"
+                href="/ressources"
                 className="flex flex-col gap-3 rounded-lg border border-border-default bg-surface p-6 transition-colors hover:border-border-strong"
               >
                 <div className="flex items-center gap-2 text-xs text-fg-muted">

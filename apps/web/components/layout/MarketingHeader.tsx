@@ -19,10 +19,10 @@ export function MarketingHeader() {
         </Link>
 
         <div className="nav-links">
-          <a href="#produit">Pourquoi AuditIQ</a>
-          <a href="#modules">Modules</a>
-          <a href="#tarifs">Tarifs</a>
-          <a href="#conformite">AI Act</a>
+          <a href="/#produit">Pourquoi AuditIQ</a>
+          <a href="/#modules">Modules</a>
+          <a href="/#tarifs">Tarifs</a>
+          <a href="/#conformite">AI Act</a>
         </div>
 
         <div className="nav-right">
