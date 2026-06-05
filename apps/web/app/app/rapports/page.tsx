@@ -24,7 +24,7 @@ export default function RapportsPage() {
   if (isLoading) {
     return (
       <>
-        <Topbar crumbs={[{ label: 'Rapports' }]} />
+        <Topbar title="Rapports" crumbs={[{ label: 'AuditIQ' }, { label: 'Rapports' }]} />
         <div className="flex items-center justify-center p-8 text-fg-muted">Chargement...</div>
       </>
     );
@@ -37,21 +37,20 @@ export default function RapportsPage() {
 
   return (
     <>
-      <div className="topbar">
-        <nav aria-label="Fil d'Ariane" style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <span style={{ color: 'var(--fg)', fontSize: 13, fontWeight: 500 }}>Rapports</span>
-        </nav>
-        <div className="topbar-actions">
+      <Topbar
+        title="Rapports"
+        crumbs={[{ label: 'AuditIQ' }, { label: 'Rapports' }]}
+        actions={
           <Link href="/app/audits/nouveau">
             <Button variant="primary" size="sm">
               <Icons.plus size={16} />
               Nouvel audit
             </Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="space-y-6">
+      <div className="page space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <MetricCard label="Rapports générés" value={totalAudits} />
           <MetricCard label="Signés & opposables" value={signedCount} />
