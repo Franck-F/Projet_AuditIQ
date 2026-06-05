@@ -66,6 +66,7 @@ class SuggestionOut(BaseModel):
     confidence: float
     reason: str
     favorable_value: Any | None = None
+    privileged_value: Any | None = None
 
     @classmethod
     def from_engine(cls, s: Suggestion) -> SuggestionOut:
@@ -74,6 +75,7 @@ class SuggestionOut(BaseModel):
             confidence=float(s.confidence),
             reason=s.reason,
             favorable_value=_to_json_scalar(s.favorable_value),
+            privileged_value=_to_json_scalar(s.privileged_value),
         )
 
 
@@ -83,6 +85,8 @@ class DatasetAnalysisOut(BaseModel):
     columns: list[ColumnProfileOut]
     suggested_decision: SuggestionOut | None = None
     suggested_protected: SuggestionOut | None = None
+    protected_candidates: list[SuggestionOut] = []
+    suggested_ground_truth: SuggestionOut | None = None
 
     @classmethod
     def from_engine(cls, a: DatasetAnalysis) -> DatasetAnalysisOut:
@@ -96,6 +100,14 @@ class DatasetAnalysisOut(BaseModel):
             suggested_protected=(
                 SuggestionOut.from_engine(a.suggested_protected)
                 if a.suggested_protected
+                else None
+            ),
+            protected_candidates=[
+                SuggestionOut.from_engine(c) for c in a.protected_candidates
+            ],
+            suggested_ground_truth=(
+                SuggestionOut.from_engine(a.suggested_ground_truth)
+                if a.suggested_ground_truth
                 else None
             ),
         )
