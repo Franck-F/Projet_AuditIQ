@@ -18,11 +18,36 @@ function Step3ConfigM1({
   dataset,
   analysis,
 }: Step3ConfigProps): React.ReactElement {
-  const { register, control } = useFormContext<UnifiedValues>();
+  const { register, control, setValue, getValues } = useFormContext<UnifiedValues>();
   const { setHelpKey, clearHelpKey } = useWizard();
-  const [advancedOpen, setAdvancedOpen] = React.useState(false);
+
+  // The advanced panel opens automatically when analysis provides privileged_value
+  // or ground_truth_column. The user can manually override it; we track that with
+  // a separate flag so the analysis-driven open always wins unless the user closed it.
+  const [userToggled, setUserToggled] = React.useState<boolean | null>(null);
+  const analysisOpensAdvanced =
+    analysis?.suggested_protected?.privileged_value != null ||
+    analysis?.suggested_ground_truth?.column != null;
+  // Prefer user's explicit choice; if none, derive from analysis.
+  const advancedOpen = userToggled ?? analysisOpensAdvanced;
 
   const selectedDecision = useWatch({ control, name: 'decision_column' });
+
+  // Prefill from analysis — anti-clobber: only fills empty fields
+  React.useEffect(() => {
+    if (!analysis) return;
+    const setIfEmpty = (name: keyof UnifiedValues, value: unknown) => {
+      if (value == null || value === '') return;
+      if (getValues(name)) return;
+      setValue(name, String(value) as never, { shouldDirty: false });
+    };
+    setIfEmpty('decision_column', analysis.suggested_decision?.column);
+    setIfEmpty('favorable_value', analysis.suggested_decision?.favorable_value);
+    setIfEmpty('protected_attribute', analysis.suggested_protected?.column);
+    setIfEmpty('privileged_value', analysis.suggested_protected?.privileged_value);
+    setIfEmpty('ground_truth_column', analysis.suggested_ground_truth?.column);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysis]);
 
   const columns = dataset?.columns ?? [];
   const suggestedDecision = analysis?.suggested_decision?.column ?? null;
@@ -57,10 +82,14 @@ function Step3ConfigM1({
           className="text-sm font-medium text-fg-secondary"
         >
           Colonne de décision
+          {analysis?.suggested_decision && (
+            <span className="ml-2 text-xs font-normal text-fg-muted">
+              suggéré · conf. {Math.round(analysis.suggested_decision.confidence * 100)}%
+            </span>
+          )}
         </label>
         <select
           id="m1-decision"
-          defaultValue=""
           className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
           {...register('decision_column', { required: true })}
           onFocus={() => setHelpKey('wizard.step3.decision_column')}
@@ -86,11 +115,15 @@ function Step3ConfigM1({
           className="text-sm font-medium text-fg-secondary"
         >
           Valeur favorable
+          {analysis?.suggested_decision?.favorable_value != null && (
+            <span className="ml-2 text-xs font-normal text-fg-muted">
+              suggéré · conf. {Math.round(analysis.suggested_decision.confidence * 100)}%
+            </span>
+          )}
         </label>
         {favorableOptions.length > 0 ? (
           <select
             id="m1-favorable"
-            defaultValue=""
             disabled={!selectedDecision}
             className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg disabled:opacity-50"
             {...register('favorable_value', { required: true })}
@@ -110,7 +143,6 @@ function Step3ConfigM1({
         ) : (
           <select
             id="m1-favorable"
-            defaultValue=""
             disabled={!selectedDecision}
             className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg disabled:opacity-50"
             {...register('favorable_value', { required: true })}
@@ -132,10 +164,14 @@ function Step3ConfigM1({
           className="text-sm font-medium text-fg-secondary"
         >
           Attribut protégé
+          {analysis?.suggested_protected && (
+            <span className="ml-2 text-xs font-normal text-fg-muted">
+              suggéré · conf. {Math.round(analysis.suggested_protected.confidence * 100)}%
+            </span>
+          )}
         </label>
         <select
           id="m1-protected"
-          defaultValue=""
           className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
           {...register('protected_attribute', { required: true })}
           onFocus={() => setHelpKey('wizard.step3.protected_attribute')}
@@ -159,7 +195,7 @@ function Step3ConfigM1({
         <button
           type="button"
           className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-fg"
-          onClick={() => setAdvancedOpen((v) => !v)}
+          onClick={() => setUserToggled((v) => !(v ?? analysisOpensAdvanced))}
           aria-expanded={advancedOpen}
         >
           <span>Options avancées</span>
@@ -204,7 +240,6 @@ function Step3ConfigM1({
               </label>
               <select
                 id="m1-ground-truth"
-                defaultValue=""
                 className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
                 {...register('ground_truth_column')}
                 aria-label="Vérité-terrain"
