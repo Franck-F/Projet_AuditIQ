@@ -104,32 +104,25 @@ describe('Dashboard R5 — maquette fidelity', () => {
   it('renders hero greeting', () => {
     mockData();
     render(<DashboardPage />);
-    expect(screen.getByRole('heading', { name: /Bonjour/i })).toBeInTheDocument();
+    expect(screen.getByText(/Bonjour/i)).toBeInTheDocument();
   });
 
-  it('renders 4 MetricCard labels matching maquette exactly', () => {
+  it('renders 4 MetricCard labels matching R9 maquette', () => {
     mockData();
     render(<DashboardPage />);
 
-    expect(screen.getByText('Audits cette année')).toBeInTheDocument();
-    expect(screen.getByText('Biais détectés (90j)')).toBeInTheDocument();
-    expect(screen.getByText('Recommandations ouvertes')).toBeInTheDocument();
-    expect(screen.getByText('Couverture AI Act')).toBeInTheDocument();
+    // R9 maquette labels
+    expect(screen.getByText('Score de conformité')).toBeInTheDocument();
+    expect(screen.getByText('Audits actifs')).toBeInTheDocument();
+    expect(screen.getByText('Modèles non conformes')).toBeInTheDocument();
+    expect(screen.getByText("Délai moyen d'audit")).toBeInTheDocument();
   });
 
-  it('renders risk gauge card with "Score de risque global" label', () => {
-    mockData();
-    render(<DashboardPage />);
-    expect(screen.getByText('Score de risque global')).toBeInTheDocument();
-    // Gauge has role="meter"
-    expect(screen.getByRole('meter')).toBeInTheDocument();
-  });
-
-  it('renders recent audits section with all 5 rows', () => {
+  it('renders recent audits section with rows', () => {
     mockData();
     render(<DashboardPage />);
 
-    expect(screen.getByText('Audits récents')).toBeInTheDocument();
+    expect(screen.getByText('Derniers audits exécutés')).toBeInTheDocument();
     expect(screen.getByText('Recrutement Q2 2026 — Scoring CV')).toBeInTheDocument();
     expect(screen.getByText('Scoring crédit immobilier')).toBeInTheDocument();
     expect(screen.getByText('Chatbot SAV — fairness')).toBeInTheDocument();
@@ -149,46 +142,39 @@ describe('Dashboard R5 — maquette fidelity', () => {
     expect(conformes.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders "Lancer un audit" module cards (M1, M2, M3)', () => {
+  it('renders right column with tendance and répartition cards', () => {
     mockData();
     render(<DashboardPage />);
 
-    expect(screen.getByText('Audit supervisé')).toBeInTheDocument();
-    expect(screen.getByText('Audit non supervisé')).toBeInTheDocument();
-    expect(screen.getByText('Audit LLM / chatbot')).toBeInTheDocument();
+    expect(screen.getByText('Conformité globale')).toBeInTheDocument();
+    expect(screen.getByText('Répartition des statuts')).toBeInTheDocument();
   });
 
-  it('renders action band CTA', () => {
+  it('renders action band CTA with Commencer link', () => {
     mockData();
     render(<DashboardPage />);
 
     expect(
       screen.getByText('Lancez un audit en moins de 7 minutes')
     ).toBeInTheDocument();
-    // Multiple "+ Lancer un audit" links (topbar + action band)
-    const ctaLinks = screen.getAllByText('+ Lancer un audit');
-    expect(ctaLinks.length).toBeGreaterThanOrEqual(1);
+    const commencer = screen.getByText('Commencer');
+    expect(commencer.closest('a')).toHaveAttribute('href', '/app/audits/nouveau');
   });
 
-  it('renders alertes prioritaires section when there are failing/warning audits', () => {
+  it('does not render old R5 sections (Alertes prioritaires, M1/M2/M3 cards)', () => {
     mockData();
     render(<DashboardPage />);
 
-    expect(screen.getByText('Alertes prioritaires')).toBeInTheDocument();
-  });
-
-  it('does not render alertes section when no alerts', () => {
-    mockData({ failing_audits: 0, warning_audits: 0 });
-    render(<DashboardPage />);
-
+    // R9 removed these R5-specific elements
     expect(screen.queryByText('Alertes prioritaires')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit supervisé')).not.toBeInTheDocument();
   });
 
-  it('renders "Historique" secondary action in action band', () => {
+  it('renders "Tout voir" link to /app/audits', () => {
     mockData();
     render(<DashboardPage />);
 
-    const historiqueLinks = screen.getAllByText('Historique');
-    expect(historiqueLinks.length).toBeGreaterThanOrEqual(1);
+    const link = screen.getByText('Tout voir →');
+    expect(link.closest('a')).toHaveAttribute('href', '/app/audits');
   });
 });
