@@ -33,9 +33,10 @@ def _tokens(name: object) -> set[str]:
     return {t for t in re.split(r"[^a-z0-9]+", _normalize(name)) if t}
 
 
+# All entries MUST be de-accented & lowercased: _tokens() NFKD-normalises and strips combining marks before the set intersection.
 _DECISION_TOKENS = frozenset({
-    "decision", "embauche", "embauché", "recrute", "recrutement", "accorde",
-    "accord", "accepte", "admis", "admission", "retenu", "octroi", "refuse",
+    "decision", "embauche", "recrute", "recrutement", "accorde",
+    "accepte", "admis", "admission", "retenu", "octroi", "refuse",
     "approved", "approuve", "outcome", "class", "target", "label", "result",
     "status", "hired", "selected", "granted", "predicted", "prediction", "y",
 })
@@ -120,7 +121,8 @@ _FAVORABLE_TOKENS = frozenset({
 
 def _favorable_value(df: pd.DataFrame, col: str) -> object | None:
     """Pick the favourable decision value by FR/EN positive vocabulary;
-    fall back to the minority class when no positive label is recognised."""
+    fall back to the minority class when no positive label is recognised.
+    If several values match the positive vocabulary, the first in insertion order is returned."""
     values = list(df[col].dropna().unique())
     for v in values:
         if _normalize(v) in _FAVORABLE_TOKENS:
@@ -234,7 +236,7 @@ def _protected_candidates(
         stats_score = _chi2_score(df, p.name, decision_col)
         final = 0.6 * name_score + 0.4 * stats_score
         if not name_hit and final < _CONFIDENCE_THRESHOLD:
-            continue  # keep name-evocative columns regardless of threshold
+            continue  # skip stats-only candidates below the confidence bar
         reasons: list[str] = []
         if name_hit:
             reasons.append("nom évocateur d'attribut sensible")
@@ -264,6 +266,7 @@ def _suggest_protected(
     return results[0] if results else None
 
 
+# "effective" targets FR "effectif/réel"; the binary + same-value-set guards prevent false matches.
 _GROUND_TRUTH_TOKENS = frozenset({
     "reel", "vrai", "vraie", "qualifie", "qualified", "actually", "ground",
     "truth", "true", "ytrue", "reelle", "effective",
@@ -307,7 +310,7 @@ def _reference_group(
     if clean.empty:
         return None
     fav_mask = clean[decision_col].astype(str) == str(favorable)
-    rates = clean.assign(_fav=fav_mask).groupby(protected_col)["_fav"].mean()
+    rates = fav_mask.groupby(clean[protected_col]).mean()
     if rates.empty:
         return None
     ref: object = rates.idxmax()

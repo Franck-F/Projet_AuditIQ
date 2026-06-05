@@ -8,6 +8,7 @@ from __future__ import annotations
 import pandas as pd
 
 from app.audit_engine.dataset_analysis import (
+    _favorable_value,
     _name_is_decision,
     _name_is_protected,
     _normalize,
@@ -59,9 +60,6 @@ def test_recruitment_dataset_detects_decision_and_protected():
     assert a.suggested_protected.column == "sexe"
 
 
-from app.audit_engine.dataset_analysis import _favorable_value  # noqa: E402
-
-
 def test_favorable_value_semantic_majority_positive():
     # majority is 'accepté' (favorable) — must NOT pick the minority class
     df = pd.DataFrame({"embauche": ["accepté"] * 7 + ["refusé"] * 3})
@@ -109,3 +107,12 @@ def test_no_ground_truth_when_absent():
     df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_ground_truth is None
+
+
+def test_credit_dataset_detects_accorde_and_sexe():
+    df = pd.read_csv(rf"{DATA}\m1-credit-equitable.csv")
+    a = run_dataset_analysis(df)
+    assert a.suggested_decision is not None
+    assert a.suggested_decision.column == "accorde"
+    assert a.suggested_protected is not None
+    assert a.suggested_protected.column == "sexe"
