@@ -290,8 +290,8 @@ export type SuggestionOut = {
 
 export type DatasetAnalysisOut = {
   columns: ColumnProfileOut[];
-  suggested_decision?: SuggestionOut | null;
-  suggested_protected?: SuggestionOut | null;
+  suggested_decision: SuggestionOut | null;
+  suggested_protected: SuggestionOut | null;
   protected_candidates?: SuggestionOut[];
   suggested_ground_truth?: SuggestionOut | null;
 };

@@ -218,6 +218,11 @@ function Step3ConfigM1({
               >
                 Groupe de référence{' '}
                 <span className="text-fg-muted">(facultatif)</span>
+                {analysis?.suggested_protected?.privileged_value != null && (
+                  <span className="ml-2 text-xs font-normal text-fg-muted">
+                    suggéré · conf. {Math.round(analysis.suggested_protected.confidence * 100)}%
+                  </span>
+                )}
               </label>
               <input
                 id="m1-privileged"
@@ -237,6 +242,11 @@ function Step3ConfigM1({
               >
                 Colonne vérité-terrain{' '}
                 <span className="text-fg-muted">(facultatif)</span>
+                {analysis?.suggested_ground_truth != null && (
+                  <span className="ml-2 text-xs font-normal text-fg-muted">
+                    suggéré · conf. {Math.round(analysis.suggested_ground_truth.confidence * 100)}%
+                  </span>
+                )}
               </label>
               <select
                 id="m1-ground-truth"

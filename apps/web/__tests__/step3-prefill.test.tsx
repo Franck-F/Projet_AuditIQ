@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as React from 'react';
 
@@ -62,14 +61,20 @@ const analysis: DatasetAnalysisOut = {
   suggested_ground_truth: { column: 'reel', confidence: 0.9, reason: 'r' },
 };
 
-function Harness({ initial }: { initial?: Partial<UnifiedValues> }) {
+function Harness({
+  initial,
+  analysisOverride,
+}: {
+  initial?: Partial<UnifiedValues>;
+  analysisOverride?: DatasetAnalysisOut;
+}) {
   const methods = useForm<UnifiedValues>({
     defaultValues: { ...DEFAULT_VALUES, audit_type: 'tabular-known', ...initial },
   });
   return (
     <WizardProvider totalSteps={5}>
       <FormProvider {...methods}>
-        <Step3Config dataset={dataset} analysis={analysis} />
+        <Step3Config dataset={dataset} analysis={analysisOverride ?? analysis} />
       </FormProvider>
     </WizardProvider>
   );
@@ -89,17 +94,29 @@ describe('Step3 prefill', () => {
     });
   });
 
-  it('does not clobber a pre-existing user value', async () => {
-    const user = userEvent.setup();
-    render(<Harness initial={{ decision_column: 'reel' }} />);
+  it('does not clobber a user edit when analysis object reference changes', async () => {
+    // Step 1: Render — effect runs, prefills decision_column to 'embauche'
+    const { rerender } = render(<Harness />);
     const dec = screen.getByRole('combobox', { name: 'Colonne de décision' }) as HTMLSelectElement;
-    // The user had already set 'reel' as defaultValue — prefill must not overwrite it
     await waitFor(() => {
-      expect(dec.value).toBe('reel');
+      expect(dec.value).toBe('embauche');
     });
-    // Changing manually should also survive
-    await user.selectOptions(dec, 'sexe');
-    expect(dec.value).toBe('sexe');
+
+    // Step 2: Simulate user changing decision_column to 'reel'
+    fireEvent.change(dec, { target: { value: 'reel' } });
+    expect(dec.value).toBe('reel');
+
+    // Step 3: Rerender with a NEW analysis object reference (same data, new object)
+    // This triggers the useEffect [analysis] dep but the form already has 'reel' set
+    const analysisNewRef: DatasetAnalysisOut = { ...analysis };
+    rerender(<Harness analysisOverride={analysisNewRef} />);
+
+    // Step 4: The anti-clobber guard (getValues check) must prevent overwriting 'reel'
+    await waitFor(() => {
+      expect(
+        (screen.getByRole('combobox', { name: 'Colonne de décision' }) as HTMLSelectElement).value,
+      ).toBe('reel');
+    });
   });
 
   it('shows confidence badge for suggested decision', async () => {
