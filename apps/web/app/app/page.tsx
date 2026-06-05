@@ -1,38 +1,231 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, Info, CircleAlert, Zap } from 'lucide-react';
+import { Zap, Plus } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
-import { Gauge } from '@/components/product/Gauge';
-import { MetricCard, MetricCardWithSparkline } from '@/components/product/MetricCard';
-import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
+import { StatusBadge } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Meter } from '@/components/product/Meter';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
 
-const VERDICT_TONE: Record<
-  'fail' | 'warn' | 'pass',
-  { tone: StatusTone; label: string }
-> = {
-  fail: { tone: 'fail', label: 'Critique' },
-  warn: { tone: 'warn', label: 'Vigilance' },
-  pass: { tone: 'pass', label: 'Conforme' },
-};
+/* ─── Sparkline ─────────────────────────────────────────────────────────── */
+const SPARK = [62, 64, 61, 66, 70, 68, 73, 71, 76, 78, 81, 84];
 
-function auditTone(
-  verdict: RecentAudit['verdict'],
-): { tone: StatusTone; label: string } {
-  return verdict
-    ? VERDICT_TONE[verdict]
-    : { tone: 'info', label: 'En cours' };
+function Sparkline({
+  data = SPARK,
+  w = 130,
+  h = 44,
+  color = 'var(--accent)',
+}: {
+  data?: number[];
+  w?: number;
+  h?: number;
+  color?: string;
+}) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const pts = data.map((v, i) => [
+    (i / (data.length - 1)) * w,
+    h - ((v - min) / (max - min || 1)) * (h - 4) - 2,
+  ]);
+  const d = pts
+    .map((p, i) => `${i ? 'L' : 'M'}${p[0]!.toFixed(1)} ${p[1]!.toFixed(1)}`)
+    .join(' ');
+  const area = `${d} L${w} ${h} L0 ${h} Z`;
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={color} stopOpacity="0.18" />
+          <stop offset="1" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#spk)" />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx={pts[pts.length - 1]![0]}
+        cy={pts[pts.length - 1]![1]}
+        r="2.6"
+        fill={color}
+      />
+    </svg>
+  );
 }
 
-// Synthetic monthly trend data for sparkline
-const SPARK_AUDITS = [4, 6, 5, 8, 7, 9, 10, 8, 11, 10, 11, 12];
-const SPARK_BIAIS = [9, 8, 10, 8, 9, 7, 8, 7, 7, 6, 7, 7];
+/* ─── Metric card ────────────────────────────────────────────────────────── */
+type StatusTone = 'pass' | 'warn' | 'fail' | 'neutral';
+const STATUS_COLORS: Record<StatusTone, string> = {
+  pass: 'var(--status-pass)',
+  warn: 'var(--status-warn)',
+  fail: 'var(--status-fail)',
+  neutral: 'var(--fg-disabled)',
+};
 
+function MetricCard({
+  label,
+  value,
+  unit,
+  delta,
+  deltaUp,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  delta?: string;
+  deltaUp?: boolean;
+  hint?: string;
+  tone?: StatusTone;
+}) {
+  const c = tone ? STATUS_COLORS[tone] : 'var(--fg)';
+  const dc =
+    deltaUp === true
+      ? 'var(--status-pass)'
+      : deltaUp === false
+        ? 'var(--status-fail)'
+        : 'var(--fg-muted)';
+  return (
+    <Card>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 14,
+        }}
+      >
+        <span
+          className="eyebrow"
+          style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+        >
+          {label}
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <span
+          className="tnum"
+          style={{
+            fontSize: 30,
+            fontWeight: 600,
+            letterSpacing: '-0.03em',
+            color: c,
+          }}
+        >
+          {value}
+        </span>
+        {unit && (
+          <span
+            className="mono"
+            style={{ fontSize: 14, color: 'var(--fg-muted)' }}
+          >
+            {unit}
+          </span>
+        )}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 10,
+        }}
+      >
+        {delta && (
+          <span
+            className="mono tnum"
+            style={{ fontSize: 12, color: dc }}
+          >
+            {delta}
+          </span>
+        )}
+        {hint && (
+          <span style={{ fontSize: 12.5, color: 'var(--fg-muted)' }}>
+            {hint}
+          </span>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/* ─── Recent audit row ───────────────────────────────────────────────────── */
+function AuditRow({ audit }: { audit: RecentAudit }) {
+  const tone =
+    audit.verdict === 'fail'
+      ? 'fail'
+      : audit.verdict === 'warn'
+        ? 'warn'
+        : audit.verdict === 'pass'
+          ? 'pass'
+          : ('neutral' as const);
+  const scoreColor =
+    tone === 'fail'
+      ? 'var(--status-fail)'
+      : tone === 'warn'
+        ? 'var(--status-warn)'
+        : tone === 'pass'
+          ? 'var(--status-pass)'
+          : 'var(--fg-muted)';
+  return (
+    <tr
+      className="tbl-row"
+      style={{ cursor: 'pointer' }}
+      onClick={() => {}}
+    >
+      <td style={{ padding: '12px 18px' }}>
+        <Link
+          href={`/app/audits/${audit.id}`}
+          style={{ display: 'block', textDecoration: 'none' }}
+        >
+          <div
+            style={{ fontWeight: 500, color: 'var(--fg)', fontSize: 13.5 }}
+          >
+            {audit.title}
+          </div>
+          <div
+            className="mono"
+            style={{ fontSize: 11.5, color: 'var(--fg-muted)', marginTop: 2 }}
+          >
+            {audit.code ?? audit.id} · {audit.module}
+          </div>
+        </Link>
+      </td>
+      <td style={{ padding: '12px 18px' }}>
+        <span className="chip">{audit.module}</span>
+      </td>
+      <td
+        className="tbl-num"
+        style={{ padding: '12px 18px', fontWeight: 600, color: scoreColor }}
+      >
+        {audit.risk_score ?? '—'}
+      </td>
+      <td style={{ padding: '12px 18px' }}>
+        <StatusBadge tone={tone} />
+      </td>
+      <td style={{ padding: '12px 18px', textAlign: 'right' }}>
+        <span style={{ color: 'var(--fg-disabled)', fontSize: 16 }}>›</span>
+      </td>
+    </tr>
+  );
+}
+
+/* ─── Main page ───────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const { data, isLoading, isError } = useDashboard();
 
@@ -55,339 +248,349 @@ export default function DashboardPage() {
   const activeAudits = data.total_audits;
   const failingAudits = data.failing_audits;
   const warningAudits = data.warning_audits ?? 0;
-  // derive alert count from failing + warning
   const alertCount = failingAudits + warningAudits;
 
-  // Risk band label
-  const riskCaption =
-    riskScore <= 30 ? '/100 · conforme' :
-    riskScore <= 70 ? '/100 · risque modéré' :
-    '/100 · critique';
+  const passingAudits = activeAudits - failingAudits - warningAudits;
+  const passCount = Math.max(0, passingAudits);
+  const passPct = activeAudits > 0 ? Math.round((passCount / activeAudits) * 100) : 0;
+  const warnPct = activeAudits > 0 ? Math.round((warningAudits / activeAudits) * 100) : 0;
+  const failPct = activeAudits > 0 ? Math.round((failingAudits / activeAudits) * 100) : 0;
+
+  const riskTone: StatusTone =
+    riskScore >= 80 ? 'pass' : riskScore >= 60 ? 'warn' : 'fail';
 
   return (
     <>
       <Topbar
         title="Vue d'ensemble"
         crumbs={[{ label: 'AuditIQ' }, { label: "Vue d'ensemble" }]}
+        sub={<StatusBadge tone="pass">Plateforme opérationnelle</StatusBadge>}
         actions={
           <Button asChild variant="primary">
-            <Link href="/app/audits/nouveau">+ Lancer un audit</Link>
+            <Link href="/app/audits/nouveau">
+              <Plus size={16} />
+              Nouvel audit
+            </Link>
           </Button>
         }
       />
       <main className="flex-1 px-8 py-8">
-
-        {/* Page header / hero */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[22px] font-semibold tracking-[-0.01em] text-fg">
-              Bonjour
-            </h1>
-            <p className="mt-1 text-[13px] leading-relaxed text-fg-secondary max-w-[560px]">
-              Dernière session récente ·{' '}
-              <strong className="font-medium text-fg">{activeAudits} audits actifs</strong>{' '}
-              et{' '}
-              <strong className="font-medium text-fg">
-                {alertCount} recommandations
-              </strong>{' '}
-              en attente de revue.
-            </p>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/app/historique">Historique</Link>
-          </Button>
+        {/* Greeting */}
+        <div style={{ marginBottom: 22 }}>
+          <h1
+            className="greeting"
+            style={{
+              fontSize: 15,
+              color: 'var(--fg-muted)',
+              maxWidth: 620,
+              fontWeight: 400,
+            }}
+          >
+            Bonjour.{' '}
+            Voici l'état de conformité{' '}
+            <em style={{ color: 'var(--fg-secondary)', fontStyle: 'normal' }}>
+              fairness
+            </em>{' '}
+            de vos modèles en production.{' '}
+            {alertCount > 0 && (
+              <strong
+                style={{ color: 'var(--status-warn)', fontWeight: 500 }}
+              >
+                {alertCount} audit{alertCount > 1 ? 's' : ''}
+              </strong>
+            )}
+            {alertCount > 0 && ' requièrent votre attention.'}
+          </h1>
         </div>
 
-        {/* Top: risk gauge + 4 KPI cards */}
+        {/* 4 Metric cards */}
         <div
-          className="mb-4 grid gap-4"
-          style={{ gridTemplateColumns: '360px 1fr' }}
+          className="grid-4"
+          style={{ marginBottom: 16 }}
         >
-          {/* Risk gauge card */}
-          <Card className="flex flex-col items-center gap-2 p-5">
-            <div className="flex w-full items-baseline justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-                Score de risque global
-              </span>
-              {riskScore <= 30 ? (
-                <StatusBadge tone="pass">Conforme</StatusBadge>
-              ) : riskScore <= 70 ? (
-                <StatusBadge tone="warn">Vigilance</StatusBadge>
-              ) : (
-                <StatusBadge tone="fail">Critique</StatusBadge>
-              )}
-            </div>
-
-            <Gauge
-              value={riskScore}
-              label="Score de risque global"
-              caption={riskCaption}
-              className="mt-2"
-            />
-
-            {/* Legend */}
-            <div className="mt-3 flex gap-4 text-[12px]">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[var(--status-pass)]" />
-                <span className="text-fg-muted">0–30 Conforme</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[var(--status-warn)]" />
-                <span className="text-fg-muted">31–70 Vigilance</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[var(--status-fail)]" />
-                <span className="text-fg-muted">71–100 Critique</span>
-              </span>
-            </div>
-
-            <p className="mt-2 max-w-[32ch] text-center text-[12px] leading-relaxed text-fg-secondary">
-              Score agrégé sur vos{' '}
-              <strong className="font-medium text-fg">{activeAudits} audits actifs</strong>
-              , pondéré par sensibilité du cas d&apos;usage.
-            </p>
-          </Card>
-
-          {/* 4-KPI grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <MetricCardWithSparkline
-              label="Audits cette année"
-              value={activeAudits}
-              delta={{ direction: 'up', text: '4 vs trimestre dernier' }}
-              sparkline={{ values: SPARK_AUDITS, tone: 'accent', filled: true }}
-            />
-            <MetricCardWithSparkline
-              label="Biais détectés (90j)"
-              value={failingAudits + warningAudits}
-              delta={{ direction: 'down', text: '2 vs précédent' }}
-              sparkline={{ values: SPARK_BIAIS, tone: 'warn' }}
-            />
-            <MetricCard
-              label="Recommandations ouvertes"
-              value={alertCount}
-              delta={{ direction: 'neutral', text: `${failingAudits} prioritaires · ${warningAudits} normales` }}
-              visual={
-                <div className="flex gap-1">
-                  <span
-                    className="h-1.5 rounded-sm bg-[var(--status-fail)]"
-                    style={{ flex: failingAudits || 1 }}
-                  />
-                  <span
-                    className="h-1.5 rounded-sm bg-[var(--status-warn)]"
-                    style={{ flex: warningAudits || 1 }}
-                  />
-                </div>
-              }
-            />
-            <MetricCard
-              label="Couverture AI Act"
-              value={76}
-              suffix="%"
-              delta={{ direction: 'up', text: '12 pts en 30 jours' }}
-              visual={
-                <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
-                  <div
-                    className="h-full rounded-full bg-[var(--status-pass)]"
-                    style={{ width: '76%' }}
-                  />
-                </div>
-              }
-            />
-          </div>
+          <MetricCard
+            label="Score de conformité"
+            value={riskScore}
+            unit="/100"
+            delta={'+6 pts'}
+            deltaUp={true}
+            hint="ce trimestre"
+            tone={riskTone}
+          />
+          <MetricCard
+            label="Audits actifs"
+            value={activeAudits}
+            delta="+3"
+            deltaUp={true}
+            hint="ce mois"
+          />
+          <MetricCard
+            label="Modèles non conformes"
+            value={failingAudits}
+            delta="-1"
+            deltaUp={true}
+            hint="vs. mois dernier"
+            tone={failingAudits > 0 ? 'fail' : 'pass'}
+          />
+          <MetricCard
+            label="Délai moyen d'audit"
+            value="—"
+            unit="min"
+            hint="pipeline auto"
+          />
         </div>
 
-        {/* Alertes prioritaires */}
-        {alertCount > 0 && (
-          <Card className="mb-4 p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-[15px] font-medium text-fg">Alertes prioritaires</h2>
-                <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-fg-muted">
-                  {alertCount}
-                </span>
-              </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/app/recommandations">Tout voir →</Link>
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              {/* Critical alert */}
-              {failingAudits > 0 && (
-                <div className="flex items-start gap-3 rounded-lg border border-[var(--status-fail)]/30 bg-[var(--status-fail)]/5 px-4 py-3">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--status-fail)]" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-fg">
-                      {failingAudits} audit{failingAudits > 1 ? 's' : ''} en niveau critique
-                    </div>
-                    <div className="mt-0.5 text-[12px] text-fg-secondary">
-                      Des métriques fairness dépassent les seuils réglementaires AI Act. Action requise avant déploiement.
-                    </div>
-                  </div>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/app/audits">Examiner</Link>
-                  </Button>
-                </div>
-              )}
-
-              {/* Warning alert */}
-              {warningAudits > 0 && (
-                <div className="flex items-start gap-3 rounded-lg border border-[var(--status-warn)]/30 bg-[var(--status-warn)]/5 px-4 py-3">
-                  <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--status-warn)]" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-fg">
-                      {warningAudits} audit{warningAudits > 1 ? 's' : ''} en vigilance
-                    </div>
-                    <div className="mt-0.5 text-[12px] text-fg-secondary">
-                      Des indicateurs déviants ont été détectés. Revue recommandée.
-                    </div>
-                  </div>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/app/audits">Examiner</Link>
-                  </Button>
-                </div>
-              )}
-
-              {/* AI Act info */}
-              <div className="flex items-start gap-3 rounded-lg border border-[var(--status-info)]/30 bg-[var(--status-info)]/5 px-4 py-3">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--status-info)]" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-fg">
-                    AI Act — l&apos;article 10 (qualité des données d&apos;entraînement) entre en vigueur le 02/08/2026.
-                  </div>
-                  <div className="mt-0.5 text-[12px] text-fg-secondary">
-                    Vos audits supervisés couvrent 76% des exigences. Téléchargez le guide de mise en conformité.
-                  </div>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/app/conformite">Lire le guide</Link>
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Two-col: Audits récents + Lancer un audit */}
+        {/* 1.55fr / 1fr grid */}
         <div
-          className="mb-4 grid gap-4"
-          style={{ gridTemplateColumns: '1.6fr 1fr' }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.55fr 1fr',
+            gap: 16,
+            marginBottom: 16,
+          }}
         >
-          {/* Audits récents */}
-          <Card className="p-5">
-            <div className="mb-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-[15px] font-medium text-fg">Audits récents</h2>
-                <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-fg-muted">
-                  {data.recent_audits.length}
-                </span>
-              </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/app/historique">Historique complet →</Link>
-              </Button>
-            </div>
-
-            <div className="flex flex-col divide-y divide-border-default">
-              {data.recent_audits.length === 0 ? (
-                <p className="py-6 text-center text-[13px] text-fg-muted">
-                  Aucun audit pour le moment.
-                </p>
-              ) : (
-                data.recent_audits.slice(0, 5).map((audit) => {
-                  const t = auditTone(audit.verdict);
-                  return (
-                    <div
-                      key={audit.id}
-                      className="flex items-center gap-3 py-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium text-fg truncate">
-                          {audit.title}
-                        </div>
-                        <div className="mt-0.5 font-mono text-[11px] text-fg-muted truncate">
-                          {audit.code ?? audit.id} · {audit.module}
-                        </div>
-                      </div>
-                      <StatusBadge tone={t.tone}>{t.label}</StatusBadge>
-                      {audit.risk_score != null && (
-                        <span className="font-mono text-[12px] text-fg-muted tabular-nums">
-                          {audit.risk_score}
-                        </span>
-                      )}
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/app/audits/${audit.id}`}>Ouvrir</Link>
-                      </Button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </Card>
-
-          {/* Lancer un audit */}
-          <Card className="p-5">
-            <h2 className="mb-3.5 text-[15px] font-medium text-fg">Lancer un audit</h2>
-            <div className="flex flex-col gap-2.5">
-              {[
-                {
-                  code: 'M1',
-                  label: 'Audit supervisé',
-                  desc: 'Dataset étiqueté · 4 métriques fairness',
-                  href: '/app/audits/nouveau?module=M1',
-                },
-                {
-                  code: 'M2',
-                  label: 'Audit non supervisé',
-                  desc: 'Clustering · détection de proxies',
-                  href: '/app/audits/nouveau?module=M2',
-                },
-                {
-                  code: 'M3',
-                  label: 'Audit LLM / chatbot',
-                  desc: 'Prompts pairs · 6 axes sensibles',
-                  href: '/app/audits/nouveau?module=M3',
-                },
-              ].map(({ code, label, desc, href }) => (
-                <Link
-                  key={code}
-                  href={href}
-                  className="flex items-center gap-3 rounded-lg border border-border-default bg-surface p-4 transition-colors hover:bg-surface-2"
+          {/* Recent audits */}
+          <Card style={{ padding: 0 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 18px 14px',
+              }}
+            >
+              <div>
+                <div
+                  className="eyebrow"
+                  style={{ marginBottom: 5, fontSize: 11, letterSpacing: '0.1em' }}
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--accent-border)] bg-[var(--accent-soft)] font-mono text-[13px] font-semibold text-[var(--accent)]">
-                    {code}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-fg">{label}</div>
-                    <div className="mt-0.5 text-[11px] text-fg-muted">{desc}</div>
-                  </div>
-                  <span className="text-fg-muted">→</span>
+                  Activité récente
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 500 }}>
+                  Derniers audits exécutés
+                </h3>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/app/audits">
+                  Tout voir →
                 </Link>
-              ))}
+              </Button>
             </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr
+                  style={{
+                    borderTop: '1px solid var(--border-subtle)',
+                    borderBottom: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  {['Audit', 'Attribut', 'Score', 'Statut', ''].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: '9px 18px',
+                        textAlign: 'left',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--fg-muted)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.recent_audits.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{
+                        padding: '24px 18px',
+                        textAlign: 'center',
+                        color: 'var(--fg-muted)',
+                        fontSize: 13,
+                      }}
+                    >
+                      Aucun audit pour le moment.
+                    </td>
+                  </tr>
+                ) : (
+                  data.recent_audits.slice(0, 5).map((audit) => (
+                    <AuditRow key={audit.id} audit={audit} />
+                  ))
+                )}
+              </tbody>
+            </table>
           </Card>
+
+          {/* Right column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Tendance card */}
+            <Card>
+              <div
+                className="eyebrow"
+                style={{ marginBottom: 5, fontSize: 11, letterSpacing: '0.1em' }}
+              >
+                Tendance
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>
+                Conformité globale
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'space-between',
+                  marginTop: 10,
+                }}
+              >
+                <div>
+                  <div
+                    className="tnum"
+                    style={{
+                      fontSize: 34,
+                      fontWeight: 600,
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    74
+                    <span style={{ fontSize: 16, color: 'var(--fg-muted)' }}>
+                      %
+                    </span>
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--status-pass)',
+                      marginTop: 2,
+                    }}
+                  >
+                    ↑ 6 pts / 90 j
+                  </div>
+                </div>
+                <Sparkline w={130} h={44} />
+              </div>
+            </Card>
+
+            {/* Répartition des statuts */}
+            <Card>
+              <div
+                className="eyebrow"
+                style={{ marginBottom: 12, fontSize: 11, letterSpacing: '0.1em' }}
+              >
+                Répartition des statuts
+              </div>
+              {(
+                [
+                  ['pass', 'Conformes', passCount, passPct],
+                  ['warn', 'Sous vigilance', warningAudits, warnPct],
+                  ['fail', 'Non conformes', failingAudits, failPct],
+                ] as Array<[StatusTone, string, number, number]>
+              ).map(([tone, label, n, pct]) => (
+                <div key={tone} style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: 13,
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 7,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 99,
+                          background: STATUS_COLORS[tone],
+                          flexShrink: 0,
+                        }}
+                      />
+                      {label}
+                    </span>
+                    <span
+                      className="mono tnum"
+                      style={{ color: 'var(--fg-muted)' }}
+                    >
+                      {n} · {pct}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 6,
+                      background: 'var(--surface-3)',
+                      borderRadius: 99,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${pct}%`,
+                        height: '100%',
+                        background: STATUS_COLORS[tone],
+                        borderRadius: 99,
+                        transition: 'width 0.8s ease-out',
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </div>
         </div>
 
         {/* Action band */}
-        <Card className="flex items-center gap-5 p-6 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/20">
-            <Zap className="h-5 w-5 text-accent" />
+        <Card
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 18,
+            background:
+              'linear-gradient(100deg, var(--accent-softer, var(--surface-2)), transparent 60%)',
+          }}
+        >
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 11,
+              display: 'grid',
+              placeItems: 'center',
+              background: 'var(--accent-soft, var(--surface-3))',
+              border: '1px solid var(--accent-border, var(--border-default))',
+              flexShrink: 0,
+            }}
+          >
+            <Zap size={20} style={{ color: 'var(--accent)' }} />
           </div>
-          <div className="flex-1">
-            <h3 className="text-[15px] font-medium text-fg">
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 500 }}>
               Lancez un audit en moins de 7 minutes
             </h3>
-            <p className="mt-1 text-[13px] text-fg-secondary">
-              Importez votre jeu de données, sélectionnez les attributs protégés,
-              AuditIQ calcule l&apos;ensemble des métriques réglementaires.
+            <p
+              style={{
+                color: 'var(--fg-muted)',
+                fontSize: 13.5,
+                marginTop: 3,
+              }}
+            >
+              Importez votre jeu de données, sélectionnez les attributs
+              protégés, AuditIQ calcule l&apos;ensemble des métriques
+              réglementaires.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="outline">
-              <Link href="/app/historique">Historique</Link>
-            </Button>
-            <Button asChild variant="primary">
-              <Link href="/app/audits/nouveau">+ Lancer un audit</Link>
-            </Button>
-          </div>
+          <Button asChild variant="primary">
+            <Link href="/app/audits/nouveau">Commencer</Link>
+          </Button>
         </Card>
 
       </main>
