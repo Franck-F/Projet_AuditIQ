@@ -284,13 +284,16 @@ export type SuggestionOut = {
   column: string;
   confidence: number;
   reason: string;
-  favorable_value?: unknown | null;
+  favorable_value?: string | number | boolean | null;
+  privileged_value?: string | number | boolean | null;
 };
 
 export type DatasetAnalysisOut = {
   columns: ColumnProfileOut[];
-  suggested_decision: SuggestionOut | null;
-  suggested_protected: SuggestionOut | null;
+  suggested_decision?: SuggestionOut | null;
+  suggested_protected?: SuggestionOut | null;
+  protected_candidates?: SuggestionOut[];
+  suggested_ground_truth?: SuggestionOut | null;
 };
 
 export async function analyzeDataset(
