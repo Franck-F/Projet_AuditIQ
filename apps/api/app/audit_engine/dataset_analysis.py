@@ -6,6 +6,7 @@ wizard's auto-detection step (M1/M2).
 from __future__ import annotations
 
 import re
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -21,15 +22,36 @@ from app.audit_engine.types import (
     Suggestion,
 )
 
-_DECISION_RE = re.compile(
-    r"^(decision|approved|outcome|class|target|label|result|status|y)$",
-    re.IGNORECASE,
-)
-_PROTECTED_RE = re.compile(
-    r"^(sex|gender|genre|age|race|origin|origine|nationality|nationalit[eé]"
-    r"|ethni.*|religion|disability|handicap.*|orientation)$",
-    re.IGNORECASE,
-)
+
+def _normalize(text: object) -> str:
+    nfkd = unicodedata.normalize("NFKD", str(text))
+    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+
+
+def _tokens(name: object) -> set[str]:
+    return {t for t in re.split(r"[^a-z0-9]+", _normalize(name)) if t}
+
+
+_DECISION_TOKENS = frozenset({
+    "decision", "embauche", "embauché", "recrute", "recrutement", "accorde",
+    "accord", "accepte", "admis", "admission", "retenu", "octroi", "refuse",
+    "approved", "approuve", "outcome", "class", "target", "label", "result",
+    "status", "hired", "selected", "granted", "predicted", "prediction", "y",
+})
+_PROTECTED_TOKENS = frozenset({
+    "sexe", "sex", "genre", "gender", "age", "race", "origine", "origin",
+    "nationalite", "nationality", "ethnie", "ethnic", "ethnicity", "religion",
+    "handicap", "disability", "orientation", "situation", "familiale",
+    "civilite",
+})
+
+
+def _name_is_decision(name: object) -> bool:
+    return bool(_tokens(name) & _DECISION_TOKENS)
+
+
+def _name_is_protected(name: object) -> bool:
+    return bool(_tokens(name) & _PROTECTED_TOKENS)
 
 
 def _infer_dtype(series: pd.Series) -> DType:
@@ -48,9 +70,9 @@ def _infer_dtype(series: pd.Series) -> DType:
 def _infer_role_hint(
     name: str, dtype: DType, unique_count: int, n_rows: int
 ) -> RoleHint:
-    if _DECISION_RE.match(name) and 2 <= unique_count <= 10:
+    if _name_is_decision(name) and 2 <= unique_count <= 10:
         return "decision"
-    if _PROTECTED_RE.match(name) and 2 <= unique_count <= 20:
+    if _name_is_protected(name) and 2 <= unique_count <= 20:
         return "protected"
     if dtype in {"numeric", "boolean"}:
         return "feature"
@@ -127,7 +149,7 @@ def _suggest_decision(
             continue
         if p.unique_count > len(df) / 2:
             continue
-        name_score = 1.0 if _DECISION_RE.match(p.name) else 0.0
+        name_score = 1.0 if _name_is_decision(p.name) else 0.0
         stats_score = _mutual_info_avg(df, p.name)
         final = 0.6 * name_score + 0.4 * stats_score
         reasons: list[str] = []
@@ -188,7 +210,7 @@ def _suggest_protected(
             continue
         if not (2 <= p.unique_count <= 20):
             continue
-        name_score = 1.0 if _PROTECTED_RE.match(p.name) else 0.0
+        name_score = 1.0 if _name_is_protected(p.name) else 0.0
         stats_score = _chi2_score(df, p.name, decision_col)
         final = 0.6 * name_score + 0.4 * stats_score
         reasons: list[str] = []
