@@ -17,6 +17,8 @@ import {
   FileText,
   CreditCard,
   Users,
+  Mail,
+  Upload,
 } from 'lucide-react';
 import { Topbar } from '@/components/app/Topbar';
 import { SectionHead } from '@/components/product/SectionHead';
@@ -27,6 +29,7 @@ import { Button } from '@/components/ui/button';
 
 type TabId =
   | 'org'
+  | 'profil'
   | 'audit'
   | 'seuils'
   | 'rapports'
@@ -37,6 +40,7 @@ type TabId =
 
 const NAV_ITEMS: { id: TabId; label: string; Icon: React.ElementType }[] = [
   { id: 'org', label: 'Entreprise', Icon: Building2 },
+  { id: 'profil', label: 'Profil', Icon: Users },
   { id: 'audit', label: 'Audit', Icon: Wand2 },
   { id: 'seuils', label: 'Seuils', Icon: SlidersHorizontal },
   { id: 'rapports', label: 'Rapports', Icon: FileText },
@@ -189,6 +193,41 @@ function TabOrg() {
             hint="Apparaîtra sur les rapports signés et dans les exports réglementaires."
           >
             <TextInput icon={Users} defaultValue="Claire Tessier" />
+          </Field>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function TabProfil() {
+  return (
+    <>
+      <SectionHead eyebrow="PROFIL" title="Votre compte" />
+      <Card>
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div
+              aria-hidden
+              className="grid size-16 place-items-center rounded-lg bg-surface-2 font-mono text-base font-medium text-fg-secondary"
+              style={{ border: '1px solid var(--border-subtle)' }}
+            >
+              LM
+            </div>
+            <Button variant="secondary" size="sm">
+              <Upload size={14} /> Changer la photo
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nom complet">
+              <TextInput defaultValue="Léa Moreau" />
+            </Field>
+            <Field label="Fonction">
+              <TextInput defaultValue="Responsable conformité" />
+            </Field>
+          </div>
+          <Field label="E-mail">
+            <TextInput icon={Mail} defaultValue="lea.moreau@exemple.fr" />
           </Field>
         </div>
       </Card>
@@ -666,6 +705,7 @@ export default function ParametresPage() {
           {/* Content */}
           <div className="flex max-w-[680px] flex-col gap-4">
             {tab === 'org' && <TabOrg />}
+            {tab === 'profil' && <TabProfil />}
             {tab === 'audit' && <TabAudit />}
             {tab === 'seuils' && <TabSeuils />}
             {tab === 'rapports' && <TabRapports />}
