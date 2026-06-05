@@ -57,3 +57,23 @@ def test_recruitment_dataset_detects_decision_and_protected():
     assert a.suggested_decision.column == "embauche"
     assert a.suggested_protected is not None
     assert a.suggested_protected.column == "sexe"
+
+
+from app.audit_engine.dataset_analysis import _favorable_value  # noqa: E402
+
+
+def test_favorable_value_semantic_majority_positive():
+    # majority is 'accepté' (favorable) — must NOT pick the minority class
+    df = pd.DataFrame({"embauche": ["accepté"] * 7 + ["refusé"] * 3})
+    assert _favorable_value(df, "embauche") == "accepté"
+
+
+def test_favorable_value_fallback_minority_when_no_positive_token():
+    df = pd.DataFrame({"d": ["X"] * 8 + ["Y"] * 2})
+    assert _favorable_value(df, "d") == "Y"  # minority fallback
+
+
+def test_recruitment_favorable_is_oui():
+    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    a = run_dataset_analysis(df)
+    assert a.suggested_decision.favorable_value == "oui"

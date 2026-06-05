@@ -110,6 +110,23 @@ def _profile_column(df: pd.DataFrame, name: str) -> ColumnProfile:
 
 _CONFIDENCE_THRESHOLD = 0.3
 
+_FAVORABLE_TOKENS = frozenset({
+    "oui", "accepte", "admis", "embauche", "accorde", "approuve", "retenu",
+    "octroye", "favorable", "positif", "yes", "approved", "granted", "hired",
+    "selected", "accepted", "eligible", "true", "1",
+})
+
+
+def _favorable_value(df: pd.DataFrame, col: str) -> object | None:
+    """Pick the favourable decision value by FR/EN positive vocabulary;
+    fall back to the minority class when no positive label is recognised."""
+    values = list(df[col].dropna().unique())
+    for v in values:
+        if _normalize(v) in _FAVORABLE_TOKENS:
+            return v
+    counts = df[col].value_counts(dropna=True)
+    return counts.idxmin() if len(counts) >= 2 else None
+
 
 def _normalize_score(raw: float, *, hi: float) -> float:
     """Linear clamp into [0, 1]."""
@@ -162,8 +179,7 @@ def _suggest_decision(
             if reasons
             else "Cardinalité compatible avec une décision binaire/discrète."
         )
-        counts = df[p.name].value_counts(dropna=True)
-        favorable = counts.idxmin() if len(counts) >= 2 else None
+        favorable = _favorable_value(df, p.name)
         candidates.append((final, p.name, reason, favorable))
     if not candidates:
         return None
