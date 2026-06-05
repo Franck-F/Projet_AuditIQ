@@ -192,6 +192,42 @@ footer.vitrine-footer { border-top: 1px solid var(--border-subtle); padding: 56p
 /* Stagger helper — set inline `style={{ ['--rv-delay']: '120ms' }}` for child rows. */
 .rv { transition-delay: var(--rv-delay, 0ms); }
 
+/* Demo video frame (How-it-works section) */
+.demo-video {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02);
+  aspect-ratio: 16 / 9;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+.demo-video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.demo-video::after {
+  /* Subtle inner edge */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-video video { display: none; }
+  .demo-video {
+    background-image: var(--poster, url('/video/comment-ca-marche-poster.jpg'));
+    background-size: cover;
+    background-position: center;
+  }
+}
+
 /* Auto-reveal: every <section> inside the marketing main wrapper (#top)
    gets the same hidden→visible transition without needing to opt in. Lets
    secondary pages (cas-usage, tarifs, modules, …) animate as the user

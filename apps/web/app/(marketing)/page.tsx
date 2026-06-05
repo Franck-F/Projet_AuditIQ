@@ -257,6 +257,23 @@ export default function LandingPage() {
               statisticiens.
             </p>
           </div>
+
+          {/* Demo video — rendered with Remotion, see apps/remotion/ */}
+          <div className="demo-video rv" style={{ marginTop: '44px' }}>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/video/comment-ca-marche-poster.jpg"
+              aria-label="Démo : un audit AuditIQ en 4 étapes"
+            >
+              <source src="/video/comment-ca-marche.webm" type="video/webm" />
+              <source src="/video/comment-ca-marche.mp4" type="video/mp4" />
+            </video>
+          </div>
+
           <div className="g4" style={{ marginTop: '44px' }}>
             <div className="card step rv">
               <span className="step-n">Étape 01</span>
