@@ -5,6 +5,7 @@ wizard's auto-detection step (M1/M2).
 """
 from __future__ import annotations
 
+import dataclasses
 import re
 import unicodedata
 
@@ -261,6 +262,19 @@ def _suggest_protected(
     return results[0] if results else None
 
 
+def _reference_group(
+    df: pd.DataFrame, protected_col: str, decision_col: str, favorable: object
+) -> object | None:
+    clean = df[[protected_col, decision_col]].dropna()
+    if clean.empty:
+        return None
+    fav_mask = clean[decision_col].astype(str) == str(favorable)
+    rates = clean.assign(_fav=fav_mask).groupby(protected_col)["_fav"].mean()
+    if rates.empty:
+        return None
+    return rates.idxmax()
+
+
 def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
     """Profile every column and emit decision/protected suggestions.
 
@@ -271,6 +285,18 @@ def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
     decision_col = sug_decision.column if sug_decision else None
     candidates = _protected_candidates(df, profiles, decision_col=decision_col)
     sug_protected = candidates[0] if candidates else None
+    if (
+        sug_protected is not None
+        and sug_decision is not None
+        and sug_decision.favorable_value is not None
+    ):
+        ref = _reference_group(
+            df, sug_protected.column, sug_decision.column,
+            sug_decision.favorable_value,
+        )
+        if ref is not None:
+            sug_protected = dataclasses.replace(sug_protected, privileged_value=ref)
+            candidates = [sug_protected, *candidates[1:]]
     return DatasetAnalysis(
         columns=profiles,
         suggested_decision=sug_decision,

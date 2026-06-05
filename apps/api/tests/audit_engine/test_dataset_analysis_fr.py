@@ -89,3 +89,10 @@ def test_protected_candidates_ranked_and_top_matches_suggested():
     # ranked by descending confidence
     confs = [c.confidence for c in a.protected_candidates]
     assert confs == sorted(confs, reverse=True)
+
+
+def test_reference_group_is_highest_favorable_rate():
+    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    a = run_dataset_analysis(df)
+    # H is hired ~80% vs F ~28% -> reference (privileged) = H
+    assert a.suggested_protected.privileged_value == "H"
