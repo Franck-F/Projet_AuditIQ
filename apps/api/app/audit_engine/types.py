@@ -266,6 +266,7 @@ class Suggestion:
     confidence: float  # in [0, 1]
     reason: str
     favorable_value: object | None = None
+    privileged_value: object | None = None
 
 
 @dataclass(frozen=True)
@@ -273,6 +274,11 @@ class DatasetAnalysis:
     columns: tuple[ColumnProfile, ...]
     suggested_decision: Suggestion | None
     suggested_protected: Suggestion | None
+    protected_candidates: tuple[Suggestion, ...] = ()
+    suggested_ground_truth: Suggestion | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "columns", tuple(self.columns))
+        object.__setattr__(
+            self, "protected_candidates", tuple(self.protected_candidates)
+        )
