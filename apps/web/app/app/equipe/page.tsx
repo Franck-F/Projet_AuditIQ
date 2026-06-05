@@ -52,7 +52,7 @@ export default function EquipePage() {
         actions={<Button variant="primary"><Icons.plus size={16} />Inviter un membre</Button>}
       />
 
-      <div className="space-y-8">
+      <div className="page space-y-8">
         <div className="grid grid-cols-3 gap-4">
           <MetricCard
             label="Membres actifs"

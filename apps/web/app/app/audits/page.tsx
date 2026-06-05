@@ -77,7 +77,7 @@ export default function AuditsListPage() {
           </Button>
         }
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         {/* 4 Metric cards */}
         <div className="grid-4" style={{ marginBottom: 20 }}>
           <MetricKpi label="Total audits" value={stats.total} hint="depuis janvier" />

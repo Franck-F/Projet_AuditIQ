@@ -90,7 +90,7 @@ export default function SupportPage() {
         ]}
       />
 
-      <div className="space-y-8">
+      <div className="page space-y-8">
         {/* Search hero */}
         <div className="rounded-lg border border-border-default bg-surface p-9 text-center">
           <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-fg">

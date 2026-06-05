@@ -231,14 +231,14 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <main role="status" className="flex-1 px-8 py-8 text-fg-secondary">
+      <main role="status" className="page flex-1 text-fg-secondary">
         Chargement du tableau de bord…
       </main>
     );
   }
   if (isError || !data) {
     return (
-      <main className="flex-1 px-8 py-8 text-status-fail">
+      <main className="page flex-1 text-status-fail">
         Impossible de charger le tableau de bord.
       </main>
     );
@@ -274,7 +274,7 @@ export default function DashboardPage() {
           </Button>
         }
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         {/* Greeting */}
         <div style={{ marginBottom: 22 }}>
           <h1

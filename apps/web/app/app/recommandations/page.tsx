@@ -412,7 +412,7 @@ function RecommandationsPageContent() {
           )
         }
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         {auditId ? (
           <AuditRecoList auditId={auditId} />
         ) : (

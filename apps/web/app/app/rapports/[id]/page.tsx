@@ -114,7 +114,7 @@ export default function RapportDetailPage() {
     return (
       <>
         <Topbar crumbs={[{ label: 'Rapports', href: '/app/rapports' }, { label: '…' }]} />
-        <main role="status" className="flex-1 px-8 py-8 text-fg-secondary">
+        <main role="status" className="page flex-1 text-fg-secondary">
           Chargement du rapport…
         </main>
       </>
@@ -125,7 +125,7 @@ export default function RapportDetailPage() {
     return (
       <>
         <Topbar crumbs={[{ label: 'Rapports', href: '/app/rapports' }, { label: 'Introuvable' }]} />
-        <main className="flex-1 px-8 py-8">
+        <main className="page flex-1">
           <div role="alert" className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail">
             <strong>Rapport introuvable.</strong>
             <p className="mt-1">Le rapport demandé n&apos;existe pas ou a été supprimé.</p>
@@ -164,7 +164,7 @@ export default function RapportDetailPage() {
         }
       />
 
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         {/* 2-column layout: content left, TOC right */}
         <div
           className="grid gap-8 lg:grid-cols-[1fr_240px]"

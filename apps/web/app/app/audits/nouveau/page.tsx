@@ -448,7 +448,7 @@ export default function NouveauPage() {
           </Button>
         }
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         <WizardProvider totalSteps={STEPS.length}>
           <WizardInner onComplete={(id) => router.push(`/app/audits/${id}`)} />
         </WizardProvider>
