@@ -296,6 +296,10 @@ class InterpretationOut(BaseModel):
     provider: str
     model: str
     recommendations: list[RecommendationOut] = Field(default_factory=list)
+    degraded: bool = False
+    """True when the LLM path was attempted but failed (auth, network, quota,
+    or unparseable output) and we fell back to the deterministic narrative.
+    False on the LLM success path and on the expected no-provider fallback."""
 
 
 class AuditOut(BaseModel):

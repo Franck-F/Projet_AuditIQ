@@ -53,3 +53,30 @@ def test_eo_eodds_match_fairlearn():
     for gs in r.groups:
         assert gs.tpr == round(float(mf_tpr.by_group[gs.value]), _ROUND)
         assert gs.fpr == round(float(mf_fpr.by_group[gs.value]), _ROUND)
+
+
+def test_di_and_demographic_parity_match_fairlearn():
+    """Disparate Impact (4/5) and Demographic Parity gap equal fairlearn's
+    demographic_parity_ratio / demographic_parity_difference. privileged=None
+    -> engine uses the symmetric min/max convention, same as fairlearn."""
+    from fairlearn.metrics import (
+        demographic_parity_difference,
+        demographic_parity_ratio,
+    )
+
+    df = pd.DataFrame({
+        "g": ["a"] * 50 + ["b"] * 50,
+        "d": (["oui"] * 40 + ["non"] * 10) + (["oui"] * 15 + ["non"] * 35),
+    })
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui")
+    r = run_m1(df, cfg)
+
+    y_pred = (df["d"].astype(str) == "oui").astype(int)
+    sf = df["g"].astype(str)
+    # y_true is unused for selection-rate-based parity; pass y_pred as a dummy.
+    fl_dpd = demographic_parity_difference(y_pred, y_pred, sensitive_features=sf)
+    fl_ratio = demographic_parity_ratio(y_pred, y_pred, sensitive_features=sf)
+
+    assert r.demographic_parity_diff == round(float(fl_dpd), _ROUND)
+    assert r.disparate_impact == round(float(fl_ratio), _ROUND)
