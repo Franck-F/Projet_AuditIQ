@@ -212,25 +212,28 @@ def _chi2_score(df: pd.DataFrame, col: str, decision_col: str) -> float:
     return _normalize_score(raw, hi=10.0)
 
 
-def _suggest_protected(
+def _protected_candidates(
     df: pd.DataFrame,
     profiles: tuple[ColumnProfile, ...],
     *,
     decision_col: str | None,
-) -> Suggestion | None:
+) -> list[Suggestion]:
     if decision_col is None or decision_col not in df.columns:
-        return None
-    candidates: list[tuple[float, str, str]] = []
+        return []
+    scored: list[tuple[float, str, str]] = []
     for p in profiles:
         if p.name == decision_col:
             continue
         if not (2 <= p.unique_count <= 20):
             continue
-        name_score = 1.0 if _name_is_protected(p.name) else 0.0
+        name_hit = _name_is_protected(p.name)
+        name_score = 1.0 if name_hit else 0.0
         stats_score = _chi2_score(df, p.name, decision_col)
         final = 0.6 * name_score + 0.4 * stats_score
+        if not name_hit and final < _CONFIDENCE_THRESHOLD:
+            continue  # keep name-evocative columns regardless of threshold
         reasons: list[str] = []
-        if name_score > 0:
+        if name_hit:
             reasons.append("nom évocateur d'attribut sensible")
         if stats_score > 0.3:
             reasons.append("lien fort avec la décision (χ²)")
@@ -239,14 +242,23 @@ def _suggest_protected(
             if reasons
             else "Cardinalité compatible mais aucun signal fort détecté."
         )
-        candidates.append((final, p.name, reason))
-    if not candidates:
-        return None
-    candidates.sort(reverse=True)
-    score, col, reason = candidates[0]
-    if score < _CONFIDENCE_THRESHOLD:
-        return None
-    return Suggestion(column=col, confidence=round(score, 3), reason=reason)
+        scored.append((final, p.name, reason))
+    scored.sort(key=lambda t: (-t[0], t[1]))
+    return [
+        Suggestion(column=col, confidence=round(score, 3), reason=reason)
+        for score, col, reason in scored
+    ]
+
+
+def _suggest_protected(
+    df: pd.DataFrame,
+    profiles: tuple[ColumnProfile, ...],
+    *,
+    decision_col: str | None,
+) -> Suggestion | None:
+    """Backwards-compatible thin wrapper; returns only the top candidate."""
+    results = _protected_candidates(df, profiles, decision_col=decision_col)
+    return results[0] if results else None
 
 
 def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
@@ -257,9 +269,11 @@ def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
     profiles = tuple(_profile_column(df, c) for c in df.columns)
     sug_decision = _suggest_decision(df, profiles)
     decision_col = sug_decision.column if sug_decision else None
-    sug_protected = _suggest_protected(df, profiles, decision_col=decision_col)
+    candidates = _protected_candidates(df, profiles, decision_col=decision_col)
+    sug_protected = candidates[0] if candidates else None
     return DatasetAnalysis(
         columns=profiles,
         suggested_decision=sug_decision,
         suggested_protected=sug_protected,
+        protected_candidates=tuple(candidates),
     )

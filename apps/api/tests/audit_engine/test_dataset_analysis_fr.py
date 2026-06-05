@@ -77,3 +77,15 @@ def test_recruitment_favorable_is_oui():
     df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_decision.favorable_value == "oui"
+
+
+def test_protected_candidates_ranked_and_top_matches_suggested():
+    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    a = run_dataset_analysis(df)
+    assert len(a.protected_candidates) >= 1
+    # 'sexe' (name-evocative) is present and ranked first
+    assert a.protected_candidates[0].column == "sexe"
+    assert a.suggested_protected.column == a.protected_candidates[0].column
+    # ranked by descending confidence
+    confs = [c.confidence for c in a.protected_candidates]
+    assert confs == sorted(confs, reverse=True)
