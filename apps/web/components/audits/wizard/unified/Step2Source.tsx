@@ -162,22 +162,39 @@ export function Step2Source({
         </div>
       )}
 
-      {analysis !== null && (
+      {analysis != null && (
         <div className="rounded-md border border-border-default bg-surface p-4">
           <p className="mb-2 text-sm font-medium text-fg">Analyse automatique</p>
           <ul className="flex flex-col gap-1 text-xs text-fg-secondary">
-            {analysis.suggested_decision !== null && (
+            {analysis.suggested_decision != null && (
               <li>
                 Décision suggérée :{' '}
                 <strong>{analysis.suggested_decision.column}</strong> (
                 {Math.round(analysis.suggested_decision.confidence * 100)}%)
               </li>
             )}
-            {analysis.suggested_protected !== null && (
+            {analysis.suggested_decision?.favorable_value != null && (
+              <li>
+                Valeur favorable :{' '}
+                <strong>{String(analysis.suggested_decision.favorable_value)}</strong>
+              </li>
+            )}
+            {analysis.suggested_protected != null && (
               <li>
                 Attribut protégé suggéré :{' '}
                 <strong>{analysis.suggested_protected.column}</strong> (
                 {Math.round(analysis.suggested_protected.confidence * 100)}%)
+              </li>
+            )}
+            {(analysis.protected_candidates?.length ?? 0) > 1 && (
+              <li className="text-fg-muted">
+                +{(analysis.protected_candidates!.length - 1)} autre(s) attribut(s) candidat(s)
+              </li>
+            )}
+            {analysis.suggested_ground_truth != null && (
+              <li>
+                Vérité-terrain détectée :{' '}
+                <strong>{analysis.suggested_ground_truth.column}</strong>
               </li>
             )}
           </ul>
