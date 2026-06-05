@@ -176,8 +176,33 @@ footer.vitrine-footer { border-top: 1px solid var(--border-subtle); padding: 56p
 .foot-col a:hover { color: var(--fg); }
 .foot-bottom { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--fg-muted); }
 
-/* contenu toujours visible */
-.rv { opacity: 1; transform: none; }
+/* ============================================================================
+   Scroll-triggered reveal animation
+   - .rv  → initial hidden state (translated down + faded)
+   - .rv.is-visible → final visible state (set by <RevealObserver/> on scroll)
+   - prefers-reduced-motion → always visible, no transition
+   ============================================================================ */
+.rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s var(--ease), transform .6s var(--ease);
+  will-change: opacity, transform;
+}
+.rv.is-visible { opacity: 1; transform: none; }
+/* Stagger helper — set inline `style={{ ['--rv-delay']: '120ms' }}` for child rows. */
+.rv { transition-delay: var(--rv-delay, 0ms); }
+
+/* Auto-reveal: every <section> inside the marketing main wrapper (#top)
+   gets the same hidden→visible transition without needing to opt in. Lets
+   secondary pages (cas-usage, tarifs, modules, …) animate as the user
+   scrolls, without hand-marking every block. */
+main#top > section {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+  will-change: opacity, transform;
+}
+main#top > section.is-visible { opacity: 1; transform: none; }
 
 @media (max-width: 900px) {
   .hero-grid, .g2, .final { grid-template-columns: 1fr; gap: 36px; }
@@ -189,4 +214,10 @@ footer.vitrine-footer { border-top: 1px solid var(--border-subtle); padding: 56p
   .nav-links { display: none; }
   .final { text-align: left; }
 }
-@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } * { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) {
+  .rv, .rv.is-visible,
+  main#top > section, main#top > section.is-visible {
+    opacity: 1; transform: none; transition: none;
+  }
+  * { scroll-behavior: auto; }
+}
