@@ -675,7 +675,7 @@ export default function ParametresPage() {
           { label: 'Paramètres' },
         ]}
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         <div
           className="grid items-start gap-7"
           style={{ gridTemplateColumns: '200px 1fr' }}

@@ -977,7 +977,7 @@ export default function AuditResultPage() {
 
   if (isLoading) {
     return (
-      <main role="status" className="flex-1 px-8 py-8 text-fg-secondary">
+      <main role="status" className="page flex-1 text-fg-secondary">
         Chargement de l&apos;audit…
       </main>
     );
@@ -985,7 +985,7 @@ export default function AuditResultPage() {
 
   if (isError || !data) {
     return (
-      <main className="flex-1 px-8 py-8 text-status-fail">
+      <main className="page flex-1 text-status-fail">
         Audit introuvable.
       </main>
     );
@@ -1000,7 +1000,7 @@ export default function AuditResultPage() {
             { label: data.code ?? data.id },
           ]}
         />
-        <main role="status" className="flex-1 px-8 py-8">
+        <main role="status" className="page flex-1">
           <p className="text-fg-secondary">Analyse en cours…</p>
         </main>
       </>
@@ -1016,7 +1016,7 @@ export default function AuditResultPage() {
             { label: data.code ?? data.id },
           ]}
         />
-        <main className="flex-1 px-8 py-8">
+        <main className="page flex-1">
           <div
             role="alert"
             className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail"
@@ -1083,7 +1083,7 @@ export default function AuditResultPage() {
           </>
         }
       />
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
 
         {data.pre_check.length > 0 && (
           <div

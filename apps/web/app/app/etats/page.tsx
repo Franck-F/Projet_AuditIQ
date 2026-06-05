@@ -58,7 +58,7 @@ export default function EtatsPage() {
         ]}
       />
 
-      <main className="flex-1 px-8 py-8">
+      <main className="page flex-1">
         {/* Page header */}
         <div className="mb-8">
           <div className="mb-2 inline-flex items-center rounded-full border border-status-warn-border bg-status-warn-bg px-2.5 py-1 text-[11px] font-medium text-status-warn">
