@@ -181,7 +181,10 @@
 
   /* Container width cap — sections constrained to lesser of 85% viewport or 1140px max */
   --maxw: 1140px;
-  --maxw-pct: 85vw;
+  --maxw-pct: 90vw;
+  /* App-shell horizontal padding — used by .topbar + .topbar-inner + .page so
+     everything aligns and never touches the sidebar or right viewport edge. */
+  --app-pad-x: clamp(40px, 5vw, 80px);
 }
 
 body {
@@ -310,15 +313,22 @@ p, ul, ol { margin: 0; }
 
 /* ---------- Main / topbar -------------------------------------------------- */
 .main { min-width: 0; display: flex; flex-direction: column; }
+/* Outer topbar = full-width sticky background.
+   Inner topbar-inner = constrained content (matches .page max-width + padding). */
 .topbar {
-  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
-  gap: 18px;
-  /* Side padding scales with viewport so elements never touch the screen edge,
-     and matches the .page max-width cap below. */
-  padding: 18px clamp(28px, 4vw, 56px);
-  min-height: 72px;
+  position: sticky; top: 0; z-index: 20;
   background: var(--surface-glass); backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid var(--border-subtle);
+  padding-inline: var(--app-pad-x);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  width: 100%;
+  max-width: min(var(--maxw-pct), 1240px);
+  margin-inline: auto;
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .searchbox {
@@ -339,10 +349,11 @@ p, ul, ol { margin: 0; }
 
 /* ---------- Page ----------------------------------------------------------- */
 .page {
-  padding: clamp(24px, 3vw, 40px) clamp(28px, 4vw, 56px);
-  max-width: min(var(--maxw-pct), 1240px);
-  margin: 0 auto;
+  padding-block: clamp(28px, 3vw, 44px);
+  padding-inline: var(--app-pad-x);
+  margin-inline: auto;
   width: 100%;
+  max-width: min(var(--maxw-pct), 1240px);
 }
 .page.wide { max-width: min(var(--maxw-pct), 1400px); }
 .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }

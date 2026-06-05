@@ -32,7 +32,8 @@ export function Topbar({
 }: TopbarProps): React.ReactElement {
   return (
     <div className="topbar">
-      <div style={{ minWidth: 0 }}>
+      <div className="topbar-inner">
+        <div style={{ minWidth: 0 }}>
         {crumbs.length > 0 && (
           <nav
             aria-label="Fil d'Ariane"
@@ -91,6 +92,7 @@ export function Topbar({
             {actions}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
