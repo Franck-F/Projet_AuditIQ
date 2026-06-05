@@ -1060,19 +1060,30 @@ export default function AuditResultPage() {
   return (
     <>
       <Topbar
+        title={data.title}
         crumbs={[
+          { label: 'AuditIQ' },
           { label: 'Audits', href: '/app/audits' },
           { label: data.code ?? data.id },
         ]}
+        sub={
+          <StatusBadge tone={VERDICT_TONE[verdict]}>
+            {VERDICT_LABELS[verdict]}
+          </StatusBadge>
+        }
+        actions={
+          <>
+            {m && <DownloadButton auditId={data.id} />}
+            <Button asChild variant="primary" size="sm">
+              <Link href={`/app/recommandations?auditId=${data.id}`}>
+                <Icons.lightbulb size={14} />
+                Voir les actions
+              </Link>
+            </Button>
+          </>
+        }
       />
       <main className="flex-1 px-8 py-8">
-        {/* Topbar action row */}
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <StatusBadge tone={VERDICT_TONE[verdict]}>{VERDICT_LABELS[verdict]}</StatusBadge>
-          </div>
-          {m && <DownloadButton auditId={data.id} />}
-        </div>
 
         {data.pre_check.length > 0 && (
           <div

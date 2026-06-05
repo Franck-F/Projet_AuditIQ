@@ -61,10 +61,10 @@ describe('audit result page — R3 refonte', () => {
 
     // narrative from interpretation (appears in hero and synthèse tab)
     expect(screen.getAllByText(/1,4 fois moins souvent/).length).toBeGreaterThan(0);
-    // title in hero
-    expect(screen.getByText('Scoring crédit — Particuliers Q2')).toBeInTheDocument();
+    // title appears in both Topbar and hero
+    expect(screen.getAllByText('Scoring crédit — Particuliers Q2').length).toBeGreaterThan(0);
     // verdict text
-    expect(screen.getByText('Non conforme')).toBeInTheDocument();
+    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
   });
 
   it('renders 4 tabs with role=tab', () => {
