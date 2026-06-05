@@ -259,18 +259,18 @@ export default function LandingPage() {
           </div>
 
           {/* Demo video — rendered with Remotion, see apps/remotion/ */}
-          <div className="demo-video rv" style={{ marginTop: '44px' }}>
+          <div className="demo-video" style={{ marginTop: '44px' }}>
             <video
               autoPlay
               muted
               loop
               playsInline
-              preload="metadata"
+              preload="auto"
               poster="/video/comment-ca-marche-poster.jpg"
               aria-label="Démo : un audit AuditIQ en 4 étapes"
             >
-              <source src="/video/comment-ca-marche.webm" type="video/webm" />
               <source src="/video/comment-ca-marche.mp4" type="video/mp4" />
+              <source src="/video/comment-ca-marche.webm" type="video/webm" />
             </video>
           </div>
 

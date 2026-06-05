@@ -195,14 +195,15 @@ footer.vitrine-footer { border-top: 1px solid var(--border-subtle); padding: 56p
 /* Demo video frame (How-it-works section) */
 .demo-video {
   position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
   border-radius: 18px;
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
   box-shadow: 0 30px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02);
   aspect-ratio: 16 / 9;
-  max-width: 1240px;
-  margin-inline: auto;
 }
 .demo-video video {
   display: block;
