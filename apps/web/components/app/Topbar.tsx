@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 
 import { Icons } from '@/components/ui/icons';
+import { NotificationsPopover } from '@/components/app/NotificationsPopover';
 
 interface Crumb {
   label: string;
@@ -83,10 +84,8 @@ export function Topbar({
           />
           <span className="searchbox-kbd mono">⌘ K</span>
         </div>
-        <button type="button" className="icon-btn" aria-label="Notifications">
-          <Icons.bell size={16} />
-          <span className="icon-btn-dot" aria-hidden />
-        </button>
+        <NotificationsPopover />
+
         {actions && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {actions}
