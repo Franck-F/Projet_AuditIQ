@@ -124,9 +124,11 @@ def _favorable_value(df: pd.DataFrame, col: str) -> object | None:
     values = list(df[col].dropna().unique())
     for v in values:
         if _normalize(v) in _FAVORABLE_TOKENS:
-            return v
+            val: object = v
+            return val
     counts = df[col].value_counts(dropna=True)
-    return counts.idxmin() if len(counts) >= 2 else None
+    result: object | None = counts.idxmin() if len(counts) >= 2 else None
+    return result
 
 
 def _normalize_score(raw: float, *, hi: float) -> float:
@@ -262,6 +264,42 @@ def _suggest_protected(
     return results[0] if results else None
 
 
+_GROUND_TRUTH_TOKENS = frozenset({
+    "reel", "vrai", "vraie", "qualifie", "qualified", "actually", "ground",
+    "truth", "true", "ytrue", "reelle", "effective",
+})
+
+
+def _suggest_ground_truth(
+    df: pd.DataFrame,
+    profiles: tuple[ColumnProfile, ...],
+    *,
+    decision_col: str | None,
+    protected_col: str | None,
+) -> Suggestion | None:
+    if decision_col is None or decision_col not in df.columns:
+        return None
+    dec_vals = set(df[decision_col].dropna().astype(str).unique())
+    for p in profiles:
+        if p.name in {decision_col, protected_col}:
+            continue
+        if not (_tokens(p.name) & _GROUND_TRUTH_TOKENS):
+            continue
+        if p.unique_count != 2:
+            continue
+        col_vals = set(df[p.name].dropna().astype(str).unique())
+        if col_vals != dec_vals:
+            continue
+        return Suggestion(
+            column=p.name,
+            confidence=0.9,
+            reason="Colonne binaire évoquant la vérité-terrain, mêmes "
+            "valeurs que la décision (active Equal Opportunity / Equalized "
+            "Odds).",
+        )
+    return None
+
+
 def _reference_group(
     df: pd.DataFrame, protected_col: str, decision_col: str, favorable: object
 ) -> object | None:
@@ -272,7 +310,8 @@ def _reference_group(
     rates = clean.assign(_fav=fav_mask).groupby(protected_col)["_fav"].mean()
     if rates.empty:
         return None
-    return rates.idxmax()
+    ref: object = rates.idxmax()
+    return ref
 
 
 def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
@@ -297,9 +336,15 @@ def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
         if ref is not None:
             sug_protected = dataclasses.replace(sug_protected, privileged_value=ref)
             candidates = [sug_protected, *candidates[1:]]
+    sug_gt = _suggest_ground_truth(
+        df, profiles,
+        decision_col=decision_col,
+        protected_col=sug_protected.column if sug_protected else None,
+    )
     return DatasetAnalysis(
         columns=profiles,
         suggested_decision=sug_decision,
         suggested_protected=sug_protected,
         protected_candidates=tuple(candidates),
+        suggested_ground_truth=sug_gt,
     )

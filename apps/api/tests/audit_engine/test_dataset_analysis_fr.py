@@ -96,3 +96,16 @@ def test_reference_group_is_highest_favorable_rate():
     a = run_dataset_analysis(df)
     # H is hired ~80% vs F ~28% -> reference (privileged) = H
     assert a.suggested_protected.privileged_value == "H"
+
+
+def test_ground_truth_detected_on_truelabel_dataset():
+    df = pd.read_csv(rf"{DATA}\m1-truelabel-eo.csv")
+    a = run_dataset_analysis(df)
+    assert a.suggested_ground_truth is not None
+    assert a.suggested_ground_truth.column == "actually_qualified"
+
+
+def test_no_ground_truth_when_absent():
+    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    a = run_dataset_analysis(df)
+    assert a.suggested_ground_truth is None
