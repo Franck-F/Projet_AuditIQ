@@ -26,3 +26,23 @@ def test_dataset_analysis_out_handles_none_suggestions() -> None:
     data = payload.model_dump()
     assert data["suggested_decision"] is None
     assert data["suggested_protected"] is None
+
+
+def test_dataset_analysis_out_maps_new_fields():
+    from app.audit_engine.types import DatasetAnalysis, Suggestion
+    from app.schemas.dataset import DatasetAnalysisOut
+
+    a = DatasetAnalysis(
+        columns=(),
+        suggested_decision=Suggestion("embauche", 0.8, "r", favorable_value="oui"),
+        suggested_protected=Suggestion("sexe", 0.7, "r", privileged_value="H"),
+        protected_candidates=(
+            Suggestion("sexe", 0.7, "r", privileged_value="H"),
+            Suggestion("age", 0.4, "r"),
+        ),
+        suggested_ground_truth=Suggestion("reel", 0.9, "r"),
+    )
+    out = DatasetAnalysisOut.from_engine(a)
+    assert out.suggested_protected.privileged_value == "H"
+    assert [c.column for c in out.protected_candidates] == ["sexe", "age"]
+    assert out.suggested_ground_truth.column == "reel"

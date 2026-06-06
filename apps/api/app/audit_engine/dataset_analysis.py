@@ -5,7 +5,9 @@ wizard's auto-detection step (M1/M2).
 """
 from __future__ import annotations
 
+import dataclasses
 import re
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -21,15 +23,37 @@ from app.audit_engine.types import (
     Suggestion,
 )
 
-_DECISION_RE = re.compile(
-    r"^(decision|approved|outcome|class|target|label|result|status|y)$",
-    re.IGNORECASE,
-)
-_PROTECTED_RE = re.compile(
-    r"^(sex|gender|genre|age|race|origin|origine|nationality|nationalit[eé]"
-    r"|ethni.*|religion|disability|handicap.*|orientation)$",
-    re.IGNORECASE,
-)
+
+def _normalize(text: object) -> str:
+    nfkd = unicodedata.normalize("NFKD", str(text))
+    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+
+
+def _tokens(name: object) -> set[str]:
+    return {t for t in re.split(r"[^a-z0-9]+", _normalize(name)) if t}
+
+
+# All entries MUST be de-accented & lowercased: _tokens() NFKD-normalises and strips combining marks before the set intersection.
+_DECISION_TOKENS = frozenset({
+    "decision", "embauche", "recrute", "recrutement", "accorde",
+    "accepte", "admis", "admission", "retenu", "octroi", "refuse",
+    "approved", "approuve", "outcome", "class", "target", "label", "result",
+    "status", "hired", "selected", "granted", "predicted", "prediction", "y",
+})
+_PROTECTED_TOKENS = frozenset({
+    "sexe", "sex", "genre", "gender", "age", "race", "origine", "origin",
+    "nationalite", "nationality", "ethnie", "ethnic", "ethnicity", "religion",
+    "handicap", "disability", "orientation", "situation", "familiale",
+    "civilite",
+})
+
+
+def _name_is_decision(name: object) -> bool:
+    return bool(_tokens(name) & _DECISION_TOKENS)
+
+
+def _name_is_protected(name: object) -> bool:
+    return bool(_tokens(name) & _PROTECTED_TOKENS)
 
 
 def _infer_dtype(series: pd.Series) -> DType:
@@ -48,9 +72,9 @@ def _infer_dtype(series: pd.Series) -> DType:
 def _infer_role_hint(
     name: str, dtype: DType, unique_count: int, n_rows: int
 ) -> RoleHint:
-    if _DECISION_RE.match(name) and 2 <= unique_count <= 10:
+    if _name_is_decision(name) and 2 <= unique_count <= 10:
         return "decision"
-    if _PROTECTED_RE.match(name) and 2 <= unique_count <= 20:
+    if _name_is_protected(name) and 2 <= unique_count <= 20:
         return "protected"
     if dtype in {"numeric", "boolean"}:
         return "feature"
@@ -87,6 +111,26 @@ def _profile_column(df: pd.DataFrame, name: str) -> ColumnProfile:
 
 
 _CONFIDENCE_THRESHOLD = 0.3
+
+_FAVORABLE_TOKENS = frozenset({
+    "oui", "accepte", "admis", "embauche", "accorde", "approuve", "retenu",
+    "octroye", "favorable", "positif", "yes", "approved", "granted", "hired",
+    "selected", "accepted", "eligible", "true", "1",
+})
+
+
+def _favorable_value(df: pd.DataFrame, col: str) -> object | None:
+    """Pick the favourable decision value by FR/EN positive vocabulary;
+    fall back to the minority class when no positive label is recognised.
+    If several values match the positive vocabulary, the first in insertion order is returned."""
+    values = list(df[col].dropna().unique())
+    for v in values:
+        if _normalize(v) in _FAVORABLE_TOKENS:
+            val: object = v
+            return val
+    counts = df[col].value_counts(dropna=True)
+    result: object | None = counts.idxmin() if len(counts) >= 2 else None
+    return result
 
 
 def _normalize_score(raw: float, *, hi: float) -> float:
@@ -127,7 +171,7 @@ def _suggest_decision(
             continue
         if p.unique_count > len(df) / 2:
             continue
-        name_score = 1.0 if _DECISION_RE.match(p.name) else 0.0
+        name_score = 1.0 if _name_is_decision(p.name) else 0.0
         stats_score = _mutual_info_avg(df, p.name)
         final = 0.6 * name_score + 0.4 * stats_score
         reasons: list[str] = []
@@ -140,8 +184,7 @@ def _suggest_decision(
             if reasons
             else "Cardinalité compatible avec une décision binaire/discrète."
         )
-        counts = df[p.name].value_counts(dropna=True)
-        favorable = counts.idxmin() if len(counts) >= 2 else None
+        favorable = _favorable_value(df, p.name)
         candidates.append((final, p.name, reason, favorable))
     if not candidates:
         return None
@@ -151,7 +194,7 @@ def _suggest_decision(
         return None
     return Suggestion(
         column=col,
-        confidence=round(score, 3),
+        confidence=round(min(score, 1.0), 3),
         reason=reason,
         favorable_value=fav,
     )
@@ -174,25 +217,28 @@ def _chi2_score(df: pd.DataFrame, col: str, decision_col: str) -> float:
     return _normalize_score(raw, hi=10.0)
 
 
-def _suggest_protected(
+def _protected_candidates(
     df: pd.DataFrame,
     profiles: tuple[ColumnProfile, ...],
     *,
     decision_col: str | None,
-) -> Suggestion | None:
+) -> list[Suggestion]:
     if decision_col is None or decision_col not in df.columns:
-        return None
-    candidates: list[tuple[float, str, str]] = []
+        return []
+    scored: list[tuple[float, str, str]] = []
     for p in profiles:
         if p.name == decision_col:
             continue
         if not (2 <= p.unique_count <= 20):
             continue
-        name_score = 1.0 if _PROTECTED_RE.match(p.name) else 0.0
+        name_hit = _name_is_protected(p.name)
+        name_score = 1.0 if name_hit else 0.0
         stats_score = _chi2_score(df, p.name, decision_col)
         final = 0.6 * name_score + 0.4 * stats_score
+        if not name_hit and final < _CONFIDENCE_THRESHOLD:
+            continue  # skip stats-only candidates below the confidence bar
         reasons: list[str] = []
-        if name_score > 0:
+        if name_hit:
             reasons.append("nom évocateur d'attribut sensible")
         if stats_score > 0.3:
             reasons.append("lien fort avec la décision (χ²)")
@@ -201,14 +247,74 @@ def _suggest_protected(
             if reasons
             else "Cardinalité compatible mais aucun signal fort détecté."
         )
-        candidates.append((final, p.name, reason))
-    if not candidates:
+        scored.append((final, p.name, reason))
+    scored.sort(key=lambda t: (-t[0], t[1]))
+    return [
+        Suggestion(column=col, confidence=round(min(score, 1.0), 3), reason=reason)
+        for score, col, reason in scored
+    ]
+
+
+def _suggest_protected(
+    df: pd.DataFrame,
+    profiles: tuple[ColumnProfile, ...],
+    *,
+    decision_col: str | None,
+) -> Suggestion | None:
+    """Backwards-compatible thin wrapper; returns only the top candidate."""
+    results = _protected_candidates(df, profiles, decision_col=decision_col)
+    return results[0] if results else None
+
+
+# "effective" targets FR "effectif/réel"; the binary + same-value-set guards prevent false matches.
+_GROUND_TRUTH_TOKENS = frozenset({
+    "reel", "vrai", "vraie", "qualifie", "qualified", "actually", "ground",
+    "truth", "true", "ytrue", "reelle", "effective",
+})
+
+
+def _suggest_ground_truth(
+    df: pd.DataFrame,
+    profiles: tuple[ColumnProfile, ...],
+    *,
+    decision_col: str | None,
+    protected_col: str | None,
+) -> Suggestion | None:
+    if decision_col is None or decision_col not in df.columns:
         return None
-    candidates.sort(reverse=True)
-    score, col, reason = candidates[0]
-    if score < _CONFIDENCE_THRESHOLD:
+    dec_vals = set(df[decision_col].dropna().astype(str).unique())
+    for p in profiles:
+        if p.name in {decision_col, protected_col}:
+            continue
+        if not (_tokens(p.name) & _GROUND_TRUTH_TOKENS):
+            continue
+        if p.unique_count != 2:
+            continue
+        col_vals = set(df[p.name].dropna().astype(str).unique())
+        if col_vals != dec_vals:
+            continue
+        return Suggestion(
+            column=p.name,
+            confidence=0.9,
+            reason="Colonne binaire évoquant la vérité-terrain, mêmes "
+            "valeurs que la décision (active Equal Opportunity / Equalized "
+            "Odds).",
+        )
+    return None
+
+
+def _reference_group(
+    df: pd.DataFrame, protected_col: str, decision_col: str, favorable: object
+) -> object | None:
+    clean = df[[protected_col, decision_col]].dropna()
+    if clean.empty:
         return None
-    return Suggestion(column=col, confidence=round(score, 3), reason=reason)
+    fav_mask = clean[decision_col].astype(str) == str(favorable)
+    rates = fav_mask.groupby(clean[protected_col]).mean()
+    if rates.empty:
+        return None
+    ref: object = rates.idxmax()
+    return ref
 
 
 def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
@@ -219,9 +325,29 @@ def run_dataset_analysis(df: pd.DataFrame) -> DatasetAnalysis:
     profiles = tuple(_profile_column(df, c) for c in df.columns)
     sug_decision = _suggest_decision(df, profiles)
     decision_col = sug_decision.column if sug_decision else None
-    sug_protected = _suggest_protected(df, profiles, decision_col=decision_col)
+    candidates = _protected_candidates(df, profiles, decision_col=decision_col)
+    sug_protected = candidates[0] if candidates else None
+    if (
+        sug_protected is not None
+        and sug_decision is not None
+        and sug_decision.favorable_value is not None
+    ):
+        ref = _reference_group(
+            df, sug_protected.column, sug_decision.column,
+            sug_decision.favorable_value,
+        )
+        if ref is not None:
+            sug_protected = dataclasses.replace(sug_protected, privileged_value=ref)
+            candidates = [sug_protected, *candidates[1:]]
+    sug_gt = _suggest_ground_truth(
+        df, profiles,
+        decision_col=decision_col,
+        protected_col=sug_protected.column if sug_protected else None,
+    )
     return DatasetAnalysis(
         columns=profiles,
         suggested_decision=sug_decision,
         suggested_protected=sug_protected,
+        protected_candidates=tuple(candidates),
+        suggested_ground_truth=sug_gt,
     )
