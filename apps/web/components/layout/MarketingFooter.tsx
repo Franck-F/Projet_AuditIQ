@@ -21,17 +21,17 @@ export function MarketingFooter() {
 
           <div className="foot-col">
             <h5>Produit</h5>
-            <a href="/#produit">Aperçu</a>
-            <a href="/#modules">Modules</a>
+            <Link href="/#produit">Aperçu</Link>
+            <Link href="/#modules">Modules</Link>
             <Link href="/cas-usage">Cas d&apos;usage</Link>
-            <a href="/#tarifs">Tarifs</a>
+            <Link href="/#tarifs">Tarifs</Link>
             <Link href="/connexion">L&apos;application</Link>
           </div>
 
           <div className="foot-col">
             <h5>Ressources</h5>
             <Link href="/blog">Articles &amp; guides</Link>
-            <a href="/#conformite">AI Act</a>
+            <Link href="/#conformite">AI Act</Link>
             <Link href="/securite">Sécurité &amp; RGPD</Link>
           </div>
 

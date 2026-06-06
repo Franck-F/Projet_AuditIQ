@@ -32,8 +32,8 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
   // preference. Render a neutral placeholder until after hydration to avoid
   // a Sun/Moon mismatch (hydration error #1).
   const [mounted, setMounted] = React.useState(false);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional mount-only flag
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-shot mount guard for hydration-safe theme icon
     setMounted(true);
   }, []);
 

@@ -92,13 +92,16 @@ export function AuditRunningState({ module = 'M1', startedAt }: Props) {
   const phases =
     module === 'M2' ? M2_PHASES : module === 'M3' ? M3_PHASES : M1_PHASES;
 
+  // Stable fallback: captured once in the lazy initializer (before first render),
+  // so Date.now() is never called during the render phase.
+  const [fallbackMs] = React.useState(() => Date.now());
   const startMs = React.useMemo(() => {
     if (startedAt) {
       const t = new Date(startedAt).getTime();
       if (Number.isFinite(t)) return t;
     }
-    return Date.now();
-  }, [startedAt]);
+    return fallbackMs;
+  }, [startedAt, fallbackMs]);
 
   const [now, setNow] = React.useState(() => Date.now());
   React.useEffect(() => {
