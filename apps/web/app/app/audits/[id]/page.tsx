@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import { Topbar } from '@/components/app/Topbar';
+import { AuditRunningState } from '@/components/audits/AuditRunningState';
 import { Gauge } from '@/components/product/Gauge';
 import { Stoplight } from '@/components/product/Stoplight';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
@@ -992,16 +993,20 @@ export default function AuditResultPage() {
   }
 
   if (data.status === 'pending' || data.status === 'running') {
+    const moduleKey =
+      data.module === 'M2' || data.module === 'M3' ? data.module : 'M1';
     return (
       <>
         <Topbar
+          title={data.title || 'Audit en cours'}
+          sub={data.code ?? undefined}
           crumbs={[
             { label: 'Audits', href: '/app/audits' },
             { label: data.code ?? data.id },
           ]}
         />
-        <main role="status" className="page flex-1">
-          <p className="text-fg-secondary">Analyse en cours…</p>
+        <main role="status" aria-live="polite">
+          <AuditRunningState module={moduleKey} startedAt={data.created_at} />
         </main>
       </>
     );

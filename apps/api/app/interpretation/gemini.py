@@ -16,9 +16,17 @@ class GeminiProvider:
         self.model = model
 
     async def complete(self, prompt: str, *, as_json: bool = False) -> str:
+        from google.genai import types
+
+        config = (
+            types.GenerateContentConfig(response_mime_type="application/json")
+            if as_json
+            else None
+        )
+
         def _call() -> str:
             resp = self._client.models.generate_content(
-                model=self.model, contents=prompt
+                model=self.model, contents=prompt, config=config
             )
             return resp.text or ""
 

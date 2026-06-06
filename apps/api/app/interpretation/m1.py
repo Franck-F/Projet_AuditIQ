@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 from importlib import resources
 
 from app.audit_engine import M1Result
+from app.interpretation._json import loads_lenient
 from app.interpretation._recommendations import parse_recommendations
 from app.interpretation.base import LLMProvider
 from app.schemas.audit import InterpretationOut
+
+logger = logging.getLogger(__name__)
 
 _AI_ACT_ANCHORS = [
     "AI Act, article 10 (qualité et gouvernance des données)",
@@ -92,7 +96,7 @@ _DI_VERDICT_LABELS = {
 }
 
 
-def _fallback(result: M1Result) -> InterpretationOut:
+def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
     phrase = _DI_VERDICT_LABELS.get(result.verdict, result.verdict)
     narrative = (
         f"Sur l'attribut analysé, la règle des 4/5 est {phrase}. "
@@ -151,6 +155,7 @@ def _fallback(result: M1Result) -> InterpretationOut:
         disclaimers=disclaimers,
         provider="fallback",
         model="deterministic",
+        degraded=degraded,
     )
 
 
@@ -162,7 +167,7 @@ async def interpret_m1(
     try:
         prompt = load_prompt_template().format(metrics_json=_metrics_json(result))
         raw = await provider.complete(prompt, as_json=True)
-        data = json.loads(raw)
+        data = loads_lenient(raw)
         return InterpretationOut(
             narrative=str(data["narrative"]),
             ai_act_anchors=[str(a) for a in data.get("ai_act_anchors", [])]
@@ -173,5 +178,10 @@ async def interpret_m1(
             model=provider.model,
             recommendations=parse_recommendations(data.get("recommendations")),
         )
-    except Exception:  # noqa: BLE001 — any LLM/parse failure → safe fallback
-        return _fallback(result)
+    except Exception as exc:  # noqa: BLE001 — any LLM/parse failure → visible fallback
+        logger.warning(
+            "Interprétation M1 — chemin LLM (%s) en échec (%s: %s) ; "
+            "bascule sur le fallback déterministe.",
+            getattr(provider, "name", "?"), type(exc).__name__, exc,
+        )
+        return _fallback(result, degraded=True)
