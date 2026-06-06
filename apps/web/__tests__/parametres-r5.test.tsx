@@ -7,11 +7,11 @@ describe('ParametresPage — R5 sidenav 8 tabs', () => {
     return screen.getByRole('navigation', { name: /Navigation paramètres/i });
   }
 
-  it('renders 8 sidenav buttons', () => {
+  it('renders 9 sidenav buttons', () => {
     render(<ParametresPage />);
     const nav = getNav();
     const buttons = within(nav).getAllByRole('button');
-    expect(buttons).toHaveLength(8);
+    expect(buttons).toHaveLength(9);
   });
 
   it('sidenav contains all 8 expected labels', () => {
