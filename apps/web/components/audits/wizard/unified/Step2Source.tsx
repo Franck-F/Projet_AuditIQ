@@ -188,7 +188,7 @@ export function Step2Source({
             )}
             {(analysis.protected_candidates?.length ?? 0) > 1 && (
               <li className="text-fg-muted">
-                +{(analysis.protected_candidates!.length - 1)} autre(s) attribut(s) candidat(s)
+                +{(analysis.protected_candidates?.length ?? 0) - 1} autre(s) attribut(s) candidat(s)
               </li>
             )}
             {analysis.suggested_ground_truth != null && (

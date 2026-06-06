@@ -7,6 +7,21 @@ import { useWizard } from '@/components/audits/wizard/WizardContext';
 import type { DatasetAnalysisOut, DatasetOut } from '@/lib/api/audits';
 import type { UnifiedValues } from '@/components/audits/wizard/unified/types';
 
+// Narrow helper: keys of UnifiedValues whose value type extends string.
+// RHF's setValue can't narrow the value type through a generic key, so we
+// restrict callers to string-valued fields to keep the cast local and typed.
+type StringField = keyof {
+  [K in keyof UnifiedValues as UnifiedValues[K] extends string ? K : never]: string;
+};
+
+function SuggestedBadge({ confidence }: { confidence: number }): React.ReactElement {
+  return (
+    <span className="ml-2 text-xs font-normal text-fg-muted">
+      suggéré · conf. {Math.round(confidence * 100)}%
+    </span>
+  );
+}
+
 interface Step3ConfigProps {
   dataset: DatasetOut | null;
   analysis: DatasetAnalysisOut | null;
@@ -36,16 +51,18 @@ function Step3ConfigM1({
   // Prefill from analysis — anti-clobber: only fills empty fields
   React.useEffect(() => {
     if (!analysis) return;
-    const setIfEmpty = (name: keyof UnifiedValues, value: unknown) => {
+    const setIfEmpty = (name: StringField, value: unknown) => {
       if (value == null || value === '') return;
       if (getValues(name)) return;
-      setValue(name, String(value) as never, { shouldDirty: false });
+      setValue(name, String(value), { shouldDirty: false });
     };
     setIfEmpty('decision_column', analysis.suggested_decision?.column);
     setIfEmpty('favorable_value', analysis.suggested_decision?.favorable_value);
     setIfEmpty('protected_attribute', analysis.suggested_protected?.column);
     setIfEmpty('privileged_value', analysis.suggested_protected?.privileged_value);
     setIfEmpty('ground_truth_column', analysis.suggested_ground_truth?.column);
+    // setValue/getValues are stable refs (react-hook-form guarantees this);
+    // listing them would re-fire the prefill on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analysis]);
 
@@ -83,9 +100,7 @@ function Step3ConfigM1({
         >
           Colonne de décision
           {analysis?.suggested_decision && (
-            <span className="ml-2 text-xs font-normal text-fg-muted">
-              suggéré · conf. {Math.round(analysis.suggested_decision.confidence * 100)}%
-            </span>
+            <SuggestedBadge confidence={analysis.suggested_decision.confidence} />
           )}
         </label>
         <select
@@ -116,9 +131,7 @@ function Step3ConfigM1({
         >
           Valeur favorable
           {analysis?.suggested_decision?.favorable_value != null && (
-            <span className="ml-2 text-xs font-normal text-fg-muted">
-              suggéré · conf. {Math.round(analysis.suggested_decision.confidence * 100)}%
-            </span>
+            <SuggestedBadge confidence={analysis.suggested_decision.confidence} />
           )}
         </label>
         {favorableOptions.length > 0 ? (
@@ -165,9 +178,7 @@ function Step3ConfigM1({
         >
           Attribut protégé
           {analysis?.suggested_protected && (
-            <span className="ml-2 text-xs font-normal text-fg-muted">
-              suggéré · conf. {Math.round(analysis.suggested_protected.confidence * 100)}%
-            </span>
+            <SuggestedBadge confidence={analysis.suggested_protected.confidence} />
           )}
         </label>
         <select
@@ -219,9 +230,7 @@ function Step3ConfigM1({
                 Groupe de référence{' '}
                 <span className="text-fg-muted">(facultatif)</span>
                 {analysis?.suggested_protected?.privileged_value != null && (
-                  <span className="ml-2 text-xs font-normal text-fg-muted">
-                    suggéré · conf. {Math.round(analysis.suggested_protected.confidence * 100)}%
-                  </span>
+                  <SuggestedBadge confidence={analysis.suggested_protected.confidence} />
                 )}
               </label>
               <input
@@ -243,9 +252,7 @@ function Step3ConfigM1({
                 Colonne vérité-terrain{' '}
                 <span className="text-fg-muted">(facultatif)</span>
                 {analysis?.suggested_ground_truth != null && (
-                  <span className="ml-2 text-xs font-normal text-fg-muted">
-                    suggéré · conf. {Math.round(analysis.suggested_ground_truth.confidence * 100)}%
-                  </span>
+                  <SuggestedBadge confidence={analysis.suggested_ground_truth.confidence} />
                 )}
               </label>
               <select
@@ -274,7 +281,6 @@ function Step3ConfigM1({
               </label>
               <select
                 id="m1-secondary"
-                defaultValue=""
                 className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
                 {...register('secondary_protected_attribute')}
                 aria-label="Attribut protégé secondaire"

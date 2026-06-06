@@ -60,7 +60,7 @@ function Harness({ a = analysis }: { a?: DatasetAnalysisOut }) {
 describe('Step2 analysis summary', () => {
   it('shows favorable value in summary', () => {
     render(<Harness />);
-    expect(screen.getByText(/oui/)).toBeInTheDocument();
+    expect(screen.getByText('oui')).toBeInTheDocument();
   });
 
   it('shows other-candidates count when more than 1 candidate', () => {
