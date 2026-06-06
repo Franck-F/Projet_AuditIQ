@@ -194,7 +194,7 @@ def _suggest_decision(
         return None
     return Suggestion(
         column=col,
-        confidence=round(score, 3),
+        confidence=round(min(score, 1.0), 3),
         reason=reason,
         favorable_value=fav,
     )
@@ -250,7 +250,7 @@ def _protected_candidates(
         scored.append((final, p.name, reason))
     scored.sort(key=lambda t: (-t[0], t[1]))
     return [
-        Suggestion(column=col, confidence=round(score, 3), reason=reason)
+        Suggestion(column=col, confidence=round(min(score, 1.0), 3), reason=reason)
         for score, col, reason in scored
     ]
 

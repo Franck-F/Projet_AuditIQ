@@ -5,6 +5,8 @@ protected candidates ranking, reference group, and ground-truth detection.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 
 from app.audit_engine.dataset_analysis import (
@@ -17,7 +19,7 @@ from app.audit_engine.dataset_analysis import (
 )
 from app.audit_engine.types import DatasetAnalysis, Suggestion
 
-DATA = r"C:\Users\Franck\Documents\projet\auditiq\Data_test"
+_FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_suggestion_carries_privileged_value():
@@ -52,7 +54,7 @@ def test_name_detection_french():
 
 
 def test_recruitment_dataset_detects_decision_and_protected():
-    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    df = pd.read_csv(_FIXTURES / "m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_decision is not None
     assert a.suggested_decision.column == "embauche"
@@ -72,13 +74,13 @@ def test_favorable_value_fallback_minority_when_no_positive_token():
 
 
 def test_recruitment_favorable_is_oui():
-    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    df = pd.read_csv(_FIXTURES / "m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_decision.favorable_value == "oui"
 
 
 def test_protected_candidates_ranked_and_top_matches_suggested():
-    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    df = pd.read_csv(_FIXTURES / "m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert len(a.protected_candidates) >= 1
     # 'sexe' (name-evocative) is present and ranked first
@@ -90,27 +92,27 @@ def test_protected_candidates_ranked_and_top_matches_suggested():
 
 
 def test_reference_group_is_highest_favorable_rate():
-    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    df = pd.read_csv(_FIXTURES / "m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     # H is hired ~80% vs F ~28% -> reference (privileged) = H
     assert a.suggested_protected.privileged_value == "H"
 
 
 def test_ground_truth_detected_on_truelabel_dataset():
-    df = pd.read_csv(rf"{DATA}\m1-truelabel-eo.csv")
+    df = pd.read_csv(_FIXTURES / "m1-truelabel-eo.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_ground_truth is not None
     assert a.suggested_ground_truth.column == "actually_qualified"
 
 
 def test_no_ground_truth_when_absent():
-    df = pd.read_csv(rf"{DATA}\m1-recrutement-biais.csv")
+    df = pd.read_csv(_FIXTURES / "m1-recrutement-biais.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_ground_truth is None
 
 
 def test_credit_dataset_detects_accorde_and_sexe():
-    df = pd.read_csv(rf"{DATA}\m1-credit-equitable.csv")
+    df = pd.read_csv(_FIXTURES / "m1-credit-equitable.csv")
     a = run_dataset_analysis(df)
     assert a.suggested_decision is not None
     assert a.suggested_decision.column == "accorde"
