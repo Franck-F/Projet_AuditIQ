@@ -50,3 +50,27 @@ def test_m1result_has_marginals_and_pairwise():
         risk_score=70,
     )
     assert r.marginals == () and r.pairwise == ()
+
+
+# ---------------------------------------------------------------------------
+# Task 2: run_intersectional_pair
+# ---------------------------------------------------------------------------
+
+from app.audit_engine.intersectional import run_intersectional_pair  # noqa: E402
+
+
+def _df():
+    return pd.DataFrame({
+        "sexe": ["H"] * 30 + ["F"] * 30,
+        "age": (["j"] * 15 + ["v"] * 15) * 2,
+        "d": (["oui"] * 24 + ["non"] * 6) + (["oui"] * 9 + ["non"] * 21),
+    })
+
+
+def test_run_intersectional_pair_labels_attributes():
+    cfg = M1Config(protected_attribute="sexe", decision_column="d",
+                   favorable_value="oui")
+    r = run_intersectional_pair(_df(), cfg, "sexe", "age")
+    assert r.primary_attribute == "sexe"
+    assert r.secondary_attribute == "age"
+    assert len(r.cells) >= 2
