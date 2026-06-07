@@ -24,8 +24,9 @@ import {
   type M1MetricsOut,
   type M2MetricsOut,
   type M3MetricsOut,
+  type MarginalOut,
+  type IntersectionalOut,
   type ReportFormat,
-  type GroupStatOut,
 } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
 import { Scale } from 'lucide-react';
@@ -656,19 +657,6 @@ function MetriquesTab({
 /* ─── Tab content — Groupes / Clusters / Catégories ─────────────────── */
 
 /**
- * Builds RatioBar groups from M1MetricsOut.groups, mapping selection_rate as
- * the bar value. The RatioBar automatically treats the highest value as
- * reference, which matches our reference_value group.
- */
-function buildRatioBarGroups(m1: M1MetricsOut): Array<{ label: string; value: number; n: number }> {
-  return m1.groups.map((g) => ({
-    label: g.value,
-    value: g.selection_rate,
-    n: g.n,
-  }));
-}
-
-/**
  * Synthesizes 2D ClusterMap points from ClusterStatOut data.
  * The engine returns no true 2D projection, so we lay out clusters on a
  * pseudo-scatter: x = clusterId * 80 (spread horizontally), y = positive_rate * 100
@@ -722,27 +710,133 @@ function GroupesTab({
 
   if (isM1) {
     const m1 = metrics as M1MetricsOut;
-    const ratioBarGroups = buildRatioBarGroups(m1);
+    // Use marginals if available, otherwise fall back to the top-level groups
+    const marginals: MarginalOut[] =
+      m1.marginals && m1.marginals.length > 0
+        ? m1.marginals
+        : [
+            {
+              attribute: '—',
+              groups: m1.groups,
+              reference_value: m1.reference_value,
+              disparate_impact: m1.disparate_impact,
+              demographic_parity_diff: m1.demographic_parity_diff,
+              worst_group: m1.worst_group,
+              verdict: m1.verdict,
+              risk_score: m1.risk_score,
+              warnings: m1.warnings,
+            },
+          ];
+    const pairwise: IntersectionalOut[] = m1.pairwise ?? [];
+
     return (
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-border-subtle px-5 py-4">
-          <h3 className="text-base font-medium text-fg">Comparaison des groupes · Règle des 4/5</h3>
-          <p className="mt-0.5 text-[13px] text-fg-muted">
-            Taux d&apos;acceptation par groupe. Le groupe de référence est le plus favorisé.
-          </p>
-        </div>
-        <div className="px-6 py-5">
-          <RatioBar
-            groups={ratioBarGroups}
-            threshold={0.8}
-            format={(v) => `${(v * 100).toFixed(1)}%`}
-          />
-          <hr className="my-4 border-border-subtle" />
-          <InlineNote icon={Scale}>
-            Règle des 4/5 : le taux du groupe défavorisé doit atteindre au moins 80 % du taux de référence.
-          </InlineNote>
-        </div>
-      </Card>
+      <div className="flex flex-col gap-4">
+        {/* Per-attribute marginal cards */}
+        {marginals.map((marginal) => {
+          const ratioBarGroups = marginal.groups.map((g) => ({
+            label: g.value,
+            value: g.selection_rate,
+            n: g.n,
+          }));
+          return (
+            <Card key={marginal.attribute} className="overflow-hidden p-0">
+              <div className="border-b border-border-subtle px-5 py-4">
+                <h3 className="text-base font-medium text-fg">
+                  Comparaison des groupes · <span className="font-mono">{marginal.attribute}</span>
+                </h3>
+                <p className="mt-0.5 text-[13px] text-fg-muted">
+                  Taux d&apos;acceptation par groupe. Le groupe de référence est le plus favorisé.
+                </p>
+              </div>
+              <div className="px-6 py-5">
+                <RatioBar
+                  groups={ratioBarGroups}
+                  threshold={0.8}
+                  format={(v) => `${(v * 100).toFixed(1)}%`}
+                />
+                <hr className="my-4 border-border-subtle" />
+                <InlineNote icon={Scale}>
+                  Règle des 4/5 : le taux du groupe défavorisé doit atteindre au moins 80 % du taux de référence.
+                </InlineNote>
+              </div>
+            </Card>
+          );
+        })}
+
+        {/* Per-pair intersectional matrices */}
+        {pairwise.map((pair) => {
+          const pairTitle = `${pair.primary_attribute ?? '—'} × ${pair.secondary_attribute ?? '—'}`;
+          // Collect unique primary and secondary values for a simple grid display
+          const primaryValues = [...new Set(pair.cells.map((c) => c.primary_value))];
+          const secondaryValues = [...new Set(pair.cells.map((c) => c.secondary_value))];
+          return (
+            <Card key={pairTitle} className="overflow-hidden p-0">
+              <div className="border-b border-border-subtle px-5 py-4">
+                <h3 className="text-base font-medium text-fg">
+                  Analyse intersectionnelle · <span className="font-mono">{pairTitle}</span>
+                </h3>
+                <p className="mt-0.5 text-[13px] text-fg-muted">
+                  Disparate Impact par combinaison de groupes. DI global&nbsp;:{' '}
+                  <strong>{(pair.disparate_impact * 100).toFixed(0)} %</strong>
+                  {' '}· verdict&nbsp;: <strong>{pair.verdict}</strong>
+                </p>
+              </div>
+              <div className="overflow-x-auto px-4 py-4">
+                <table className="w-full text-sm" aria-label={`Matrice intersectionnelle ${pairTitle}`}>
+                  <thead>
+                    <tr>
+                      <th className="pb-2 pr-4 text-left font-medium text-fg-muted">
+                        {pair.primary_attribute ?? 'Primaire'} ↓ / {pair.secondary_attribute ?? 'Secondaire'} →
+                      </th>
+                      {secondaryValues.map((sv) => (
+                        <th key={sv} className="pb-2 px-3 text-center font-medium text-fg-muted">
+                          {sv}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {primaryValues.map((pv) => (
+                      <tr key={pv} className="border-t border-border-subtle">
+                        <td className="py-2 pr-4 font-medium text-fg">{pv}</td>
+                        {secondaryValues.map((sv) => {
+                          const cell = pair.cells.find(
+                            (c) => c.primary_value === pv && c.secondary_value === sv,
+                          );
+                          if (!cell) {
+                            return (
+                              <td key={sv} className="px-3 py-2 text-center text-fg-muted">
+                                —
+                              </td>
+                            );
+                          }
+                          const diPct = (cell.disparate_impact * 100).toFixed(0);
+                          const diColor =
+                            cell.verdict === 'fail'
+                              ? 'var(--status-fail)'
+                              : cell.verdict === 'warn'
+                                ? 'var(--status-warn)'
+                                : 'var(--status-pass)';
+                          return (
+                            <td
+                              key={sv}
+                              className="px-3 py-2 text-center font-mono"
+                              style={{ color: diColor }}
+                              title={`n=${cell.n}, taux=${(cell.selection_rate * 100).toFixed(1)}%`}
+                            >
+                              {diPct}%
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
     );
   }
 
