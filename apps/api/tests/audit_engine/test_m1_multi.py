@@ -6,10 +6,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from app.audit_engine.errors import DatasetValidationError
+from app.audit_engine.intersectional import run_intersectional_pair
+from app.audit_engine.m1_supervised import _marginal_audit, run_m1
 from app.audit_engine.types import (
-    GroupStat, IntersectionalResult, M1Config, M1Result, MarginalResult,
+    GroupStat,
+    IntersectionalResult,
+    M1Config,
+    M1Result,
+    MarginalResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # Task 1: Engine types
@@ -56,9 +62,6 @@ def test_m1result_has_marginals_and_pairwise():
 # Task 2: run_intersectional_pair
 # ---------------------------------------------------------------------------
 
-from app.audit_engine.intersectional import run_intersectional_pair  # noqa: E402
-
-
 def _df():
     return pd.DataFrame({
         "sexe": ["H"] * 30 + ["F"] * 30,
@@ -80,9 +83,6 @@ def test_run_intersectional_pair_labels_attributes():
 # Task 3: _marginal_audit
 # ---------------------------------------------------------------------------
 
-from app.audit_engine.m1_supervised import _marginal_audit, run_m1  # noqa: E402
-
-
 def test_marginal_audit_matches_single_run_m1():
     df = pd.read_csv(
         Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv"
@@ -96,3 +96,61 @@ def test_marginal_audit_matches_single_run_m1():
     assert m.demographic_parity_diff == single.demographic_parity_diff
     assert m.verdict == single.verdict
     assert m.reference_value == single.reference_value
+
+
+# ---------------------------------------------------------------------------
+# Task 4: run_m1 orchestrates N attributes
+# ---------------------------------------------------------------------------
+
+def _attrs_cfg(attrs, **kw):
+    return M1Config(protected_attribute=attrs[0], decision_column="embauche",
+                    favorable_value="oui", protected_attributes=tuple(attrs),
+                    **kw)
+
+
+def test_run_m1_three_attributes_marginals_and_pairs():
+    df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
+    # use the two real categoricals available in the fixture
+    cfg = _attrs_cfg(["sexe", "diplome"])
+    r = run_m1(df, cfg)
+    assert [m.attribute for m in r.marginals] == ["sexe", "diplome"]
+    assert len(r.pairwise) == 1  # C(2,2)=1 pair
+    assert r.pairwise[0].primary_attribute == "sexe"
+    assert r.pairwise[0].secondary_attribute == "diplome"
+
+
+def test_run_m1_aggregate_verdict_is_worst():
+    df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
+    r = run_m1(df, _attrs_cfg(["sexe", "diplome"]))
+    order = {"pass": 0, "warn": 1, "fail": 2}
+    worst = max(
+        [order[m.verdict] for m in r.marginals]
+        + [order[p.verdict] for p in r.pairwise]
+    )
+    assert order[r.verdict] == worst
+    assert r.risk_score == max(
+        [m.risk_score for m in r.marginals] + [p.risk_score for p in r.pairwise]
+    )
+
+
+def test_run_m1_single_attribute_backward_compatible():
+    df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
+    cfg = M1Config(protected_attribute="sexe", decision_column="embauche",
+                   favorable_value="oui", privileged_value="H")
+    r = run_m1(df, cfg)
+    assert len(r.marginals) == 1 and r.pairwise == ()
+    # top-level == the single marginal (unchanged behaviour)
+    assert r.disparate_impact == r.marginals[0].disparate_impact
+    assert r.verdict == r.marginals[0].verdict
+    assert tuple(g.value for g in r.groups) == tuple(
+        g.value for g in r.marginals[0].groups
+    )
+
+
+def test_run_m1_rejects_more_than_four_attributes():
+    df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
+    cfg = M1Config(protected_attribute="sexe", decision_column="embauche",
+                   favorable_value="oui",
+                   protected_attributes=("a", "b", "c", "d", "e"))
+    with pytest.raises(DatasetValidationError):
+        run_m1(df, cfg)
