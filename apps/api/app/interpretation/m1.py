@@ -134,8 +134,13 @@ _DI_VERDICT_LABELS = {
 
 def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
     phrase = _DI_VERDICT_LABELS.get(result.verdict, result.verdict)
+    n_marginals = len(result.marginals) if result.marginals else 0
+    if n_marginals > 1:
+        intro = f"Sur les {n_marginals} attributs analysés"
+    else:
+        intro = "Sur l'attribut analysé"
     narrative = (
-        f"Sur l'attribut analysé, la règle des 4/5 est {phrase}. "
+        f"{intro}, la règle des 4/5 est {phrase}. "
         f"Le Disparate Impact est de {result.disparate_impact} "
         f"(groupe le plus défavorisé : « {result.worst_group} » ; "
         f"référence : « {result.reference_value} »). "

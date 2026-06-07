@@ -72,6 +72,18 @@ def test_secondary_attribute_must_differ_and_is_m1_only():
         )
 
 
+def test_m1_rejects_secondary_combined_with_protected_attributes_list():
+    """Combining secondary_protected_attribute with protected_attributes must be rejected."""
+    with pytest.raises(ValidationError, match="secondary_protected_attribute"):
+        AuditCreate(
+            dataset_id=uuid.uuid4(), title="t",
+            protected_attributes=["genre", "origine"],
+            secondary_protected_attribute="nationalite",  # not in the list → rejected
+            decision_column="embauche",
+            favorable_value="oui",
+        )
+
+
 def test_m1_metrics_out_has_marginals_and_pairwise():
     """M1MetricsOut exposes marginals/pairwise; intersectional is gone."""
     m = M1MetricsOut(
@@ -84,7 +96,7 @@ def test_m1_metrics_out_has_marginals_and_pairwise():
     assert not hasattr(m, "intersectional")
 
 
-def test_m1_metrics_out_from_engine_maps_marginals_and_pairwise():
+def test_m1_metrics_out_serializes_marginals_and_pairwise():
     """M1MetricsOut built from an M1Result with 2 marginals + 1 pair serializes both."""
     from typing import cast
 

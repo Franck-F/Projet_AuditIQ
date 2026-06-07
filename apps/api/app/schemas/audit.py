@@ -85,6 +85,15 @@ class AuditCreate(BaseModel):
                     "de l'attribut protégé, de la colonne décision et de la "
                     "colonne vérité-terrain."
                 )
+            if (
+                self.protected_attributes
+                and self.secondary_protected_attribute is not None
+                and self.secondary_protected_attribute not in self.protected_attributes
+            ):
+                raise ValueError(
+                    "module M1 : ne combinez pas 'secondary_protected_attribute' "
+                    "avec 'protected_attributes'."
+                )
             if self.protected_attributes is not None:
                 attrs = self.protected_attributes
                 if not (1 <= len(attrs) <= 4):

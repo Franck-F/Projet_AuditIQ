@@ -134,6 +134,40 @@ async def test_run_m1_audit_with_secondary_attribute_roundtrip(ctx):
     assert len(fetched.metrics.pairwise) == 1
 
 
+async def test_run_m1_audit_with_protected_attributes_list_roundtrip(ctx):
+    """New path: protected_attributes=[attr1, attr2] without secondary_protected_attribute.
+
+    Asserts: 2 marginals, 1 pairwise, and the pairwise primary_attribute is persisted.
+    """
+    sm, org_id, user_id, upload, store = ctx
+    csv = (
+        "genre,origine,embauche\n"
+        + "h,fr,oui\n" * 18 + "h,fr,non\n" * 2
+        + "h,etr,oui\n" * 12 + "h,etr,non\n" * 8
+        + "f,fr,oui\n" * 12 + "f,fr,non\n" * 8
+        + "f,etr,oui\n" * 3 + "f,etr,non\n" * 17
+    ).encode()
+    async with sm() as session:
+        ds = await upload(session, org_id, user_id, csv)
+        out = await _run_m1(
+            session, store, org_id=org_id, user_id=user_id,
+            body=AuditCreate(
+                dataset_id=ds.id, title="M1 multi-attr list",
+                protected_attributes=["genre", "origine"],
+                decision_column="embauche",
+                favorable_value="oui",
+            ),
+        )
+    assert out.status == "done"
+    assert isinstance(out.metrics, M1MetricsOut)
+    assert len(out.metrics.marginals) == 2
+    assert len(out.metrics.pairwise) == 1
+    async with sm() as session:
+        fetched = await audit_service.get_audit(session, out.id, org_id=org_id)
+    assert isinstance(fetched.metrics, M1MetricsOut)
+    assert fetched.metrics.pairwise[0].primary_attribute == "genre"
+
+
 async def test_run_m1_audit_without_secondary_attribute_unchanged(ctx):
     sm, org_id, user_id, upload, store = ctx
     csv = ("genre,embauche\n" + "h,oui\n" * 20 + "h,non\n" * 20

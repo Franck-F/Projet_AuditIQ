@@ -318,8 +318,9 @@ def test_excel_m1_pairwise_section_present_and_absent():
     assert "homme" in t_with
     # pair heading (attribut names) and worst cell labels
     assert "Pire sous-groupe" in t_with or "femme" in t_with
-    # marginal DI values from pairwise entry
+    # marginal DI values from pairwise entry (primary=0.82, secondary=0.9)
     assert "0.82" in t_with
+    assert "0.9" in t_with
 
     # Per-attribute marginal sections
     assert "genre" in t_with

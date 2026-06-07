@@ -463,7 +463,10 @@ async def compute_m1_audit(
     result = run_m1(
         df,
         M1Config(
-            protected_attribute=cast(str, body.protected_attribute),
+            protected_attribute=(
+                body.protected_attribute
+                or (body.protected_attributes[0] if body.protected_attributes else "")
+            ),
             decision_column=dec_col,
             favorable_value=fav,
             privileged_value=priv,
