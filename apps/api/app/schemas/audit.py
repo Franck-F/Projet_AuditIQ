@@ -42,6 +42,7 @@ class AuditCreate(BaseModel):
     ground_truth_column: str | None = None
     secondary_protected_attribute: str | None = None
     secondary_privileged_value: str | None = None
+    protected_attributes: list[str] | None = None
     config: M2ConfigIn | None = None
     target: TargetIn | None = None
     lang: str = "fr"
@@ -51,7 +52,8 @@ class AuditCreate(BaseModel):
         if self.module == "M1":
             if self.dataset_id is None:
                 raise ValueError("module M1 : 'dataset_id' est requis.")
-            if not self.protected_attribute:
+            # At least one of protected_attribute or protected_attributes required
+            if not self.protected_attribute and not self.protected_attributes:
                 raise ValueError(
                     "module M1 : 'protected_attribute' est requis."
                 )
@@ -83,6 +85,26 @@ class AuditCreate(BaseModel):
                     "de l'attribut protégé, de la colonne décision et de la "
                     "colonne vérité-terrain."
                 )
+            if self.protected_attributes is not None:
+                attrs = self.protected_attributes
+                if not (1 <= len(attrs) <= 4):
+                    raise ValueError(
+                        "module M1 : 'protected_attributes' doit contenir "
+                        "entre 1 et 4 attributs."
+                    )
+                if len(set(attrs)) != len(attrs):
+                    raise ValueError(
+                        "module M1 : 'protected_attributes' doit contenir "
+                        "des attributs distincts."
+                    )
+                dec = self.decision_column
+                gt = self.ground_truth_column
+                for a in attrs:
+                    if a == dec or (gt is not None and a == gt):
+                        raise ValueError(
+                            f"module M1 : l'attribut protégé « {a} » doit "
+                            f"différer des colonnes décision et vérité-terrain."
+                        )
         elif self.module == "M2":
             if self.dataset_id is None:
                 raise ValueError("module M2 : 'dataset_id' est requis.")
@@ -118,6 +140,11 @@ class AuditCreate(BaseModel):
                     "module M2 : 'secondary_privileged_value' ne "
                     "s'applique pas (M1 uniquement)."
                 )
+            if self.protected_attributes is not None:
+                raise ValueError(
+                    "module M2 : 'protected_attributes' ne "
+                    "s'applique pas (M1 uniquement)."
+                )
         elif self.module == "M3":
             if self.target is None:
                 raise ValueError("module M3 : 'target' est requis.")
@@ -129,13 +156,14 @@ class AuditCreate(BaseModel):
                 or self.ground_truth_column is not None
                 or self.secondary_protected_attribute is not None
                 or self.secondary_privileged_value is not None
+                or self.protected_attributes is not None
                 or self.config is not None
             ):
                 raise ValueError(
                     "module M3 : 'protected_attribute'/'decision_column'/"
                     "'favorable_value'/'privileged_value'/'ground_truth_column'/"
                     "'secondary_protected_attribute'/'secondary_privileged_value'/"
-                    "'config' ne s'appliquent pas."
+                    "'protected_attributes'/'config' ne s'appliquent pas."
                 )
         return self
 
@@ -186,6 +214,28 @@ class IntersectionalOut(BaseModel):
     equalized_odds_verdict: Verdict | None = None
     warnings: list[str] = []
     reason: str | None = None
+    primary_attribute: str = ""
+    secondary_attribute: str = ""
+
+
+class MarginalOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    attribute: str
+    groups: list[GroupStatOut]
+    reference_value: str
+    disparate_impact: float
+    demographic_parity_diff: float
+    worst_group: str
+    verdict: Verdict
+    risk_score: int
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
+    demographic_parity_verdict: Verdict | None = None
+    equal_opportunity_verdict: Verdict | None = None
+    equalized_odds_verdict: Verdict | None = None
+    truelabel_reason: str | None = None
+    warnings: list[str] = []
 
 
 class M1MetricsOut(BaseModel):
@@ -205,7 +255,8 @@ class M1MetricsOut(BaseModel):
     equal_opportunity_verdict: Verdict | None = None
     equalized_odds_verdict: Verdict | None = None
     truelabel_reason: str | None = None
-    intersectional: IntersectionalOut | None = None
+    marginals: list[MarginalOut] = []
+    pairwise: list[IntersectionalOut] = []
 
 
 class FeatureContributionOut(BaseModel):
