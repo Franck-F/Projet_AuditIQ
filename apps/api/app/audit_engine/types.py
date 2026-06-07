@@ -17,6 +17,11 @@ class M1Config:
     ground_truth_column: str | None = None
     secondary_protected_attribute: str | None = None
     secondary_privileged_value: object | None = None
+    protected_attributes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "protected_attributes",
+                           tuple(self.protected_attributes))
 
 
 @dataclass(frozen=True)
@@ -28,6 +33,29 @@ class GroupStat:
     disparate_impact: float
     tpr: float | None = None
     fpr: float | None = None
+
+
+@dataclass(frozen=True)
+class MarginalResult:
+    attribute: str
+    groups: tuple[GroupStat, ...]
+    reference_value: str
+    disparate_impact: float
+    demographic_parity_diff: float
+    worst_group: str
+    verdict: str
+    risk_score: int
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
+    demographic_parity_verdict: str | None = None
+    equal_opportunity_verdict: str | None = None
+    equalized_odds_verdict: str | None = None
+    truelabel_reason: str | None = None
+    warnings: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "groups", tuple(self.groups))
+        object.__setattr__(self, "warnings", tuple(self.warnings))
 
 
 @dataclass(frozen=True)
@@ -46,11 +74,14 @@ class M1Result:
     equal_opportunity_verdict: str | None = None
     equalized_odds_verdict: str | None = None
     truelabel_reason: str | None = None
-    intersectional: IntersectionalResult | None = None
+    marginals: tuple[MarginalResult, ...] = ()
+    pairwise: tuple[IntersectionalResult, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "groups", tuple(self.groups))
         object.__setattr__(self, "warnings", tuple(self.warnings))
+        object.__setattr__(self, "marginals", tuple(self.marginals))
+        object.__setattr__(self, "pairwise", tuple(self.pairwise))
 
 
 @dataclass(frozen=True)
@@ -85,6 +116,8 @@ class IntersectionalResult:
     equalized_odds_verdict: str | None = None
     warnings: tuple[str, ...] = ()
     reason: str | None = None
+    primary_attribute: str = ""
+    secondary_attribute: str = ""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "cells", tuple(self.cells))
