@@ -71,16 +71,52 @@ def _metrics_json(result: M1Result) -> str:
         data["equalized_odds_verdict"] = result.equalized_odds_verdict
         if result.truelabel_reason is not None:
             data["truelabel_reason"] = result.truelabel_reason
-    if result.intersectional is not None:
-        ix = result.intersectional
-        data["intersectional"] = {
-            "worst_primary": ix.worst_primary,
-            "worst_secondary": ix.worst_secondary,
-            "disparate_impact": ix.disparate_impact,
-            "marginal_di": list(ix.marginal_di),
-            "verdict": ix.verdict,
-            "risk_score": ix.risk_score,
-        }
+    if result.marginals:
+        data["marginals"] = [
+            {
+                "attribute": m.attribute,
+                "disparate_impact": m.disparate_impact,
+                "demographic_parity_diff": m.demographic_parity_diff,
+                "verdict": m.verdict,
+                "risk_score": m.risk_score,
+                "worst_group": m.worst_group,
+                "reference_value": m.reference_value,
+                "groups": [
+                    {
+                        "value": g.value,
+                        "n": g.n,
+                        "selection_rate": g.selection_rate,
+                        "disparate_impact": g.disparate_impact,
+                        **({"tpr": g.tpr, "fpr": g.fpr} if g.tpr is not None else {}),
+                    }
+                    for g in m.groups
+                ],
+                **(
+                    {
+                        "equal_opportunity_diff": m.equal_opportunity_diff,
+                        "equalized_odds_diff": m.equalized_odds_diff,
+                    }
+                    if m.equal_opportunity_diff is not None
+                    else {}
+                ),
+            }
+            for m in result.marginals
+        ]
+    if result.pairwise:
+        data["pairwise"] = [
+            {
+                "primary_attribute": p.primary_attribute,
+                "secondary_attribute": p.secondary_attribute,
+                "disparate_impact": p.disparate_impact,
+                "demographic_parity_diff": p.demographic_parity_diff,
+                "marginal_di": list(p.marginal_di),
+                "verdict": p.verdict,
+                "risk_score": p.risk_score,
+                "worst_primary": p.worst_primary,
+                "worst_secondary": p.worst_secondary,
+            }
+            for p in result.pairwise
+        ]
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -133,14 +169,33 @@ def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
         narrative += eo_narrative
         disclaimers.append(_TRUELABEL_DISCLAIMER)
 
-    if result.intersectional is not None:
-        ix = result.intersectional
-        marginal_di_primary, marginal_di_secondary = ix.marginal_di
+    if result.marginals:
+        # Describe the worst marginal across all attributes
+        worst_m = max(result.marginals, key=lambda m: m.risk_score)
+        if len(result.marginals) > 1:
+            attrs_list = ", ".join(
+                f"« {m.attribute} »" for m in result.marginals
+            )
+            narrative += (
+                f" L'analyse porte sur {len(result.marginals)} attributs protégés : "
+                f"{attrs_list}. "
+                f"L'attribut le plus problématique est « {worst_m.attribute} » "
+                f"(Disparate Impact : {worst_m.disparate_impact}, "
+                f"groupe le plus défavorisé : « {worst_m.worst_group} »)."
+            )
+
+    if result.pairwise:
+        # Describe the worst pairwise crossing (Gender Shades framing)
+        worst_p = max(result.pairwise, key=lambda p: p.risk_score)
+        marginal_di = list(worst_p.marginal_di)
+        marginal_di_primary = marginal_di[0] if len(marginal_di) > 0 else "?"
+        marginal_di_secondary = marginal_di[1] if len(marginal_di) > 1 else "?"
         ix_narrative = (
-            f" L'analyse intersectionnelle (croisement des deux attributs protégés) "
+            f" L'analyse intersectionnelle (croisement "
+            f"« {worst_p.primary_attribute} × {worst_p.secondary_attribute} ») "
             f"révèle que le sous-groupe croisé le plus défavorisé est "
-            f"« {ix.worst_primary} × {ix.worst_secondary} », "
-            f"avec un Disparate Impact de {ix.disparate_impact}. "
+            f"« {worst_p.worst_primary} × {worst_p.worst_secondary} », "
+            f"avec un Disparate Impact de {worst_p.disparate_impact}. "
             f"En comparaison, les DI marginaux de chaque attribut pris séparément "
             f"({marginal_di_primary} et {marginal_di_secondary}) paraissent bien "
             f"moins sévères — c'est l'effet Gender Shades : l'intersection amplifie "
