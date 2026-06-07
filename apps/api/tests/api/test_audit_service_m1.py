@@ -123,13 +123,15 @@ async def test_run_m1_audit_with_secondary_attribute_roundtrip(ctx):
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
-    assert out.metrics.intersectional is not None
-    assert len(out.metrics.intersectional.cells) == 4
+    # With secondary_protected_attribute, engine produces 2 marginals + 1 pairwise
+    assert len(out.metrics.marginals) == 2
+    assert len(out.metrics.pairwise) == 1
+    assert len(out.metrics.pairwise[0].cells) == 4
     async with sm() as session:
         fetched = await audit_service.get_audit(session, out.id,
                                                 org_id=org_id)
     assert isinstance(fetched.metrics, M1MetricsOut)
-    assert fetched.metrics.intersectional is not None
+    assert len(fetched.metrics.pairwise) == 1
 
 
 async def test_run_m1_audit_without_secondary_attribute_unchanged(ctx):
@@ -149,4 +151,6 @@ async def test_run_m1_audit_without_secondary_attribute_unchanged(ctx):
         )
     assert out.status == "done"
     assert isinstance(out.metrics, M1MetricsOut)
-    assert out.metrics.intersectional is None
+    # Single attribute: 1 marginal, no pairwise
+    assert len(out.metrics.marginals) == 1
+    assert out.metrics.pairwise == []
