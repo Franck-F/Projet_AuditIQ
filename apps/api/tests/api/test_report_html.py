@@ -313,9 +313,14 @@ def _intersectional_out() -> IntersectionalOut:
     )
 
 
-def _m1_with_intersectional() -> AuditOut:
+def _m1_with_pairwise() -> AuditOut:
+    from app.schemas.audit import MarginalOut
+    ix = _intersectional_out()
+    ix_with_attrs = ix.model_copy(
+        update={"primary_attribute": "genre", "secondary_attribute": "origine"}
+    )
     return AuditOut(
-        id=uuid.uuid4(), code="AUD-2026-050", title="Recrutement Intersect.", status="done",
+        id=uuid.uuid4(), code="AUD-2026-050", title="Recrutement Pairwise", status="done",
         module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
         decision_column="embauche", favorable_value="oui", privileged_value=None,
         created_at=_NOW, completed_at=_NOW,
@@ -325,15 +330,33 @@ def _m1_with_intersectional() -> AuditOut:
             reference_value="H", disparate_impact=0.6,
             demographic_parity_diff=0.2, worst_group="F", verdict="fail",
             risk_score=80, warnings=[],
-            intersectional=_intersectional_out(),
+            marginals=[
+                MarginalOut(
+                    attribute="genre",
+                    groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                         selection_rate=0.3, disparate_impact=0.6)],
+                    reference_value="H", disparate_impact=0.6,
+                    demographic_parity_diff=0.2, worst_group="F",
+                    verdict="fail", risk_score=80,
+                ),
+                MarginalOut(
+                    attribute="origine",
+                    groups=[GroupStatOut(value="etr", n=50, favorable=10,
+                                         selection_rate=0.2, disparate_impact=0.4)],
+                    reference_value="fr", disparate_impact=0.82,
+                    demographic_parity_diff=0.18, worst_group="etr",
+                    verdict="warn", risk_score=50,
+                ),
+            ],
+            pairwise=[ix_with_attrs],
         ),
         interpretation=_interp(), pre_check=["Déséquilibre groupe F."],
         config=None,
     )
 
 
-def test_html_m1_intersectional_section_present():
-    h = build_report_html(_m1_with_intersectional())
+def test_html_m1_pairwise_section_present():
+    h = build_report_html(_m1_with_pairwise())
     # Crossed subgroup values present
     assert "etr" in h
     assert "femme" in h
@@ -343,14 +366,19 @@ def test_html_m1_intersectional_section_present():
     assert "0.9" in h
     # worst cell labels
     assert "femme" in h
+    # per-attribute sections
+    assert "genre" in h
+    assert "origine" in h
+    # pair heading
+    assert "genre" in h and "origine" in h
     # existing M1 content still present
     assert "Disparate Impact" in h
     assert "AUD-2026-050" in h
 
 
-def test_html_m1_intersectional_section_absent():
+def test_html_m1_pairwise_section_absent():
     h = build_report_html(_m1())
-    # no intersectional section
+    # no pairwise section
     assert "intersectionnel" not in h
     assert "etr" not in h
     # existing M1 content unchanged
@@ -358,11 +386,11 @@ def test_html_m1_intersectional_section_absent():
     assert "AUD-2026-001" in h
 
 
-def test_html_m1_intersectional_escapes_hostile_primary_value():
-    """primary_value with HTML tags must be _e-escaped in the intersectional section."""
+def test_html_m1_pairwise_escapes_hostile_primary_value():
+    """primary_value with HTML tags must be _e-escaped in the pairwise section."""
     hostile_primary = "<b>femme</b>"
     audit = AuditOut(
-        id=uuid.uuid4(), code="AUD-2026-060", title="XSS Intersect.", status="done",
+        id=uuid.uuid4(), code="AUD-2026-060", title="XSS Pairwise", status="done",
         module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
         decision_column="embauche", favorable_value="oui", privileged_value=None,
         created_at=_NOW, completed_at=_NOW,
@@ -372,7 +400,7 @@ def test_html_m1_intersectional_escapes_hostile_primary_value():
             reference_value="H", disparate_impact=0.6,
             demographic_parity_diff=0.2, worst_group="F", verdict="fail",
             risk_score=80, warnings=[],
-            intersectional=IntersectionalOut(
+            pairwise=[IntersectionalOut(
                 cells=[
                     IntersectionalCellOut(
                         primary_value=hostile_primary, secondary_value="etr",
@@ -389,7 +417,9 @@ def test_html_m1_intersectional_escapes_hostile_primary_value():
                 verdict="fail",
                 risk_score=75,
                 marginal_di=[0.82, 0.9],
-            ),
+                primary_attribute="genre",
+                secondary_attribute="origine",
+            )],
         ),
         interpretation=_interp(), pre_check=[], config=None,
     )

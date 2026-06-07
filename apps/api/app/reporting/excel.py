@@ -174,13 +174,58 @@ def build_excel_report(audit: AuditOut) -> bytes:
                          "technique."],
                     ],
                 )
-        if m.intersectional is not None:
-            ix = m.intersectional
+        for marg in m.marginals:
             _rows(
                 detail,
                 [
                     [],
-                    ["Analyse intersectionnelle"],
+                    [f"Attribut protégé : {marg.attribute}"],
+                    ["Disparate Impact", marg.disparate_impact],
+                    ["Demographic Parity (écart)", marg.demographic_parity_diff],
+                    ["Groupe le plus défavorisé", marg.worst_group],
+                    ["Référence", marg.reference_value],
+                    ["Verdict", marg.verdict],
+                    ["Score de risque", marg.risk_score],
+                    [],
+                    ["Groupe", "Effectif", "Favorables", "Taux", "DI"],
+                ],
+            )
+            for g in marg.groups:
+                detail.append(
+                    [g.value, g.n, g.favorable, g.selection_rate,
+                     g.disparate_impact]
+                )
+            if marg.equal_opportunity_diff is not None:
+                _rows(
+                    detail,
+                    [
+                        [],
+                        ["Equal Opportunity (écart TPR)",
+                         marg.equal_opportunity_diff,
+                         "Verdict EO",
+                         marg.equal_opportunity_verdict or "—"],
+                        ["Equalized Odds (écart max TPR/FPR)",
+                         marg.equalized_odds_diff,
+                         "Verdict Eq. Odds",
+                         marg.equalized_odds_verdict or "—"],
+                    ],
+                )
+            if marg.warnings:
+                for w in marg.warnings:
+                    detail.append(["Avertissement", w])
+            if marg.truelabel_reason is not None:
+                _rows(detail, [["Note vérité-terrain", marg.truelabel_reason]])
+        for ix in m.pairwise:
+            pair_title = (
+                f"{ix.primary_attribute} × {ix.secondary_attribute}"
+                if ix.primary_attribute
+                else "Analyse intersectionnelle"
+            )
+            _rows(
+                detail,
+                [
+                    [],
+                    [f"Croisement : {pair_title}"],
                     ["Disparate Impact intersectionnel", ix.disparate_impact],
                     ["Demographic Parity (écart intersectionnel)",
                      ix.demographic_parity_diff],

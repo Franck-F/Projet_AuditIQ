@@ -262,9 +262,15 @@ def _intersectional_out() -> IntersectionalOut:
     )
 
 
-def _m1_audit_with_intersectional() -> AuditOut:
+def _m1_audit_with_pairwise() -> AuditOut:
+    from app.schemas.audit import MarginalOut
+    ix = _intersectional_out()
+    # set attribute names for the pairwise entry
+    ix_with_attrs = ix.model_copy(
+        update={"primary_attribute": "genre", "secondary_attribute": "origine"}
+    )
     return AuditOut(
-        id=uuid.uuid4(), code="AUD-2026-050", title="Recrutement Intersect.", status="done",
+        id=uuid.uuid4(), code="AUD-2026-050", title="Recrutement Pairwise", status="done",
         module="M1", dataset_id=uuid.uuid4(), protected_attribute="genre",
         decision_column="embauche", favorable_value="oui", privileged_value=None,
         created_at=_NOW, completed_at=_NOW,
@@ -274,37 +280,59 @@ def _m1_audit_with_intersectional() -> AuditOut:
             reference_value="H", disparate_impact=0.6,
             demographic_parity_diff=0.2, worst_group="F", verdict="fail",
             risk_score=80, warnings=[],
-            intersectional=_intersectional_out(),
+            marginals=[
+                MarginalOut(
+                    attribute="genre",
+                    groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                         selection_rate=0.3, disparate_impact=0.6)],
+                    reference_value="H", disparate_impact=0.6,
+                    demographic_parity_diff=0.2, worst_group="F",
+                    verdict="fail", risk_score=80,
+                ),
+                MarginalOut(
+                    attribute="origine",
+                    groups=[GroupStatOut(value="etr", n=50, favorable=10,
+                                         selection_rate=0.2, disparate_impact=0.4)],
+                    reference_value="fr", disparate_impact=0.82,
+                    demographic_parity_diff=0.18, worst_group="etr",
+                    verdict="warn", risk_score=50,
+                ),
+            ],
+            pairwise=[ix_with_attrs],
         ),
         interpretation=_interp(), pre_check=["Déséquilibre groupe F."],
         config=None,
     )
 
 
-def test_excel_m1_intersectional_section_present_and_absent():
-    b_with = build_excel_report(_m1_audit_with_intersectional())
+def test_excel_m1_pairwise_section_present_and_absent():
+    b_with = build_excel_report(_m1_audit_with_pairwise())
     b_without = build_excel_report(_m1_audit())
 
     t_with = _text(b_with)
     t_without = _text(b_without)
 
-    # Intersectional section present: crossed subgroup values
+    # Pairwise section present: crossed subgroup values
     assert "etr" in t_with
     assert "femme" in t_with
     assert "homme" in t_with
-    # worst cell labels
-    assert "worst_primary" in t_with.lower() or "Pire sous-groupe" in t_with or "femme" in t_with
-    # marginal DI values
+    # pair heading (attribut names) and worst cell labels
+    assert "Pire sous-groupe" in t_with or "femme" in t_with
+    # marginal DI values from pairwise entry
     assert "0.82" in t_with
-    assert "0.9" in t_with
+
+    # Per-attribute marginal sections
+    assert "genre" in t_with
+    assert "origine" in t_with
+    assert "Attribut protégé" in t_with
 
     # Existing M1 cells present in BOTH
     assert "Disparate Impact" in t_with
     assert "Disparate Impact" in t_without
 
-    # No intersectional section when absent
-    assert "etr" not in t_without
+    # No pairwise section when absent (no pairwise list)
     assert "intersectionnel" not in t_without.lower()
+    assert "etr" not in t_without
 
 
 def _interp_with_recommendations(

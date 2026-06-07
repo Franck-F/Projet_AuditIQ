@@ -46,10 +46,10 @@ from app.schemas.audit import (
     InterpretationOut,
     IntersectionalCellOut,
     IntersectionalOut,
-    MarginalOut,
     M1MetricsOut,
     M2MetricsOut,
     M3MetricsOut,
+    MarginalOut,
     Verdict,
 )
 from app.services.dataset_service import get_dataset

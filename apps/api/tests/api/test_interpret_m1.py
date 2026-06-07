@@ -75,8 +75,8 @@ async def test_interpret_m1_fallback_mentions_pairwise_contrast():
     from app.audit_engine.types import (
         IntersectionalCell,
         IntersectionalResult,
-        MarginalResult,
         M1Result,
+        MarginalResult,
     )
     from app.interpretation.m1 import interpret_m1
 

@@ -87,11 +87,15 @@ def test_m1_metrics_out_has_marginals_and_pairwise():
 def test_m1_metrics_out_from_engine_maps_marginals_and_pairwise():
     """M1MetricsOut built from an M1Result with 2 marginals + 1 pair serializes both."""
     from typing import cast
+
     from app.audit_engine.types import (
-        GroupStat, IntersectionalCell, IntersectionalResult,
-        MarginalResult, M1Result,
+        GroupStat,
+        IntersectionalCell,
+        IntersectionalResult,
+        M1Result,
+        MarginalResult,
     )
-    from app.schemas.audit import MarginalOut, IntersectionalOut, GroupStatOut, Verdict
+    from app.schemas.audit import GroupStatOut, IntersectionalOut, MarginalOut, Verdict
 
     g1 = GroupStat("H", 60, 40, 0.667, 1.0)
     g2 = GroupStat("F", 60, 24, 0.4, 0.6)
