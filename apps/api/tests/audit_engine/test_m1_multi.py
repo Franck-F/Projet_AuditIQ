@@ -74,3 +74,25 @@ def test_run_intersectional_pair_labels_attributes():
     assert r.primary_attribute == "sexe"
     assert r.secondary_attribute == "age"
     assert len(r.cells) >= 2
+
+
+# ---------------------------------------------------------------------------
+# Task 3: _marginal_audit
+# ---------------------------------------------------------------------------
+
+from app.audit_engine.m1_supervised import _marginal_audit, run_m1  # noqa: E402
+
+
+def test_marginal_audit_matches_single_run_m1():
+    df = pd.read_csv(
+        Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv"
+    )
+    cfg = M1Config(protected_attribute="sexe", decision_column="embauche",
+                   favorable_value="oui", privileged_value="H")
+    single = run_m1(df, cfg)                     # current top-level == this attr
+    m = _marginal_audit(df, cfg, "sexe", is_primary=True)
+    assert m.attribute == "sexe"
+    assert m.disparate_impact == single.disparate_impact
+    assert m.demographic_parity_diff == single.demographic_parity_diff
+    assert m.verdict == single.verdict
+    assert m.reference_value == single.reference_value
