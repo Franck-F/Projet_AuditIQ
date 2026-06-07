@@ -9,6 +9,7 @@ import pytest
 from app.audit_engine.errors import DatasetValidationError
 from app.audit_engine.intersectional import run_intersectional_pair
 from app.audit_engine.m1_supervised import _marginal_audit, run_m1
+from app.audit_engine.metrics import VERDICT_ORDER
 from app.audit_engine.types import (
     GroupStat,
     IntersectionalResult,
@@ -108,7 +109,7 @@ def _attrs_cfg(attrs, **kw):
                     **kw)
 
 
-def test_run_m1_three_attributes_marginals_and_pairs():
+def test_run_m1_two_attributes_marginals_and_pairs():
     df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
     # use the two real categoricals available in the fixture
     cfg = _attrs_cfg(["sexe", "diplome"])
@@ -119,15 +120,44 @@ def test_run_m1_three_attributes_marginals_and_pairs():
     assert r.pairwise[0].secondary_attribute == "diplome"
 
 
+def test_run_m1_three_attributes_produces_three_pairs():
+    """Synthetic 3-attribute dataset: 3 marginals + C(3,2)=3 pairs.
+    Each (a×x×p) combination gets 15 rows — well above min_group_error."""
+    rows = []
+    for a in ("a", "b"):
+        for x in ("x", "y"):
+            for p in ("p", "q"):
+                for decision in (["oui"] * 10 + ["non"] * 5):
+                    rows.append({"col_a": a, "col_x": x, "col_p": p, "decision": decision})
+    df = pd.DataFrame(rows)
+    cfg = M1Config(
+        protected_attribute="col_a",
+        decision_column="decision",
+        favorable_value="oui",
+        protected_attributes=("col_a", "col_x", "col_p"),
+    )
+    r = run_m1(df, cfg)
+    assert len(r.marginals) == 3
+    assert [m.attribute for m in r.marginals] == ["col_a", "col_x", "col_p"]
+    assert len(r.pairwise) == 3  # C(3,2)
+    pair_labels = {
+        (p.primary_attribute, p.secondary_attribute) for p in r.pairwise
+    }
+    assert pair_labels == {
+        ("col_a", "col_x"),
+        ("col_a", "col_p"),
+        ("col_x", "col_p"),
+    }
+
+
 def test_run_m1_aggregate_verdict_is_worst():
     df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
     r = run_m1(df, _attrs_cfg(["sexe", "diplome"]))
-    order = {"pass": 0, "warn": 1, "fail": 2}
     worst = max(
-        [order[m.verdict] for m in r.marginals]
-        + [order[p.verdict] for p in r.pairwise]
+        [VERDICT_ORDER[m.verdict] for m in r.marginals]
+        + [VERDICT_ORDER[p.verdict] for p in r.pairwise]
     )
-    assert order[r.verdict] == worst
+    assert VERDICT_ORDER[r.verdict] == worst
     assert r.risk_score == max(
         [m.risk_score for m in r.marginals] + [p.risk_score for p in r.pairwise]
     )
@@ -148,9 +178,21 @@ def test_run_m1_single_attribute_backward_compatible():
 
 
 def test_run_m1_rejects_more_than_four_attributes():
-    df = pd.read_csv(Path(__file__).parent / "fixtures" / "m1-recrutement-biais.csv")
-    cfg = M1Config(protected_attribute="sexe", decision_column="embauche",
-                   favorable_value="oui",
-                   protected_attributes=("a", "b", "c", "d", "e"))
+    """Synthetic DataFrame with all 5 protected columns present so the cap,
+    not a missing-column error, is what triggers DatasetValidationError."""
+    df = pd.DataFrame({
+        "a": ["x", "y"] * 20,
+        "b": ["p", "q"] * 20,
+        "c": ["r", "s"] * 20,
+        "d": ["t", "u"] * 20,
+        "e": ["v", "w"] * 20,
+        "decision": ["oui", "non"] * 20,
+    })
+    cfg = M1Config(
+        protected_attribute="a",
+        decision_column="decision",
+        favorable_value="oui",
+        protected_attributes=("a", "b", "c", "d", "e"),
+    )
     with pytest.raises(DatasetValidationError):
         run_m1(df, cfg)

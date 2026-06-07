@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from .errors import DatasetValidationError
 from .metrics import (
     decide_verdict,
     gap_verdict,
@@ -205,7 +206,11 @@ def run_intersectional(
 ) -> IntersectionalResult:
     """Backward-compat wrapper: cross config.protected_attribute x
     config.secondary_protected_attribute."""
-    assert config.secondary_protected_attribute is not None  # caller guarantees
+    if config.secondary_protected_attribute is None:
+        raise DatasetValidationError(
+            "run_intersectional requiert secondary_protected_attribute.",
+            field="secondary_protected_attribute",
+        )
     return run_intersectional_pair(
         df, config,
         config.protected_attribute,

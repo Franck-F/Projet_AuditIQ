@@ -8,6 +8,7 @@ import pandas as pd
 from .errors import DatasetValidationError
 from .intersectional import run_intersectional_pair
 from .metrics import (
+    VERDICT_ORDER,
     decide_verdict,
     demographic_parity_diff,
     disparate_impacts,
@@ -29,6 +30,7 @@ def _marginal_audit(
     attribute: str,
     *,
     is_primary: bool,
+    error_field: str = "protected_attribute",
 ) -> MarginalResult:
     """Compute per-attribute M1 metrics, returning a MarginalResult.
 
@@ -41,7 +43,7 @@ def _marginal_audit(
     if pa not in df.columns:
         raise DatasetValidationError(
             f"Colonne attribut protégé « {pa} » absente du jeu de données.",
-            field="protected_attribute",
+            field=error_field,
         )
     if dc not in df.columns:
         raise DatasetValidationError(
@@ -79,7 +81,7 @@ def _marginal_audit(
         raise DatasetValidationError(
             f"L'attribut protégé doit avoir au moins 2 groupes, trouvé "
             f"{len(groups)}.",
-            field="protected_attribute",
+            field=error_field,
         )
 
     privileged = (
@@ -104,7 +106,7 @@ def _marginal_audit(
             raise DatasetValidationError(
                 f"Effectif insuffisant (n={n} < {config.min_group_error}) "
                 f"pour le groupe « {g} » — audit non fiable.",
-                field="protected_attribute",
+                field=error_field,
             )
         if n < config.min_group_warn:
             warnings.append(
@@ -240,6 +242,11 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     worst of all marginals and pairs; top-level fields mirror the first
     marginal (backward-compat for 1-attribute calls).
 
+    ``protected_attributes`` takes precedence over the legacy
+    ``protected_attribute`` / ``secondary_protected_attribute`` pair.
+    When ``protected_attributes`` is set, ``secondary_protected_attribute``
+    must not be set simultaneously (raises DatasetValidationError).
+
     Value-comparison contract: the protected and decision columns are
     compared as strings via ``astype(str)``. ``favorable_value`` and
     ``privileged_value`` are matched using ``str(value)``. Callers must
@@ -254,6 +261,17 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
     # resolve attribute list (source of truth = protected_attributes,
     # else derive from primary + optional secondary — backward compat)
     if config.protected_attributes:
+        # guard: secondary_protected_attribute must not be combined with the list
+        if (
+            config.secondary_protected_attribute is not None
+            and config.secondary_protected_attribute
+            not in config.protected_attributes
+        ):
+            raise DatasetValidationError(
+                "Ne combinez pas 'secondary_protected_attribute' avec "
+                "'protected_attributes' ; utilisez la liste.",
+                field="protected_attributes",
+            )
         attrs = list(config.protected_attributes)
     else:
         attrs = [config.protected_attribute]
@@ -295,7 +313,13 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
             )
 
     marginals = [
-        _marginal_audit(df, config, a, is_primary=(i == 0))
+        _marginal_audit(
+            df, config, a, is_primary=(i == 0),
+            error_field=(
+                "protected_attributes" if config.protected_attributes
+                else "protected_attribute"
+            ),
+        )
         for i, a in enumerate(attrs)
     ]
     pairwise = [
@@ -303,9 +327,8 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         for a, b in combinations(attrs, 2)
     ]
 
-    order = {"pass": 0, "warn": 1, "fail": 2}
     verdicts = [m.verdict for m in marginals] + [p.verdict for p in pairwise]
-    agg_verdict = max(verdicts, key=lambda v: order[v])
+    agg_verdict = max(verdicts, key=lambda v: VERDICT_ORDER[v])
     agg_risk = max(
         [m.risk_score for m in marginals] + [p.risk_score for p in pairwise]
     )
