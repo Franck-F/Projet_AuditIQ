@@ -143,7 +143,7 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     await waitFor(() => screen.getByText(/Analyse automatique/i));
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
-    // Step 3: decision_column + favorable_value + protected_attribute
+    // Step 3: decision_column + favorable_value + protected_attributes (checkbox)
     await user.selectOptions(
       screen.getByRole('combobox', { name: /Colonne de décision/i }),
       'approved',
@@ -152,10 +152,12 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
       screen.getByRole('combobox', { name: /Valeur favorable/i }),
       '1',
     );
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: /Attribut protégé/i }),
-      'sex',
-    );
+    // protected_attributes is now a checkbox group — pre-selected by analysis prefill
+    // The analysis suggests 'sex', so it should be pre-selected; verify and advance
+    await waitFor(() => {
+      const sexCheckbox = screen.getByRole('checkbox', { name: /sex/i });
+      expect(sexCheckbox).toBeInTheDocument();
+    });
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 4: metrics info — just advance
@@ -172,7 +174,7 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
           title: 'Test M1',
           decision_column: 'approved',
           favorable_value: '1',
-          protected_attribute: 'sex',
+          protected_attributes: expect.arrayContaining(['sex']),
         }),
       ),
     );

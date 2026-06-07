@@ -51,6 +51,23 @@ const M1_FIXTURE = {
     verdict: 'fail' as const,
     risk_score: 72,
     warnings: [],
+    marginals: [
+      {
+        attribute: 'genre',
+        groups: [
+          { value: 'Hommes', n: 286, favorable: 107, selection_rate: 0.375, disparate_impact: 1.0 },
+          { value: 'Femmes', n: 126, favorable: 34, selection_rate: 0.27, disparate_impact: 0.72 },
+        ],
+        reference_value: 'Hommes',
+        disparate_impact: 0.72,
+        demographic_parity_diff: 0.105,
+        worst_group: 'Femmes',
+        verdict: 'fail' as const,
+        risk_score: 72,
+        warnings: [],
+      },
+    ],
+    pairwise: [],
   },
   interpretation: {
     narrative: 'Les candidatures Femmes sont sélectionnées 28 % moins souvent que les Hommes.',

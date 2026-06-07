@@ -66,35 +66,51 @@ describe('Unified Step4Verify', () => {
       expect(screen.getByText(/Equalized Odds/i)).toBeInTheDocument();
     });
 
-    it('does NOT show intersectional bullet when secondary_protected_attribute is empty', () => {
+    it('does NOT show intersectional bullet when only one protected_attribute is selected', () => {
       render(
         <WizardProvider totalSteps={5}>
           <Harness
             initial={{
               audit_type: 'tabular-known',
-              secondary_protected_attribute: '',
+              protected_attributes: ['sexe'],
             }}
           />
         </WizardProvider>,
       );
       expect(
-        screen.queryByText(/Analyse intersectionnelle/i),
+        screen.queryByText(/Analyse intersectionnelle par paire/i),
       ).not.toBeInTheDocument();
     });
 
-    it('shows intersectional bullet when secondary_protected_attribute is set', () => {
+    it('shows intersectional bullet when two or more protected_attributes are selected', () => {
       render(
         <WizardProvider totalSteps={5}>
           <Harness
             initial={{
               audit_type: 'tabular-known',
-              secondary_protected_attribute: 'age',
+              protected_attributes: ['sexe', 'age'],
             }}
           />
         </WizardProvider>,
       );
       expect(
-        screen.getByText(/Analyse intersectionnelle/i),
+        screen.getByText(/Analyse intersectionnelle par paire/i),
+      ).toBeInTheDocument();
+    });
+
+    it('shows marginal analysis bullet when protected_attributes is set', () => {
+      render(
+        <WizardProvider totalSteps={5}>
+          <Harness
+            initial={{
+              audit_type: 'tabular-known',
+              protected_attributes: ['sexe', 'age'],
+            }}
+          />
+        </WizardProvider>,
+      );
+      expect(
+        screen.getByText(/Analyse marginale par attribut/i),
       ).toBeInTheDocument();
     });
   });

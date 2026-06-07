@@ -29,10 +29,9 @@ describe('Step5Review — tabular-known (M1)', () => {
     title: 'Audit RH Q1 2026',
     decision_column: 'approved',
     favorable_value: '1',
-    protected_attribute: 'sex',
+    protected_attributes: ['sex'],
     privileged_value: 'M',
     ground_truth_column: '',
-    secondary_protected_attribute: '',
   });
 
   it('shows title and sector label', () => {
@@ -73,13 +72,13 @@ describe('Step5Review — tabular-known (M1)', () => {
     expect(screen.getByText(/Equalized Odds/i)).toBeInTheDocument();
   });
 
-  it('shows intersectional analysis when secondary_protected_attribute is provided', () => {
-    const v = makeValues({ ...values, secondary_protected_attribute: 'age' });
+  it('shows intersectional analysis when 2+ protected_attributes are provided', () => {
+    const v = makeValues({ ...values, protected_attributes: ['sex', 'age'] });
     render(<Step5Review values={v} dataset={dataset} />);
     expect(screen.getByText(/Analyse intersectionnelle/i)).toBeInTheDocument();
   });
 
-  it('does NOT show intersectional analysis when secondary_protected_attribute is empty', () => {
+  it('does NOT show intersectional analysis when only one protected_attribute is selected', () => {
     render(<Step5Review values={values} dataset={dataset} />);
     expect(screen.queryByText(/Analyse intersectionnelle/i)).not.toBeInTheDocument();
   });

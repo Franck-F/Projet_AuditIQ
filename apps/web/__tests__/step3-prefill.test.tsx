@@ -87,10 +87,9 @@ describe('Step3 prefill', () => {
       expect(
         (screen.getByRole('combobox', { name: 'Colonne de décision' }) as HTMLSelectElement).value,
       ).toBe('embauche');
-      // Use the select id directly since 'Attribut protégé' aria-label is exact
-      expect(
-        (screen.getByRole('combobox', { name: 'Attribut protégé' }) as HTMLSelectElement).value,
-      ).toBe('sexe');
+      // protected_attributes is now a checkbox group — suggested attribute should be pre-checked
+      const sexCheckbox = screen.getByRole('checkbox', { name: 'sexe' }) as HTMLInputElement;
+      expect(sexCheckbox.checked).toBe(true);
     });
   });
 

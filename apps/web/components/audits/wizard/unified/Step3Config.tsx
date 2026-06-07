@@ -14,6 +14,8 @@ type StringField = keyof {
   [K in keyof UnifiedValues as UnifiedValues[K] extends string ? K : never]: string;
 };
 
+const MAX_PROTECTED_ATTRIBUTES = 4;
+
 function SuggestedBadge({ confidence }: { confidence: number }): React.ReactElement {
   return (
     <span className="ml-2 text-xs font-normal text-fg-muted">
@@ -47,6 +49,7 @@ function Step3ConfigM1({
   const advancedOpen = userToggled ?? analysisOpensAdvanced;
 
   const selectedDecision = useWatch({ control, name: 'decision_column' });
+  const selectedAttributes = useWatch({ control, name: 'protected_attributes' }) as string[];
 
   // Prefill from analysis — anti-clobber: only fills empty fields
   React.useEffect(() => {
@@ -58,9 +61,13 @@ function Step3ConfigM1({
     };
     setIfEmpty('decision_column', analysis.suggested_decision?.column);
     setIfEmpty('favorable_value', analysis.suggested_decision?.favorable_value);
-    setIfEmpty('protected_attribute', analysis.suggested_protected?.column);
     setIfEmpty('privileged_value', analysis.suggested_protected?.privileged_value);
     setIfEmpty('ground_truth_column', analysis.suggested_ground_truth?.column);
+    // Prefill protected_attributes to the top suggested attribute if empty
+    const currentAttrs = getValues('protected_attributes') as string[];
+    if ((!currentAttrs || currentAttrs.length === 0) && analysis.suggested_protected?.column) {
+      setValue('protected_attributes', [analysis.suggested_protected.column], { shouldDirty: false });
+    }
     // setValue/getValues are stable refs (react-hook-form guarantees this);
     // listing them would re-fire the prefill on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,6 +76,18 @@ function Step3ConfigM1({
   const columns = dataset?.columns ?? [];
   const suggestedDecision = analysis?.suggested_decision?.column ?? null;
   const suggestedProtected = analysis?.suggested_protected?.column ?? null;
+  const protectedCandidates = analysis?.protected_candidates?.map((c) => c.column) ?? [];
+
+  // All columns that are candidates or suggested (shown first in the checkbox list)
+  const candidateSet = new Set([
+    ...(suggestedProtected ? [suggestedProtected] : []),
+    ...protectedCandidates,
+  ]);
+  // Order: candidates first, then remaining columns
+  const orderedColumns = [
+    ...columns.filter((c) => candidateSet.has(c)),
+    ...columns.filter((c) => !candidateSet.has(c)),
+  ];
 
   const selectedColumnProfile = React.useMemo(() => {
     if (!analysis || !selectedDecision) return null;
@@ -82,14 +101,28 @@ function Step3ConfigM1({
     );
   }, [selectedColumnProfile]);
 
+  const currentSelected: string[] = Array.isArray(selectedAttributes) ? selectedAttributes : [];
+  const atMax = currentSelected.length >= MAX_PROTECTED_ATTRIBUTES;
+
+  const handleCheckboxChange = (col: string, checked: boolean) => {
+    const current = getValues('protected_attributes') as string[];
+    const currentArr = Array.isArray(current) ? current : [];
+    if (checked) {
+      if (currentArr.length >= MAX_PROTECTED_ATTRIBUTES) return;
+      setValue('protected_attributes', [...currentArr, col], { shouldDirty: true });
+    } else {
+      setValue('protected_attributes', currentArr.filter((c) => c !== col), { shouldDirty: true });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-fg">
         Configuration de l&apos;audit
       </h2>
       <p className="text-sm text-fg-secondary">
-        Indiquez la colonne de décision, la valeur favorable, et l&apos;attribut
-        protégé à auditer.
+        Indiquez la colonne de décision, la valeur favorable, et les attributs
+        protégés à auditer (1 à {MAX_PROTECTED_ATTRIBUTES} attributs).
       </p>
 
       {/* decision_column */}
@@ -170,35 +203,57 @@ function Step3ConfigM1({
         )}
       </div>
 
-      {/* protected_attribute */}
+      {/* protected_attributes — multi-select (checkbox list) */}
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="m1-protected"
-          className="text-sm font-medium text-fg-secondary"
-        >
-          Attribut protégé
+        <div className="text-sm font-medium text-fg-secondary">
+          Attributs protégés
           {analysis?.suggested_protected && (
             <SuggestedBadge confidence={analysis.suggested_protected.confidence} />
           )}
-        </label>
-        <select
-          id="m1-protected"
-          className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
-          {...register('protected_attribute', { required: true })}
+          <span className="ml-2 text-xs text-fg-muted">
+            {currentSelected.length}/{MAX_PROTECTED_ATTRIBUTES} sélectionné{currentSelected.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div
+          className="rounded-md border border-border-default bg-surface px-3 py-2 flex flex-col gap-1.5"
+          role="group"
+          aria-label="Attributs protégés"
           onFocus={() => setHelpKey('wizard.step3.protected_attribute')}
           onBlur={() => clearHelpKey()}
-          aria-label="Attribut protégé"
         >
-          <option value="" disabled>
-            —
-          </option>
-          {columns.map((c) => (
-            <option key={c} value={c}>
-              {c}
-              {c === suggestedProtected ? ' — Suggéré' : ''}
-            </option>
-          ))}
-        </select>
+          {orderedColumns.length === 0 && (
+            <span className="text-sm text-fg-muted">— aucune colonne disponible</span>
+          )}
+          {orderedColumns.map((col) => {
+            const isChecked = currentSelected.includes(col);
+            const isDisabled = !isChecked && atMax;
+            const isSuggested = col === suggestedProtected;
+            return (
+              <label
+                key={col}
+                className={`flex items-center gap-2.5 rounded px-1.5 py-1 text-sm cursor-pointer select-none ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface-muted'}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  disabled={isDisabled}
+                  onChange={(e) => handleCheckboxChange(col, e.target.checked)}
+                  aria-label={col}
+                  className="shrink-0"
+                />
+                <span className="text-fg">{col}</span>
+                {isSuggested && (
+                  <span className="text-xs text-fg-muted">— Suggéré</span>
+                )}
+              </label>
+            );
+          })}
+        </div>
+        {atMax && (
+          <p className="text-xs text-fg-muted">
+            Maximum {MAX_PROTECTED_ATTRIBUTES} attributs — désélectionnez un attribut pour en ajouter un autre.
+          </p>
+        )}
       </div>
 
       {/* Advanced options (collapsible) */}
@@ -228,7 +283,7 @@ function Step3ConfigM1({
                 className="text-sm font-medium text-fg-secondary"
               >
                 Groupe de référence{' '}
-                <span className="text-fg-muted">(facultatif)</span>
+                <span className="text-fg-muted">(facultatif — s&apos;applique au premier attribut)</span>
                 {analysis?.suggested_protected?.privileged_value != null && (
                   <SuggestedBadge confidence={analysis.suggested_protected.confidence} />
                 )}
@@ -262,30 +317,6 @@ function Step3ConfigM1({
                 aria-label="Vérité-terrain"
               >
                 <option value="">— aucune</option>
-                {columns.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* secondary_protected_attribute */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="m1-secondary"
-                className="text-sm font-medium text-fg-secondary"
-              >
-                Attribut protégé secondaire{' '}
-                <span className="text-fg-muted">(intersectionnel, facultatif)</span>
-              </label>
-              <select
-                id="m1-secondary"
-                className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
-                {...register('secondary_protected_attribute')}
-                aria-label="Attribut protégé secondaire"
-              >
-                <option value="">— aucun</option>
                 {columns.map((c) => (
                   <option key={c} value={c}>
                     {c}

@@ -18,10 +18,9 @@ export interface UnifiedValues {
   // Step 3
   decision_column: string;
   favorable_value: string;
-  protected_attribute: string;            // M1 only
-  privileged_value: string;               // M1 optional
+  protected_attributes: string[];          // M1 only (multi-select, 1-4 attrs)
+  privileged_value: string;               // M1 optional (applies to first attr)
   ground_truth_column: string;            // M1 optional (EO/EOdds)
-  secondary_protected_attribute: string;  // M1 optional (intersectionnel)
   preset: string;                          // M3 (openai | custom)
   body_template: string;                   // M3
   response_path: string;                   // M3
@@ -41,10 +40,9 @@ export const DEFAULT_VALUES: UnifiedValues = {
   auth_header: '',
   decision_column: '',
   favorable_value: '',
-  protected_attribute: '',
+  protected_attributes: [],
   privileged_value: '',
   ground_truth_column: '',
-  secondary_protected_attribute: '',
   preset: 'openai',
   body_template:
     '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"{prompt}"}]}',

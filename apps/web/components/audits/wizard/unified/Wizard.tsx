@@ -85,7 +85,7 @@ export function Wizard({ onComplete }: WizardProps): React.ReactElement {
             v.response_path.trim().length > 0
           );
         if (!v.decision_column || !v.favorable_value) return false;
-        if (v.audit_type === 'tabular-known' && !v.protected_attribute)
+        if (v.audit_type === 'tabular-known' && (!Array.isArray(v.protected_attributes) || v.protected_attributes.length === 0))
           return false;
         return true;
       },
@@ -113,18 +113,17 @@ export function Wizard({ onComplete }: WizardProps): React.ReactElement {
       let audit;
       if (mod === 'M1') {
         if (!dataset) return;
+        const protectedAttrs: string[] = Array.isArray(v.protected_attributes) ? v.protected_attributes : [];
         audit = await createAudit({
           dataset_id: dataset.id,
           title: v.title,
           decision_column: v.decision_column,
           favorable_value: v.favorable_value,
-          protected_attribute: v.protected_attribute,
+          protected_attributes: protectedAttrs,
+          protected_attribute: protectedAttrs[0] ?? '',
           privileged_value: v.privileged_value || null,
           ...(v.ground_truth_column
             ? { ground_truth_column: v.ground_truth_column }
-            : {}),
-          ...(v.secondary_protected_attribute
-            ? { secondary_protected_attribute: v.secondary_protected_attribute }
             : {}),
         });
       } else if (mod === 'M2') {
