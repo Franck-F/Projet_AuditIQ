@@ -1,6 +1,7 @@
 """TDD: additive fairlearn metric fields + helpers."""
 from __future__ import annotations
 
+from app.audit_engine.metrics import demographic_parity_ratio, group_confusion, truelabel_metrics
 from app.audit_engine.types import GroupStat, IntersectionalResult, MarginalResult
 
 
@@ -31,3 +32,25 @@ def test_intersectional_has_ratio_fields():
         equal_opportunity_ratio=0.5, equalized_odds_ratio=0.45,
     )
     assert r.demographic_parity_ratio == 0.4
+
+
+def test_demographic_parity_ratio():
+    assert demographic_parity_ratio({"a": 0.8, "b": 0.2}) == 0.25
+    assert demographic_parity_ratio({"a": 0.0, "b": 0.0}) == 1.0
+
+
+def test_truelabel_metrics_ratios_and_rates():
+    # group a: tp=8 fp=2 fn=2 tn=8 ; group b: tp=3 fp=7 fn=7 tn=3
+    conf = {
+        "a": {"tp": 8, "fp": 2, "fn": 2, "tn": 8},
+        "b": {"tp": 3, "fp": 7, "fn": 7, "tn": 3},
+    }
+    r = truelabel_metrics(conf, None)
+    # TPR a=0.8 b=0.3 -> ratio 0.375 ; FPR a=0.2 b=0.7 -> ratio 0.2857
+    assert round(r.eo_ratio, 4) == 0.375
+    assert round(r.eodds_ratio, 4) == round(min(0.3 / 0.8, 0.2 / 0.7), 4)
+    # per-group rates
+    assert round(r.accuracy["a"], 4) == 0.8      # (8+8)/20
+    assert round(r.precision["a"], 4) == 0.8     # 8/(8+2)
+    assert round(r.fnr["a"], 4) == 0.2           # 2/(8+2) ; ==1-TPR
+    assert round(r.fnr["b"], 4) == 0.7
