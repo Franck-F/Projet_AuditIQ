@@ -390,3 +390,138 @@ def test_excel_omits_recommendations_sheet_when_empty() -> None:
     data = build_excel_report(audit)
     wb = load_workbook(io.BytesIO(data))
     assert "Recommandations" not in wb.sheetnames
+
+
+# ---------------------------------------------------------------------------
+# Task 6 — new tests: fairlearn ratios + per-group rates in Excel
+# ---------------------------------------------------------------------------
+
+def _m1_audit_with_ratios_and_gt() -> AuditOut:
+    """Audit with 2 attributes, ground truth, ratios, and per-group rates."""
+    from app.schemas.audit import MarginalOut
+    mar_sexe = MarginalOut(
+        attribute="sexe",
+        groups=[
+            GroupStatOut(value="H", n=100, favorable=80,
+                         selection_rate=0.8, disparate_impact=1.0,
+                         tpr=0.85, fpr=0.1, fnr=0.15, accuracy=0.82,
+                         precision=0.88),
+            GroupStatOut(value="F", n=100, favorable=40,
+                         selection_rate=0.4, disparate_impact=0.5,
+                         tpr=0.5, fpr=0.3, fnr=0.5, accuracy=0.6,
+                         precision=0.7),
+        ],
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        equal_opportunity_diff=0.35,
+        equalized_odds_diff=0.35,
+        equal_opportunity_verdict="fail",
+        equalized_odds_verdict="fail",
+        demographic_parity_verdict="fail",
+        demographic_parity_ratio=0.5,
+        equal_opportunity_ratio=0.588,
+        equalized_odds_ratio=0.333,
+    )
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-R1", title="Ratios GT", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="sexe",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=mar_sexe.groups,
+            reference_value="H", disparate_impact=0.5,
+            demographic_parity_diff=0.4, worst_group="F", verdict="fail",
+            risk_score=75, warnings=[],
+            equal_opportunity_diff=0.35, equalized_odds_diff=0.35,
+            equal_opportunity_verdict="fail",
+            equalized_odds_verdict="fail",
+            demographic_parity_verdict="fail",
+            marginals=[mar_sexe],
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+
+
+def test_excel_marginal_shows_dp_ratio():
+    """Excel report must show demographic_parity_ratio in the per-attribute marginal block."""
+    t = _text(build_excel_report(_m1_audit_with_ratios_and_gt()))
+    assert "0.5" in t  # dp_ratio value
+    assert "Parité" in t or "ratio" in t.lower() or "DP ratio" in t
+
+
+def test_excel_marginal_shows_eo_eodds_ratio():
+    """Excel report shows equal_opportunity_ratio and equalized_odds_ratio when GT present."""
+    t = _text(build_excel_report(_m1_audit_with_ratios_and_gt()))
+    assert "0.588" in t  # eo_ratio
+    assert "0.333" in t  # eodds_ratio
+
+
+def test_excel_marginal_group_table_shows_fnr_accuracy_precision():
+    """Excel per-group table shows FNR, Accuracy, Precision columns when GT present."""
+    t = _text(build_excel_report(_m1_audit_with_ratios_and_gt()))
+    assert "FNR" in t or "fnr" in t.lower()
+    assert "Accuracy" in t or "accuracy" in t.lower()
+    assert "Precision" in t or "precision" in t.lower()
+    # Per-group rate values
+    assert "0.15" in t  # H group fnr
+    assert "0.82" in t  # H group accuracy
+    assert "0.88" in t  # H group precision
+
+
+def test_excel_marginal_group_table_no_extra_cols_without_gt():
+    """Without GT (no fnr/accuracy/precision), no extra rate columns are shown."""
+    t = _text(build_excel_report(_m1_audit_with_pairwise()))
+    # No fnr/accuracy/precision values in the output
+    # (the fixture _m1_audit_with_pairwise has no per-group rates)
+    # We check no "FNR" header appears in the text
+    assert "FNR" not in t
+
+
+def _m1_audit_with_pairwise_ratios() -> AuditOut:
+    """Audit with pairwise entry carrying ratio fields."""
+    ix = _intersectional_out().model_copy(update={
+        "primary_attribute": "sexe",
+        "secondary_attribute": "origine",
+        "demographic_parity_ratio": 0.4,
+        "equal_opportunity_ratio": 0.5,
+        "equalized_odds_ratio": 0.45,
+    })
+    from app.schemas.audit import MarginalOut
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-R2", title="Pairwise Ratios", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="sexe",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            marginals=[
+                MarginalOut(
+                    attribute="sexe",
+                    groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                         selection_rate=0.3, disparate_impact=0.6)],
+                    reference_value="H", disparate_impact=0.6,
+                    demographic_parity_diff=0.2, worst_group="F",
+                    verdict="fail", risk_score=80,
+                    demographic_parity_ratio=0.6,
+                ),
+            ],
+            pairwise=[ix],
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+
+
+def test_excel_pairwise_shows_ratios():
+    """Excel report shows pairwise ratio values in the intersectional block."""
+    t = _text(build_excel_report(_m1_audit_with_pairwise_ratios()))
+    assert "0.4" in t   # dp_ratio (pairwise)
+    assert "0.5" in t   # eo_ratio (pairwise)
+    assert "0.45" in t  # eodds_ratio (pairwise)

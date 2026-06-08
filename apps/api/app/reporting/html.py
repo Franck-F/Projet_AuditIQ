@@ -164,28 +164,66 @@ def _detail(audit: AuditOut) -> str:
         # Per-attribute marginal sections
         marg_parts: list[str] = []
         for marg in m.marginals:
-            marg_kv = _rows(
-                [
-                    ("Disparate Impact", marg.disparate_impact),
-                    ("Demographic Parity (écart)", marg.demographic_parity_diff),
-                    ("Groupe le plus défavorisé", marg.worst_group),
-                    ("Référence", marg.reference_value),
-                    ("Verdict", marg.verdict),
-                    ("Score de risque", marg.risk_score),
-                ]
-            )
-            marg_body = "".join(
-                f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
-                f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
-                for g in marg.groups
-            )
-            marg_html = (
-                f"<h2>Attribut protégé : {_e(marg.attribute)}</h2>"
-                f"<table class='kv'>{marg_kv}</table>"
-                f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
-                f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
-                f"<tbody>{marg_body}</tbody></table>"
-            )
+            marg_kv_data: list[tuple[str, object]] = [
+                ("Disparate Impact", marg.disparate_impact),
+                ("Demographic Parity (écart)", marg.demographic_parity_diff),
+                ("DP ratio (fairlearn)", marg.demographic_parity_ratio),
+            ]
+            if marg.equal_opportunity_ratio is not None:
+                marg_kv_data.append(
+                    ("EO ratio (fairlearn, informatif)",
+                     marg.equal_opportunity_ratio)
+                )
+            if marg.equalized_odds_ratio is not None:
+                marg_kv_data.append(
+                    ("Equalized Odds ratio (fairlearn, informatif)",
+                     marg.equalized_odds_ratio)
+                )
+            marg_kv_data += [
+                ("Groupe le plus défavorisé", marg.worst_group),
+                ("Référence", marg.reference_value),
+                ("Verdict", marg.verdict),
+                ("Score de risque", marg.risk_score),
+            ]
+            marg_kv = _rows(marg_kv_data)
+            # Per-group table: add FNR/Accuracy/Precision when GT rates present
+            has_gt_rates = any(g.fnr is not None for g in marg.groups)
+            if has_gt_rates:
+                marg_body = "".join(
+                    f"<tr><td>{_e(g.value)}</td><td>{g.n}</td>"
+                    f"<td>{g.favorable}</td>"
+                    f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td>"
+                    f"<td>{_e(g.fnr if g.fnr is not None else '—')}</td>"
+                    f"<td>{_e(g.accuracy if g.accuracy is not None else '—')}</td>"
+                    f"<td>{_e(g.precision if g.precision is not None else '—')}</td>"
+                    f"</tr>"
+                    for g in marg.groups
+                )
+                marg_html = (
+                    f"<h2>Attribut protégé : {_e(marg.attribute)}</h2>"
+                    f"<table class='kv'>{marg_kv}</table>"
+                    f"<table class='grid'><thead><tr><th>Groupe</th>"
+                    f"<th>Effectif</th><th>Favorables</th><th>Taux</th>"
+                    f"<th>DI</th><th>FNR</th><th>Accuracy</th>"
+                    f"<th>Precision</th></tr></thead>"
+                    f"<tbody>{marg_body}</tbody></table>"
+                )
+            else:
+                marg_body = "".join(
+                    f"<tr><td>{_e(g.value)}</td><td>{g.n}</td>"
+                    f"<td>{g.favorable}</td>"
+                    f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td>"
+                    f"</tr>"
+                    for g in marg.groups
+                )
+                marg_html = (
+                    f"<h2>Attribut protégé : {_e(marg.attribute)}</h2>"
+                    f"<table class='kv'>{marg_kv}</table>"
+                    f"<table class='grid'><thead><tr><th>Groupe</th>"
+                    f"<th>Effectif</th><th>Favorables</th><th>Taux</th>"
+                    f"<th>DI</th></tr></thead>"
+                    f"<tbody>{marg_body}</tbody></table>"
+                )
             if marg.equal_opportunity_diff is not None:
                 marg_eo_kv = _rows(
                     [
@@ -212,20 +250,33 @@ def _detail(audit: AuditOut) -> str:
                 if ix.primary_attribute
                 else "Analyse intersectionnelle"
             )
-            ix_kv = _rows(
-                [
-                    ("Disparate Impact intersectionnel", ix.disparate_impact),
-                    ("Demographic Parity (écart intersectionnel)",
-                     ix.demographic_parity_diff),
-                    ("Verdict intersectionnel", ix.verdict),
-                    ("Pire sous-groupe (primaire)", ix.worst_primary),
-                    ("Pire sous-groupe (secondaire)", ix.worst_secondary),
-                    ("DI marginal (attribut primaire)",
-                     ix.marginal_di[0] if len(ix.marginal_di) > 0 else "—"),
-                    ("DI marginal (attribut secondaire)",
-                     ix.marginal_di[1] if len(ix.marginal_di) > 1 else "—"),
-                ]
-            )
+            ix_kv_data: list[tuple[str, object]] = [
+                ("Disparate Impact intersectionnel", ix.disparate_impact),
+                ("Demographic Parity (écart intersectionnel)",
+                 ix.demographic_parity_diff),
+                ("DP ratio intersectionnel (fairlearn)",
+                 ix.demographic_parity_ratio),
+            ]
+            if ix.equal_opportunity_ratio is not None:
+                ix_kv_data.append(
+                    ("EO ratio intersectionnel (fairlearn, informatif)",
+                     ix.equal_opportunity_ratio)
+                )
+            if ix.equalized_odds_ratio is not None:
+                ix_kv_data.append(
+                    ("Equalized Odds ratio intersectionnel (fairlearn, informatif)",
+                     ix.equalized_odds_ratio)
+                )
+            ix_kv_data += [
+                ("Verdict intersectionnel", ix.verdict),
+                ("Pire sous-groupe (primaire)", ix.worst_primary),
+                ("Pire sous-groupe (secondaire)", ix.worst_secondary),
+                ("DI marginal (attribut primaire)",
+                 ix.marginal_di[0] if len(ix.marginal_di) > 0 else "—"),
+                ("DI marginal (attribut secondaire)",
+                 ix.marginal_di[1] if len(ix.marginal_di) > 1 else "—"),
+            ]
+            ix_kv = _rows(ix_kv_data)
             ix_cells = "".join(
                 f"<tr><td>{_e(c.primary_value)}</td><td>{_e(c.secondary_value)}</td>"
                 f"<td>{c.n}</td><td>{c.favorable}</td><td>{c.selection_rate}</td>"
