@@ -187,6 +187,9 @@ class GroupStatOut(BaseModel):
     disparate_impact: float
     tpr: float | None = None
     fpr: float | None = None
+    fnr: float | None = None
+    accuracy: float | None = None
+    precision: float | None = None
 
 
 class IntersectionalCellOut(BaseModel):
@@ -225,6 +228,9 @@ class IntersectionalOut(BaseModel):
     reason: str | None = None
     primary_attribute: str = ""
     secondary_attribute: str = ""
+    demographic_parity_ratio: float = 1.0
+    equal_opportunity_ratio: float | None = None
+    equalized_odds_ratio: float | None = None
 
 
 class MarginalOut(BaseModel):
@@ -245,6 +251,9 @@ class MarginalOut(BaseModel):
     equalized_odds_verdict: Verdict | None = None
     truelabel_reason: str | None = None
     warnings: list[str] = []
+    demographic_parity_ratio: float = 1.0
+    equal_opportunity_ratio: float | None = None
+    equalized_odds_ratio: float | None = None
 
 
 class M1MetricsOut(BaseModel):
