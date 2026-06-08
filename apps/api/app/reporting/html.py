@@ -161,58 +161,109 @@ def _detail(audit: AuditOut) -> str:
                     f"métrique est un choix normatif, pas seulement technique.</p>"
                 )
             eo_block = "".join(eo_parts)
-        if m.intersectional is None:
-            return base + eo_block
-        ix = m.intersectional
-        ix_kv = _rows(
-            [
-                ("Disparate Impact intersectionnel", ix.disparate_impact),
-                ("Demographic Parity (écart intersectionnel)",
-                 ix.demographic_parity_diff),
-                ("Verdict intersectionnel", ix.verdict),
-                ("Pire sous-groupe (primaire)", ix.worst_primary),
-                ("Pire sous-groupe (secondaire)", ix.worst_secondary),
-                ("DI marginal (attribut primaire)",
-                 ix.marginal_di[0] if len(ix.marginal_di) > 0 else "—"),
-                ("DI marginal (attribut secondaire)",
-                 ix.marginal_di[1] if len(ix.marginal_di) > 1 else "—"),
-            ]
-        )
-        ix_cells = "".join(
-            f"<tr><td>{_e(c.primary_value)}</td><td>{_e(c.secondary_value)}</td>"
-            f"<td>{c.n}</td><td>{c.favorable}</td><td>{c.selection_rate}</td>"
-            f"<td>{c.disparate_impact}</td><td>{_e(c.verdict)}</td></tr>"
-            for c in ix.cells
-        )
-        ix_parts: list[str] = [
-            f"<h2>Analyse intersectionnelle</h2>"
-            f"<table class='kv'>{ix_kv}</table>"
-            f"<table class='grid'><thead><tr>"
-            f"<th>Groupe primaire</th><th>Groupe secondaire</th>"
-            f"<th>Effectif</th><th>Favorables</th><th>Taux</th>"
-            f"<th>DI</th><th>Verdict</th>"
-            f"</tr></thead><tbody>{ix_cells}</tbody></table>"
-        ]
-        if ix.equal_opportunity_diff is not None:
-            ix_eo_kv = _rows(
+        # Per-attribute marginal sections
+        marg_parts: list[str] = []
+        for marg in m.marginals:
+            marg_kv = _rows(
                 [
-                    ("Equal Opportunity intersectionnel (écart TPR)",
-                     ix.equal_opportunity_diff),
-                    ("Verdict EO intersectionnel",
-                     ix.equal_opportunity_verdict or "—"),
-                    ("Equalized Odds intersectionnel (écart max TPR/FPR)",
-                     ix.equalized_odds_diff),
-                    ("Verdict Equalized Odds intersectionnel",
-                     ix.equalized_odds_verdict or "—"),
+                    ("Disparate Impact", marg.disparate_impact),
+                    ("Demographic Parity (écart)", marg.demographic_parity_diff),
+                    ("Groupe le plus défavorisé", marg.worst_group),
+                    ("Référence", marg.reference_value),
+                    ("Verdict", marg.verdict),
+                    ("Score de risque", marg.risk_score),
                 ]
             )
-            ix_parts.append(f"<table class='kv'>{ix_eo_kv}</table>")
-        if ix.warnings:
-            warns = "".join(f"<li>{_e(w)}</li>" for w in ix.warnings)
-            ix_parts.append(f"<ul class='note'>{warns}</ul>")
-        if ix.reason is not None:
-            ix_parts.append(f"<p class='note'>{_e(ix.reason)}</p>")
-        return base + eo_block + "".join(ix_parts)
+            marg_body = "".join(
+                f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
+                f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
+                for g in marg.groups
+            )
+            marg_html = (
+                f"<h2>Attribut protégé : {_e(marg.attribute)}</h2>"
+                f"<table class='kv'>{marg_kv}</table>"
+                f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
+                f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
+                f"<tbody>{marg_body}</tbody></table>"
+            )
+            if marg.equal_opportunity_diff is not None:
+                marg_eo_kv = _rows(
+                    [
+                        ("Equal Opportunity (écart TPR)", marg.equal_opportunity_diff),
+                        ("Verdict EO", marg.equal_opportunity_verdict or "—"),
+                        ("Equalized Odds (écart max TPR/FPR)", marg.equalized_odds_diff),
+                        ("Verdict Eq. Odds", marg.equalized_odds_verdict or "—"),
+                    ]
+                )
+                marg_html += f"<table class='kv'>{marg_eo_kv}</table>"
+            if marg.warnings:
+                warns = "".join(f"<li>{_e(w)}</li>" for w in marg.warnings)
+                marg_html += f"<ul class='note'>{warns}</ul>"
+            if marg.truelabel_reason is not None:
+                marg_html += f"<p class='note'>{_e(marg.truelabel_reason)}</p>"
+            marg_parts.append(marg_html)
+        marg_block = "".join(marg_parts)
+
+        # Per-pair intersectional sections
+        ix_parts: list[str] = []
+        for ix in m.pairwise:
+            pair_title = (
+                f"{_e(ix.primary_attribute)} × {_e(ix.secondary_attribute)}"
+                if ix.primary_attribute
+                else "Analyse intersectionnelle"
+            )
+            ix_kv = _rows(
+                [
+                    ("Disparate Impact intersectionnel", ix.disparate_impact),
+                    ("Demographic Parity (écart intersectionnel)",
+                     ix.demographic_parity_diff),
+                    ("Verdict intersectionnel", ix.verdict),
+                    ("Pire sous-groupe (primaire)", ix.worst_primary),
+                    ("Pire sous-groupe (secondaire)", ix.worst_secondary),
+                    ("DI marginal (attribut primaire)",
+                     ix.marginal_di[0] if len(ix.marginal_di) > 0 else "—"),
+                    ("DI marginal (attribut secondaire)",
+                     ix.marginal_di[1] if len(ix.marginal_di) > 1 else "—"),
+                ]
+            )
+            ix_cells = "".join(
+                f"<tr><td>{_e(c.primary_value)}</td><td>{_e(c.secondary_value)}</td>"
+                f"<td>{c.n}</td><td>{c.favorable}</td><td>{c.selection_rate}</td>"
+                f"<td>{c.disparate_impact}</td><td>{_e(c.verdict)}</td></tr>"
+                for c in ix.cells
+            )
+            ix_html = (
+                f"<h2>Croisement : {pair_title}</h2>"
+                f"<table class='kv'>{ix_kv}</table>"
+                f"<table class='grid'><thead><tr>"
+                f"<th>Groupe primaire</th><th>Groupe secondaire</th>"
+                f"<th>Effectif</th><th>Favorables</th><th>Taux</th>"
+                f"<th>DI</th><th>Verdict</th>"
+                f"</tr></thead><tbody>{ix_cells}</tbody></table>"
+            )
+            if ix.equal_opportunity_diff is not None:
+                ix_eo_kv = _rows(
+                    [
+                        ("Equal Opportunity intersectionnel (écart TPR)",
+                         ix.equal_opportunity_diff),
+                        ("Verdict EO intersectionnel",
+                         ix.equal_opportunity_verdict or "—"),
+                        ("Equalized Odds intersectionnel (écart max TPR/FPR)",
+                         ix.equalized_odds_diff),
+                        ("Verdict Equalized Odds intersectionnel",
+                         ix.equalized_odds_verdict or "—"),
+                    ]
+                )
+                ix_html += f"<table class='kv'>{ix_eo_kv}</table>"
+            if ix.warnings:
+                warns = "".join(f"<li>{_e(w)}</li>" for w in ix.warnings)
+                ix_html += f"<ul class='note'>{warns}</ul>"
+            if ix.reason is not None:
+                ix_html += f"<p class='note'>{_e(ix.reason)}</p>"
+            ix_parts.append(ix_html)
+        ix_block = "".join(ix_parts)
+
+        return base + eo_block + marg_block + ix_block
     return "<p>Résultats indisponibles pour cet audit.</p>"
 
 

@@ -62,7 +62,7 @@ const analysis: DatasetAnalysisOut = {
 
 describe('Unified Step3Config', () => {
   describe('tabular-known (M1)', () => {
-    it('shows decision_column dropdown, favorable_value dropdown, and protected_attribute dropdown', () => {
+    it('shows decision_column dropdown, favorable_value dropdown, and protected_attributes checkbox group', () => {
       render(
         <WizardProvider totalSteps={5}>
           <Harness
@@ -78,8 +78,9 @@ describe('Unified Step3Config', () => {
       expect(
         screen.getByRole('combobox', { name: /Valeur favorable/i }),
       ).toBeInTheDocument();
+      // protected_attributes is now a checkbox group
       expect(
-        screen.getByRole('combobox', { name: /Attribut protégé/i }),
+        screen.getByRole('group', { name: /Attributs protégés/i }),
       ).toBeInTheDocument();
     });
 
@@ -120,7 +121,7 @@ describe('Unified Step3Config', () => {
   });
 
   describe('tabular-unknown (M2)', () => {
-    it('shows decision_column and favorable_value but NOT protected_attribute', () => {
+    it('shows decision_column and favorable_value but NOT protected_attributes group', () => {
       render(
         <WizardProvider totalSteps={5}>
           <Harness
@@ -137,7 +138,7 @@ describe('Unified Step3Config', () => {
         screen.getByRole('combobox', { name: /Valeur favorable/i }),
       ).toBeInTheDocument();
       expect(
-        screen.queryByRole('combobox', { name: /Attribut protégé/i }),
+        screen.queryByRole('group', { name: /Attributs protégés/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -177,7 +178,7 @@ describe('Unified Step3Config', () => {
       ).toBeInTheDocument();
     });
 
-    it('does NOT show decision_column or protected_attribute for M3', () => {
+    it('does NOT show decision_column or protected_attributes group for M3', () => {
       render(
         <WizardProvider totalSteps={5}>
           <Harness
@@ -191,7 +192,7 @@ describe('Unified Step3Config', () => {
         screen.queryByRole('combobox', { name: /Colonne de décision/i }),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByRole('combobox', { name: /Attribut protégé/i }),
+        screen.queryByRole('group', { name: /Attributs protégés/i }),
       ).not.toBeInTheDocument();
     });
   });

@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 const STEPS = [
   { id: 'context',  title: 'Contexte',          tagline: 'Cadre & objectif',        helpKey: 'wizard.step1', isValid: (v: UnifiedValues) => v.title.trim().length > 0 && v.audit_type !== '' && v.sector !== '' },
   { id: 'source',   title: 'Données',            tagline: 'Jeu de test',             helpKey: 'wizard.step2', isValid: (v: UnifiedValues) => v.audit_type === 'llm-api' ? v.url.trim().length > 0 : true },
-  { id: 'config',   title: 'Configuration',      tagline: 'Attributs & métriques',   helpKey: 'wizard.step3', isValid: (v: UnifiedValues) => { if (v.audit_type === 'llm-api') return v.body_template.includes('{prompt}') && v.response_path.trim().length > 0; if (!v.decision_column || !v.favorable_value) return false; if (v.audit_type === 'tabular-known' && !v.protected_attribute) return false; return true; } },
+  { id: 'config',   title: 'Configuration',      tagline: 'Attributs & métriques',   helpKey: 'wizard.step3', isValid: (v: UnifiedValues) => { if (v.audit_type === 'llm-api') return v.body_template.includes('{prompt}') && v.response_path.trim().length > 0; if (!v.decision_column || !v.favorable_value) return false; if (v.audit_type === 'tabular-known' && (!Array.isArray(v.protected_attributes) || v.protected_attributes.length === 0)) return false; return true; } },
   { id: 'verify',   title: 'Vérification',       tagline: 'Contrôle qualité',        helpKey: 'wizard.step4', isValid: () => true },
   { id: 'review',   title: 'Revue & lancement',  tagline: 'Confirmation',            helpKey: 'wizard.step5', isValid: () => true },
 ] as const;
@@ -360,17 +360,16 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
       let audit;
       if (mod === 'M1') {
         if (!dataset) return;
+        const protectedAttrs: string[] = Array.isArray(v.protected_attributes) ? v.protected_attributes : [];
         audit = await createAudit({
           dataset_id: dataset.id,
           title: v.title,
           decision_column: v.decision_column,
           favorable_value: v.favorable_value,
-          protected_attribute: v.protected_attribute,
+          protected_attributes: protectedAttrs,
+          protected_attribute: protectedAttrs[0] ?? '',
           privileged_value: v.privileged_value || null,
           ...(v.ground_truth_column ? { ground_truth_column: v.ground_truth_column } : {}),
-          ...(v.secondary_protected_attribute
-            ? { secondary_protected_attribute: v.secondary_protected_attribute }
-            : {}),
         });
       } else if (mod === 'M2') {
         if (!dataset) return;

@@ -70,34 +70,58 @@ async def test_interpret_m1_no_eo_is_unchanged_shape():
     assert "simultan" not in blob
 
 
-async def test_interpret_m1_fallback_mentions_intersectional_contrast():
+async def test_interpret_m1_fallback_mentions_pairwise_contrast():
+    """2-attribute result: fallback narrative mentions both attributes and worst pair."""
     from app.audit_engine.types import (
         IntersectionalCell,
         IntersectionalResult,
         M1Result,
+        MarginalResult,
     )
     from app.interpretation.m1 import interpret_m1
 
-    inter = IntersectionalResult(
+    marginal_sexe = MarginalResult(
+        attribute="sexe",
+        groups=(),
+        reference_value="H", disparate_impact=0.86,
+        demographic_parity_diff=0.14, worst_group="F",
+        verdict="warn", risk_score=50,
+    )
+    marginal_origine = MarginalResult(
+        attribute="origine",
+        groups=(),
+        reference_value="fr", disparate_impact=0.9,
+        demographic_parity_diff=0.1, worst_group="etr",
+        verdict="warn", risk_score=40,
+    )
+    pair = IntersectionalResult(
         cells=(IntersectionalCell("f", "etr", 20, 3, 0.15, 0.3, "fail"),),
-        reference_primary="h", reference_secondary="fr",
-        worst_primary="f", worst_secondary="etr", disparate_impact=0.3,
+        reference_primary="H", reference_secondary="fr",
+        worst_primary="F", worst_secondary="etr", disparate_impact=0.3,
         demographic_parity_diff=0.35, verdict="fail", risk_score=80,
         marginal_di=(0.86, 0.9),
+        primary_attribute="sexe", secondary_attribute="origine",
     )
     r = M1Result(
-        groups=(), reference_value="h", disparate_impact=0.3,
-        demographic_parity_diff=0.35, worst_group="f", verdict="fail",
-        risk_score=80, warnings=(), intersectional=inter,
+        groups=(), reference_value="H", disparate_impact=0.3,
+        demographic_parity_diff=0.35, worst_group="F", verdict="fail",
+        risk_score=80, warnings=(),
+        marginals=(marginal_sexe, marginal_origine),
+        pairwise=(pair,),
     )
     out = await interpret_m1(r, provider=None)
     assert out.provider == "fallback"
     blob = (out.narrative + " " + " ".join(out.disclaimers)).lower()
+    # Both attribute names should appear
+    assert "sexe" in blob
+    assert "origine" in blob
+    # Intersectional contrast (Gender Shades) should be described
     assert "intersection" in blob or "sous-groupe" in blob
-    assert "etr" in blob  # worst crossed subgroup named
+    # Worst crossed subgroup named
+    assert "etr" in blob
 
 
-async def test_interpret_m1_no_intersectional_unchanged_shape():
+async def test_interpret_m1_no_pairwise_unchanged_shape():
     from app.audit_engine.types import GroupStat, M1Result
     from app.interpretation.m1 import interpret_m1
 

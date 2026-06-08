@@ -49,6 +49,7 @@ from app.schemas.audit import (
     M1MetricsOut,
     M2MetricsOut,
     M3MetricsOut,
+    MarginalOut,
     Verdict,
 )
 from app.services.dataset_service import get_dataset
@@ -120,7 +121,47 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
             if result_obj.equalized_odds_verdict is not None else None
         ),
         truelabel_reason=result_obj.truelabel_reason,
-        intersectional=(
+        marginals=[
+            MarginalOut(
+                attribute=m.attribute,
+                groups=[
+                    GroupStatOut(
+                        value=g.value,
+                        n=g.n,
+                        favorable=g.favorable,
+                        selection_rate=g.selection_rate,
+                        disparate_impact=g.disparate_impact,
+                        tpr=g.tpr,
+                        fpr=g.fpr,
+                    )
+                    for g in m.groups
+                ],
+                reference_value=m.reference_value,
+                disparate_impact=m.disparate_impact,
+                demographic_parity_diff=m.demographic_parity_diff,
+                worst_group=m.worst_group,
+                verdict=cast(Verdict, m.verdict),
+                risk_score=m.risk_score,
+                warnings=list(m.warnings),
+                equal_opportunity_diff=m.equal_opportunity_diff,
+                equalized_odds_diff=m.equalized_odds_diff,
+                demographic_parity_verdict=(
+                    cast(Verdict, m.demographic_parity_verdict)
+                    if m.demographic_parity_verdict is not None else None
+                ),
+                equal_opportunity_verdict=(
+                    cast(Verdict, m.equal_opportunity_verdict)
+                    if m.equal_opportunity_verdict is not None else None
+                ),
+                equalized_odds_verdict=(
+                    cast(Verdict, m.equalized_odds_verdict)
+                    if m.equalized_odds_verdict is not None else None
+                ),
+                truelabel_reason=m.truelabel_reason,
+            )
+            for m in result_obj.marginals
+        ],
+        pairwise=[
             IntersectionalOut(
                 cells=[
                     IntersectionalCellOut(
@@ -134,40 +175,38 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                         tpr=c.tpr,
                         fpr=c.fpr,
                     )
-                    for c in result_obj.intersectional.cells
+                    for c in p.cells
                 ],
-                reference_primary=result_obj.intersectional.reference_primary,
-                reference_secondary=result_obj.intersectional.reference_secondary,
-                worst_primary=result_obj.intersectional.worst_primary,
-                worst_secondary=result_obj.intersectional.worst_secondary,
-                disparate_impact=result_obj.intersectional.disparate_impact,
-                demographic_parity_diff=result_obj.intersectional.demographic_parity_diff,
-                verdict=cast(Verdict, result_obj.intersectional.verdict),
-                risk_score=result_obj.intersectional.risk_score,
-                marginal_di=list(result_obj.intersectional.marginal_di),
-                equal_opportunity_diff=result_obj.intersectional.equal_opportunity_diff,
-                equalized_odds_diff=result_obj.intersectional.equalized_odds_diff,
+                reference_primary=p.reference_primary,
+                reference_secondary=p.reference_secondary,
+                worst_primary=p.worst_primary,
+                worst_secondary=p.worst_secondary,
+                disparate_impact=p.disparate_impact,
+                demographic_parity_diff=p.demographic_parity_diff,
+                verdict=cast(Verdict, p.verdict),
+                risk_score=p.risk_score,
+                marginal_di=list(p.marginal_di),
+                equal_opportunity_diff=p.equal_opportunity_diff,
+                equalized_odds_diff=p.equalized_odds_diff,
                 demographic_parity_verdict=(
-                    cast(Verdict, result_obj.intersectional.demographic_parity_verdict)
-                    if result_obj.intersectional.demographic_parity_verdict is not None
-                    else None
+                    cast(Verdict, p.demographic_parity_verdict)
+                    if p.demographic_parity_verdict is not None else None
                 ),
                 equal_opportunity_verdict=(
-                    cast(Verdict, result_obj.intersectional.equal_opportunity_verdict)
-                    if result_obj.intersectional.equal_opportunity_verdict is not None
-                    else None
+                    cast(Verdict, p.equal_opportunity_verdict)
+                    if p.equal_opportunity_verdict is not None else None
                 ),
                 equalized_odds_verdict=(
-                    cast(Verdict, result_obj.intersectional.equalized_odds_verdict)
-                    if result_obj.intersectional.equalized_odds_verdict is not None
-                    else None
+                    cast(Verdict, p.equalized_odds_verdict)
+                    if p.equalized_odds_verdict is not None else None
                 ),
-                warnings=list(result_obj.intersectional.warnings),
-                reason=result_obj.intersectional.reason,
+                warnings=list(p.warnings),
+                reason=p.reason,
+                primary_attribute=p.primary_attribute,
+                secondary_attribute=p.secondary_attribute,
             )
-            if result_obj.intersectional is not None
-            else None
-        ),
+            for p in result_obj.pairwise
+        ],
     )
 
 
@@ -322,6 +361,17 @@ def _build_audit_row(
             created_by=user_id,
         )
     # M1
+    m1_config: dict[str, object] = {}
+    if body.ground_truth_column is not None:
+        m1_config["ground_truth_column"] = body.ground_truth_column
+    if body.secondary_protected_attribute is not None:
+        m1_config["secondary_protected_attribute"] = (
+            body.secondary_protected_attribute
+        )
+    if body.secondary_privileged_value is not None:
+        m1_config["secondary_privileged_value"] = body.secondary_privileged_value
+    if body.protected_attributes is not None:
+        m1_config["protected_attributes"] = body.protected_attributes
     return Audit(
         code=code,
         org_id=org_id,
@@ -333,6 +383,7 @@ def _build_audit_row(
         decision_column=body.decision_column,
         favorable_value=body.favorable_value,
         privileged_value=body.privileged_value,
+        config=m1_config if m1_config else None,
         created_by=user_id,
     )
 
@@ -405,16 +456,24 @@ async def compute_m1_audit(
 
     # run_m1 may raise DatasetValidationError — let it propagate; the router
     # maps it to RFC 7807 422 (see core/errors.py handler).
+    # Resolve the protected attribute list for M1Config.
+    # Prefer protected_attributes if supplied; else derive from single/secondary.
+    pa_list: list[str] = list(body.protected_attributes or [])
+
     result = run_m1(
         df,
         M1Config(
-            protected_attribute=cast(str, body.protected_attribute),
+            protected_attribute=(
+                body.protected_attribute
+                or (body.protected_attributes[0] if body.protected_attributes else "")
+            ),
             decision_column=dec_col,
             favorable_value=fav,
             privileged_value=priv,
             ground_truth_column=body.ground_truth_column,
             secondary_protected_attribute=body.secondary_protected_attribute,
             secondary_privileged_value=body.secondary_privileged_value,
+            protected_attributes=tuple(pa_list),
         ),
     )
 

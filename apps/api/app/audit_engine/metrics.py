@@ -6,6 +6,8 @@ VERDICT_PASS = "pass"
 VERDICT_WARN = "warn"
 VERDICT_FAIL = "fail"
 
+VERDICT_ORDER: dict[str, int] = {"pass": 0, "warn": 1, "fail": 2}
+
 
 def selection_rate(favorable: int, n: int) -> float:
     if n <= 0:

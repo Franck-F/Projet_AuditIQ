@@ -137,7 +137,7 @@ def test_run_m1_without_secondary_attribute_is_byte_identical():
     cfg = M1Config(protected_attribute="g", decision_column="d",
                    favorable_value="oui")
     r = run_m1(df, cfg)
-    assert r.intersectional is None
+    assert r.pairwise == ()
     assert r.verdict in ("pass", "warn", "fail")
 
 
@@ -158,11 +158,18 @@ def test_run_m1_with_secondary_attribute_attaches_intersectional():
                    secondary_protected_attribute="o",
                    secondary_privileged_value="fr")
     r = run_m1(df, cfg)
-    assert r.intersectional is not None
-    assert len(r.intersectional.cells) == 4
-    # global verdict/risk are driven by the intersectional worst cell
-    assert r.verdict == r.intersectional.verdict
-    assert r.risk_score == r.intersectional.risk_score
+    assert len(r.pairwise) == 1
+    assert len(r.pairwise[0].cells) == 4
+    # global verdict/risk are driven by the aggregate (worst of marginals + pair)
+    order = {"pass": 0, "warn": 1, "fail": 2}
+    worst_verdict = max(
+        [m.verdict for m in r.marginals] + [p.verdict for p in r.pairwise],
+        key=lambda v: order[v],
+    )
+    assert r.verdict == worst_verdict
+    assert r.risk_score == max(
+        [m.risk_score for m in r.marginals] + [p.risk_score for p in r.pairwise]
+    )
 
 
 def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
@@ -189,12 +196,13 @@ def test_run_m1_intersectional_contrast_marginals_pass_cross_fails():
                    favorable_value="oui",
                    secondary_protected_attribute="o")
     r = run_m1(df, cfg)
-    assert r.intersectional is not None
-    assert r.intersectional.verdict == "fail"
+    assert len(r.pairwise) == 1
+    pair = r.pairwise[0]
+    assert pair.verdict == "fail"
     # Both marginal DIs are genuinely compliant (≥ 0.8)
-    assert all(d >= 0.8 for d in r.intersectional.marginal_di)
+    assert all(d >= 0.8 for d in pair.marginal_di)
     # The worst crossed cell DI is strictly worse than every marginal DI
-    assert min(r.intersectional.marginal_di) > r.intersectional.disparate_impact
+    assert min(pair.marginal_di) > pair.disparate_impact
 
 
 def test_run_m1_missing_secondary_column_raises():

@@ -29,6 +29,10 @@ function Step5ReviewM1({
   const sectorLabel =
     SECTOR_CARDS.find((c) => c.value === values.sector)?.title ?? values.sector;
 
+  const attrs: string[] = Array.isArray(values.protected_attributes) ? values.protected_attributes : [];
+  const hasPairwise = attrs.length >= 2;
+  const nPairs = attrs.length * (attrs.length - 1) / 2;
+
   const analyses: string[] = [
     'Disparate Impact (DI)',
     'Règle des 4/5',
@@ -38,9 +42,9 @@ function Step5ReviewM1({
     analyses.push('Equal Opportunity');
     analyses.push('Equalized Odds');
   }
-  if (values.secondary_protected_attribute) {
+  if (hasPairwise) {
     analyses.push(
-      `Analyse intersectionnelle (${values.protected_attribute} × ${values.secondary_protected_attribute})`,
+      `Analyse intersectionnelle par paire (${nPairs} paire${nPairs > 1 ? 's' : ''} : ${attrs.join(' × ')})`,
     );
   }
 
@@ -65,20 +69,22 @@ function Step5ReviewM1({
           <code>{values.decision_column}</code> ={' '}
           <code>{values.favorable_value}</code> est l&apos;issue favorable
         </ReviewRow>
-        <ReviewRow label="Attribut protégé">
-          <code>{values.protected_attribute}</code>
-          {values.privileged_value && (
+        <ReviewRow label="Attributs protégés">
+          {attrs.length > 0
+            ? attrs.map((a, i) => (
+                <React.Fragment key={a}>
+                  {i > 0 && ', '}
+                  <code>{a}</code>
+                </React.Fragment>
+              ))
+            : <span className="text-fg-muted">— aucun sélectionné</span>}
+          {values.privileged_value && attrs.length > 0 && (
             <> (référence&nbsp;: <code>{values.privileged_value}</code>)</>
           )}
         </ReviewRow>
         {values.ground_truth_column && (
           <ReviewRow label="Vérité-terrain">
             <code>{values.ground_truth_column}</code>
-          </ReviewRow>
-        )}
-        {values.secondary_protected_attribute && (
-          <ReviewRow label="Attribut secondaire">
-            <code>{values.secondary_protected_attribute}</code>
           </ReviewRow>
         )}
       </div>

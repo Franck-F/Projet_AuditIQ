@@ -206,7 +206,7 @@ def test_intersectional_dataclasses():
         demographic_parity_diff=0.0, worst_group="a", verdict="pass",
         risk_score=10,
     )
-    assert res.intersectional is None
+    assert res.pairwise == ()
 
 
 def test_column_profile_is_frozen() -> None:

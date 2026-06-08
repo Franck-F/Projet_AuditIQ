@@ -39,6 +39,23 @@ const M1_FIXTURE = {
     verdict: 'fail' as const,
     risk_score: 52,
     warnings: [],
+    marginals: [
+      {
+        attribute: 'genre',
+        groups: [
+          { value: 'Hommes', n: 62140, favorable: 44119, selection_rate: 0.71, disparate_impact: 1.0 },
+          { value: 'Femmes', n: 58920, favorable: 28870, selection_rate: 0.49, disparate_impact: 0.69 },
+        ],
+        reference_value: 'Hommes',
+        disparate_impact: 0.69,
+        demographic_parity_diff: 0.22,
+        worst_group: 'Femmes',
+        verdict: 'fail' as const,
+        risk_score: 52,
+        warnings: [],
+      },
+    ],
+    pairwise: [],
   },
   interpretation: {
     narrative:

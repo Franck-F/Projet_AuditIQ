@@ -25,8 +25,15 @@ Consignes STRICTES :
   vérité-terrain et les groupes dégénérés (aucun positif ou négatif réel) sont
   ignorés du calcul.
   Si ces champs sont ABSENTS du JSON, ne les mentionne pas.
-- Si le champ `intersectional` est présent dans le JSON ci-dessus, tu DOIS
-  expliquer en français simple :
+- Si le champ `marginals` est présent dans le JSON ci-dessus (plusieurs attributs
+  protégés analysés), tu DOIS :
+  (a) pour chaque attribut, présenter brièvement son Disparate Impact et son
+  verdict (en citant le nom de l'attribut) ;
+  (b) identifier l'attribut le plus problématique (risk_score le plus élevé) et
+  expliquer pourquoi.
+  Si le champ `marginals` est ABSENT du JSON, ne le mentionne pas.
+- Si le champ `pairwise` est présent dans le JSON ci-dessus, tu DOIS expliquer
+  en français simple pour chaque paire (primary_attribute × secondary_attribute) :
   (a) le contraste marginal-vs-intersection : le sous-groupe croisé le plus
   défavorisé (worst_primary × worst_secondary) et son Disparate Impact, versus
   les DI marginaux (marginal_di) de chaque attribut pris séparément, qui
@@ -35,7 +42,7 @@ Consignes STRICTES :
   (b) la limite de sparsité : les sous-groupes croisés à effectif insuffisant
   sont exclus du calcul ; l'analyse intersectionnelle est indicative sur de
   petits jeux de données.
-  Si le champ `intersectional` est ABSENT du JSON, ne le mentionne pas.
+  Si le champ `pairwise` est ABSENT du JSON, ne le mentionne pas.
 - Termine en proposant 3 à 5 recommandations actionnables (PAS plus, PAS moins),
   prioritisées par impact réel :
   - chaque reco = un objet {{"title": "...", "detail": "...", "priority": "..."}}

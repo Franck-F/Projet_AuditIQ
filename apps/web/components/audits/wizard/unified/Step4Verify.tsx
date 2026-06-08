@@ -19,12 +19,15 @@ function Step4VerifyM1(): React.ReactElement {
   const { setHelpKey, clearHelpKey } = useWizard();
 
   const groundTruth = useWatch({ control, name: 'ground_truth_column' });
-  const secondaryAttr = useWatch({ control, name: 'secondary_protected_attribute' });
+  const protectedAttributes = useWatch({ control, name: 'protected_attributes' }) as string[];
 
   React.useEffect(() => {
     setHelpKey('wizard.step4.metrics');
     return () => clearHelpKey();
   }, [setHelpKey, clearHelpKey]);
+
+  const attrs: string[] = Array.isArray(protectedAttributes) ? protectedAttributes : [];
+  const hasPairwise = attrs.length >= 2;
 
   return (
     <div className="flex flex-col gap-4">
@@ -60,13 +63,24 @@ function Step4VerifyM1(): React.ReactElement {
               </span>
             </li>
           )}
-          {secondaryAttr && (
+          {attrs.length > 0 && (
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-fg-muted">•</span>
               <span>
-                <strong>Analyse intersectionnelle</strong>{' '}
+                <strong>Analyse marginale par attribut</strong>{' '}
                 <span className="text-fg-muted">
-                  (attribut secondaire : <code>{secondaryAttr}</code>)
+                  ({attrs.map((a) => <code key={a}>{a}</code>).reduce<React.ReactNode[]>((acc, el, i) => i === 0 ? [el] : [...acc, ', ', el], [])})
+                </span>
+              </span>
+            </li>
+          )}
+          {hasPairwise && (
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 text-fg-muted">•</span>
+              <span>
+                <strong>Analyse intersectionnelle par paire</strong>{' '}
+                <span className="text-fg-muted">
+                  ({attrs.length * (attrs.length - 1) / 2} paire{attrs.length * (attrs.length - 1) / 2 > 1 ? 's' : ''})
                 </span>
               </span>
             </li>

@@ -1,11 +1,14 @@
 """Pure M1 supervised fairness audit: run_m1(df, config) -> M1Result. No I/O."""
 from __future__ import annotations
 
+from itertools import combinations
+
 import pandas as pd
 
 from .errors import DatasetValidationError
-from .intersectional import run_intersectional
+from .intersectional import run_intersectional_pair
 from .metrics import (
+    VERDICT_ORDER,
     decide_verdict,
     demographic_parity_diff,
     disparate_impacts,
@@ -16,36 +19,31 @@ from .metrics import (
     selection_rate,
     truelabel_metrics,
 )
-from .types import GroupStat, M1Config, M1Result
+from .types import GroupStat, M1Config, M1Result, MarginalResult
 
 _ROUND = 4
 
 
-def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
-    """Run the M1 supervised fairness audit.
+def _marginal_audit(
+    df: pd.DataFrame,
+    config: M1Config,
+    attribute: str,
+    *,
+    is_primary: bool,
+    error_field: str = "protected_attribute",
+) -> MarginalResult:
+    """Compute per-attribute M1 metrics, returning a MarginalResult.
 
-    Pure: no I/O, no LLM. Validates the dataframe/config then computes
-    Disparate Impact (4/5 rule), Demographic Parity, per-group selection
-    rates, a verdict and a 0-100 risk score.
-
-    Value-comparison contract: the protected and decision columns are
-    compared as strings via ``astype(str)``. ``favorable_value`` and
-    ``privileged_value`` are matched using ``str(value)``. Callers must
-    therefore pass these in a form that equals ``str()`` of the column's
-    values (e.g. for a float column holding 1.0, pass "1.0", not 1).
-    Normalising numeric/boolean columns is the responsibility of the
-    caller / input layer, not this engine.
-
-    Raises:
-        DatasetValidationError: if the data or config cannot be audited.
+    The privileged_value override is applied only when is_primary=True.
+    Raises DatasetValidationError for invalid data/config.
     """
-    pa = config.protected_attribute
+    pa = attribute
     dc = config.decision_column
 
     if pa not in df.columns:
         raise DatasetValidationError(
             f"Colonne attribut protégé « {pa} » absente du jeu de données.",
-            field="protected_attribute",
+            field=error_field,
         )
     if dc not in df.columns:
         raise DatasetValidationError(
@@ -83,11 +81,13 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         raise DatasetValidationError(
             f"L'attribut protégé doit avoir au moins 2 groupes, trouvé "
             f"{len(groups)}.",
-            field="protected_attribute",
+            field=error_field,
         )
 
     privileged = (
-        str(config.privileged_value) if config.privileged_value is not None else None
+        str(config.privileged_value)
+        if is_primary and config.privileged_value is not None
+        else None
     )
     if privileged is not None and privileged not in groups:
         raise DatasetValidationError(
@@ -106,7 +106,7 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
             raise DatasetValidationError(
                 f"Effectif insuffisant (n={n} < {config.min_group_error}) "
                 f"pour le groupe « {g} » — audit non fiable.",
-                field="protected_attribute",
+                field=error_field,
             )
         if n < config.min_group_warn:
             warnings.append(
@@ -215,9 +215,91 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
         for g in groups
     ]
 
-    intersectional = None
-    sa = config.secondary_protected_attribute
-    if sa is not None:
+    return MarginalResult(
+        attribute=attribute,
+        groups=tuple(group_stats),
+        reference_value=reference,
+        disparate_impact=round(overall_di, _ROUND),
+        demographic_parity_diff=round(dpd, _ROUND),
+        worst_group=worst_group,
+        verdict=verdict,
+        risk_score=score,
+        warnings=tuple(warnings),
+        equal_opportunity_diff=eo_diff,
+        equalized_odds_diff=eodds_diff,
+        demographic_parity_verdict=dp_verdict,
+        equal_opportunity_verdict=eo_verdict,
+        equalized_odds_verdict=eodds_verdict,
+        truelabel_reason=tl_reason,
+    )
+
+
+def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
+    """Run the M1 supervised fairness audit for N protected attributes.
+
+    Pure: no I/O, no LLM. Computes one MarginalResult per attribute and
+    one IntersectionalResult per 2-way pair. The aggregate verdict is the
+    worst of all marginals and pairs; top-level fields mirror the first
+    marginal (backward-compat for 1-attribute calls).
+
+    ``protected_attributes`` takes precedence over the legacy
+    ``protected_attribute`` / ``secondary_protected_attribute`` pair.
+    When ``protected_attributes`` is set, ``secondary_protected_attribute``
+    must not be set simultaneously (raises DatasetValidationError).
+
+    Value-comparison contract: the protected and decision columns are
+    compared as strings via ``astype(str)``. ``favorable_value`` and
+    ``privileged_value`` are matched using ``str(value)``. Callers must
+    therefore pass these in a form that equals ``str()`` of the column's
+    values (e.g. for a float column holding 1.0, pass "1.0", not 1).
+    Normalising numeric/boolean columns is the responsibility of the
+    caller / input layer, not this engine.
+
+    Raises:
+        DatasetValidationError: if the data or config cannot be audited.
+    """
+    # resolve attribute list (source of truth = protected_attributes,
+    # else derive from primary + optional secondary — backward compat)
+    if config.protected_attributes:
+        # guard: secondary_protected_attribute must not be combined with the list
+        if (
+            config.secondary_protected_attribute is not None
+            and config.secondary_protected_attribute
+            not in config.protected_attributes
+        ):
+            raise DatasetValidationError(
+                "Ne combinez pas 'secondary_protected_attribute' avec "
+                "'protected_attributes' ; utilisez la liste.",
+                field="protected_attributes",
+            )
+        attrs = list(config.protected_attributes)
+    else:
+        attrs = [config.protected_attribute]
+        if config.secondary_protected_attribute:
+            attrs.append(config.secondary_protected_attribute)
+
+    # validate attribute list constraints
+    if not 1 <= len(attrs) <= 4:
+        raise DatasetValidationError(
+            "Sélectionnez entre 1 et 4 attributs protégés.",
+            field="protected_attributes",
+        )
+    if len(set(attrs)) != len(attrs):
+        raise DatasetValidationError(
+            "Les attributs protégés doivent être distincts.",
+            field="protected_attributes",
+        )
+    for a in attrs:
+        if a == config.decision_column or a == config.ground_truth_column:
+            raise DatasetValidationError(
+                f"L'attribut protégé « {a} » doit différer des colonnes "
+                f"décision et vérité-terrain.",
+                field="protected_attributes",
+            )
+
+    # validate secondary_protected_attribute presence (backward compat path)
+    if config.secondary_protected_attribute is not None and not config.protected_attributes:
+        sa = config.secondary_protected_attribute
         if sa not in df.columns:
             raise DatasetValidationError(
                 f"Colonne attribut protégé secondaire « {sa} » absente "
@@ -229,24 +311,44 @@ def run_m1(df: pd.DataFrame, config: M1Config) -> M1Result:
                 "L'attribut protégé secondaire doit différer du primaire.",
                 field="secondary_protected_attribute",
             )
-        intersectional = run_intersectional(df, config)
 
+    marginals = [
+        _marginal_audit(
+            df, config, a, is_primary=(i == 0),
+            error_field=(
+                "protected_attributes" if config.protected_attributes
+                else "protected_attribute"
+            ),
+        )
+        for i, a in enumerate(attrs)
+    ]
+    pairwise = [
+        run_intersectional_pair(df, config, a, b)
+        for a, b in combinations(attrs, 2)
+    ]
+
+    verdicts = [m.verdict for m in marginals] + [p.verdict for p in pairwise]
+    agg_verdict = max(verdicts, key=lambda v: VERDICT_ORDER[v])
+    agg_risk = max(
+        [m.risk_score for m in marginals] + [p.risk_score for p in pairwise]
+    )
+
+    first = marginals[0]
     return M1Result(
-        groups=tuple(group_stats),
-        reference_value=reference,
-        disparate_impact=round(overall_di, _ROUND),
-        demographic_parity_diff=round(dpd, _ROUND),
-        worst_group=worst_group,
-        verdict=(intersectional.verdict if intersectional is not None
-                 else verdict),
-        risk_score=(intersectional.risk_score if intersectional is not None
-                    else score),
-        warnings=tuple(warnings),
-        equal_opportunity_diff=eo_diff,
-        equalized_odds_diff=eodds_diff,
-        demographic_parity_verdict=dp_verdict,
-        equal_opportunity_verdict=eo_verdict,
-        equalized_odds_verdict=eodds_verdict,
-        truelabel_reason=tl_reason,
-        intersectional=intersectional,
+        groups=first.groups,
+        reference_value=first.reference_value,
+        disparate_impact=first.disparate_impact,
+        demographic_parity_diff=first.demographic_parity_diff,
+        worst_group=first.worst_group,
+        verdict=agg_verdict,
+        risk_score=agg_risk,
+        warnings=first.warnings,
+        equal_opportunity_diff=first.equal_opportunity_diff,
+        equalized_odds_diff=first.equalized_odds_diff,
+        demographic_parity_verdict=first.demographic_parity_verdict,
+        equal_opportunity_verdict=first.equal_opportunity_verdict,
+        equalized_odds_verdict=first.equalized_odds_verdict,
+        truelabel_reason=first.truelabel_reason,
+        marginals=tuple(marginals),
+        pairwise=tuple(pairwise),
     )

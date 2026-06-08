@@ -139,15 +139,16 @@ describe('audits api', () => {
     expect(body.ground_truth_column).toBe('reel');
   });
 
-  it('createAudit M1 can include a secondary protected attribute', async () => {
+  it('createAudit M1 can include protected_attributes (multi-select)', async () => {
     post.mockResolvedValueOnce({ data: { id: 'm1-x', module: 'M1' } });
     await createAudit({
-      dataset_id: 'd1', title: 't', protected_attribute: 'genre',
+      dataset_id: 'd1', title: 't',
+      protected_attributes: ['genre', 'origine'],
       decision_column: 'embauche', favorable_value: 'oui',
-      privileged_value: null, secondary_protected_attribute: 'origine',
-    } as Parameters<typeof createAudit>[0]);
+      privileged_value: null,
+    });
     const body = post.mock.calls.at(-1)![1];
-    expect(body.secondary_protected_attribute).toBe('origine');
+    expect(body.protected_attributes).toEqual(['genre', 'origine']);
   });
 
   it('fetchAudit surfaces a failed audit error', async () => {

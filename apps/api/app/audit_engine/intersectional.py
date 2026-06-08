@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from .errors import DatasetValidationError
 from .metrics import (
     decide_verdict,
     gap_verdict,
@@ -33,21 +34,20 @@ def _marginal_di(pa: pd.Series, fav_mask: pd.Series) -> float:
     return round(min(r / ref for r in rates.values()), _ROUND)
 
 
-def run_intersectional(
-    df: pd.DataFrame, config: M1Config
+def run_intersectional_pair(
+    df: pd.DataFrame, config: M1Config, attr_a: str, attr_b: str
 ) -> IntersectionalResult:
-    """Cross config.protected_attribute x config.secondary_protected_attribute.
+    """Cross attr_a x attr_b explicitly.
 
     Pure. Crossed cells with n < config.min_group_error are excluded with a
     warning; n < config.min_group_warn adds a low-confidence warning; fewer
     than 2 usable cells -> reason set, metrics None. Never raises here (the
     caller validates column presence).
     """
-    pa = config.protected_attribute
-    sa = config.secondary_protected_attribute
+    pa = attr_a
+    sa = attr_b
     dc = config.decision_column
     gt = config.ground_truth_column
-    assert sa is not None  # caller guarantees
 
     cols = [pa, sa, dc] + ([gt] if gt is not None else [])
     clean = df[cols].dropna()
@@ -95,6 +95,7 @@ def run_intersectional(
                 "sous-groupes croisés exploitables après exclusion des "
                 "cellules à effectif insuffisant."
             ),
+            primary_attribute=attr_a, secondary_attribute=attr_b,
         )
 
     rates = {k: v["fav"] / v["n"] for k, v in raw.items()}
@@ -196,4 +197,22 @@ def run_intersectional(
         equal_opportunity_verdict=eo_verdict,
         equalized_odds_verdict=eodds_verdict,
         warnings=tuple(warnings), reason=None,
+        primary_attribute=attr_a, secondary_attribute=attr_b,
+    )
+
+
+def run_intersectional(
+    df: pd.DataFrame, config: M1Config
+) -> IntersectionalResult:
+    """Backward-compat wrapper: cross config.protected_attribute x
+    config.secondary_protected_attribute."""
+    if config.secondary_protected_attribute is None:
+        raise DatasetValidationError(
+            "run_intersectional requiert secondary_protected_attribute.",
+            field="secondary_protected_attribute",
+        )
+    return run_intersectional_pair(
+        df, config,
+        config.protected_attribute,
+        config.secondary_protected_attribute,
     )
