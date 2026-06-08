@@ -21,7 +21,6 @@ export type AuditCreate = {
   favorable_value: string;
   privileged_value: string | null;
   ground_truth_column?: string | null;
-  secondary_protected_attribute?: string | null;
   secondary_privileged_value?: string | null;
 };
 

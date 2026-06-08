@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
@@ -80,22 +80,25 @@ describe('Onboarding R5 — 5-step stepper', () => {
     const nextBtn = screen.getByRole('button', { name: /Commencer/ });
     await user.click(nextBtn);
 
-    // Fill in profile fields
-    const raisonSocialeInput = screen.getByPlaceholderText(/Cabinet Tessier/);
-    const sirenInput = screen.getByPlaceholderText(/824 561 832/);
+    // Wait for step 2 inputs to appear before interacting
+    const raisonSocialeInput = await screen.findByPlaceholderText(/Cabinet Tessier/);
+    const sirenInput = await screen.findByPlaceholderText(/824 561 832/);
 
     await user.type(raisonSocialeInput, 'Test Company');
     await user.type(sirenInput, '123456789');
 
-    // Wait for debounce
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const stored = localStorage.getItem('auditiq.onboarding');
-    expect(stored).toBeDefined();
-    const state = JSON.parse(stored!);
-    expect(state.profile.raison_sociale).toBe('Test Company');
-    expect(state.profile.siren).toBe('123456789');
-  });
+    // Wait for debounce + localStorage write
+    await waitFor(
+      () => {
+        const stored = localStorage.getItem('auditiq.onboarding');
+        expect(stored).toBeDefined();
+        const state = JSON.parse(stored!);
+        expect(state.profile.raison_sociale).toBe('Test Company');
+        expect(state.profile.siren).toBe('123456789');
+      },
+      { timeout: 2000 },
+    );
+  }, 15000);
 
   it('selects organization size and persists to localStorage', async () => {
     const user = userEvent.setup();

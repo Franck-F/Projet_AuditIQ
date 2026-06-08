@@ -134,6 +134,8 @@ describe('Step3 multi-select protected_attributes', () => {
   });
 
   it('can select up to 4 attributes', async () => {
+    // COLUMNS = ['sexe', 'age', 'diplome', 'origine', 'embauche']
+    // 'embauche' is the decision column (role_hint='decision'), so 4 non-decision columns are available.
     const { container } = render(
       <Harness initial={{ protected_attributes: [] }} />,
     );
@@ -142,14 +144,10 @@ describe('Step3 multi-select protected_attributes', () => {
       expect(screen.getByRole('group', { name: /Attributs protégés/i })).toBeInTheDocument();
     });
 
-    // Select 4 attributes manually (clear prefill first by starting with empty)
-    // After prefill, sexe is selected (1). Add age, diplome, origine.
-    const checkboxes = COLUMNS.filter((c) => c !== 'embauche').map((c) =>
-      screen.getByRole('checkbox', { name: c }),
-    );
-
-    // Click non-selected ones until we have 4
-    for (const cb of checkboxes) {
+    // After prefill, sexe is selected (1). Click age, diplome, origine to reach 4.
+    const nonDecisionCols = COLUMNS.filter((c) => c !== 'embauche');
+    for (const col of nonDecisionCols) {
+      const cb = screen.getByRole('checkbox', { name: col });
       const attrs = getSelectedAttrs(container);
       if (attrs.length < 4 && !(cb as HTMLInputElement).checked) {
         fireEvent.click(cb);
@@ -158,7 +156,7 @@ describe('Step3 multi-select protected_attributes', () => {
 
     await waitFor(() => {
       const attrs = getSelectedAttrs(container);
-      expect(attrs.length).toBeLessThanOrEqual(4);
+      expect(attrs.length).toBe(4);
     });
   });
 

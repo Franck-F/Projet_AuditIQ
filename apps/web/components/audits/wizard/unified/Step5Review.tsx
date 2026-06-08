@@ -44,7 +44,7 @@ function Step5ReviewM1({
   }
   if (hasPairwise) {
     analyses.push(
-      `Analyse intersectionnelle (${nPairs} paire${nPairs > 1 ? 's' : ''} : ${attrs.join(' × ')})`,
+      `Analyse intersectionnelle par paire (${nPairs} paire${nPairs > 1 ? 's' : ''} : ${attrs.join(' × ')})`,
     );
   }
 

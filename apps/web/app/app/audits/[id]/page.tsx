@@ -1015,7 +1015,10 @@ function MethodoTab({ audit }: { audit: ReturnType<typeof useAudit>['data'] }) {
       ]
     : [
         ['Modèle', audit.code ?? audit.id],
-        ['Attribut audité', audit.protected_attribute ?? '—'],
+        ['Attributs audités', (() => {
+          const m1 = audit.metrics && 'marginals' in audit.metrics ? audit.metrics as M1MetricsOut : null;
+          return m1?.marginals?.length ? m1.marginals.map((x) => x.attribute).join(', ') : (audit.protected_attribute ?? '—');
+        })()],
         ['Colonne de décision', audit.decision_column ?? '—'],
         ['Valeur favorable', audit.favorable_value ?? '—'],
         ['Décisions analysées', audit.metrics && 'groups' in audit.metrics ? String((audit.metrics as M1MetricsOut).groups.reduce((s, g) => s + g.n, 0)) : (audit.metrics && 'n' in audit.metrics ? String((audit.metrics as M2MetricsOut).n) : '—')],

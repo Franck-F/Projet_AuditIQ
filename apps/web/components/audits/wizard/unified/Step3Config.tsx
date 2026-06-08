@@ -218,7 +218,7 @@ function Step3ConfigM1({
           className="rounded-md border border-border-default bg-surface px-3 py-2 flex flex-col gap-1.5"
           role="group"
           aria-label="Attributs protégés"
-          onFocus={() => setHelpKey('wizard.step3.protected_attribute')}
+          onFocus={() => setHelpKey('wizard.step3.protected_attributes')}
           onBlur={() => clearHelpKey()}
         >
           {orderedColumns.length === 0 && (
