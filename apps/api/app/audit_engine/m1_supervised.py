@@ -11,6 +11,7 @@ from .metrics import (
     VERDICT_ORDER,
     decide_verdict,
     demographic_parity_diff,
+    demographic_parity_ratio,
     disparate_impacts,
     gap_verdict,
     group_confusion,
@@ -117,6 +118,7 @@ def _marginal_audit(
         favs[g] = int((mask & (dc_str == fav)).sum())
 
     rates = {g: selection_rate(favs[g], counts[g]) for g in groups}
+    dp_ratio = demographic_parity_ratio(rates)
     reference = pick_reference(rates, privileged)
     if (
         privileged is not None
@@ -148,9 +150,14 @@ def _marginal_audit(
     score = risk_score(overall_di, size_imbalance)
 
     eo_diff = eodds_diff = None
+    eo_ratio: float | None = None
+    eodds_ratio: float | None = None
     dp_verdict = eo_verdict = eodds_verdict = tl_reason = None
     tpr_map: dict[str, float] = {}
     fpr_map: dict[str, float] = {}
+    acc_map: dict[str, float] = {}
+    prec_map: dict[str, float] = {}
+    fnr_map: dict[str, float] = {}
     gt = config.ground_truth_column
     if gt is not None:
         if gt not in df.columns:
@@ -174,6 +181,7 @@ def _marginal_audit(
             res = truelabel_metrics(confusion, privileged)
             warnings.extend(res.skipped)
             tpr_map, fpr_map = res.tpr, res.fpr
+            acc_map, prec_map, fnr_map = res.accuracy, res.precision, res.fnr
             eo_diff = (
                 round(res.eo_diff, _ROUND)
                 if res.eo_diff is not None else None
@@ -181,6 +189,14 @@ def _marginal_audit(
             eodds_diff = (
                 round(res.eodds_diff, _ROUND)
                 if res.eodds_diff is not None else None
+            )
+            eo_ratio = (
+                round(res.eo_ratio, _ROUND)
+                if res.eo_ratio is not None else None
+            )
+            eodds_ratio = (
+                round(res.eodds_ratio, _ROUND)
+                if res.eodds_ratio is not None else None
             )
             tl_reason = res.reason
             if eo_diff is not None:
@@ -211,6 +227,9 @@ def _marginal_audit(
             disparate_impact=round(di_map[g], _ROUND),
             tpr=(round(tpr_map[g], _ROUND) if g in tpr_map else None),
             fpr=(round(fpr_map[g], _ROUND) if g in fpr_map else None),
+            fnr=(round(fnr_map[g], _ROUND) if g in fnr_map else None),
+            accuracy=(round(acc_map[g], _ROUND) if g in acc_map else None),
+            precision=(round(prec_map[g], _ROUND) if g in prec_map else None),
         )
         for g in groups
     ]
@@ -231,6 +250,9 @@ def _marginal_audit(
         equal_opportunity_verdict=eo_verdict,
         equalized_odds_verdict=eodds_verdict,
         truelabel_reason=tl_reason,
+        demographic_parity_ratio=round(dp_ratio, _ROUND),
+        equal_opportunity_ratio=eo_ratio,
+        equalized_odds_ratio=eodds_ratio,
     )
 
 

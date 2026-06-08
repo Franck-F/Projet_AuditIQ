@@ -1,8 +1,16 @@
 """TDD: additive fairlearn metric fields + helpers."""
 from __future__ import annotations
 
-from app.audit_engine.metrics import demographic_parity_ratio, group_confusion, truelabel_metrics
-from app.audit_engine.types import GroupStat, IntersectionalResult, MarginalResult
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from app.audit_engine.m1_supervised import run_m1
+from app.audit_engine.metrics import demographic_parity_ratio, truelabel_metrics
+from app.audit_engine.types import GroupStat, IntersectionalResult, M1Config, MarginalResult
+
+_FIX = Path(__file__).parent / "fixtures"
 
 
 def test_groupstat_has_extra_rates():
@@ -54,3 +62,54 @@ def test_truelabel_metrics_ratios_and_rates():
     assert round(r.precision["a"], 4) == 0.8     # 8/(8+2)
     assert round(r.fnr["a"], 4) == 0.2           # 2/(8+2) ; ==1-TPR
     assert round(r.fnr["b"], 4) == 0.7
+
+
+# ---------------------------------------------------------------------------
+# Task 3 tests: _marginal_audit + run_intersectional_pair populate new fields
+# ---------------------------------------------------------------------------
+
+
+def test_marginal_populates_dp_ratio_and_group_rates():
+    df = pd.read_csv(_FIX / "m1-truelabel-eo.csv")  # has ground truth
+    cfg = M1Config(protected_attribute="sexe", decision_column="predicted",
+                   favorable_value="1", ground_truth_column="actually_qualified")
+    r = run_m1(df, cfg)
+    m = r.marginals[0]
+    assert 0.0 <= m.demographic_parity_ratio <= 1.0
+    assert m.equal_opportunity_ratio is not None
+    assert m.equalized_odds_ratio is not None
+    # at least one group exposes the extra true-label rates
+    assert any(g.accuracy is not None and g.precision is not None
+               and g.fnr is not None for g in m.groups)
+
+
+def test_marginal_no_groundtruth_ratios_none_but_dp_ratio_present():
+    df = pd.read_csv(_FIX / "m1-recrutement-biais.csv")  # no GT
+    cfg = M1Config(protected_attribute="sexe", decision_column="embauche",
+                   favorable_value="oui")
+    m = run_m1(df, cfg).marginals[0]
+    assert m.equal_opportunity_ratio is None
+    assert m.equalized_odds_ratio is None
+    assert 0.0 <= m.demographic_parity_ratio <= 1.0
+    assert all(g.accuracy is None for g in m.groups)
+
+
+def test_pairwise_populates_ratios():
+    # Use a synthetic DataFrame with 2 low-cardinality protected attrs
+    # (age from the CSV fixture is high-cardinality — not suitable)
+    np.random.seed(42)
+    df = pd.DataFrame({
+        "sexe": (["H"] * 60 + ["F"] * 60),
+        "cat": (["A"] * 30 + ["B"] * 30 + ["A"] * 30 + ["B"] * 30),
+        "decision": (["1"] * 20 + ["0"] * 10 + ["1"] * 20 + ["0"] * 10
+                     + ["1"] * 15 + ["0"] * 15 + ["1"] * 15 + ["0"] * 15),
+        "gt": (["1"] * 18 + ["0"] * 12 + ["1"] * 18 + ["0"] * 12
+               + ["1"] * 12 + ["0"] * 18 + ["1"] * 12 + ["0"] * 18),
+    })
+    cfg = M1Config(
+        protected_attribute="sexe", decision_column="decision",
+        favorable_value="1", ground_truth_column="gt",
+        protected_attributes=("sexe", "cat"),
+    )
+    p = run_m1(df, cfg).pairwise[0]
+    assert 0.0 <= p.demographic_parity_ratio <= 1.0

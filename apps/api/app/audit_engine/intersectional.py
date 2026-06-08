@@ -7,6 +7,7 @@ import pandas as pd
 from .errors import DatasetValidationError
 from .metrics import (
     decide_verdict,
+    demographic_parity_ratio,
     gap_verdict,
     group_confusion,
     risk_score,
@@ -96,9 +97,15 @@ def run_intersectional_pair(
                 "cellules à effectif insuffisant."
             ),
             primary_attribute=attr_a, secondary_attribute=attr_b,
+            demographic_parity_ratio=1.0,
+            equal_opportunity_ratio=None,
+            equalized_odds_ratio=None,
         )
 
     rates = {k: v["fav"] / v["n"] for k, v in raw.items()}
+    dp_ratio = demographic_parity_ratio(
+        {f"{pv}|{sv}": r for (pv, sv), r in rates.items()}
+    )
 
     # reference cell
     ref_key: tuple[str, str] | None = None
@@ -119,6 +126,8 @@ def run_intersectional_pair(
     tpr_map: dict[tuple[str, str], float] = {}
     fpr_map: dict[tuple[str, str], float] = {}
     eo_diff = eodds_diff = None
+    eo_ratio: float | None = None
+    eodds_ratio: float | None = None
     dp_verdict = eo_verdict = eodds_verdict = None
     if gt is not None:
         true_mask = clean[gt].astype(str) == fav
@@ -142,6 +151,13 @@ def run_intersectional_pair(
         eodds_diff = (
             round(tl.eodds_diff, _ROUND)
             if tl.eodds_diff is not None else None
+        )
+        eo_ratio = (
+            round(tl.eo_ratio, _ROUND) if tl.eo_ratio is not None else None
+        )
+        eodds_ratio = (
+            round(tl.eodds_ratio, _ROUND)
+            if tl.eodds_ratio is not None else None
         )
 
     cells: list[IntersectionalCell] = []
@@ -198,6 +214,9 @@ def run_intersectional_pair(
         equalized_odds_verdict=eodds_verdict,
         warnings=tuple(warnings), reason=None,
         primary_attribute=attr_a, secondary_attribute=attr_b,
+        demographic_parity_ratio=round(dp_ratio, _ROUND),
+        equal_opportunity_ratio=eo_ratio,
+        equalized_odds_ratio=eodds_ratio,
     )
 
 

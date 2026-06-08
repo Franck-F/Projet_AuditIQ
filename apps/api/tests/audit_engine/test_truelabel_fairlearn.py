@@ -55,6 +55,35 @@ def test_eo_eodds_match_fairlearn():
         assert gs.fpr == round(float(mf_fpr.by_group[gs.value]), _ROUND)
 
 
+def test_ratios_match_fairlearn():
+    from fairlearn.metrics import (
+        MetricFrame,
+        false_negative_rate,
+    )
+    from fairlearn.metrics import (
+        demographic_parity_ratio as fl_dp_ratio,
+    )
+    from fairlearn.metrics import (
+        equalized_odds_ratio as fl_eodds_ratio,
+    )
+    df = _frame()  # the existing helper with g/d/reel
+    cfg = M1Config(protected_attribute="g", decision_column="d",
+                   favorable_value="oui", ground_truth_column="reel")
+    m = run_m1(df, cfg).marginals[0]
+    y_pred = (df["d"].astype(str) == "oui").astype(int)
+    y_true = (df["reel"].astype(str) == "oui").astype(int)
+    sf = df["g"].astype(str)
+    assert m.demographic_parity_ratio == round(
+        float(fl_dp_ratio(y_pred, y_pred, sensitive_features=sf)), _ROUND)
+    assert m.equalized_odds_ratio == round(
+        float(fl_eodds_ratio(y_true, y_pred, sensitive_features=sf)), _ROUND)
+    mf_fnr = MetricFrame(metrics=false_negative_rate, y_true=y_true,
+                         y_pred=y_pred, sensitive_features=sf)
+    for g in m.groups:
+        if g.fnr is not None:
+            assert g.fnr == round(float(mf_fnr.by_group[g.value]), _ROUND)
+
+
 def test_di_and_demographic_parity_match_fairlearn():
     """Disparate Impact (4/5) and Demographic Parity gap equal fairlearn's
     demographic_parity_ratio / demographic_parity_difference. privileged=None
