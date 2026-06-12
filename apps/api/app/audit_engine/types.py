@@ -33,6 +33,9 @@ class GroupStat:
     disparate_impact: float
     tpr: float | None = None
     fpr: float | None = None
+    fnr: float | None = None
+    accuracy: float | None = None
+    precision: float | None = None
 
 
 @dataclass(frozen=True)
@@ -52,6 +55,9 @@ class MarginalResult:
     equalized_odds_verdict: str | None = None
     truelabel_reason: str | None = None
     warnings: tuple[str, ...] = ()
+    demographic_parity_ratio: float = 1.0
+    equal_opportunity_ratio: float | None = None
+    equalized_odds_ratio: float | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "groups", tuple(self.groups))
@@ -118,6 +124,9 @@ class IntersectionalResult:
     reason: str | None = None
     primary_attribute: str = ""
     secondary_attribute: str = ""
+    demographic_parity_ratio: float = 1.0
+    equal_opportunity_ratio: float | None = None
+    equalized_odds_ratio: float | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "cells", tuple(self.cells))

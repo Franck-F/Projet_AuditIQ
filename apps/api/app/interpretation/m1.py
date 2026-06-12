@@ -43,6 +43,30 @@ def load_prompt_template() -> str:
     )
 
 
+def _group_dict(g: object) -> dict[str, object]:
+    """Serialize a GroupStat (engine) to a JSON-friendly dict, including new
+    fairlearn fields when present."""
+    from app.audit_engine.types import GroupStat as _GroupStat
+    assert isinstance(g, _GroupStat)
+    d: dict[str, object] = {
+        "value": g.value,
+        "n": g.n,
+        "selection_rate": g.selection_rate,
+        "disparate_impact": g.disparate_impact,
+    }
+    if g.tpr is not None:
+        d["tpr"] = g.tpr
+        d["fpr"] = g.fpr
+    # Per-group rates (only when ground truth was provided)
+    if g.fnr is not None:
+        d["fnr"] = g.fnr
+    if g.accuracy is not None:
+        d["accuracy"] = g.accuracy
+    if g.precision is not None:
+        d["precision"] = g.precision
+    return d
+
+
 def _metrics_json(result: M1Result) -> str:
     data: dict[str, object] = {
         "disparate_impact": result.disparate_impact,
@@ -51,16 +75,7 @@ def _metrics_json(result: M1Result) -> str:
         "risk_score": result.risk_score,
         "worst_group": result.worst_group,
         "reference_value": result.reference_value,
-        "groups": [
-            {
-                "value": g.value,
-                "n": g.n,
-                "selection_rate": g.selection_rate,
-                "disparate_impact": g.disparate_impact,
-                **({"tpr": g.tpr, "fpr": g.fpr} if g.tpr is not None else {}),
-            }
-            for g in result.groups
-        ],
+        "groups": [_group_dict(g) for g in result.groups],
         "warnings": list(result.warnings),
     }
     if result.equal_opportunity_diff is not None:
@@ -81,16 +96,17 @@ def _metrics_json(result: M1Result) -> str:
                 "risk_score": m.risk_score,
                 "worst_group": m.worst_group,
                 "reference_value": m.reference_value,
-                "groups": [
+                # Fairlearn ratios — always present (DP ratio is selection-rate based)
+                "demographic_parity_ratio": m.demographic_parity_ratio,
+                **(
                     {
-                        "value": g.value,
-                        "n": g.n,
-                        "selection_rate": g.selection_rate,
-                        "disparate_impact": g.disparate_impact,
-                        **({"tpr": g.tpr, "fpr": g.fpr} if g.tpr is not None else {}),
+                        "equal_opportunity_ratio": m.equal_opportunity_ratio,
+                        "equalized_odds_ratio": m.equalized_odds_ratio,
                     }
-                    for g in m.groups
-                ],
+                    if m.equal_opportunity_ratio is not None
+                    else {}
+                ),
+                "groups": [_group_dict(g) for g in m.groups],
                 **(
                     {
                         "equal_opportunity_diff": m.equal_opportunity_diff,
@@ -114,6 +130,16 @@ def _metrics_json(result: M1Result) -> str:
                 "risk_score": p.risk_score,
                 "worst_primary": p.worst_primary,
                 "worst_secondary": p.worst_secondary,
+                # Fairlearn ratios
+                "demographic_parity_ratio": p.demographic_parity_ratio,
+                **(
+                    {
+                        "equal_opportunity_ratio": p.equal_opportunity_ratio,
+                        "equalized_odds_ratio": p.equalized_odds_ratio,
+                    }
+                    if p.equal_opportunity_ratio is not None
+                    else {}
+                ),
             }
             for p in result.pairwise
         ]
@@ -188,6 +214,23 @@ def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
                 f"(Disparate Impact : {worst_m.disparate_impact}, "
                 f"groupe le plus défavorisé : « {worst_m.worst_group} »)."
             )
+        # Informative fairlearn ratio sentence — never changes verdict, purely additive
+        ratio_parts = [
+            f"DP ratio = {worst_m.demographic_parity_ratio}"
+        ]
+        if worst_m.equal_opportunity_ratio is not None:
+            ratio_parts.append(f"EO ratio = {worst_m.equal_opportunity_ratio}")
+        if worst_m.equalized_odds_ratio is not None:
+            ratio_parts.append(
+                f"Equalized Odds ratio = {worst_m.equalized_odds_ratio}"
+            )
+        narrative += (
+            f" [Informatif — sans effet sur le verdict] "
+            f"Ratios fairlearn pour « {worst_m.attribute} » : "
+            f"{', '.join(ratio_parts)}. "
+            f"Un ratio proche de 1 indique une parité entre groupes ; "
+            f"ces ratios complètent les différences et se lisent conjointement."
+        )
 
     if result.pairwise:
         # Describe the worst pairwise crossing (Gender Shades framing)

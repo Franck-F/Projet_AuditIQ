@@ -182,19 +182,47 @@ def build_excel_report(audit: AuditOut) -> bytes:
                     [f"Attribut protégé : {marg.attribute}"],
                     ["Disparate Impact", marg.disparate_impact],
                     ["Demographic Parity (écart)", marg.demographic_parity_diff],
+                    ["DP ratio (fairlearn)", marg.demographic_parity_ratio],
                     ["Groupe le plus défavorisé", marg.worst_group],
                     ["Référence", marg.reference_value],
                     ["Verdict", marg.verdict],
                     ["Score de risque", marg.risk_score],
-                    [],
-                    ["Groupe", "Effectif", "Favorables", "Taux", "DI"],
                 ],
             )
-            for g in marg.groups:
-                detail.append(
-                    [g.value, g.n, g.favorable, g.selection_rate,
-                     g.disparate_impact]
+            if marg.equal_opportunity_ratio is not None:
+                _rows(
+                    detail,
+                    [
+                        ["EO ratio (fairlearn, informatif)",
+                         marg.equal_opportunity_ratio],
+                        ["Equalized Odds ratio (fairlearn, informatif)",
+                         marg.equalized_odds_ratio if marg.equalized_odds_ratio is not None else "—"],
+                    ],
                 )
+            # Per-group table — add FNR/Accuracy/Precision columns when GT present
+            has_gt_rates = any(
+                g.fnr is not None for g in marg.groups
+            )
+            if has_gt_rates:
+                _rows(detail, [[], ["Groupe", "Effectif", "Favorables",
+                                     "Taux", "DI", "FNR", "Accuracy",
+                                     "Precision"]])
+                for g in marg.groups:
+                    detail.append(
+                        [g.value, g.n, g.favorable, g.selection_rate,
+                         g.disparate_impact,
+                         g.fnr if g.fnr is not None else "—",
+                         g.accuracy if g.accuracy is not None else "—",
+                         g.precision if g.precision is not None else "—"]
+                    )
+            else:
+                _rows(detail, [[], ["Groupe", "Effectif", "Favorables",
+                                     "Taux", "DI"]])
+                for g in marg.groups:
+                    detail.append(
+                        [g.value, g.n, g.favorable, g.selection_rate,
+                         g.disparate_impact]
+                    )
             if marg.equal_opportunity_diff is not None:
                 _rows(
                     detail,
@@ -229,6 +257,8 @@ def build_excel_report(audit: AuditOut) -> bytes:
                     ["Disparate Impact intersectionnel", ix.disparate_impact],
                     ["Demographic Parity (écart intersectionnel)",
                      ix.demographic_parity_diff],
+                    ["DP ratio intersectionnel (fairlearn)",
+                     ix.demographic_parity_ratio],
                     ["Verdict intersectionnel", ix.verdict],
                     ["Pire sous-groupe (primaire)", ix.worst_primary],
                     ["Pire sous-groupe (secondaire)", ix.worst_secondary],
@@ -236,6 +266,21 @@ def build_excel_report(audit: AuditOut) -> bytes:
                      if len(ix.marginal_di) > 0 else "—"],
                     ["DI marginal (attribut secondaire)", ix.marginal_di[1]
                      if len(ix.marginal_di) > 1 else "—"],
+                ],
+            )
+            if ix.equal_opportunity_ratio is not None:
+                _rows(
+                    detail,
+                    [
+                        ["EO ratio intersectionnel (fairlearn, informatif)",
+                         ix.equal_opportunity_ratio],
+                        ["Equalized Odds ratio intersectionnel (fairlearn, informatif)",
+                         ix.equalized_odds_ratio if ix.equalized_odds_ratio is not None else "—"],
+                    ],
+                )
+            _rows(
+                detail,
+                [
                     [],
                     ["Matrice croisée : sous-groupes"],
                     ["Groupe primaire", "Groupe secondaire", "Effectif",

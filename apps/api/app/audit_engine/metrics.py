@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 VERDICT_PASS = "pass"
 VERDICT_WARN = "warn"
@@ -40,6 +40,21 @@ def disparate_impacts(
 
 def demographic_parity_diff(rates: dict[str, float]) -> float:
     return max(rates.values()) - min(rates.values())
+
+
+def demographic_parity_ratio(rates: dict[str, float]) -> float:
+    """min/max selection rate across groups (fairlearn). 1.0 if max == 0."""
+    if not rates:
+        return 1.0
+    hi = max(rates.values())
+    return 1.0 if hi == 0.0 else min(rates.values()) / hi
+
+
+def _ratio(values: dict[str, float]) -> float | None:
+    if len(values) < 2:
+        return None
+    hi = max(values.values())
+    return None if hi == 0.0 else min(values.values()) / hi
 
 
 def decide_verdict(
@@ -100,6 +115,11 @@ class TrueLabelMetrics:
     eodds_diff: float | None
     skipped: list[str]
     reason: str | None
+    eo_ratio: float | None = None
+    eodds_ratio: float | None = None
+    accuracy: dict[str, float] = field(default_factory=dict)
+    precision: dict[str, float] = field(default_factory=dict)
+    fnr: dict[str, float] = field(default_factory=dict)
 
 
 def _gap(values: dict[str, float], privileged: str | None) -> float:
@@ -119,6 +139,9 @@ def truelabel_metrics(
     tpr: dict[str, float] = {}
     fpr: dict[str, float] = {}
     skipped: list[str] = []
+    accuracy: dict[str, float] = {}
+    precision: dict[str, float] = {}
+    fnr: dict[str, float] = {}
     for g, c in confusion.items():
         pos = c["tp"] + c["fn"]
         neg = c["fp"] + c["tn"]
@@ -129,6 +152,7 @@ def truelabel_metrics(
             )
         else:
             tpr[g] = c["tp"] / pos
+            fnr[g] = c["fn"] / pos
         if neg == 0:
             skipped.append(
                 f"Groupe « {g} » : aucun négatif réel — FPR non "
@@ -136,6 +160,11 @@ def truelabel_metrics(
             )
         else:
             fpr[g] = c["fp"] / neg
+        n = c["tp"] + c["fp"] + c["fn"] + c["tn"]
+        if n > 0:
+            accuracy[g] = (c["tp"] + c["tn"]) / n
+        if (c["tp"] + c["fp"]) > 0:
+            precision[g] = c["tp"] / (c["tp"] + c["fp"])
     reason: str | None = None
     eo_diff: float | None = None
     eodds_diff: float | None = None
@@ -154,7 +183,14 @@ def truelabel_metrics(
             "Equalized Odds non calculable : moins de 2 groupes avec un "
             "taux de faux positifs défini."
         )
+    eo_ratio = _ratio(tpr)
+    eodds_ratio: float | None = None
+    if eo_ratio is not None and len(fpr) >= 2:
+        fpr_ratio = _ratio(fpr)
+        eodds_ratio = min(eo_ratio, fpr_ratio) if fpr_ratio is not None else None
     return TrueLabelMetrics(
         tpr=tpr, fpr=fpr, eo_diff=eo_diff, eodds_diff=eodds_diff,
         skipped=skipped, reason=reason,
+        eo_ratio=eo_ratio, eodds_ratio=eodds_ratio,
+        accuracy=accuracy, precision=precision, fnr=fnr,
     )

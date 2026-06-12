@@ -738,6 +738,13 @@ function GroupesTab({
             value: g.selection_rate,
             n: g.n,
           }));
+          const dpRatio = marginal.demographic_parity_ratio;
+          const eoRatio = marginal.equal_opportunity_ratio;
+          const eoddsRatio = marginal.equalized_odds_ratio;
+          // Show per-group rate columns only when at least one group has ground-truth rates
+          const hasGroundTruth = marginal.groups.some(
+            (g) => g.fnr != null || g.accuracy != null || g.precision != null,
+          );
           return (
             <Card key={marginal.attribute} className="overflow-hidden p-0">
               <div className="border-b border-border-subtle px-5 py-4">
@@ -754,6 +761,67 @@ function GroupesTab({
                   threshold={0.8}
                   format={(v) => `${(v * 100).toFixed(1)}%`}
                 />
+                {/* Fairlearn ratios — informative */}
+                {dpRatio != null && (
+                  <div
+                    className="mt-4 flex flex-wrap gap-4 rounded-md border border-border-subtle bg-surface-2 px-4 py-3 text-[12.5px] text-fg-secondary"
+                    aria-label="Ratios fairlearn (informatifs)"
+                  >
+                    <span>
+                      <span className="font-medium text-fg">Ratio DP</span>{' '}
+                      <span className="font-mono tabular-nums">{dpRatio.toFixed(3)}</span>
+                    </span>
+                    {eoRatio != null && (
+                      <span>
+                        <span className="font-medium text-fg">Ratio EO</span>{' '}
+                        <span className="font-mono tabular-nums">{eoRatio.toFixed(3)}</span>
+                      </span>
+                    )}
+                    {eoddsRatio != null && (
+                      <span>
+                        <span className="font-medium text-fg">Ratio EOdds</span>{' '}
+                        <span className="font-mono tabular-nums">{eoddsRatio.toFixed(3)}</span>
+                      </span>
+                    )}
+                    <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted">
+                      informatif
+                    </span>
+                  </div>
+                )}
+                {/* Per-group true-label rates — only when ground truth provided */}
+                {hasGroundTruth && (
+                  <div className="mt-4 overflow-x-auto">
+                    <table
+                      className="w-full text-[12.5px]"
+                      aria-label={`Taux par groupe · ${marginal.attribute}`}
+                    >
+                      <thead>
+                        <tr className="border-b border-border-subtle">
+                          <th className="pb-2 pr-4 text-left font-medium text-fg-muted">Groupe</th>
+                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">FNR</th>
+                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">Précision</th>
+                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">Accuracy</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {marginal.groups.map((g) => (
+                          <tr key={g.value} className="border-t border-border-subtle">
+                            <td className="py-1.5 pr-4 font-medium text-fg">{g.value}</td>
+                            <td className="py-1.5 px-3 text-center font-mono tabular-nums text-fg-secondary">
+                              {g.fnr != null ? `${(g.fnr * 100).toFixed(1)}%` : '—'}
+                            </td>
+                            <td className="py-1.5 px-3 text-center font-mono tabular-nums text-fg-secondary">
+                              {g.precision != null ? `${(g.precision * 100).toFixed(1)}%` : '—'}
+                            </td>
+                            <td className="py-1.5 px-3 text-center font-mono tabular-nums text-fg-secondary">
+                              {g.accuracy != null ? `${(g.accuracy * 100).toFixed(1)}%` : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 <hr className="my-4 border-border-subtle" />
                 <InlineNote icon={Scale}>
                   Règle des 4/5 : le taux du groupe défavorisé doit atteindre au moins 80 % du taux de référence.
@@ -769,6 +837,9 @@ function GroupesTab({
           // Collect unique primary and secondary values for a simple grid display
           const primaryValues = [...new Set(pair.cells.map((c) => c.primary_value))];
           const secondaryValues = [...new Set(pair.cells.map((c) => c.secondary_value))];
+          const pairDpRatio = pair.demographic_parity_ratio;
+          const pairEoRatio = pair.equal_opportunity_ratio;
+          const pairEoddsRatio = pair.equalized_odds_ratio;
           return (
             <Card key={pairTitle} className="overflow-hidden p-0">
               <div className="border-b border-border-subtle px-5 py-4">
@@ -832,6 +903,33 @@ function GroupesTab({
                     ))}
                   </tbody>
                 </table>
+                {/* Fairlearn ratios for the pair — informative */}
+                {pairDpRatio != null && (
+                  <div
+                    className="mt-3 flex flex-wrap gap-4 rounded-md border border-border-subtle bg-surface-2 px-4 py-3 text-[12.5px] text-fg-secondary"
+                    aria-label="Ratios fairlearn paire (informatifs)"
+                  >
+                    <span>
+                      <span className="font-medium text-fg">Ratio DP</span>{' '}
+                      <span className="font-mono tabular-nums">{pairDpRatio.toFixed(3)}</span>
+                    </span>
+                    {pairEoRatio != null && (
+                      <span>
+                        <span className="font-medium text-fg">Ratio EO</span>{' '}
+                        <span className="font-mono tabular-nums">{pairEoRatio.toFixed(3)}</span>
+                      </span>
+                    )}
+                    {pairEoddsRatio != null && (
+                      <span>
+                        <span className="font-medium text-fg">Ratio EOdds</span>{' '}
+                        <span className="font-mono tabular-nums">{pairEoddsRatio.toFixed(3)}</span>
+                      </span>
+                    )}
+                    <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted">
+                      informatif
+                    </span>
+                  </div>
+                )}
               </div>
             </Card>
           );

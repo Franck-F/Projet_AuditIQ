@@ -489,3 +489,137 @@ def test_html_escapes_recommendation_xss() -> None:
     html = build_report_html(audit)
     assert "<script>alert(1)</script>" not in html
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+# ---------------------------------------------------------------------------
+# Task 6 — new tests: fairlearn ratios + per-group rates in HTML
+# ---------------------------------------------------------------------------
+
+def _m1_with_ratios_and_gt() -> AuditOut:
+    """Audit with marginal carrying ratios and per-group GT rates."""
+    from app.schemas.audit import MarginalOut
+    mar = MarginalOut(
+        attribute="sexe",
+        groups=[
+            GroupStatOut(value="H", n=100, favorable=80,
+                         selection_rate=0.8, disparate_impact=1.0,
+                         tpr=0.85, fpr=0.1, fnr=0.15, accuracy=0.82,
+                         precision=0.88),
+            GroupStatOut(value="F", n=100, favorable=40,
+                         selection_rate=0.4, disparate_impact=0.5,
+                         tpr=0.5, fpr=0.3, fnr=0.5, accuracy=0.6,
+                         precision=0.7),
+        ],
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        equal_opportunity_diff=0.35,
+        equalized_odds_diff=0.35,
+        equal_opportunity_verdict="fail",
+        equalized_odds_verdict="fail",
+        demographic_parity_verdict="fail",
+        demographic_parity_ratio=0.5,
+        equal_opportunity_ratio=0.588,
+        equalized_odds_ratio=0.333,
+    )
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-R1", title="Ratios GT HTML", status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="sexe",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=mar.groups,
+            reference_value="H", disparate_impact=0.5,
+            demographic_parity_diff=0.4, worst_group="F", verdict="fail",
+            risk_score=75, warnings=[],
+            equal_opportunity_diff=0.35, equalized_odds_diff=0.35,
+            equal_opportunity_verdict="fail",
+            equalized_odds_verdict="fail",
+            demographic_parity_verdict="fail",
+            marginals=[mar],
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+
+
+def test_html_marginal_shows_dp_ratio():
+    """HTML report must show demographic_parity_ratio in the per-attribute section."""
+    h = build_report_html(_m1_with_ratios_and_gt())
+    assert "0.5" in h
+    # Some label indicating this is a DP ratio or ratio section
+    assert "ratio" in h.lower() or "Parité" in h or "DP" in h
+
+
+def test_html_marginal_shows_eo_eodds_ratio():
+    """HTML report shows equal_opportunity_ratio and equalized_odds_ratio when GT present."""
+    h = build_report_html(_m1_with_ratios_and_gt())
+    assert "0.588" in h
+    assert "0.333" in h
+
+
+def test_html_marginal_group_table_shows_fnr_accuracy_precision():
+    """HTML per-group table shows FNR, Accuracy, Precision columns when GT present."""
+    h = build_report_html(_m1_with_ratios_and_gt())
+    assert "FNR" in h or "fnr" in h.lower()
+    assert "Accuracy" in h or "accuracy" in h.lower()
+    assert "Precision" in h or "precision" in h.lower()
+    # Per-group rate values
+    assert "0.15" in h   # H group fnr
+    assert "0.82" in h   # H group accuracy
+    assert "0.88" in h   # H group precision
+
+
+def test_html_marginal_group_table_no_extra_cols_without_gt():
+    """Without GT (no fnr/accuracy/precision), no FNR/Accuracy/Precision columns."""
+    h = build_report_html(_m1_with_pairwise())
+    assert "FNR" not in h
+
+
+def _m1_with_pairwise_ratios() -> AuditOut:
+    """Audit with pairwise entry carrying ratio fields."""
+    ix = _intersectional_out().model_copy(update={
+        "primary_attribute": "sexe",
+        "secondary_attribute": "origine",
+        "demographic_parity_ratio": 0.4,
+        "equal_opportunity_ratio": 0.5,
+        "equalized_odds_ratio": 0.45,
+    })
+    from app.schemas.audit import MarginalOut
+    return AuditOut(
+        id=uuid.uuid4(), code="AUD-2026-R2", title="Pairwise Ratios HTML",
+        status="done",
+        module="M1", dataset_id=uuid.uuid4(), protected_attribute="sexe",
+        decision_column="embauche", favorable_value="oui", privileged_value=None,
+        created_at=_NOW, completed_at=_NOW,
+        metrics=M1MetricsOut(
+            groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                 selection_rate=0.3, disparate_impact=0.6)],
+            reference_value="H", disparate_impact=0.6,
+            demographic_parity_diff=0.2, worst_group="F", verdict="fail",
+            risk_score=80, warnings=[],
+            marginals=[
+                MarginalOut(
+                    attribute="sexe",
+                    groups=[GroupStatOut(value="F", n=100, favorable=30,
+                                         selection_rate=0.3, disparate_impact=0.6)],
+                    reference_value="H", disparate_impact=0.6,
+                    demographic_parity_diff=0.2, worst_group="F",
+                    verdict="fail", risk_score=80,
+                    demographic_parity_ratio=0.6,
+                ),
+            ],
+            pairwise=[ix],
+        ),
+        interpretation=_interp(), pre_check=[], config=None,
+    )
+
+
+def test_html_pairwise_shows_ratios():
+    """HTML report shows pairwise ratio values in the intersectional block."""
+    h = build_report_html(_m1_with_pairwise_ratios())
+    assert "0.4" in h    # dp_ratio (pairwise)
+    assert "0.5" in h    # eo_ratio (pairwise)
+    assert "0.45" in h   # eodds_ratio (pairwise)

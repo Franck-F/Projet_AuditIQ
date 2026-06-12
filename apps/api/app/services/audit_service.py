@@ -94,6 +94,9 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                 disparate_impact=g.disparate_impact,
                 tpr=g.tpr,
                 fpr=g.fpr,
+                fnr=g.fnr,
+                accuracy=g.accuracy,
+                precision=g.precision,
             )
             for g in result_obj.groups
         ],
@@ -133,6 +136,9 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                         disparate_impact=g.disparate_impact,
                         tpr=g.tpr,
                         fpr=g.fpr,
+                        fnr=g.fnr,
+                        accuracy=g.accuracy,
+                        precision=g.precision,
                     )
                     for g in m.groups
                 ],
@@ -158,6 +164,9 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                     if m.equalized_odds_verdict is not None else None
                 ),
                 truelabel_reason=m.truelabel_reason,
+                demographic_parity_ratio=m.demographic_parity_ratio,
+                equal_opportunity_ratio=m.equal_opportunity_ratio,
+                equalized_odds_ratio=m.equalized_odds_ratio,
             )
             for m in result_obj.marginals
         ],
@@ -204,6 +213,9 @@ def _to_metrics_out(result_obj: M1Result) -> M1MetricsOut:
                 reason=p.reason,
                 primary_attribute=p.primary_attribute,
                 secondary_attribute=p.secondary_attribute,
+                demographic_parity_ratio=p.demographic_parity_ratio,
+                equal_opportunity_ratio=p.equal_opportunity_ratio,
+                equalized_odds_ratio=p.equalized_odds_ratio,
             )
             for p in result_obj.pairwise
         ],

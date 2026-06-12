@@ -198,3 +198,212 @@ async def test_interpret_m1_recommendations_empty_when_field_absent(
     provider = _StubLLM(llm_json)
     out = await interpret_m1(m1_result_pass, provider=provider)
     assert out.recommendations == []
+
+
+# ---------------------------------------------------------------------------
+# Task 5 — new tests: ratios in _metrics_json + _fallback informative sentence
+# ---------------------------------------------------------------------------
+
+async def test_metrics_json_includes_ratios_for_marginal():
+    """_metrics_json must include demographic_parity_ratio (and EO/EOdds when set)
+    for each marginal."""
+    from app.audit_engine.types import MarginalResult
+    from app.interpretation.m1 import _metrics_json
+
+    marginal_with_ratios = MarginalResult(
+        attribute="sexe",
+        groups=(),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.3,
+        worst_group="F",
+        verdict="fail",
+        risk_score=70,
+        demographic_parity_ratio=0.5,
+        equal_opportunity_ratio=0.6,
+        equalized_odds_ratio=0.55,
+    )
+    r = M1Result(
+        groups=(GroupStat("H", 60, 40, 0.667, 1.0),
+                GroupStat("F", 60, 24, 0.4, 0.6)),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.3,
+        worst_group="F",
+        verdict="fail",
+        risk_score=70,
+        warnings=(),
+        marginals=(marginal_with_ratios,),
+    )
+    j = json.loads(_metrics_json(r))
+    assert "marginals" in j
+    m = j["marginals"][0]
+    assert m.get("demographic_parity_ratio") == 0.5
+    assert m.get("equal_opportunity_ratio") == 0.6
+    assert m.get("equalized_odds_ratio") == 0.55
+
+
+async def test_metrics_json_includes_per_group_rates_when_present():
+    """_metrics_json must include fnr/accuracy/precision for a group that has them."""
+    from app.audit_engine.types import MarginalResult
+    from app.interpretation.m1 import _metrics_json
+
+    g_with_rates = GroupStat("H", 100, 80, 0.8, 1.0,
+                              tpr=0.85, fpr=0.1, fnr=0.15, accuracy=0.82,
+                              precision=0.88)
+    g_no_rates = GroupStat("F", 100, 40, 0.4, 0.5)
+
+    marginal = MarginalResult(
+        attribute="sexe",
+        groups=(g_with_rates, g_no_rates),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        demographic_parity_ratio=0.5,
+    )
+    r = M1Result(
+        groups=(g_with_rates, g_no_rates),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        warnings=(),
+        marginals=(marginal,),
+    )
+    j = json.loads(_metrics_json(r))
+    # top-level groups must also include rates when present
+    h_grp = next(g for g in j["groups"] if g["value"] == "H")
+    assert h_grp.get("fnr") == 0.15
+    assert h_grp.get("accuracy") == 0.82
+    assert h_grp.get("precision") == 0.88
+    # group without rates: keys absent (or None)
+    f_grp = next(g for g in j["groups"] if g["value"] == "F")
+    assert f_grp.get("fnr") is None
+    assert f_grp.get("accuracy") is None
+    assert f_grp.get("precision") is None
+
+
+async def test_metrics_json_includes_ratios_for_pairwise():
+    """_metrics_json must include the 3 ratios for each pairwise entry."""
+    from app.audit_engine.types import IntersectionalResult
+    from app.interpretation.m1 import _metrics_json
+
+    pair = IntersectionalResult(
+        cells=(),
+        reference_primary="H",
+        reference_secondary="j",
+        worst_primary="F",
+        worst_secondary="v",
+        disparate_impact=0.4,
+        demographic_parity_diff=0.3,
+        verdict="fail",
+        risk_score=75,
+        marginal_di=(0.5, 0.667),
+        demographic_parity_ratio=0.4,
+        equal_opportunity_ratio=0.5,
+        equalized_odds_ratio=0.45,
+        primary_attribute="sexe",
+        secondary_attribute="age",
+    )
+    r = M1Result(
+        groups=(),
+        reference_value="H",
+        disparate_impact=0.4,
+        demographic_parity_diff=0.3,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        warnings=(),
+        pairwise=(pair,),
+    )
+    j = json.loads(_metrics_json(r))
+    assert "pairwise" in j
+    p = j["pairwise"][0]
+    assert p.get("demographic_parity_ratio") == 0.4
+    assert p.get("equal_opportunity_ratio") == 0.5
+    assert p.get("equalized_odds_ratio") == 0.45
+
+
+async def test_fallback_mentions_ratio_informatively_with_gt():
+    """_fallback: when EO is present, the narrative includes an informative ratio
+    sentence citing at least the demographic_parity_ratio of the worst marginal.
+    Verdict and provider must not change."""
+    from app.audit_engine.types import GroupStat, M1Result, MarginalResult
+    from app.interpretation.m1 import interpret_m1
+
+    g1 = GroupStat("H", 100, 80, 0.8, 1.0, tpr=0.85, fpr=0.1,
+                   fnr=0.15, accuracy=0.82, precision=0.88)
+    g2 = GroupStat("F", 100, 40, 0.4, 0.5, tpr=0.5, fpr=0.3,
+                   fnr=0.5, accuracy=0.6, precision=0.7)
+    mar = MarginalResult(
+        attribute="sexe",
+        groups=(g1, g2),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        equal_opportunity_diff=0.35,
+        equalized_odds_diff=0.35,
+        demographic_parity_verdict="fail",
+        equal_opportunity_verdict="fail",
+        equalized_odds_verdict="fail",
+        demographic_parity_ratio=0.5,
+        equal_opportunity_ratio=0.588,
+        equalized_odds_ratio=0.333,
+    )
+    r = M1Result(
+        groups=(g1, g2),
+        reference_value="H",
+        disparate_impact=0.5,
+        demographic_parity_diff=0.4,
+        worst_group="F",
+        verdict="fail",
+        risk_score=75,
+        warnings=(),
+        equal_opportunity_diff=0.35,
+        equalized_odds_diff=0.35,
+        demographic_parity_verdict="fail",
+        equal_opportunity_verdict="fail",
+        equalized_odds_verdict="fail",
+        marginals=(mar,),
+    )
+    out = await interpret_m1(r, provider=None)
+    assert out.provider == "fallback"
+    assert out.model == "deterministic"
+    blob = out.narrative.lower()
+    # Informative sentence must mention at least one ratio value
+    assert "0.5" in blob or "ratio" in blob or "informatif" in blob
+    # Verdict unchanged (still deterministic fallback)
+    assert "fail" in blob or "critique" in blob or "non respect" in blob
+
+
+async def test_fallback_no_gt_no_ratio_sentence():
+    """Without ground truth (no EO data), no EO/EOdds ratio sentence should appear
+    in the fallback narrative, though demographic_parity_ratio is fine to mention."""
+    from app.audit_engine.types import GroupStat, M1Result
+    from app.interpretation.m1 import interpret_m1
+
+    r = M1Result(
+        groups=(GroupStat("H", 60, 40, 0.667, 1.0),
+                GroupStat("F", 60, 24, 0.4, 0.6)),
+        reference_value="H",
+        disparate_impact=0.6,
+        demographic_parity_diff=0.267,
+        worst_group="F",
+        verdict="fail",
+        risk_score=70,
+        warnings=(),
+    )
+    out = await interpret_m1(r, provider=None)
+    assert out.provider == "fallback"
+    blob = out.narrative.lower()
+    # No EO/EOdds ratio mention when GT absent
+    assert "equal_opportunity_ratio" not in blob
+    assert "equalized_odds_ratio" not in blob

@@ -25,6 +25,13 @@ Consignes STRICTES :
   vérité-terrain et les groupes dégénérés (aucun positif ou négatif réel) sont
   ignorés du calcul.
   Si ces champs sont ABSENTS du JSON, ne les mentionne pas.
+- Si les champs `demographic_parity_ratio`, `equal_opportunity_ratio` ou
+  `equalized_odds_ratio` sont présents dans le JSON (au niveau marginal ou pairwise),
+  tu DOIS les mentionner de façon **informative** : ces ratios (min/max des taux par
+  groupe, alignés fairlearn) complètent les différences absolues mais
+  **n'influencent pas le verdict**. Rappelle que diff et ratio se lisent conjointement
+  (un grand écart absolu peut coexister avec un ratio correct si les taux de base sont
+  faibles). Ne présente jamais un ratio comme un verdict de conformité.
 - Si le champ `marginals` est présent dans le JSON ci-dessus (plusieurs attributs
   protégés analysés), tu DOIS :
   (a) pour chaque attribut, présenter brièvement son Disparate Impact et son
