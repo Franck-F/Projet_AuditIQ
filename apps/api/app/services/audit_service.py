@@ -233,6 +233,22 @@ def _run_iqr(
     )
 
 
+def _run_iqr_multi(df: pd.DataFrame, attributes: list[str]) -> list[str]:
+    """IQR group-size pre-check across ALL protected attributes (M1).
+
+    Each attribute is checked independently. When more than one attribute is
+    audited, warnings are prefixed with ``[attribute]`` so identical group
+    labels across attributes stay unambiguous. A single attribute keeps the
+    legacy (unprefixed) text for backward compatibility.
+    """
+    multi = len(attributes) > 1
+    out: list[str] = []
+    for attr in attributes:
+        for warning in _run_iqr(df, group_column=attr, numeric_columns=None):
+            out.append(f"[{attr}] {warning}" if multi else warning)
+    return out
+
+
 def _to_m2_metrics_out(r: M2Result) -> M2MetricsOut:
     return M2MetricsOut(
         n=r.n, k=r.k, global_positive_rate=r.global_positive_rate,
@@ -453,9 +469,12 @@ async def compute_m1_audit(
     raw = await storage.download(dataset.storage_path)
     df = pd.read_csv(io.BytesIO(raw))
 
-    pre_check = _run_iqr(
-        df, group_column=body.protected_attribute, numeric_columns=None
-    )
+    iqr_attrs = list(body.protected_attributes or []) or [
+        a
+        for a in (body.protected_attribute, body.secondary_protected_attribute)
+        if a
+    ]
+    pre_check = _run_iqr_multi(df, iqr_attrs)
 
     dec_col = cast(str, body.decision_column)  # required for M1 by _per_module
     fav_val = cast(str, body.favorable_value)  # required for M1 by _per_module
