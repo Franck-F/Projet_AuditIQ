@@ -35,6 +35,17 @@ _INTERSECTIONAL_SPARSITY_DISCLAIMER = (
 )
 
 
+def _base_disclaimers(result: M1Result) -> list[str]:
+    """Base disclaimers, with the scope line pluralised when several
+    protected attributes are audited."""
+    scope = (
+        "Analyse limitée aux attributs protégés et à la décision fournis."
+        if len(result.marginals) > 1
+        else "Analyse limitée à l'attribut protégé et à la décision fournis."
+    )
+    return [_DISCLAIMERS[0], _DISCLAIMERS[1], scope]
+
+
 def load_prompt_template() -> str:
     return (
         resources.files("app.interpretation.prompts")
@@ -173,7 +184,7 @@ def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
         f"Score de risque agrégé : {result.risk_score}/100. "
         f"Verdict : {result.verdict}."
     )
-    disclaimers = list(_DISCLAIMERS)
+    disclaimers = _base_disclaimers(result)
 
     if result.equal_opportunity_diff is not None:
         dp_v = _VERDICT_LABELS.get(
@@ -276,7 +287,7 @@ async def interpret_m1(
             ai_act_anchors=[str(a) for a in data.get("ai_act_anchors", [])]
             or list(_AI_ACT_ANCHORS),
             disclaimers=[str(d) for d in data.get("disclaimers", [])]
-            or list(_DISCLAIMERS),
+            or _base_disclaimers(result),
             provider=provider.name,
             model=provider.model,
             recommendations=parse_recommendations(data.get("recommendations")),
