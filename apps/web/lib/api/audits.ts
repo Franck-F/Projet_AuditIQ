@@ -32,6 +32,9 @@ export type GroupStatOut = {
   disparate_impact: number;
   tpr?: number | null;
   fpr?: number | null;
+  fnr?: number | null;
+  accuracy?: number | null;
+  precision?: number | null;
 };
 
 export type IntersectionalCellOut = {
@@ -66,6 +69,9 @@ export type IntersectionalOut = {
   reason?: string | null;
   primary_attribute?: string;
   secondary_attribute?: string;
+  demographic_parity_ratio?: number | null;
+  equal_opportunity_ratio?: number | null;
+  equalized_odds_ratio?: number | null;
 };
 
 export type MarginalOut = {
@@ -84,6 +90,9 @@ export type MarginalOut = {
   equal_opportunity_verdict?: Verdict | null;
   equalized_odds_verdict?: Verdict | null;
   truelabel_reason?: string | null;
+  demographic_parity_ratio?: number | null;
+  equal_opportunity_ratio?: number | null;
+  equalized_odds_ratio?: number | null;
 };
 
 export type M1MetricsOut = {
