@@ -262,11 +262,21 @@ function SyntheseTab({
           ? `À profil de remboursement égal, les groupes sont traités de façon similaire (écart TPR : ${m.equal_opportunity_diff.toFixed(2)}).`
           : `L'égalité des chances n'est pas pleinement satisfaite (écart TPR : ${m.equal_opportunity_diff.toFixed(2)}).`,
       ]);
+    } else if (m.truelabel_reason != null) {
+      // Ground truth WAS provided, but EO/Equalized Odds could not be
+      // computed (e.g. the truth column's values don't match the decision's
+      // favorable value, or a group has no real positives). Surface the real
+      // reason instead of wrongly claiming no ground truth was given.
+      statusRows.push([
+        'warn',
+        'Vérité-terrain : métriques supervisées non calculées',
+        `${m.truelabel_reason} Vérifiez que la colonne vérité-terrain utilise la même valeur favorable que la colonne de décision, et que chaque groupe contient des cas positifs réels.`,
+      ]);
     } else {
       statusRows.push([
         'pass',
         'Données de vérité terrain',
-        'Aucune donnée de ground truth disponible — les métriques supervisées (EO, calibration) ne peuvent être calculées.',
+        'Aucune donnée de vérité-terrain fournie — les métriques supervisées (Equal Opportunity, Equalized Odds) ne peuvent être calculées.',
       ]);
     }
   } else if (isM2) {
