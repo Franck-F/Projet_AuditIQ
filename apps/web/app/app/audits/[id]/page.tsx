@@ -29,6 +29,7 @@ import {
   type ReportFormat,
 } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
+import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS, verdictLabel, formatPValue } from '@/lib/verdict';
 import { Scale } from 'lucide-react';
 
 /* simple relative time — no external dep */
@@ -51,22 +52,12 @@ function relativeTime(iso: string): string {
 
 type Verdict = 'pass' | 'warn' | 'fail';
 
-const VERDICT_LABELS: Record<Verdict, string> = {
-  fail: 'Non conforme',
-  warn: 'Vigilance',
-  pass: 'Conforme',
-};
+const VERDICT_LABELS: Record<Verdict, string> = CENTRAL_VERDICT_LABELS;
 
 const VERDICT_TONE: Record<Verdict, StatusTone> = {
   fail: 'fail',
   warn: 'warn',
   pass: 'pass',
-};
-
-const RISK_LABELS: Record<Verdict, string> = {
-  fail: 'Élevé · action requise',
-  warn: 'Modéré · vigilance',
-  pass: 'Faible · conforme',
 };
 
 /* ─── Download action ──────────────────────────────────────────────────── */
@@ -100,7 +91,7 @@ function DownloadButton({ auditId }: { auditId: string }) {
           disabled={busy !== null}
           onClick={() => onDownload('xlsx')}
         >
-          {busy === 'xlsx' ? 'Export…' : 'Rapport Excel'}
+          {busy === 'xlsx' ? 'Téléchargement…' : 'Rapport Excel'}
         </Button>
         <Button
           variant="secondary"
@@ -108,7 +99,7 @@ function DownloadButton({ auditId }: { auditId: string }) {
           disabled={busy !== null}
           onClick={() => onDownload('pdf')}
         >
-          {busy === 'pdf' ? 'Export…' : 'Rapport PDF'}
+          {busy === 'pdf' ? 'Téléchargement…' : 'Rapport PDF'}
         </Button>
       </div>
       {error && (
@@ -156,8 +147,8 @@ function buildM1Metrics(m: M1MetricsOut): MetricDesc[] {
       fmt: pct,
       plain:
         di < 0.8
-          ? `Le groupe défavorisé est retenu ${pct(di)} aussi souvent que le groupe de référence — en dessous du seuil légal de 80 %.`
-          : `Le ratio d'acceptation entre groupes respecte le seuil légal de 80 %.`,
+          ? `Le groupe défavorisé est retenu ${pct(di)} aussi souvent que le groupe de référence — en dessous du seuil de référence de 80 % (règle des 4/5, convention internationale).`
+          : `Le ratio d'acceptation entre groupes respecte le seuil de référence de 80 % (règle des 4/5, convention internationale).`,
     },
     {
       name: 'Parité démographique',
@@ -186,8 +177,8 @@ function buildM1Metrics(m: M1MetricsOut): MetricDesc[] {
       fmt: pct,
       plain:
         eo > 0.1
-          ? `Écart TPR de ${num2(eo)} entre groupes — la sensibilité diffère selon les profils.`
-          : `À profil de remboursement égal, les groupes sont traités de façon similaire.`,
+          ? `Écart de ${num2(eo)} entre les taux de bonnes décisions des groupes — à profil égal, les groupes ne sont pas traités de la même façon.`
+          : `À profil égal, les groupes sont traités de façon similaire.`,
     });
   }
 
@@ -204,7 +195,7 @@ function buildM1Metrics(m: M1MetricsOut): MetricDesc[] {
       fmt: pct,
       plain:
         eodds > 0.1
-          ? `Écart max TPR/FPR de ${num2(eodds)} — un même score reflète un risque différent selon le groupe.`
+          ? `Écart maximal de ${num2(eodds)} entre les taux d'erreur des groupes — un même score reflète un risque différent selon le groupe.`
           : `Un même score reflète un risque comparable quel que soit le groupe.`,
     });
   }
@@ -242,16 +233,16 @@ function SyntheseTab({
     const di = m.disparate_impact;
     statusRows.push([
       di < 0.8 ? 'fail' : 'pass',
-      di < 0.8 ? 'Ce qui ne va pas' : 'Point critique',
+      di < 0.8 ? 'Ce qui ne va pas' : 'Point principal',
       narrative ??
         (di < 0.8
-          ? `Le groupe défavorisé obtient une décision favorable ${(di * 100).toFixed(0)} % aussi souvent que le groupe de référence, en dessous du seuil légal de 80 %.`
-          : 'Le disparate impact respecte le seuil légal.'),
+          ? `Le groupe défavorisé obtient une décision favorable ${(di * 100).toFixed(0)} % aussi souvent que le groupe de référence, en dessous du seuil de référence de 80 % (règle des 4/5, convention internationale).`
+          : 'Le ratio entre groupes respecte le seuil de référence de 80 % (règle des 4/5).'),
     ]);
     statusRows.push([
       'info',
       "Pourquoi c'est un risque",
-      'La loi interdit la discrimination indirecte, même non intentionnelle. Un tel écart est sanctionnable et doit être corrigé ou documenté.',
+      "La réglementation encadre la discrimination indirecte, même non intentionnelle. Un tel écart mérite d'être analysé, corrigé ou documenté.",
     ]);
     if (m.equal_opportunity_diff != null) {
       const eoOk = m.equal_opportunity_diff <= 0.1;
@@ -259,8 +250,8 @@ function SyntheseTab({
         eoOk ? 'pass' : 'warn',
         eoOk ? 'Ce qui fonctionne' : 'Point de vigilance',
         eoOk
-          ? `À profil de remboursement égal, les groupes sont traités de façon similaire (écart TPR : ${m.equal_opportunity_diff.toFixed(2)}).`
-          : `L'égalité des chances n'est pas pleinement satisfaite (écart TPR : ${m.equal_opportunity_diff.toFixed(2)}).`,
+          ? `À profil égal, les groupes sont traités de façon similaire (écart : ${m.equal_opportunity_diff.toFixed(2)}).`
+          : `L'égalité des chances n'est pas pleinement satisfaite (écart : ${m.equal_opportunity_diff.toFixed(2)}).`,
       ]);
     } else if (m.truelabel_reason != null) {
       // Ground truth WAS provided, but EO/Equalized Odds could not be
@@ -275,21 +266,24 @@ function SyntheseTab({
     } else {
       statusRows.push([
         'pass',
-        'Données de vérité terrain',
-        'Aucune donnée de vérité-terrain fournie — les métriques supervisées (Equal Opportunity, Equalized Odds) ne peuvent être calculées.',
+        'Résultat réel des décisions',
+        "Votre fichier ne contient pas le résultat réel des décisions — les métriques qui en dépendent (égalité des chances, calibration) n'ont pas pu être calculées.",
       ]);
     }
   } else if (isM2) {
     const m = metrics as M2MetricsOut;
+    const nDeviant = m.deviant_cluster_ids.length;
     statusRows.push([
       m.verdict,
-      m.deviant_cluster_ids.length > 0 ? 'Clusters déviants détectés' : 'Aucun cluster déviant',
-      `${m.deviant_cluster_ids.length} cluster(s) sur ${m.k} présentent un écart significatif par rapport au taux global.`,
+      nDeviant > 0 ? 'Groupes au traitement atypique détectés' : 'Aucun groupe atypique',
+      `${nDeviant} ${nDeviant > 1 ? 'groupes' : 'groupe'} sur ${m.k} ${nDeviant > 1 ? 'présentent' : 'présente'} un écart significatif par rapport au taux global.`,
     ]);
     statusRows.push([
       'info',
       'Méthode utilisée',
-      `Test du χ² (p = ${m.p_value}, χ² = ${m.chi2}, ddl ${m.dof}). Un p < 0,05 indique une hétérogénéité non aléatoire.`,
+      m.p_value < 0.05
+        ? `Un test statistique confirme que les écarts observés ne sont probablement pas dus au hasard (${formatPValue(m.p_value)}).`
+        : `Un test statistique n'indique pas d'écart significatif entre les groupes (${formatPValue(m.p_value)}).`,
     ]);
     statusRows.push([
       m.verdict === 'pass' ? 'pass' : 'warn',
@@ -408,7 +402,7 @@ function SyntheseTab({
           ) : isM2 ? (
             <Card>
               <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-                Clusters déviants
+                Groupes au traitement atypique
               </div>
               <div
                 className="font-mono text-[40px] font-semibold tabular-nums"
@@ -417,7 +411,11 @@ function SyntheseTab({
                 {(metrics as M2MetricsOut).deviant_cluster_ids.length}
                 <span className="text-lg"> / {(metrics as M2MetricsOut).k}</span>
               </div>
-              <p className="mt-1 mb-3 text-[12.5px] text-fg-muted">clusters présentent une déviation significative.</p>
+              <p className="mt-1 mb-3 text-[12.5px] text-fg-muted">
+                {(metrics as M2MetricsOut).deviant_cluster_ids.length > 1
+                  ? 'groupes présentent un écart significatif.'
+                  : 'groupe présente un écart significatif.'}
+              </p>
               <Meter
                 value={(metrics as M2MetricsOut).deviant_cluster_ids.length}
                 max={(metrics as M2MetricsOut).k}
@@ -438,7 +436,7 @@ function SyntheseTab({
                 <span className="text-lg"> %</span>
               </div>
               <p className="mt-1 mb-3 text-[12.5px] text-fg-muted">
-                de conformité — sur {(metrics as M3MetricsOut).n_pairs} paires testées.
+                d&apos;équité de traitement — sur {(metrics as M3MetricsOut).n_pairs} paires testées.
               </p>
               <Meter
                 value={(metrics as M3MetricsOut).global_score}
@@ -586,22 +584,30 @@ function MetriquesTab({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'center' }}>
             <div>
               <div className="mb-1.5 flex items-center gap-2.5">
-                <h3 className="text-[15.5px] font-medium text-fg">Test du χ²</h3>
+                <h3 className="text-[15.5px] font-medium text-fg">Test statistique</h3>
                 <StatusBadge tone={m2.verdict as StatusTone} />
               </div>
               <p className="text-[13.5px] leading-relaxed text-fg-secondary" style={{ maxWidth: 620 }}>
-                p-value = {m2.p_value} · χ² = {m2.chi2} · ddl = {m2.dof}. Un p &lt; 0,05 indique une hétérogénéité non aléatoire.
+                {m2.p_value < 0.05
+                  ? 'Un test statistique confirme que les écarts observés entre les groupes ne sont probablement pas dus au hasard.'
+                  : "Un test statistique n'indique pas d'écart significatif entre les groupes."}
               </p>
+              <details className="mt-2 text-[12.5px] text-fg-muted">
+                <summary className="cursor-pointer select-none">Détails techniques</summary>
+                <p className="mt-1 font-mono">
+                  Test du χ² : {formatPValue(m2.p_value)} · χ² = {m2.chi2.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} · ddl = {m2.dof}
+                </p>
+              </details>
             </div>
             <div style={{ width: 220 }}>
-              <div className="mb-2 text-right font-mono text-[28px] font-semibold tabular-nums text-fg">
-                {m2.p_value}
+              <div className="mb-2 text-right font-mono text-[20px] font-semibold tabular-nums text-fg">
+                {formatPValue(m2.p_value)}
               </div>
               <Meter
                 value={m2.p_value < 0.05 ? 1 : 0}
                 max={1}
                 status={m2.p_value < 0.05 ? 'fail' : 'pass'}
-                format={(v) => (v > 0.5 ? 'sig.' : 'n.s.')}
+                format={(v) => (v > 0.5 ? 'significatif' : 'non significatif')}
               />
             </div>
           </div>
@@ -775,7 +781,7 @@ function GroupesTab({
                 {dpRatio != null && (
                   <div
                     className="mt-4 flex flex-wrap gap-4 rounded-md border border-border-subtle bg-surface-2 px-4 py-3 text-[12.5px] text-fg-secondary"
-                    aria-label="Ratios fairlearn (informatifs)"
+                    aria-label="Indicateurs complémentaires"
                   >
                     <span>
                       <span className="font-medium text-fg">Ratio DP</span>{' '}
@@ -808,9 +814,9 @@ function GroupesTab({
                       <thead>
                         <tr className="border-b border-border-subtle">
                           <th className="pb-2 pr-4 text-left font-medium text-fg-muted">Groupe</th>
-                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">FNR</th>
+                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">Refus à tort</th>
                           <th className="pb-2 px-3 text-center font-medium text-fg-muted">Précision</th>
-                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">Accuracy</th>
+                          <th className="pb-2 px-3 text-center font-medium text-fg-muted">Exactitude</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -857,9 +863,9 @@ function GroupesTab({
                   Analyse intersectionnelle · <span className="font-mono">{pairTitle}</span>
                 </h3>
                 <p className="mt-0.5 text-[13px] text-fg-muted">
-                  Disparate Impact par combinaison de groupes. DI global&nbsp;:{' '}
+                  Ratio d&apos;acceptation par combinaison de groupes. Ratio global&nbsp;:{' '}
                   <strong>{(pair.disparate_impact * 100).toFixed(0)} %</strong>
-                  {' '}· verdict&nbsp;: <strong>{pair.verdict}</strong>
+                  {' '}· résultat&nbsp;: <strong>{verdictLabel(pair.verdict)}</strong>
                 </p>
               </div>
               <div className="overflow-x-auto px-4 py-4">
@@ -917,7 +923,7 @@ function GroupesTab({
                 {pairDpRatio != null && (
                   <div
                     className="mt-3 flex flex-wrap gap-4 rounded-md border border-border-subtle bg-surface-2 px-4 py-3 text-[12.5px] text-fg-secondary"
-                    aria-label="Ratios fairlearn paire (informatifs)"
+                    aria-label="Indicateurs complémentaires de la paire"
                   >
                     <span>
                       <span className="font-medium text-fg">Ratio DP</span>{' '}
@@ -959,10 +965,10 @@ function GroupesTab({
       <div className="flex flex-col gap-4">
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border-subtle px-5 py-4">
-            <h3 className="text-base font-medium text-fg">Projection des clusters · carte 2D</h3>
+            <h3 className="text-base font-medium text-fg">Carte des groupes détectés</h3>
             <p className="mt-0.5 text-[13px] text-fg-muted">
-              Les clusters sont projetés selon leur taux d&apos;acceptation (axe Y) et leur identifiant (axe X).
-              Les clusters déviants apparaissent en rouge.
+              Chaque groupe est positionné selon son taux d&apos;acceptation (axe vertical).
+              Les groupes au traitement atypique apparaissent en rouge.
             </p>
           </div>
           <div className="flex flex-col items-start gap-4 px-6 py-5 sm:flex-row">
@@ -978,8 +984,8 @@ function GroupesTab({
               {selectedCluster ? (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-fg">Cluster #{selectedCluster.id}</span>
-                    {selectedCluster.is_deviant && <StatusBadge tone="fail">Déviant</StatusBadge>}
+                    <span className="text-sm font-medium text-fg">Groupe #{selectedCluster.id}</span>
+                    {selectedCluster.is_deviant && <StatusBadge tone="fail">Atypique</StatusBadge>}
                   </div>
                   <p className="text-[13px] text-fg-secondary">
                     {selectedCluster.n.toLocaleString('fr-FR')} décisions ·{' '}
@@ -996,7 +1002,7 @@ function GroupesTab({
                   {selectedCluster.top_features.length > 0 && (
                     <div className="mt-2">
                       <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-fg-muted">
-                        Features dominantes
+                        Caractéristiques dominantes
                       </div>
                       <div className="flex flex-col gap-2">
                         {selectedCluster.top_features.map((f) => (
@@ -1011,7 +1017,7 @@ function GroupesTab({
                 </div>
               ) : (
                 <p className="text-sm text-fg-muted">
-                  Cliquez sur un cluster pour voir ses caractéristiques.
+                  Cliquez sur un groupe pour voir ses caractéristiques.
                 </p>
               )}
             </div>
@@ -1021,7 +1027,7 @@ function GroupesTab({
         {/* Feature rank list — shows all clusters sorted by risk */}
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border-subtle px-5 py-4">
-            <h3 className="text-base font-medium text-fg">Classement des clusters par risque</h3>
+            <h3 className="text-base font-medium text-fg">Classement des groupes par risque</h3>
           </div>
           <div className="px-6 py-4 flex flex-col gap-3">
             {[...m2.clusters].sort((a, b) => (b.is_deviant ? 1 : 0) - (a.is_deviant ? 1 : 0) || Math.abs(b.deviation_pp) - Math.abs(a.deviation_pp)).map((c) => (
@@ -1232,7 +1238,16 @@ export default function AuditResultPage() {
             className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail"
           >
             <strong>L&apos;audit a échoué.</strong>
-            <p className="mt-1">{data.error ?? "Une erreur inattendue s'est produite."}</p>
+            <p className="mt-1">
+              Une erreur est survenue pendant le calcul. Relancez l&apos;audit ou contactez le
+              support si le problème persiste.
+            </p>
+            {data.error && (
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer select-none">Détail technique</summary>
+                <p className="mt-1 font-mono">{data.error}</p>
+              </details>
+            )}
           </div>
         </main>
       </>
@@ -1255,11 +1270,8 @@ export default function AuditResultPage() {
       ? (m as M2MetricsOut).n
       : null;
 
-  /* Verddict text from interpretation or canned */
-  const heroNarrative = data.interpretation?.narrative ?? null;
-
   /* Tab labels */
-  const groupsLabel = isM2 ? 'Clusters' : isM3 ? 'Catégories' : 'Groupes';
+  const groupsLabel = isM2 ? 'Groupes détectés' : isM3 ? 'Catégories' : 'Groupes';
   const tabs = [
     { id: 'synthese', label: 'Synthèse' },
     { id: 'metriques', label: 'Métriques détaillées' },
@@ -1332,25 +1344,21 @@ export default function AuditResultPage() {
               {m && (
                 <Gauge
                   value={m.risk_score}
-                  label="Score fairness"
+                  label="Score de risque"
+                  caption="Score de risque"
                   className="max-w-[150px]"
                 />
               )}
             </div>
 
-            {/* Center: verdict text */}
+            {/* Center: result text — l'interprétation détaillée est dans « En clair » */}
             <div style={{ minWidth: 0 }}>
               <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-                Verdict de l&apos;audit
+                Résultat de l&apos;audit
               </div>
               <h1 className="mb-2 text-2xl font-semibold tracking-[-0.03em] text-fg">
                 {data.title}
               </h1>
-              {heroNarrative && (
-                <p className="text-[14.5px] leading-relaxed text-fg-secondary" style={{ maxWidth: 540 }}>
-                  {heroNarrative}
-                </p>
-              )}
               {/* Chips */}
               <div className="mt-3.5 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-muted">
@@ -1381,9 +1389,9 @@ export default function AuditResultPage() {
               <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
                 Niveau de risque
               </div>
-              <StatusBadge tone={verdict}>{RISK_LABELS[verdict]}</StatusBadge>
+              <StatusBadge tone={verdict}>{VERDICT_LABELS[verdict]}</StatusBadge>
               <div className="mt-1 text-right font-mono text-[11.5px] text-fg-muted">
-                Rapport signé
+                Référence
                 <br />
                 {data.code ?? data.id} · v1
               </div>

@@ -52,7 +52,7 @@ export default function FaqPage() {
               Tout ce que vous voulez savoir avant de réserver une démo.
             </h1>
             <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.3vw,20px)] leading-relaxed text-fg-secondary">
-              42 questions regroupées par thème. Vous ne trouvez pas votre réponse ? Posez-la
+              31 questions regroupées par thème. Vous ne trouvez pas votre réponse ? Posez-la
               directement à notre équipe via la{' '}
               <Link href="/contact" className="text-accent hover:underline">
                 page contact
@@ -100,23 +100,26 @@ export default function FaqPage() {
                 <FaqItem question="Quels types de modèles AuditIQ peut-il auditer ?">
                   <p>
                     Trois familles : modèles supervisés de classification ou de scoring (Module 1),
-                    datasets sans cible explicite (Module 2), assistants LLM et chatbots (Module
-                    3). Compatible avec vos modèles internes, des APIs externes (OpenAI, Mistral,
-                    Anthropic), et des modèles déployés en production.
+                    jeux de données sans cible explicite (Module 2), assistants LLM et chatbots
+                    (Module 3). L&apos;audit se fait à partir d&apos;un export CSV de vos données et
+                    décisions — quel que soit l&apos;outil qui les a produites.
                   </p>
                 </FaqItem>
                 <FaqItem question="Faut-il avoir une équipe data interne ?">
                   <p>
-                    Non. AuditIQ est conçu pour être utilisable sans bagage statistique. Le mode
-                    expert reste disponible pour les équipes data qui souhaitent ajuster les
-                    métriques, les agrégations ou les intervalles de confiance.
+                    Non. AuditIQ est conçu pour être utilisable sans bagage statistique : chaque
+                    métrique est expliquée en langage clair, et les paramètres avancés restent
+                    accessibles aux équipes data qui veulent les ajuster.
                   </p>
                 </FaqItem>
                 <FaqItem question="Quelle quantité de données puis-je analyser ?">
                   <p>
-                    Jusqu&apos;à 5 millions de lignes en standard sur les paliers PME et
-                    Entreprise. Datasets plus volumineux : optimisations possibles sur le palier
-                    Souverain ou en architecture dédiée.
+                    Jusqu&apos;à 5 000 lignes sur le palier Découverte et 1 million de lignes sur
+                    le palier PME. Au-delà, voir les paliers Entreprise et Souverain sur{' '}
+                    <Link href="/tarifs" className="text-accent hover:underline">
+                      la page tarifs
+                    </Link>
+                    .
                   </p>
                 </FaqItem>
                 <FaqItem question="AuditIQ corrige-t-il les biais ?">
@@ -129,9 +132,9 @@ export default function FaqPage() {
                 </FaqItem>
                 <FaqItem question="AuditIQ est-il disponible en anglais ?">
                   <p>
-                    Interface, documentation et rapports principalement en français. La banque de
-                    prompts LLM est disponible en français, anglais et espagnol. Une version
-                    anglaise complète de la plateforme est planifiée pour Q4 2026.
+                    Interface, documentation et rapports sont en français. La banque de prompts du
+                    module LLM est disponible en français et en anglais. Une version anglaise de la
+                    plateforme est en feuille de route.
                   </p>
                 </FaqItem>
               </FaqCategory>
@@ -152,7 +155,7 @@ export default function FaqPage() {
                   <p>
                     Non. Un certificat formel relève d&apos;un organisme notifié au sens de
                     l&apos;article 43 du règlement (UE) 2024/1689. AuditIQ produit une analyse
-                    documentée des écarts mesurés et un rapport opposable. La qualification
+                    documentée des écarts mesurés et un rapport documenté et traçable. La qualification
                     réglementaire finale appartient à votre responsable conformité ou DPO.
                   </p>
                 </FaqItem>
@@ -165,13 +168,14 @@ export default function FaqPage() {
                     charge.
                   </p>
                 </FaqItem>
-                <FaqItem question="Le rapport AuditIQ est-il opposable en cas de contrôle ?">
+                <FaqItem question="Le rapport AuditIQ peut-il servir en cas de contrôle ?">
                   <p>
-                    Le rapport est signé numériquement, horodaté par notre tiers d&apos;horodatage
-                    qualifié (CertEurope), et archivé dans un format inviolable. Il constitue une
-                    pièce probante au sens du droit français. Il ne se substitue cependant pas à
-                    l&apos;expertise d&apos;un cabinet d&apos;avocats spécialisé en cas de
-                    contentieux.
+                    Le rapport est documenté et traçable : identifiant d&apos;audit, horodatage,
+                    méthodes et seuils explicités, données d&apos;entrée décrites. C&apos;est une
+                    pièce utile pour documenter votre démarche auprès d&apos;un auditeur. La
+                    signature électronique qualifiée est en feuille de route. Le rapport ne se
+                    substitue pas à l&apos;expertise d&apos;un cabinet d&apos;avocats spécialisé en
+                    cas de contentieux.
                   </p>
                 </FaqItem>
                 <FaqItem question="Et le droit français ?">
@@ -195,44 +199,41 @@ export default function FaqPage() {
               <FaqCategory id="securite" title="Sécurité & données">
                 <FaqItem question="Où sont stockées mes données ?">
                   <p>
-                    Sur OVHcloud, datacenters de Roubaix et Strasbourg. Aucun transfert hors UE, à
-                    aucune étape. Pour le palier Souverain : hébergement SecNumCloud dédié sur
-                    infrastructure 3DS Outscale.
+                    En Union européenne (Francfort · Paris). L&apos;interprétation en langage clair
+                    s&apos;appuie sur le modèle Gemini par défaut, avec une option souveraine
+                    Mistral.
                   </p>
                 </FaqItem>
                 <FaqItem question="Comment sont chiffrées les données ?">
                   <p>
-                    Chiffrement AES-256 au repos (objet et base de données), TLS 1.3 en transit.
-                    Sur le palier Souverain : option BYOK (Bring Your Own Key) avec rotation
-                    hebdomadaire automatique.
+                    Chiffrement en transit (TLS) et au repos, assuré par nos hébergeurs européens.
+                    Cloisonnement strict des données entre organisations.
                   </p>
                 </FaqItem>
                 <FaqItem question="Combien de temps conservez-vous mes données ?">
                   <p>
-                    Données d&apos;audit (résultats, rapports) : 5 ans par défaut, configurable
-                    jusqu&apos;à illimité. Données sources (datasets uploadés) : 90 jours après
-                    l&apos;audit, puis suppression automatique. Suppression sur demande sous 72h.
+                    Données sources (fichiers CSV importés) : supprimées automatiquement 30 jours
+                    après l&apos;import. Résultats d&apos;audit et rapports : conservés dans votre
+                    espace tant que votre compte est actif, et supprimés sur demande.
                   </p>
                 </FaqItem>
                 <FaqItem question="Êtes-vous certifiés ISO 27001 ?">
                   <p>
-                    Certification ISO 27001 en cours, audit en Q3 2026. Notre PSSI est aligné sur
-                    les exigences. Le rapport de pré-audit (juin 2025) est disponible sur demande
-                    sous NDA.
+                    Pas encore : la démarche ISO 27001 est en cours. Aucune certification
+                    n&apos;est revendiquée tant qu&apos;elle n&apos;est pas obtenue.
                   </p>
                 </FaqItem>
                 <FaqItem question="Comment se passe une demande de suppression ?">
                   <p>
-                    Demande à formuler par un admin via le panel de paramètres, ou par email à
-                    dpo@auditiq.fr. Confirmation sous 24h, suppression effective sous 72h,
-                    certificat de suppression émis.
+                    Demande à formuler par email à dpo@auditiq.fr. Nous confirmons la prise en
+                    compte puis la suppression effective de vos données.
                   </p>
                 </FaqItem>
                 <FaqItem question="Mes données servent-elles à entraîner vos modèles ?">
                   <p>
-                    Non. Aucune donnée client n&apos;est utilisée pour entraîner ou améliorer nos
-                    modèles. La banque de prompts LLM est maintenue manuellement par notre équipe
-                    linguiste, sans réutilisation de prompts client.
+                    Non. Aucune donnée client n&apos;est utilisée pour entraîner ou améliorer des
+                    modèles. La banque de prompts LLM est maintenue manuellement et versionnée,
+                    sans réutilisation de prompts client.
                   </p>
                 </FaqItem>
               </FaqCategory>
@@ -241,8 +242,7 @@ export default function FaqPage() {
                 <FaqItem question="Existe-t-il un essai gratuit ?">
                   <p>
                     Oui. Le palier Découverte est gratuit et permanent (1 audit Module 1/mois,
-                    dataset ≤ 5 000 lignes). Le palier PME est en essai 14 jours sans carte
-                    bancaire. Voir{' '}
+                    dataset ≤ 5 000 lignes), sans carte bancaire. Voir{' '}
                     <Link href="/tarifs" className="text-accent hover:underline">
                       la page tarifs
                     </Link>
@@ -251,21 +251,14 @@ export default function FaqPage() {
                 </FaqItem>
                 <FaqItem question="Y a-t-il un engagement minimum ?">
                   <p>
-                    Non. Facturation mensuelle sans durée minimale. Vous pouvez annuler à tout
-                    moment depuis votre panel — l&apos;annulation prend effet à la fin de la
-                    période en cours.
+                    Non. Les paliers payants sont facturés au mois, sans durée minimale.
+                    L&apos;annulation prend effet à la fin de la période en cours.
                   </p>
                 </FaqItem>
                 <FaqItem question="Acceptez-vous les marchés publics ?">
                   <p>
-                    Oui sur les paliers Entreprise et Souverain. Devis sur 30 ou 60 jours, bons de
-                    commande publics acceptés.
-                  </p>
-                </FaqItem>
-                <FaqItem question="Quelle remise pour le paiement annuel ?">
-                  <p>
-                    15 % sur tous les paliers payants. Facturation en une seule fois, en début
-                    d&apos;année d&apos;abonnement. SEPA disponible.
+                    Oui, sur devis, pour les paliers Entreprise et Souverain. Contactez-nous pour
+                    les modalités.
                   </p>
                 </FaqItem>
               </FaqCategory>
@@ -273,31 +266,30 @@ export default function FaqPage() {
               <FaqCategory id="integration" title="Intégration">
                 <FaqItem question="Comment importer mes données ?">
                   <p>
-                    Quatre options : upload manuel (CSV, XLSX, Parquet, JSON), connecteurs natifs
-                    (Workday, BambooHR, Snowflake, BigQuery, PostgreSQL), API REST, ou export
-                    depuis votre solution existante. La validation de schéma est automatique.
+                    Par fichier CSV (UTF-8) — c&apos;est le seul format pris en charge
+                    aujourd&apos;hui. La validation du fichier (taille, encodage, colonnes, valeurs
+                    manquantes) est automatique. D&apos;autres formats et des connecteurs sont en
+                    feuille de route.
                   </p>
                 </FaqItem>
-                <FaqItem question="Comment connecter mon chatbot LLM ?">
+                <FaqItem question="Comment fonctionne l'audit LLM (Module 3) ?">
                   <p>
-                    Via une clé API du fournisseur (OpenAI, Mistral, Anthropic, Cohere) ou via une
-                    URL d&apos;endpoint custom. AuditIQ gère le rate limiting, retry, et budget
-                    API plafonné pour éviter les coûts non maîtrisés.
+                    Le module s&apos;appuie sur une banque versionnée de paires de prompts
+                    contrefactuels (français et anglais) couvrant six axes de discrimination. Les
+                    réponses sont comparées sur la longueur, la polarité (analyse par lexique
+                    bilingue, déterministe et documentée) et le taux de refus.
                   </p>
                 </FaqItem>
                 <FaqItem question="SSO et authentification ?">
                   <p>
-                    SSO SAML 2.0 et OIDC sur les paliers Entreprise et Souverain. Compatible Okta,
-                    Azure AD, Google Workspace, OneLogin. MFA obligatoire sur tous les paliers
-                    payants.
+                    L&apos;authentification se fait par e-mail/mot de passe ou via Google. SSO
+                    (SAML / OIDC) et MFA sont en feuille de route.
                   </p>
                 </FaqItem>
                 <FaqItem question="Existe-t-il une API publique ?">
                   <p>
-                    Oui sur les paliers Entreprise et Souverain. API REST documentée pour : lancer
-                    un audit, récupérer les résultats, télécharger les rapports, lister
-                    l&apos;historique. Pas d&apos;API de modification — tout audit modifié laisse
-                    trace dans le journal d&apos;activité.
+                    Pas encore. Une API REST publique (lancer un audit, récupérer les résultats,
+                    télécharger les rapports) est en feuille de route.
                   </p>
                 </FaqItem>
               </FaqCategory>
@@ -305,15 +297,15 @@ export default function FaqPage() {
               <FaqCategory id="support" title="Support">
                 <FaqItem question="Comment se passe l'onboarding ?">
                   <p>
-                    Palier Découverte : autonome via documentation et chat IA. Palier PME : 4h
-                    d&apos;onboarding accompagné incluses, avec un consultant en visio. Palier
-                    Entreprise : 1 jour. Palier Souverain : 2 jours + formation équipe.
+                    Palier Découverte : en autonomie, via la documentation. Paliers payants : un
+                    accompagnement à la prise en main est inclus, en visio, sur vos propres
+                    données.
                   </p>
                 </FaqItem>
                 <FaqItem question="Délais de réponse du support ?">
                   <p>
-                    Découverte : communautaire (Discord, sans SLA). PME : 24h ouvrées. Entreprise :
-                    4h en jour ouvré. Souverain : SLA personnalisé jusqu&apos;à 1h.
+                    Découverte : par e-mail, sans engagement de délai. PME : sous 24h ouvrées.
+                    Entreprise et Souverain : support prioritaire, modalités définies au devis.
                   </p>
                 </FaqItem>
                 <FaqItem question="Existe-t-il une documentation publique ?">
@@ -322,15 +314,7 @@ export default function FaqPage() {
                     <Link href="/ressources" className="text-accent hover:underline">
                       documentation et ressources
                     </Link>{' '}
-                    accessibles sans compte. La documentation technique avancée (API, structures
-                    de rapport, schémas de données) est accessible aux utilisateurs connectés.
-                  </p>
-                </FaqItem>
-                <FaqItem question="Y a-t-il une communauté utilisateur ?">
-                  <p>
-                    Oui — un canal Discord modéré (1 200 membres) et un meetup trimestriel à Paris
-                    (50 places). Les annonces produit y sont faites une semaine avant la
-                    communication officielle.
+                    accessibles sans compte : guides AI Act, fiches méthodologiques et articles.
                   </p>
                 </FaqItem>
               </FaqCategory>
@@ -338,28 +322,22 @@ export default function FaqPage() {
               <FaqCategory id="commercial" title="Commercial">
                 <FaqItem question="Comment se passe une démo ?">
                   <p>
-                    30 minutes en visio, avec un consultant. Vous apportez un cas d&apos;usage et
-                    idéalement un dataset anonymisé ; nous lançons l&apos;audit en live. À
-                    l&apos;issue : un rapport pilote utilisable pour votre comité.
+                    30 minutes en visio. Vous apportez un cas d&apos;usage et idéalement un dataset
+                    anonymisé ; nous lançons l&apos;audit en direct. À l&apos;issue : un rapport
+                    pilote utilisable pour votre comité.
                   </p>
                 </FaqItem>
                 <FaqItem question="Proposez-vous un programme partenaires ?">
                   <p>
-                    Oui — pour les cabinets de conseil, intégrateurs, ESN et cabinets
-                    d&apos;avocats. Co-vente, co-formation, marges revendeur. Contactez
-                    partners@auditiq.fr.
+                    Nous échangeons volontiers avec les cabinets de conseil, intégrateurs et
+                    cabinets d&apos;avocats intéressés par le sujet. Écrivez-nous à
+                    contact@auditiq.fr.
                   </p>
                 </FaqItem>
                 <FaqItem question="Êtes-vous référencés UGAP ?">
                   <p>
-                    Référencement UGAP en cours, attendu Q3 2026. En attendant, marchés publics
-                    traitables en gré à gré sous le seuil de 40 000 €.
-                  </p>
-                </FaqItem>
-                <FaqItem question="Avez-vous un cas client comparable au nôtre ?">
-                  <p>
-                    Probablement. Nous accompagnons 47 PME au moment où nous écrivons ces lignes,
-                    dans 9 secteurs. Demandez-nous un cas client de votre secteur, sous NDA.
+                    Non, pas à ce jour. Les marchés publics restent traitables en gré à gré selon
+                    les seuils en vigueur.
                   </p>
                 </FaqItem>
               </FaqCategory>

@@ -40,6 +40,27 @@ export default function MentionsLegalesPage() {
           <p className="mono" style={{ fontSize: '12.5px', color: 'var(--fg-muted)', marginTop: '14px' }}>
             Dernière mise à jour&nbsp;: janvier 2026
           </p>
+          <div
+            role="note"
+            style={{
+              marginTop: '20px',
+              padding: '14px 16px',
+              borderRadius: '11px',
+              background: 'var(--warn-bg)',
+              border: '1px solid var(--warn-border)',
+              fontSize: '13.5px',
+              color: 'var(--fg-secondary)',
+              lineHeight: 1.6,
+            }}
+          >
+            <strong style={{ color: 'var(--warn)', fontWeight: 600 }}>
+              ⚠ À compléter avant publication.
+            </strong>{' '}
+            Cette page contient des champs provisoires signalés entre crochets — SIREN, RCS, TVA
+            intracommunautaire, adresse du siège, nom du dirigeant et adresse de l&apos;hébergeur.
+            Ils doivent être renseignés avec les informations officielles de la société avant
+            toute mise en ligne publique.
+          </div>
         </div>
       </header>
 
@@ -75,11 +96,11 @@ export default function MentionsLegalesPage() {
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Forme juridique</dt>
                   <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Société par actions simplifiée</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Siège social</dt>
-                  <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>12 rue de la Conformité, 75002 Paris</dd>
+                  <dd style={{ fontSize: '14px', color: 'var(--fg-muted)', fontStyle: 'italic', margin: 0 }}>[adresse — à compléter]</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>RCS</dt>
                   <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Paris [n°&nbsp;à compléter]</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>SIREN</dt>
-                  <dd className="mono" style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>552 100 554</dd>
+                  <dd className="mono" style={{ fontSize: '14px', color: 'var(--fg-muted)', fontStyle: 'italic', margin: 0 }}>[SIREN — à compléter avant mise en ligne]</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>TVA intracom.</dt>
                   <dd className="mono" style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>FR [n°&nbsp;à compléter]</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Contact</dt>
@@ -108,9 +129,9 @@ export default function MentionsLegalesPage() {
                 <p style={{ color: 'var(--fg-secondary)', fontSize: '14.5px', lineHeight: 1.65, marginTop: '12px' }}>Le site et l&apos;application sont hébergés au sein de l&apos;Union européenne par&nbsp;:</p>
                 <dl style={{ marginTop: '14px', display: 'grid', gridTemplateColumns: '180px 1fr', gap: '8px 18px' }}>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Hébergeur</dt>
-                  <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Vercel</dd>
+                  <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Vercel (site et interface web) · Render (API et traitement des données)</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Localisation</dt>
-                  <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Centres de données situés en Union européenne</dd>
+                  <dd style={{ fontSize: '14px', color: 'var(--fg)', margin: 0 }}>Traitement et stockage des données en Union européenne (Francfort · Paris)</dd>
                   <dt style={{ fontSize: '13.5px', color: 'var(--fg-muted)' }}>Adresse</dt>
                   <dd style={{ fontSize: '14px', color: 'var(--fg-muted)', fontStyle: 'italic', margin: 0 }}>[adresse de l&apos;hébergeur]</dd>
                 </dl>
@@ -125,7 +146,7 @@ export default function MentionsLegalesPage() {
                   L&apos;ensemble des éléments composant ce site et l&apos;application AuditIQ — marque, logo, textes, interface, code, méthodologie d&apos;audit et rapports générés — est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive d&apos;AuditIQ SAS, sauf mention contraire.
                 </p>
                 <p style={{ color: 'var(--fg-secondary)', fontSize: '14.5px', lineHeight: 1.65, marginTop: '12px' }}>
-                  Toute reproduction, représentation, adaptation ou exploitation, totale ou partielle, sans autorisation écrite préalable, est interdite et constitue une contrefaçon au sens des articles L.335-2 et suivants du Code de la propriété intellectuelle. Les outils tiers cités (Fairlearn, AIF360, Aequitas, SHAP, scikit-learn) restent la propriété de leurs auteurs respectifs.
+                  Toute reproduction, représentation, adaptation ou exploitation, totale ou partielle, sans autorisation écrite préalable, est interdite et constitue une contrefaçon au sens des articles L.335-2 et suivants du Code de la propriété intellectuelle. Les outils tiers cités (Fairlearn, scikit-learn) restent la propriété de leurs auteurs respectifs.
                 </p>
               </article>
 

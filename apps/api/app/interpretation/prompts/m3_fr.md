@@ -15,6 +15,9 @@ Consignes STRICTES :
   chatbots.
 - N'emploie JAMAIS de formulation absolue (« certifié conforme », « garanti »,
   « 100 % »).
+- Ne mentionne JAMAIS de noms d'outils ou de bibliothèques internes
+  ni de codes bruts (« fail », « warn », « pass », « done ») dans le texte
+  destiné au lecteur.
 - Termine par les limites : sentiment lexical grossier et détection de refus
   heuristique sur des réponses courtes — un signal à approfondir, pas une
   preuve de discrimination.

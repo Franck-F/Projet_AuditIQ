@@ -7,8 +7,6 @@ import {
   SlidersHorizontal,
   Link2,
   Lock,
-  KeyRound,
-  Eye,
   Layers,
   ExternalLink,
   TrendingUp,
@@ -21,6 +19,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { Topbar } from '@/components/app/Topbar';
+import { PreviewBanner } from '@/components/app/PreviewBanner';
 import { SectionHead } from '@/components/product/SectionHead';
 import { InlineNote } from '@/components/product/InlineNote';
 import { Toggle } from '@/components/product/Toggle';
@@ -190,7 +189,7 @@ function TabOrg() {
           </div>
           <Field
             label="DPO ou référent conformité"
-            hint="Apparaîtra sur les rapports signés et dans les exports réglementaires."
+            hint="Apparaîtra sur les rapports générés et dans les exports."
           >
             <TextInput icon={Users} defaultValue="Claire Tessier" />
           </Field>
@@ -259,7 +258,7 @@ function TabAudit() {
         </PrefRow>
         <PrefRow
           label="Lancer automatiquement la génération du rapport"
-          desc="À la fin d'un audit, AuditIQ génère automatiquement le PDF executive + PDF réglementaire."
+          desc="À la fin d'un audit, AuditIQ génère automatiquement la synthèse dirigeants + le rapport détaillé."
         >
           <Toggle
             checked={autoReport}
@@ -272,9 +271,9 @@ function TabAudit() {
           desc="Type de module lancé par défaut lors de la création d'un audit."
         >
           <SelectInput aria-label="Audit par défaut" defaultValue="M1" style={{ maxWidth: 200 }}>
-            <option value="M1">M1 — Supervisé</option>
-            <option value="M2">M2 — Non supervisé</option>
-            <option value="M3">M3 — LLM</option>
+            <option value="M1">Module 1 — Audit supervisé</option>
+            <option value="M2">Module 2 — Détection non supervisée</option>
+            <option value="M3">Module 3 — Audit LLM &amp; chatbot</option>
           </SelectInput>
         </PrefRow>
         <PrefRow
@@ -313,8 +312,8 @@ function TabSeuils() {
     <>
       <SectionHead
         eyebrow="Seuils"
-        title="Critères de conformité"
-        sub="Ajustez les seuils déclenchant un verdict « non conforme ». Valeurs par défaut alignées sur la réglementation."
+        title="Seuils d'alerte"
+        sub="Ajustez les seuils déclenchant un signal « risque élevé ». Valeurs par défaut issues des références du secteur."
       />
       <Card className="p-0">
         <div>
@@ -336,7 +335,7 @@ function TabSeuils() {
         </div>
       </Card>
       <InlineNote>
-        Modifier ces seuils n&apos;altère pas les audits déjà signés — seuls les prochains audits
+        Modifier ces seuils n&apos;altère pas les audits déjà réalisés — seuls les prochains audits
         utiliseront les nouvelles valeurs.
       </InlineNote>
     </>
@@ -344,7 +343,6 @@ function TabSeuils() {
 }
 
 function TabRapports() {
-  const [eidas, setEidas] = React.useState(true);
   const [executive, setExecutive] = React.useState(true);
   const [annexe, setAnnexe] = React.useState(true);
   const [confidentiel, setConfidentiel] = React.useState(false);
@@ -357,21 +355,15 @@ function TabRapports() {
         sub="Personnalisez le format et les options des rapports PDF générés par AuditIQ."
       />
       <Card>
-        <PrefRow label="Template PDF">
-          <SelectInput aria-label="Template PDF" defaultValue="sobre" style={{ maxWidth: 200 }}>
+        <PrefRow label="Modèle de PDF">
+          <SelectInput aria-label="Modèle de PDF" defaultValue="sobre" style={{ maxWidth: 200 }}>
             <option value="sobre">Sobre</option>
             <option value="detaille">Détaillé</option>
             <option value="reglementaire">Réglementaire</option>
           </SelectInput>
         </PrefRow>
-        <PrefRow
-          label="Signature électronique eIDAS"
-          desc="Tous les PDF finaux sont signés via DocuSign EU (certificat qualifié)."
-        >
-          <Toggle checked={eidas} onChange={setEidas} ariaLabel="Signature eIDAS activée" />
-        </PrefRow>
-        <PrefRow label="Inclure la vue executive dans tous les rapports">
-          <Toggle checked={executive} onChange={setExecutive} ariaLabel="Vue executive" />
+        <PrefRow label="Inclure la synthèse dirigeants dans tous les rapports">
+          <Toggle checked={executive} onChange={setExecutive} ariaLabel="Synthèse dirigeants" />
         </PrefRow>
         <PrefRow label="Inclure le détail technique en annexe">
           <Toggle checked={annexe} onChange={setAnnexe} ariaLabel="Détail technique annexe" />
@@ -386,69 +378,38 @@ function TabRapports() {
           </SelectInput>
         </PrefRow>
       </Card>
-      <InlineNote>
-        La signature eIDAS est fournie via DocuSign EU. Un certificat qualifié est requis — contactez
-        le support pour l&apos;activer sur votre compte.
-      </InlineNote>
     </>
   );
 }
 
-type Integration = { key: string; name: string; Icon: React.ElementType; defaultConnected: boolean };
+type Integration = { key: string; name: string; Icon: React.ElementType };
 const INTEGRATIONS: Integration[] = [
-  { key: 'mlflow', name: 'MLflow', Icon: Layers, defaultConnected: true },
-  { key: 'github', name: 'GitHub Actions', Icon: ExternalLink, defaultConnected: true },
-  { key: 'datadog', name: 'Datadog', Icon: TrendingUp, defaultConnected: false },
-  { key: 'slack', name: 'Slack', Icon: MessageSquare, defaultConnected: true },
+  { key: 'mlflow', name: 'MLflow', Icon: Layers },
+  { key: 'github', name: 'GitHub Actions', Icon: ExternalLink },
+  { key: 'datadog', name: 'Datadog', Icon: TrendingUp },
+  { key: 'slack', name: 'Slack', Icon: MessageSquare },
 ];
 
 function TabIntegrations() {
-  const [integStates, setIntegStates] = React.useState<Record<string, boolean>>(
-    Object.fromEntries(INTEGRATIONS.map((i) => [i.key, i.defaultConnected])),
-  );
-
   return (
     <>
       <SectionHead
         eyebrow="Intégrations"
         title="Connexion à votre pipeline"
-        sub="Déclenchez des audits automatiquement depuis votre CI/CD ou votre plateforme MLOps."
+        sub="Déclenchez des audits automatiquement depuis votre CI/CD ou votre plateforme MLOps — bientôt disponible."
       />
-      <Card>
-        <Field label="Clé API de production" hint="Ne la partagez jamais publiquement.">
-          <TextInput
-            mono
-            icon={KeyRound}
-            trail={<Eye size={15} />}
-            defaultValue="aiq_live_••••••••••••••••••3f9a"
-            readOnly
-          />
-        </Field>
-      </Card>
       <div className="grid grid-cols-2 gap-4">
-        {INTEGRATIONS.map((integ) => {
-          const connected = integStates[integ.key] ?? false;
-          return (
-            <Card key={integ.key} className="flex items-center gap-3 p-4">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border-default bg-surface-2">
-                <integ.Icon size={17} className="text-fg-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-medium text-fg">{integ.name}</div>
-                <div
-                  className={`text-xs ${connected ? 'text-[color:var(--status-pass,#22c55e)]' : 'text-fg-muted'}`}
-                >
-                  {connected ? 'Connecté' : 'Non connecté'}
-                </div>
-              </div>
-              <Toggle
-                checked={connected}
-                onChange={(v) => setIntegStates((prev) => ({ ...prev, [integ.key]: v }))}
-                ariaLabel={integ.name}
-              />
-            </Card>
-          );
-        })}
+        {INTEGRATIONS.map((integ) => (
+          <Card key={integ.key} className="flex items-center gap-3 p-4">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border-default bg-surface-2">
+              <integ.Icon size={17} className="text-fg-secondary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13.5px] font-medium text-fg">{integ.name}</div>
+              <div className="text-xs text-fg-muted">Bientôt disponible</div>
+            </div>
+          </Card>
+        ))}
       </div>
     </>
   );
@@ -483,10 +444,10 @@ function TabSecurite() {
               <div>
                 <div className="text-sm font-medium text-fg">Hébergement & résidence des données</div>
                 <div className="mt-0.5 text-[12.5px] text-fg-muted">
-                  Toutes vos données sont stockées en France (OVH Roubaix · ISO 27001 · SecNumCloud).
+                  Vos données sont hébergées dans l&apos;Union européenne.
                 </div>
               </div>
-              <span className="text-xs font-medium text-fg-secondary ml-4 shrink-0">UE · France</span>
+              <span className="text-xs font-medium text-fg-secondary ml-4 shrink-0">UE</span>
             </div>
             <div className="flex items-center justify-between py-2 border-t border-border-subtle">
               <div>
@@ -702,17 +663,21 @@ export default function ParametresPage() {
             </nav>
           </aside>
 
-          {/* Content */}
+          {/* Content — fieldset disabled : aucun de ces formulaires ne persiste
+              encore côté backend, les contrôles sont donc inactifs. */}
           <div className="flex max-w-[680px] flex-col gap-4">
-            {tab === 'org' && <TabOrg />}
-            {tab === 'profil' && <TabProfil />}
-            {tab === 'audit' && <TabAudit />}
-            {tab === 'seuils' && <TabSeuils />}
-            {tab === 'rapports' && <TabRapports />}
-            {tab === 'integrations' && <TabIntegrations />}
-            {tab === 'securite' && <TabSecurite />}
-            {tab === 'facturation' && <TabFacturation />}
-            {tab === 'notifications' && <TabNotifications />}
+            <PreviewBanner />
+            <fieldset disabled className="flex min-w-0 flex-col gap-4 border-0 p-0 m-0">
+              {tab === 'org' && <TabOrg />}
+              {tab === 'profil' && <TabProfil />}
+              {tab === 'audit' && <TabAudit />}
+              {tab === 'seuils' && <TabSeuils />}
+              {tab === 'rapports' && <TabRapports />}
+              {tab === 'integrations' && <TabIntegrations />}
+              {tab === 'securite' && <TabSecurite />}
+              {tab === 'facturation' && <TabFacturation />}
+              {tab === 'notifications' && <TabNotifications />}
+            </fieldset>
           </div>
         </div>
       </main>

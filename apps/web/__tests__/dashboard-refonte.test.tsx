@@ -74,7 +74,7 @@ describe('Dashboard (R9 maquette)', () => {
     expect(screen.getByText('Impossible de charger le tableau de bord.')).toBeInTheDocument();
   });
 
-  it('renders 4 metric cards with R9 maquette labels', () => {
+  it('renders the 3 metric cards with risk-oriented labels', () => {
     vi.spyOn(useD, 'useDashboard').mockReturnValue({
       data: BASE_DATA,
       isLoading: false,
@@ -83,11 +83,14 @@ describe('Dashboard (R9 maquette)', () => {
 
     render(<DashboardPage />);
 
-    // R9 maquette labels
-    expect(screen.getAllByText('Score de conformité').length).toBeGreaterThan(0);
+    // Libellés orientés risque
+    expect(screen.getAllByText('Score de risque moyen').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Audits actifs').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Modèles non conformes').length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Délai moyen d'audit").length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Audits à risque élevé').length).toBeGreaterThan(0);
+    // Anciennes cartes supprimées
+    expect(screen.queryByText('Score de conformité')).not.toBeInTheDocument();
+    expect(screen.queryByText('Modèles non conformes')).not.toBeInTheDocument();
+    expect(screen.queryByText("Délai moyen d'audit")).not.toBeInTheDocument();
 
     // Check metric values
     expect(screen.getAllByText('18')).toBeTruthy(); // total_audits
@@ -161,7 +164,7 @@ describe('Dashboard (R9 maquette)', () => {
     render(<DashboardPage />);
 
     expect(
-      screen.getByText('Lancez un audit en moins de 7 minutes')
+      screen.getByText('Lancez un audit en ~5 minutes')
     ).toBeInTheDocument();
     const links = screen.getAllByRole('link');
     const commencer = links.find((l) => l.textContent?.includes('Commencer'));
@@ -181,7 +184,7 @@ describe('Dashboard (R9 maquette)', () => {
     expect(toutVoir.closest('a')).toHaveAttribute('href', '/app/audits');
   });
 
-  it('renders tendance and répartition right column', () => {
+  it('renders répartition right column (tendance card removed)', () => {
     vi.spyOn(useD, 'useDashboard').mockReturnValue({
       data: { ...BASE_DATA, recent_audits: [] },
       isLoading: false,
@@ -190,7 +193,7 @@ describe('Dashboard (R9 maquette)', () => {
 
     render(<DashboardPage />);
 
-    expect(screen.getByText('Conformité globale')).toBeInTheDocument();
+    expect(screen.queryByText('Conformité globale')).not.toBeInTheDocument();
     expect(screen.getByText('Répartition des statuts')).toBeInTheDocument();
   });
 });

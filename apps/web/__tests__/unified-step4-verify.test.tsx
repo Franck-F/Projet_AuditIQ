@@ -125,12 +125,12 @@ describe('Unified Step4Verify', () => {
         </WizardProvider>,
       );
       expect(
-        screen.getByRole('button', { name: /Personnaliser les paramètres KMeans/i }),
+        screen.getByRole('button', { name: /Personnaliser les réglages/i }),
       ).toBeInTheDocument();
       expect(screen.getByText(/Valeurs par défaut adaptées/i)).toBeInTheDocument();
       // Inputs should not be visible when collapsed
       expect(
-        screen.queryByRole('spinbutton', { name: /Nombre de clusters/i }),
+        screen.queryByRole('spinbutton', { name: /Nombre de groupes recherchés/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -142,16 +142,16 @@ describe('Unified Step4Verify', () => {
       );
       const user = userEvent.setup();
       await user.click(
-        screen.getByRole('button', { name: /Personnaliser les paramètres KMeans/i }),
+        screen.getByRole('button', { name: /Personnaliser les réglages/i }),
       );
       expect(
-        screen.getByRole('spinbutton', { name: /Nombre de clusters/i }),
+        screen.getByRole('spinbutton', { name: /Nombre de groupes recherchés/i }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole('spinbutton', { name: /Seuil de déviation/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('spinbutton', { name: /Seuil χ²/i }),
+        screen.getByRole('spinbutton', { name: /Niveau d'exigence statistique/i }),
       ).toBeInTheDocument();
     });
   });

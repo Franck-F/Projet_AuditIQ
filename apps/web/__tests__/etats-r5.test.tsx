@@ -20,39 +20,39 @@ describe('etats template gallery — R5', () => {
 
   it('renders first-use section (01)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/first-use/i)).toBeInTheDocument();
+    expect(screen.getByText(/première utilisation · pas encore d.audit/i)).toBeInTheDocument();
     expect(screen.getByText(/lancez votre premier audit/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /lancer mon premier audit/i })).toBeInTheDocument();
   });
 
   it('renders loading skeleton section (02)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/loading · skeleton card/i)).toBeInTheDocument();
+    expect(screen.getByText(/chargement · carte squelette/i)).toBeInTheDocument();
   });
 
   it('renders error / retry section (03)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/error · erreur réseau/i)).toBeInTheDocument();
+    expect(screen.getByText(/erreur · erreur réseau avec nouvelle tentative/i)).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument();
   });
 
   it('renders permission denied section (04)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/permission denied/i)).toBeInTheDocument();
+    expect(screen.getByText(/accès refusé · droits insuffisants/i)).toBeInTheDocument();
     expect(screen.getByText(/vous n.avez pas accès/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /voir mon rôle/i })).toBeInTheDocument();
   });
 
   it('renders success section (05)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/success · rapport généré/i)).toBeInTheDocument();
-    expect(screen.getByText(/rapport généré et signé avec succès/i)).toBeInTheDocument();
+    expect(screen.getByText(/succès · rapport généré/i)).toBeInTheDocument();
+    expect(screen.getByText(/rapport généré avec succès/i)).toBeInTheDocument();
   });
 
   it('renders toast cluster section (06)', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/toast cluster/i)).toBeInTheDocument();
+    expect(screen.getByText(/notifications éphémères \(toasts\)/i)).toBeInTheDocument();
     // success toast
     expect(screen.getByText(/audit aud-2026-014 terminé/i)).toBeInTheDocument();
     // warn toast
@@ -63,7 +63,7 @@ describe('etats template gallery — R5', () => {
 
   it('renders modal section (07) with trigger button', () => {
     render(<EtatsPage />);
-    expect(screen.getByText(/modal · confirmation avec saisie/i)).toBeInTheDocument();
+    expect(screen.getByText(/modale · confirmation avec saisie/i)).toBeInTheDocument();
     const trigger = screen.getByRole('button', { name: /supprimer l.audit aud-2026-014/i });
     expect(trigger).toBeInTheDocument();
   });

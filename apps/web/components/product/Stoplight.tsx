@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { VERDICT_LABELS } from '@/lib/verdict';
 
 export type Verdict = 'pass' | 'warn' | 'fail';
 
@@ -11,11 +12,7 @@ interface StoplightProps {
   label?: string;
 }
 
-const VERDICT_LABEL: Record<Verdict, string> = {
-  pass: 'Conforme',
-  warn: 'Vigilance',
-  fail: 'Critique',
-};
+const VERDICT_LABEL: Record<Verdict, string> = VERDICT_LABELS;
 
 const LAMP_COLORS: Record<Verdict, string> = {
   pass: 'bg-status-pass shadow-[0_0_12px_var(--status-pass-bg)] border-status-pass',

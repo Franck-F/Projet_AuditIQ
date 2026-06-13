@@ -21,9 +21,9 @@ export interface AuthShellProps {
 }
 
 const BULLETS = [
-  "Métriques alignées sur la règle des 4/5 et l'AI Act",
-  "Rapports signés et horodatés, prêts pour l'audit",
-  'Vos données restent chez vous — calcul en mémoire',
+  "Métriques reconnues : règle des 4/5, parité, égalité des chances",
+  'Rapports horodatés et traçables, prêts pour vos échanges avec un auditeur',
+  'Jeux de données supprimés automatiquement 30 jours après l’import',
 ];
 
 export function AuthShell({ activeTab, heading, intro, children }: AuthShellProps) {
@@ -62,7 +62,7 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
           <div>
             <div className="text-base font-semibold text-fg">AuditIQ</div>
             <div className="font-mono text-[9.5px] tracking-[0.1em] text-fg-muted uppercase">
-              FAIRNESS PLATFORM
+              Plateforme d&apos;audit de fairness
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
               aria-hidden
               className="size-1.5 rounded-full bg-status-pass"
             />
-            Conforme AI Act · RGPD
+            Hébergé en UE · RGPD
           </span>
 
           <h2
@@ -86,8 +86,8 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
           </h2>
 
           <p className="text-[15px] leading-[1.6] text-fg-secondary">
-            AuditIQ détecte les biais discriminatoires, calcule les métriques réglementaires et
-            génère des rapports opposables. Sans déplacer vos données.
+            AuditIQ détecte les biais discriminatoires, calcule les métriques de fairness
+            reconnues et génère des rapports documentés et traçables.
           </p>
 
           <ul className="mt-[26px] flex flex-col gap-3">
@@ -106,9 +106,9 @@ export function AuthShell({ activeTab, heading, intro, children }: AuthShellProp
 
         {/* Bottom: compliance footer */}
         <div className="relative flex gap-[22px] font-mono text-[12.5px] text-fg-muted">
-          <span>SOC 2 Type II</span>
-          <span>ISO 27001</span>
           <span>Hébergé en UE</span>
+          <span>RGPD</span>
+          <span>ISO 27001 : démarche en cours</span>
         </div>
       </aside>
 

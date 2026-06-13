@@ -197,7 +197,7 @@ describe('HeatMap6Axes', () => {
     const genreCard = cards.find((c) =>
       c.getAttribute('aria-label')?.includes('Genre'),
     );
-    expect(genreCard?.getAttribute('aria-label')).toContain('Conforme');
+    expect(genreCard?.getAttribute('aria-label')).toContain('Risque faible');
   });
 });
 

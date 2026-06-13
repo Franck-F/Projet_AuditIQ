@@ -162,6 +162,11 @@ _VERDICT_LABELS = {
     "warn": "respectée avec une marge faible",
     "pass": "respectée",
 }
+_VERDICT_FR = {
+    "fail": "Risque élevé",
+    "warn": "Vigilance",
+    "pass": "Risque faible",
+}
 _DI_VERDICT_LABELS = {
     "fail": "non respectée (impact disproportionné)",
     "warn": "respectée mais avec une marge faible",
@@ -182,7 +187,7 @@ def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
         f"(groupe le plus défavorisé : « {result.worst_group} » ; "
         f"référence : « {result.reference_value} »). "
         f"Score de risque agrégé : {result.risk_score}/100. "
-        f"Verdict : {result.verdict}."
+        f"Verdict : {_VERDICT_FR.get(result.verdict, result.verdict)}."
     )
     disclaimers = _base_disclaimers(result)
 
@@ -225,19 +230,21 @@ def _fallback(result: M1Result, *, degraded: bool = False) -> InterpretationOut:
                 f"(Disparate Impact : {worst_m.disparate_impact}, "
                 f"groupe le plus défavorisé : « {worst_m.worst_group} »)."
             )
-        # Informative fairlearn ratio sentence — never changes verdict, purely additive
+        # Informative ratio sentence — never changes verdict, purely additive
         ratio_parts = [
-            f"DP ratio = {worst_m.demographic_parity_ratio}"
+            f"ratio de parité = {worst_m.demographic_parity_ratio}"
         ]
         if worst_m.equal_opportunity_ratio is not None:
-            ratio_parts.append(f"EO ratio = {worst_m.equal_opportunity_ratio}")
+            ratio_parts.append(
+                f"ratio Equal Opportunity = {worst_m.equal_opportunity_ratio}"
+            )
         if worst_m.equalized_odds_ratio is not None:
             ratio_parts.append(
-                f"Equalized Odds ratio = {worst_m.equalized_odds_ratio}"
+                f"ratio Equalized Odds = {worst_m.equalized_odds_ratio}"
             )
         narrative += (
             f" [Informatif — sans effet sur le verdict] "
-            f"Ratios fairlearn pour « {worst_m.attribute} » : "
+            f"Indicateurs complémentaires pour « {worst_m.attribute} » : "
             f"{', '.join(ratio_parts)}. "
             f"Un ratio proche de 1 indique une parité entre groupes ; "
             f"ces ratios complètent les différences et se lisent conjointement."

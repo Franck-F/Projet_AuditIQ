@@ -1,4 +1,4 @@
-"""Pure Excel compliance report: build_excel_report(AuditOut) -> bytes."""
+"""Pure Excel audit report: build_excel_report(AuditOut) -> bytes."""
 from __future__ import annotations
 
 import io
@@ -8,12 +8,13 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 
+from app.reporting.format import p_value_display, status_label, verdict_label
 from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
 
-_VERDICT_FR = {
-    "fail": "🔴 Critique",
+_VERDICT_BADGE_FR = {
+    "fail": "🔴 Risque élevé",
     "warn": "🟠 Vigilance",
-    "pass": "🟢 Conforme",
+    "pass": "🟢 Risque faible",
 }
 _NOT_A_CERTIFICATE = (
     "Ce rapport est une aide à l'analyse documentée : il n'est pas un "
@@ -30,13 +31,6 @@ _FR_LAW = (
 )
 
 
-_PRIORITY_LABEL_FR = {
-    "high": "Action prioritaire",
-    "medium": "À planifier",
-    "low": "Maintien / veille",
-}
-
-
 def _rows(ws: Worksheet, rows: Sequence[Sequence[object]]) -> None:
     for r in rows:
         ws.append(r)
@@ -45,14 +39,17 @@ def _rows(ws: Worksheet, rows: Sequence[Sequence[object]]) -> None:
 def _write_recommendations_sheet(
     wb: Workbook, recs: list[RecommendationOut]
 ) -> None:
+    """Liste numérotée simple : l'ordre vaut priorité, sans étiquette."""
     if not recs:
         return
     ws = wb.create_sheet("Recommandations")
-    ws.append(["#", "Priorité", "Action", "Détail"])
+    ws.append(["#", "Action", "Détail"])
     for cell in ws[1]:
         cell.font = Font(bold=True)
     for idx, rec in enumerate(recs, start=1):
-        ws.append([idx, _PRIORITY_LABEL_FR[rec.priority], rec.title, rec.detail])
+        ws.append([idx, rec.title, rec.detail])
+    ws.append([])
+    ws.append(["Recommandations présentées par ordre de priorité."])
 
 
 def build_excel_report(audit: AuditOut) -> bytes:
@@ -65,13 +62,13 @@ def build_excel_report(audit: AuditOut) -> bytes:
     _rows(
         summary,
         [
-            ["Rapport de conformité AuditIQ"],
+            ["Rapport d'audit de fairness — AuditIQ"],
             [],
             ["Audit", audit.code or str(audit.id)],
             ["Titre", audit.title],
             ["Module", audit.module],
-            ["Statut", audit.status],
-            ["Verdict", _VERDICT_FR.get(verdict, verdict)],
+            ["Statut", status_label(audit.status)],
+            ["Verdict", _VERDICT_BADGE_FR.get(str(verdict), str(verdict))],
             ["Score de risque", f"{risk}/100"],
             [],
             [_NOT_A_CERTIFICATE],
@@ -86,7 +83,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
             detail,
             [
                 ["Module 2 — détection non supervisée"],
-                ["Test du Khi-deux (p-value)", m.p_value],
+                ["Test du Khi-deux (p-value)", p_value_display(m.p_value)],
                 ["χ²", m.chi2, "ddl", m.dof],
                 ["Taux favorable global", m.global_positive_rate],
                 ["Clusters déviants", f"{len(m.deviant_cluster_ids)} / {m.k}"],
@@ -105,7 +102,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
             [
                 ["Module 3 — audit LLM/chatbot"],
                 ["Score global", m.global_score],
-                ["Verdict", m.verdict],
+                ["Verdict", verdict_label(m.verdict)],
                 ["Paires", m.n_pairs, "Appels échoués", m.n_calls_failed],
                 [],
                 ["Catégorie", "Écart long.", "Écart sent.", "Taux refus",
@@ -114,25 +111,33 @@ def build_excel_report(audit: AuditOut) -> bytes:
         )
         for cat in m.categories:
             detail.append([cat.name, cat.length_gap, cat.sentiment_gap,
-                           cat.refusal_rate, cat.score, cat.verdict])
+                           cat.refusal_rate, cat.score,
+                           verdict_label(cat.verdict)])
     elif isinstance(m, M1MetricsOut):
-        _rows(
-            detail,
-            [
-                ["Module 1 — audit supervisé"],
-                ["Disparate Impact", m.disparate_impact],
-                ["Demographic Parity (écart)", m.demographic_parity_diff],
-                ["Groupe le plus défavorisé", m.worst_group],
-                ["Référence", m.reference_value],
-                [],
-                ["Groupe", "Effectif", "Favorables", "Taux", "DI"],
-            ],
-        )
-        for g in m.groups:
-            detail.append(
-                [g.value, g.n, g.favorable, g.selection_rate,
-                 g.disparate_impact]
+        # Mono-attribut : le résumé module et la section « Attribut protégé »
+        # afficheraient deux fois les mêmes métriques — on ne garde que la
+        # section par attribut.
+        single_attr = len(m.marginals) == 1
+        if single_attr:
+            _rows(detail, [["Module 1 — audit supervisé"]])
+        else:
+            _rows(
+                detail,
+                [
+                    ["Module 1 — audit supervisé"],
+                    ["Disparate Impact", m.disparate_impact],
+                    ["Demographic Parity (écart)", m.demographic_parity_diff],
+                    ["Groupe le plus défavorisé", m.worst_group],
+                    ["Référence", m.reference_value],
+                    [],
+                    ["Groupe", "Effectif", "Favorables", "Taux", "DI"],
+                ],
             )
+            for g in m.groups:
+                detail.append(
+                    [g.value, g.n, g.favorable, g.selection_rate,
+                     g.disparate_impact]
+                )
         if m.equal_opportunity_diff is not None or m.truelabel_reason is not None:
             _rows(detail, [[]])
             if m.truelabel_reason is not None:
@@ -145,13 +150,16 @@ def build_excel_report(audit: AuditOut) -> bytes:
                         ["Equal Opportunity (écart TPR)",
                          m.equal_opportunity_diff,
                          "Verdict EO",
-                         m.equal_opportunity_verdict or "—"],
+                         verdict_label(m.equal_opportunity_verdict)
+                         if m.equal_opportunity_verdict else "—"],
                         ["Equalized Odds (écart max TPR/FPR)",
                          m.equalized_odds_diff,
                          "Verdict Eq. Odds",
-                         m.equalized_odds_verdict or "—"],
+                         verdict_label(m.equalized_odds_verdict)
+                         if m.equalized_odds_verdict else "—"],
                         ["Demographic Parity (verdict)",
-                         m.demographic_parity_verdict or "—"],
+                         verdict_label(m.demographic_parity_verdict)
+                         if m.demographic_parity_verdict else "—"],
                         [],
                         ["Groupe", "TPR", "FPR"],
                     ],
@@ -182,10 +190,11 @@ def build_excel_report(audit: AuditOut) -> bytes:
                     [f"Attribut protégé : {marg.attribute}"],
                     ["Disparate Impact", marg.disparate_impact],
                     ["Demographic Parity (écart)", marg.demographic_parity_diff],
-                    ["DP ratio (fairlearn)", marg.demographic_parity_ratio],
+                    ["Ratio de parité (indicateur complémentaire)",
+                     marg.demographic_parity_ratio],
                     ["Groupe le plus défavorisé", marg.worst_group],
                     ["Référence", marg.reference_value],
-                    ["Verdict", marg.verdict],
+                    ["Verdict", verdict_label(marg.verdict)],
                     ["Score de risque", marg.risk_score],
                 ],
             )
@@ -193,9 +202,9 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 _rows(
                     detail,
                     [
-                        ["EO ratio (fairlearn, informatif)",
+                        ["Ratio Equal Opportunity (indicateur complémentaire)",
                          marg.equal_opportunity_ratio],
-                        ["Equalized Odds ratio (fairlearn, informatif)",
+                        ["Ratio Equalized Odds (indicateur complémentaire)",
                          marg.equalized_odds_ratio if marg.equalized_odds_ratio is not None else "—"],
                     ],
                 )
@@ -223,7 +232,11 @@ def build_excel_report(audit: AuditOut) -> bytes:
                         [g.value, g.n, g.favorable, g.selection_rate,
                          g.disparate_impact]
                     )
-            if marg.equal_opportunity_diff is not None:
+            # Mono-attribut : le bloc vérité-terrain global couvre déjà ces
+            # lignes — éviter le doublon.
+            if marg.equal_opportunity_diff is not None and not (
+                single_attr and m.equal_opportunity_diff is not None
+            ):
                 _rows(
                     detail,
                     [
@@ -231,17 +244,21 @@ def build_excel_report(audit: AuditOut) -> bytes:
                         ["Equal Opportunity (écart TPR)",
                          marg.equal_opportunity_diff,
                          "Verdict EO",
-                         marg.equal_opportunity_verdict or "—"],
+                         verdict_label(marg.equal_opportunity_verdict)
+                         if marg.equal_opportunity_verdict else "—"],
                         ["Equalized Odds (écart max TPR/FPR)",
                          marg.equalized_odds_diff,
                          "Verdict Eq. Odds",
-                         marg.equalized_odds_verdict or "—"],
+                         verdict_label(marg.equalized_odds_verdict)
+                         if marg.equalized_odds_verdict else "—"],
                     ],
                 )
             if marg.warnings:
                 for w in marg.warnings:
                     detail.append(["Avertissement", w])
-            if marg.truelabel_reason is not None:
+            if marg.truelabel_reason is not None and not (
+                single_attr and m.truelabel_reason is not None
+            ):
                 _rows(detail, [["Note vérité-terrain", marg.truelabel_reason]])
         for ix in m.pairwise:
             pair_title = (
@@ -257,9 +274,10 @@ def build_excel_report(audit: AuditOut) -> bytes:
                     ["Disparate Impact intersectionnel", ix.disparate_impact],
                     ["Demographic Parity (écart intersectionnel)",
                      ix.demographic_parity_diff],
-                    ["DP ratio intersectionnel (fairlearn)",
+                    ["Ratio de parité intersectionnel "
+                     "(indicateur complémentaire)",
                      ix.demographic_parity_ratio],
-                    ["Verdict intersectionnel", ix.verdict],
+                    ["Verdict intersectionnel", verdict_label(ix.verdict)],
                     ["Pire sous-groupe (primaire)", ix.worst_primary],
                     ["Pire sous-groupe (secondaire)", ix.worst_secondary],
                     ["DI marginal (attribut primaire)", ix.marginal_di[0]
@@ -272,9 +290,11 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 _rows(
                     detail,
                     [
-                        ["EO ratio intersectionnel (fairlearn, informatif)",
+                        ["Ratio Equal Opportunity intersectionnel "
+                         "(indicateur complémentaire)",
                          ix.equal_opportunity_ratio],
-                        ["Equalized Odds ratio intersectionnel (fairlearn, informatif)",
+                        ["Ratio Equalized Odds intersectionnel "
+                         "(indicateur complémentaire)",
                          ix.equalized_odds_ratio if ix.equalized_odds_ratio is not None else "—"],
                     ],
                 )
@@ -291,7 +311,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
                 detail.append([
                     cell.primary_value, cell.secondary_value, cell.n,
                     cell.favorable, cell.selection_rate,
-                    cell.disparate_impact, cell.verdict,
+                    cell.disparate_impact, verdict_label(cell.verdict),
                 ])
             if ix.equal_opportunity_diff is not None:
                 _rows(
@@ -301,11 +321,13 @@ def build_excel_report(audit: AuditOut) -> bytes:
                         ["Equal Opportunity intersectionnel (écart TPR)",
                          ix.equal_opportunity_diff,
                          "Verdict EO intersect.",
-                         ix.equal_opportunity_verdict or "—"],
+                         verdict_label(ix.equal_opportunity_verdict)
+                         if ix.equal_opportunity_verdict else "—"],
                         ["Equalized Odds intersectionnel (écart max TPR/FPR)",
                          ix.equalized_odds_diff,
                          "Verdict Eq. Odds intersect.",
-                         ix.equalized_odds_verdict or "—"],
+                         verdict_label(ix.equalized_odds_verdict)
+                         if ix.equalized_odds_verdict else "—"],
                     ],
                 )
             if ix.warnings:
@@ -314,9 +336,9 @@ def build_excel_report(audit: AuditOut) -> bytes:
             if ix.reason is not None:
                 _rows(detail, [["Note", ix.reason]])
 
-    conformity = wb.create_sheet("Conformité")
+    references = wb.create_sheet("Références")
     _rows(
-        conformity,
+        references,
         [
             ["Mise en regard AI Act"],
             ["Article", "Élément du rapport"],

@@ -44,7 +44,7 @@ export function MarketingFooter() {
 
         <div className="foot-bottom">
           <span>© 2026 AuditIQ. Tous droits réservés.</span>
-          <span className="mono">Conforme AI Act · SOC 2 · ISO 27001 · Hébergé en UE</span>
+          <span className="mono">Hébergé en UE · RGPD · Conçu pour les exigences de l&apos;AI Act</span>
         </div>
       </div>
     </footer>

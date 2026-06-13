@@ -223,7 +223,7 @@ describe('M1 fairlearn metrics — with ground truth', () => {
   it('renders without crashing and shows verdict', () => {
     useAudit.mockReturnValue({ isLoading: false, isError: false, data: M1_WITH_GT_FIXTURE });
     render(<AuditResultPage />);
-    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Risque élevé').length).toBeGreaterThan(0);
   });
 
   it('shows DP ratio value in Groupes tab (marginal card)', async () => {
@@ -259,9 +259,9 @@ describe('M1 fairlearn metrics — with ground truth', () => {
     await openGroupesTab();
 
     // Column headers
-    expect(screen.getByText('FNR')).toBeInTheDocument();
+    expect(screen.getByText('Refus à tort')).toBeInTheDocument();
     expect(screen.getByText('Précision')).toBeInTheDocument();
-    expect(screen.getByText('Accuracy')).toBeInTheDocument();
+    expect(screen.getByText('Exactitude')).toBeInTheDocument();
   });
 
   it('renders per-group rate values for group H (fnr=20%, precision=80%, accuracy=80%)', async () => {
@@ -301,7 +301,7 @@ describe('M1 fairlearn metrics — with ground truth', () => {
     render(<AuditResultPage />);
 
     // verdict hero still present — no impact on verdict display
-    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Risque élevé').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Recrutement avec ground truth').length).toBeGreaterThan(0);
   });
 });
@@ -331,17 +331,17 @@ describe('M1 fairlearn metrics — without ground truth (backward compat)', () =
     render(<AuditResultPage />);
     await openGroupesTab();
 
-    // No per-group rate columns (FNR, Précision, Accuracy) should appear
-    expect(screen.queryByText('FNR')).not.toBeInTheDocument();
+    // No per-group rate columns (Refus à tort, Précision, Exactitude) should appear
+    expect(screen.queryByText('Refus à tort')).not.toBeInTheDocument();
     expect(screen.queryByText('Précision')).not.toBeInTheDocument();
-    expect(screen.queryByText('Accuracy')).not.toBeInTheDocument();
+    expect(screen.queryByText('Exactitude')).not.toBeInTheDocument();
   });
 
   it('still renders verdict correctly without GT', () => {
     useAudit.mockReturnValue({ isLoading: false, isError: false, data: M1_WITHOUT_GT_FIXTURE });
     render(<AuditResultPage />);
 
-    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Risque élevé').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Recrutement sans ground truth').length).toBeGreaterThan(0);
   });
 });

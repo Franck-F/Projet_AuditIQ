@@ -1,6 +1,7 @@
 // apps/web/components/product/HeatMap6Axes.tsx
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { VERDICT_LABELS } from '@/lib/verdict';
 
 type AxisStatus = 'pass' | 'warn' | 'fail' | 'info';
 
@@ -31,9 +32,7 @@ const TEXT_COLOR: Record<AxisStatus, string> = {
 };
 
 const STATUS_LABEL: Record<AxisStatus, string> = {
-  pass: 'Conforme',
-  warn: 'Attention',
-  fail: 'Non conforme',
+  ...VERDICT_LABELS,
   info: 'Info',
 };
 

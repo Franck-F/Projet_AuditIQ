@@ -38,13 +38,13 @@ describe('AuthShell — R4 split-screen refonte', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the AI Act badge', () => {
+  it('renders the hosting / RGPD trust badge', () => {
     render(
       <Wrapped activeTab="login" heading="Content" intro="Accédez">
         <div>FORM</div>
       </Wrapped>,
     );
-    expect(screen.getByText(/conforme ai act/i)).toBeInTheDocument();
+    expect(screen.getByText(/hébergé en ue · rgpd/i)).toBeInTheDocument();
   });
 
   it('Connexion tab has aria-current=page when activeTab=login', () => {

@@ -10,62 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Meter } from '@/components/product/Meter';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
-
-/* ─── Sparkline ─────────────────────────────────────────────────────────── */
-const SPARK = [62, 64, 61, 66, 70, 68, 73, 71, 76, 78, 81, 84];
-
-function Sparkline({
-  data = SPARK,
-  w = 130,
-  h = 44,
-  color = 'var(--accent)',
-}: {
-  data?: number[];
-  w?: number;
-  h?: number;
-  color?: string;
-}) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const pts = data.map((v, i) => [
-    (i / (data.length - 1)) * w,
-    h - ((v - min) / (max - min || 1)) * (h - 4) - 2,
-  ]);
-  const d = pts
-    .map((p, i) => `${i ? 'L' : 'M'}${p[0]!.toFixed(1)} ${p[1]!.toFixed(1)}`)
-    .join(' ');
-  const area = `${d} L${w} ${h} L0 ${h} Z`;
-  return (
-    <svg
-      width={w}
-      height={h}
-      viewBox={`0 0 ${w} ${h}`}
-      style={{ overflow: 'visible' }}
-    >
-      <defs>
-        <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={color} stopOpacity="0.18" />
-          <stop offset="1" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#spk)" />
-      <path
-        d={d}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx={pts[pts.length - 1]![0]}
-        cy={pts[pts.length - 1]![1]}
-        r="2.6"
-        fill={color}
-      />
-    </svg>
-  );
-}
+import { riskTone, VERDICT_LABELS } from '@/lib/verdict';
 
 /* ─── Metric card ────────────────────────────────────────────────────────── */
 type StatusTone = 'pass' | 'warn' | 'fail' | 'neutral';
@@ -183,11 +128,7 @@ function AuditRow({ audit }: { audit: RecentAudit }) {
           ? 'var(--status-pass)'
           : 'var(--fg-muted)';
   return (
-    <tr
-      className="tbl-row"
-      style={{ cursor: 'pointer' }}
-      onClick={() => {}}
-    >
+    <tr className="tbl-row" style={{ cursor: 'pointer' }}>
       <td style={{ padding: '12px 18px' }}>
         <Link
           href={`/app/audits/${audit.id}`}
@@ -256,15 +197,14 @@ export default function DashboardPage() {
   const warnPct = activeAudits > 0 ? Math.round((warningAudits / activeAudits) * 100) : 0;
   const failPct = activeAudits > 0 ? Math.round((failingAudits / activeAudits) * 100) : 0;
 
-  const riskTone: StatusTone =
-    riskScore >= 80 ? 'pass' : riskScore >= 60 ? 'warn' : 'fail';
+  // Score de RISQUE 0–100 (plus bas = mieux) — seuils alignés sur la jauge.
+  const riskScoreTone: StatusTone = riskTone(riskScore);
 
   return (
     <>
       <Topbar
         title="Vue d'ensemble"
         crumbs={[{ label: 'AuditIQ' }, { label: "Vue d'ensemble" }]}
-        sub={<StatusBadge tone="pass">Plateforme opérationnelle</StatusBadge>}
         actions={
           <Button asChild variant="primary">
             <Link href="/app/audits/nouveau">
@@ -287,11 +227,11 @@ export default function DashboardPage() {
             }}
           >
             Bonjour.{' '}
-            Voici l'état de conformité{' '}
+            Voici l'état des risques de{' '}
             <em style={{ color: 'var(--fg-secondary)', fontStyle: 'normal' }}>
               fairness
             </em>{' '}
-            de vos modèles en production.{' '}
+            de vos modèles.{' '}
             {alertCount > 0 && (
               <strong
                 style={{ color: 'var(--status-warn)', fontWeight: 500 }}
@@ -299,44 +239,37 @@ export default function DashboardPage() {
                 {alertCount} audit{alertCount > 1 ? 's' : ''}
               </strong>
             )}
-            {alertCount > 0 && ' requièrent votre attention.'}
+            {alertCount > 0 &&
+              (alertCount > 1
+                ? ' requièrent votre attention.'
+                : ' requiert votre attention.')}
           </h1>
         </div>
 
-        {/* 4 Metric cards */}
+        {/* Metric cards */}
         <div
-          className="grid-4"
-          style={{ marginBottom: 16 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 16,
+            marginBottom: 16,
+          }}
         >
           <MetricCard
-            label="Score de conformité"
-            value={riskScore}
-            unit="/100"
-            delta={'+6 pts'}
-            deltaUp={true}
-            hint="ce trimestre"
-            tone={riskTone}
+            label="Score de risque moyen"
+            value={activeAudits > 0 ? riskScore : '—'}
+            unit={activeAudits > 0 ? '/100' : undefined}
+            hint="plus bas = mieux"
+            tone={activeAudits > 0 ? riskScoreTone : undefined}
           />
           <MetricCard
             label="Audits actifs"
             value={activeAudits}
-            delta="+3"
-            deltaUp={true}
-            hint="ce mois"
           />
           <MetricCard
-            label="Modèles non conformes"
+            label="Audits à risque élevé"
             value={failingAudits}
-            delta="-1"
-            deltaUp={true}
-            hint="vs. mois dernier"
             tone={failingAudits > 0 ? 'fail' : 'pass'}
-          />
-          <MetricCard
-            label="Délai moyen d'audit"
-            value="—"
-            unit="min"
-            hint="pipeline auto"
           />
         </div>
 
@@ -384,7 +317,7 @@ export default function DashboardPage() {
                     borderBottom: '1px solid var(--border-subtle)',
                   }}
                 >
-                  {['Audit', 'Attribut', 'Score', 'Statut', ''].map((h) => (
+                  {['Audit', 'Module', 'Score de risque', 'Statut', ''].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -428,54 +361,6 @@ export default function DashboardPage() {
 
           {/* Right column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Tendance card */}
-            <Card>
-              <div
-                className="eyebrow"
-                style={{ marginBottom: 5, fontSize: 11, letterSpacing: '0.1em' }}
-              >
-                Tendance
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>
-                Conformité globale
-              </h3>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'space-between',
-                  marginTop: 10,
-                }}
-              >
-                <div>
-                  <div
-                    className="tnum"
-                    style={{
-                      fontSize: 34,
-                      fontWeight: 600,
-                      letterSpacing: '-0.03em',
-                    }}
-                  >
-                    74
-                    <span style={{ fontSize: 16, color: 'var(--fg-muted)' }}>
-                      %
-                    </span>
-                  </div>
-                  <div
-                    className="mono"
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--status-pass)',
-                      marginTop: 2,
-                    }}
-                  >
-                    ↑ 6 pts / 90 j
-                  </div>
-                </div>
-                <Sparkline w={130} h={44} />
-              </div>
-            </Card>
-
             {/* Répartition des statuts */}
             <Card>
               <div
@@ -486,9 +371,9 @@ export default function DashboardPage() {
               </div>
               {(
                 [
-                  ['pass', 'Conformes', passCount, passPct],
-                  ['warn', 'Sous vigilance', warningAudits, warnPct],
-                  ['fail', 'Non conformes', failingAudits, failPct],
+                  ['pass', VERDICT_LABELS.pass, passCount, passPct],
+                  ['warn', VERDICT_LABELS.warn, warningAudits, warnPct],
+                  ['fail', VERDICT_LABELS.fail, failingAudits, failPct],
                 ] as Array<[StatusTone, string, number, number]>
               ).map(([tone, label, n, pct]) => (
                 <div key={tone} style={{ marginBottom: 12 }}>
@@ -574,7 +459,7 @@ export default function DashboardPage() {
           </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: 15, fontWeight: 500 }}>
-              Lancez un audit en moins de 7 minutes
+              Lancez un audit en ~5 minutes
             </h3>
             <p
               style={{

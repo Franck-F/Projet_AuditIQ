@@ -15,25 +15,44 @@ import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/ui/icons';
 
 export default function RapportsPage() {
-  const { data: dashboard, isLoading } = useDashboard();
+  const { data: dashboard, isLoading, isError, refetch } = useDashboard();
 
   const handleDownload = (auditId: string, format: 'pdf' | 'xlsx') => {
-    downloadReport(auditId, format);
+    void downloadReport(auditId, format);
   };
 
   if (isLoading) {
     return (
       <>
         <Topbar title="Rapports" crumbs={[{ label: 'AuditIQ' }, { label: 'Rapports' }]} />
-        <div className="flex items-center justify-center p-8 text-fg-muted">Chargement...</div>
+        <div className="flex items-center justify-center p-8 text-fg-muted">Chargement…</div>
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <Topbar title="Rapports" crumbs={[{ label: 'AuditIQ' }, { label: 'Rapports' }]} />
+        <div className="page">
+          <div
+            role="alert"
+            className="flex flex-col items-start gap-3 rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail"
+          >
+            <p>Connexion au serveur impossible. Réessayez dans quelques instants.</p>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Réessayer
+            </Button>
+          </div>
+        </div>
       </>
     );
   }
 
   const recentAudits = dashboard?.recent_audits || [];
   const totalAudits = dashboard?.total_audits || 0;
-  const signedCount = recentAudits.filter((a) => a.verdict !== null).length;
-  const pendingCount = totalAudits - signedCount;
+  const generatedCount = recentAudits.filter((a) => a.verdict !== null).length;
+  const pendingCount = totalAudits - generatedCount;
 
   return (
     <>
@@ -53,7 +72,7 @@ export default function RapportsPage() {
       <div className="page space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <MetricCard label="Rapports générés" value={totalAudits} />
-          <MetricCard label="Signés & opposables" value={signedCount} />
+          <MetricCard label="Horodatés & archivés" value={generatedCount} />
           <MetricCard label="En attente de revue" value={pendingCount} />
         </div>
 
@@ -63,7 +82,7 @@ export default function RapportsPage() {
           </div>
           <h2 className="text-h2 font-medium tracking-tight">Tous les rapports</h2>
           <p className="text-sm text-fg-secondary max-w-2xl">
-            Documents horodatés, versionnés et opposables en cas de contrôle réglementaire.
+            Documents horodatés et versionnés, pour documenter vos démarches en cas de contrôle.
           </p>
         </div>
 
@@ -86,10 +105,7 @@ export default function RapportsPage() {
                     Verdict
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.06em] text-fg-muted">
-                    Pages
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.06em] text-fg-muted">
-                    Signature
+                    Statut
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.06em] text-fg-muted">
                     Date
@@ -100,8 +116,8 @@ export default function RapportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentAudits.map((audit, idx) => {
-                  const isSigned = audit.verdict !== null;
+                {recentAudits.map((audit) => {
+                  const isGenerated = audit.verdict !== null;
                   const statusTone = audit.verdict === 'pass' ? 'pass' : audit.verdict === 'warn' ? 'warn' : 'fail';
                   return (
                     <tr
@@ -123,18 +139,15 @@ export default function RapportsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {isSigned && (
+                        {isGenerated && (
                           <StatusBadge tone={statusTone} noDot />
                         )}
                       </td>
-                      <td className="px-6 py-4 font-mono text-sm text-fg-secondary">
-                        — p.
-                      </td>
                       <td className="px-6 py-4">
-                        {isSigned ? (
+                        {isGenerated ? (
                           <span className="inline-flex items-center gap-1.5 text-xs text-status-pass font-medium">
-                            <Icons.shield size={14} />
-                            Signé
+                            <Icons.fileText size={14} />
+                            Généré
                           </span>
                         ) : (
                           <span className="text-xs text-fg-muted">Brouillon</span>

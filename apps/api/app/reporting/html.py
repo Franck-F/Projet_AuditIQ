@@ -1,4 +1,4 @@
-"""Pure HTML compliance report: build_report_html(AuditOut) -> str.
+"""Pure HTML audit report: build_report_html(AuditOut) -> str.
 
 No I/O. The HTML is rendered to PDF by the apps/pdf microservice.
 """
@@ -6,12 +6,13 @@ from __future__ import annotations
 
 from html import escape
 
+from app.reporting.format import p_value_display, status_label, verdict_label
 from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
 
-_VERDICT_FR = {
-    "fail": ("Critique", "#b42318"),
-    "warn": ("Vigilance", "#b54708"),
-    "pass": ("Conforme", "#067647"),
+_VERDICT_COLOR = {
+    "fail": "#b42318",
+    "warn": "#b54708",
+    "pass": "#067647",
 }
 _NOT_A_CERTIFICATE = (
     "Ce rapport est une aide à l'analyse documentée : il n'est pas un "
@@ -21,11 +22,6 @@ _FR_LAW = (
     "Références droit français : Code du travail L.1132-1 ; Défenseur des "
     "droits ; CNIL ; ACPR (selon le contexte d'usage)."
 )
-_PRIORITY_LABEL_FR = {
-    "high": "Action prioritaire",
-    "medium": "À planifier",
-    "low": "Maintien / veille",
-}
 
 _AI_ACT = [
     ("Article 9 — gestion des risques", "Risque agrégé / verdict"),
@@ -51,13 +47,13 @@ def _detail(audit: AuditOut) -> str:
     if isinstance(m, M3MetricsOut):
         head = _rows([
             ("Score global", m.global_score),
-            ("Verdict", m.verdict),
+            ("Verdict", verdict_label(m.verdict)),
             ("Paires / échecs", f"{m.n_pairs} / {m.n_calls_failed}"),
         ])
         body = "".join(
             f"<tr><td>{_e(c.name)}</td><td>{c.length_gap}</td>"
             f"<td>{c.sentiment_gap}</td><td>{c.refusal_rate}</td>"
-            f"<td>{c.score}</td><td>{_e(c.verdict)}</td></tr>"
+            f"<td>{c.score}</td><td>{_e(verdict_label(c.verdict))}</td></tr>"
             for c in m.categories
         )
         ex = "".join(
@@ -81,7 +77,7 @@ def _detail(audit: AuditOut) -> str:
     if isinstance(m, M2MetricsOut):
         head = _rows(
             [
-                ("Test du Khi-deux (p-value)", m.p_value),
+                ("Test du Khi-deux (p-value)", p_value_display(m.p_value)),
                 ("χ² / ddl", f"{m.chi2} / {m.dof}"),
                 ("Taux favorable global", m.global_positive_rate),
                 ("Clusters déviants", f"{len(m.deviant_cluster_ids)} / {m.k}"),
@@ -101,26 +97,33 @@ def _detail(audit: AuditOut) -> str:
             f"</tr></thead><tbody>{body}</tbody></table>"
         )
     if isinstance(m, M1MetricsOut):
-        head = _rows(
-            [
-                ("Disparate Impact", m.disparate_impact),
-                ("Demographic Parity (écart)", m.demographic_parity_diff),
-                ("Groupe le plus défavorisé", m.worst_group),
-                ("Référence", m.reference_value),
-            ]
-        )
-        body = "".join(
-            f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
-            f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
-            for g in m.groups
-        )
-        base = (
-            f"<h2>Module 1 — audit supervisé</h2>"
-            f"<table class='kv'>{head}</table>"
-            f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
-            f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
-            f"<tbody>{body}</tbody></table>"
-        )
+        # Mono-attribut : le résumé module et la section « Attribut protégé »
+        # afficheraient deux fois les mêmes métriques — on ne garde que la
+        # section par attribut.
+        single_attr = len(m.marginals) == 1
+        if single_attr:
+            base = "<h2>Module 1 — audit supervisé</h2>"
+        else:
+            head = _rows(
+                [
+                    ("Disparate Impact", m.disparate_impact),
+                    ("Demographic Parity (écart)", m.demographic_parity_diff),
+                    ("Groupe le plus défavorisé", m.worst_group),
+                    ("Référence", m.reference_value),
+                ]
+            )
+            body = "".join(
+                f"<tr><td>{_e(g.value)}</td><td>{g.n}</td><td>{g.favorable}</td>"
+                f"<td>{g.selection_rate}</td><td>{g.disparate_impact}</td></tr>"
+                for g in m.groups
+            )
+            base = (
+                f"<h2>Module 1 — audit supervisé</h2>"
+                f"<table class='kv'>{head}</table>"
+                f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
+                f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
+                f"<tbody>{body}</tbody></table>"
+            )
         if m.equal_opportunity_diff is None and m.truelabel_reason is None:
             eo_block = ""
         else:
@@ -136,13 +139,16 @@ def _detail(audit: AuditOut) -> str:
                         ("Equal Opportunity (écart TPR)",
                          m.equal_opportunity_diff),
                         ("Verdict Equal Opportunity",
-                         m.equal_opportunity_verdict or "—"),
+                         verdict_label(m.equal_opportunity_verdict)
+                         if m.equal_opportunity_verdict else "—"),
                         ("Equalized Odds (écart max TPR/FPR)",
                          m.equalized_odds_diff),
                         ("Verdict Equalized Odds",
-                         m.equalized_odds_verdict or "—"),
+                         verdict_label(m.equalized_odds_verdict)
+                         if m.equalized_odds_verdict else "—"),
                         ("Demographic Parity (verdict par métrique)",
-                         m.demographic_parity_verdict or "—"),
+                         verdict_label(m.demographic_parity_verdict)
+                         if m.demographic_parity_verdict else "—"),
                     ]
                 )
                 tpr_rows = "".join(
@@ -167,22 +173,23 @@ def _detail(audit: AuditOut) -> str:
             marg_kv_data: list[tuple[str, object]] = [
                 ("Disparate Impact", marg.disparate_impact),
                 ("Demographic Parity (écart)", marg.demographic_parity_diff),
-                ("DP ratio (fairlearn)", marg.demographic_parity_ratio),
+                ("Ratio de parité (indicateur complémentaire)",
+                 marg.demographic_parity_ratio),
             ]
             if marg.equal_opportunity_ratio is not None:
                 marg_kv_data.append(
-                    ("EO ratio (fairlearn, informatif)",
+                    ("Ratio Equal Opportunity (indicateur complémentaire)",
                      marg.equal_opportunity_ratio)
                 )
             if marg.equalized_odds_ratio is not None:
                 marg_kv_data.append(
-                    ("Equalized Odds ratio (fairlearn, informatif)",
+                    ("Ratio Equalized Odds (indicateur complémentaire)",
                      marg.equalized_odds_ratio)
                 )
             marg_kv_data += [
                 ("Groupe le plus défavorisé", marg.worst_group),
                 ("Référence", marg.reference_value),
-                ("Verdict", marg.verdict),
+                ("Verdict", verdict_label(marg.verdict)),
                 ("Score de risque", marg.risk_score),
             ]
             marg_kv = _rows(marg_kv_data)
@@ -224,20 +231,30 @@ def _detail(audit: AuditOut) -> str:
                     f"<th>DI</th></tr></thead>"
                     f"<tbody>{marg_body}</tbody></table>"
                 )
-            if marg.equal_opportunity_diff is not None:
+            # Mono-attribut : la section Equal Opportunity / Equalized Odds
+            # globale couvre déjà ces lignes — éviter le doublon.
+            if marg.equal_opportunity_diff is not None and not (
+                single_attr and m.equal_opportunity_diff is not None
+            ):
                 marg_eo_kv = _rows(
                     [
                         ("Equal Opportunity (écart TPR)", marg.equal_opportunity_diff),
-                        ("Verdict EO", marg.equal_opportunity_verdict or "—"),
+                        ("Verdict EO",
+                         verdict_label(marg.equal_opportunity_verdict)
+                         if marg.equal_opportunity_verdict else "—"),
                         ("Equalized Odds (écart max TPR/FPR)", marg.equalized_odds_diff),
-                        ("Verdict Eq. Odds", marg.equalized_odds_verdict or "—"),
+                        ("Verdict Eq. Odds",
+                         verdict_label(marg.equalized_odds_verdict)
+                         if marg.equalized_odds_verdict else "—"),
                     ]
                 )
                 marg_html += f"<table class='kv'>{marg_eo_kv}</table>"
             if marg.warnings:
                 warns = "".join(f"<li>{_e(w)}</li>" for w in marg.warnings)
                 marg_html += f"<ul class='note'>{warns}</ul>"
-            if marg.truelabel_reason is not None:
+            if marg.truelabel_reason is not None and not (
+                single_attr and m.truelabel_reason is not None
+            ):
                 marg_html += f"<p class='note'>{_e(marg.truelabel_reason)}</p>"
             marg_parts.append(marg_html)
         marg_block = "".join(marg_parts)
@@ -254,21 +271,23 @@ def _detail(audit: AuditOut) -> str:
                 ("Disparate Impact intersectionnel", ix.disparate_impact),
                 ("Demographic Parity (écart intersectionnel)",
                  ix.demographic_parity_diff),
-                ("DP ratio intersectionnel (fairlearn)",
+                ("Ratio de parité intersectionnel (indicateur complémentaire)",
                  ix.demographic_parity_ratio),
             ]
             if ix.equal_opportunity_ratio is not None:
                 ix_kv_data.append(
-                    ("EO ratio intersectionnel (fairlearn, informatif)",
+                    ("Ratio Equal Opportunity intersectionnel "
+                     "(indicateur complémentaire)",
                      ix.equal_opportunity_ratio)
                 )
             if ix.equalized_odds_ratio is not None:
                 ix_kv_data.append(
-                    ("Equalized Odds ratio intersectionnel (fairlearn, informatif)",
+                    ("Ratio Equalized Odds intersectionnel "
+                     "(indicateur complémentaire)",
                      ix.equalized_odds_ratio)
                 )
             ix_kv_data += [
-                ("Verdict intersectionnel", ix.verdict),
+                ("Verdict intersectionnel", verdict_label(ix.verdict)),
                 ("Pire sous-groupe (primaire)", ix.worst_primary),
                 ("Pire sous-groupe (secondaire)", ix.worst_secondary),
                 ("DI marginal (attribut primaire)",
@@ -280,7 +299,8 @@ def _detail(audit: AuditOut) -> str:
             ix_cells = "".join(
                 f"<tr><td>{_e(c.primary_value)}</td><td>{_e(c.secondary_value)}</td>"
                 f"<td>{c.n}</td><td>{c.favorable}</td><td>{c.selection_rate}</td>"
-                f"<td>{c.disparate_impact}</td><td>{_e(c.verdict)}</td></tr>"
+                f"<td>{c.disparate_impact}</td>"
+                f"<td>{_e(verdict_label(c.verdict))}</td></tr>"
                 for c in ix.cells
             )
             ix_html = (
@@ -298,11 +318,13 @@ def _detail(audit: AuditOut) -> str:
                         ("Equal Opportunity intersectionnel (écart TPR)",
                          ix.equal_opportunity_diff),
                         ("Verdict EO intersectionnel",
-                         ix.equal_opportunity_verdict or "—"),
+                         verdict_label(ix.equal_opportunity_verdict)
+                         if ix.equal_opportunity_verdict else "—"),
                         ("Equalized Odds intersectionnel (écart max TPR/FPR)",
                          ix.equalized_odds_diff),
                         ("Verdict Equalized Odds intersectionnel",
-                         ix.equalized_odds_verdict or "—"),
+                         verdict_label(ix.equalized_odds_verdict)
+                         if ix.equalized_odds_verdict else "—"),
                     ]
                 )
                 ix_html += f"<table class='kv'>{ix_eo_kv}</table>"
@@ -319,14 +341,12 @@ def _detail(audit: AuditOut) -> str:
 
 
 def _render_recommendations(recs: list[RecommendationOut]) -> str:
+    """Liste numérotée simple : l'ordre vaut priorité, sans étiquette."""
     if not recs:
         return ""
     items = "".join(
-        '<li class="rec rec-' + escape(r.priority) + '">'
-        '<div class="rec-head">'
+        '<li class="rec">'
         '<span class="rec-title">' + escape(r.title) + '</span>'
-        '<span class="rec-prio">' + escape(_PRIORITY_LABEL_FR[r.priority]) + '</span>'
-        '</div>'
         '<p class="rec-detail">' + escape(r.detail) + '</p>'
         '</li>'
         for r in recs
@@ -334,7 +354,8 @@ def _render_recommendations(recs: list[RecommendationOut]) -> str:
     return (
         '<section class="recommendations">'
         '<h3>Recommandations</h3>'
-        '<ul>' + items + '</ul>'
+        '<p class="note">Recommandations présentées par ordre de priorité.</p>'
+        '<ol>' + items + '</ol>'
         '</section>'
     )
 
@@ -342,7 +363,8 @@ def _render_recommendations(recs: list[RecommendationOut]) -> str:
 def build_report_html(audit: AuditOut) -> str:
     m = audit.metrics
     verdict = m.verdict if m is not None else "pass"
-    label, color = _VERDICT_FR.get(verdict, ("—", "#475467"))
+    label = verdict_label(verdict) if m is not None else "—"
+    color = _VERDICT_COLOR.get(verdict, "#475467")
     risk = m.risk_score if m is not None else "—"
     pre = "".join(f"<li>{_e(w)}</li>" for w in audit.pre_check) or "<li>Aucune.</li>"
     disc = (
@@ -379,22 +401,18 @@ footer{{margin-top:32px;border-top:1px solid #eaecf0;padding-top:8px;
 color:#475467;font-size:10px}}
 .recommendations{{margin-top:24px}}
 .recommendations h3{{font-size:14px;font-weight:600;margin-bottom:8px}}
-.recommendations ul{{list-style:none;padding:0}}
+.recommendations ol{{padding-left:20px;margin:0}}
 .recommendations .rec{{border:1px solid #d4d4d8;border-radius:6px;padding:12px;margin-bottom:8px}}
-.recommendations .rec-head{{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}}
-.recommendations .rec-title{{font-weight:500;font-size:13px}}
-.recommendations .rec-prio{{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#71717a}}
-.recommendations .rec-high .rec-prio{{color:#dc2626}}
-.recommendations .rec-medium .rec-prio{{color:#d97706}}
+.recommendations .rec-title{{font-weight:500;font-size:13px;display:block;margin-bottom:6px}}
 .recommendations .rec-detail{{font-size:12px;color:#52525b;margin:0}}
 </style></head><body>
-<h1>Rapport de conformité AuditIQ</h1>
+<h1>Rapport d'audit de fairness — AuditIQ</h1>
 <p class="note">{_NOT_A_CERTIFICATE}</p>
 <table class="kv">
 <tr><th>Audit</th><td>{_e(audit.code or audit.id)}</td></tr>
 <tr><th>Titre</th><td>{_e(audit.title)}</td></tr>
 <tr><th>Module</th><td>{_e(audit.module)}</td></tr>
-<tr><th>Statut</th><td>{_e(audit.status)}</td></tr>
+<tr><th>Statut</th><td>{_e(status_label(audit.status))}</td></tr>
 <tr><th>Verdict</th><td><span class="badge">{_e(label)}</span></td></tr>
 <tr><th>Score de risque</th><td>{_e(risk)}/100</td></tr>
 </table>

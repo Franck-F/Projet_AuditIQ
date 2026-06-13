@@ -8,6 +8,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { AlertCircle, Lock, CheckCircle, RefreshCw, Bell, Trash2 } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
@@ -49,6 +50,11 @@ function StateSection({
 export default function EtatsPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
 
+  // Page de documentation interne — jamais accessible en production.
+  if (process.env.NODE_ENV === 'production') {
+    notFound();
+  }
+
   return (
     <>
       <Topbar
@@ -77,7 +83,7 @@ export default function EtatsPage() {
           {/* 01 — First-use */}
           <StateSection
             num="01"
-            title="First-use · pas encore d'audit"
+            title="Première utilisation · pas encore d'audit"
             description="Premier écran après l'inscription, avant tout audit."
           >
             <div className="flex max-w-[540px] flex-col items-center gap-5 px-12 py-12 text-center">
@@ -89,7 +95,7 @@ export default function EtatsPage() {
                   Lancez votre premier audit
                 </h4>
                 <p className="text-[13px] leading-relaxed text-fg-secondary">
-                  AuditIQ n&apos;a encore traité aucun audit dans votre espace. Importez un dataset ou connectez votre chatbot pour commencer — comptez environ 25 min pour un premier passage complet.
+                  AuditIQ n&apos;a encore traité aucun audit dans votre espace. Importez un jeu de données ou connectez votre chatbot pour commencer — comptez ~5 minutes pour un premier passage complet.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -106,8 +112,8 @@ export default function EtatsPage() {
           {/* 02 — Loading skeleton */}
           <StateSection
             num="02"
-            title="Loading · skeleton card"
-            description="État pendant le chargement des données — skeleton animé."
+            title="Chargement · carte squelette"
+            description="État pendant le chargement des données — squelette animé."
           >
             <div className="w-full max-w-[640px]">
               <Card className="animate-pulse">
@@ -134,8 +140,8 @@ export default function EtatsPage() {
           {/* 03 — Error / network */}
           <StateSection
             num="03"
-            title="Error · erreur réseau avec retry"
-            description="Erreur bloquante avec action corrective (retry)."
+            title="Erreur · erreur réseau avec nouvelle tentative"
+            description="Erreur bloquante avec action corrective (réessayer)."
           >
             <div className="w-full max-w-[640px]">
               <div
@@ -169,7 +175,7 @@ export default function EtatsPage() {
           {/* 04 — Permission denied */}
           <StateSection
             num="04"
-            title="Permission denied · accès restreint"
+            title="Accès refusé · droits insuffisants"
             description="L'utilisateur n'a pas les droits nécessaires."
           >
             <div className="flex max-w-[480px] flex-col items-center gap-4 py-6 text-center">
@@ -198,7 +204,7 @@ export default function EtatsPage() {
           {/* 05 — Success */}
           <StateSection
             num="05"
-            title="Success · rapport généré"
+            title="Succès · rapport généré"
             description="Confirmation après la génération réussie d'un rapport."
           >
             <Card
@@ -212,10 +218,10 @@ export default function EtatsPage() {
                 <CheckCircle size={28} aria-hidden />
               </span>
               <h3 className="mb-2 text-[20px] font-semibold text-fg">
-                Rapport généré et signé avec succès
+                Rapport généré avec succès
               </h3>
               <p className="mb-5 text-[13px] leading-relaxed text-fg-secondary">
-                Votre rapport <code className="font-mono text-[12px]">RPT-2026-014</code> a été signé eIDAS et est prêt à être partagé.
+                Votre rapport <code className="font-mono text-[12px]">RPT-2026-014</code> est prêt à être partagé.
               </p>
               <div className="flex justify-center gap-2">
                 <Button variant="primary" size="sm" asChild>
@@ -229,8 +235,8 @@ export default function EtatsPage() {
           {/* 06 — Toast cluster */}
           <StateSection
             num="06"
-            title="Toast cluster · notifications éphémères"
-            description="Toasts success, warn et info rendus côte à côte (normalement bottom-right)."
+            title="Notifications éphémères (toasts)"
+            description="Toasts succès, alerte et info rendus côte à côte (normalement en bas à droite)."
           >
             <div className="flex flex-col items-end gap-2 w-full max-w-[480px]">
               {/* Success toast */}
@@ -278,7 +284,7 @@ export default function EtatsPage() {
           {/* 07 — Modal demo */}
           <StateSection
             num="07"
-            title="Modal · confirmation avec saisie"
+            title="Modale · confirmation avec saisie"
             description="Modale de confirmation avant une action destructrice. Tapez le nom pour débloquer."
           >
             <div className="flex flex-col items-center gap-4">

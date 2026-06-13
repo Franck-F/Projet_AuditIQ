@@ -26,16 +26,16 @@ describe('Recommendations', () => {
 
   it('renders priority badge label for each priority level', () => {
     render(<Recommendations items={items} />);
-    expect(screen.getByText('Action prioritaire')).toBeInTheDocument();
-    expect(screen.getByText('À planifier')).toBeInTheDocument();
-    expect(screen.getByText('Maintien / veille')).toBeInTheDocument();
+    expect(screen.getByText('Priorité 1')).toBeInTheDocument();
+    expect(screen.getByText('Priorité 2')).toBeInTheDocument();
+    expect(screen.getByText('Priorité 3')).toBeInTheDocument();
   });
 
   it('applies different CSS classes per priority', () => {
     render(<Recommendations items={items} />);
-    const high = screen.getByText('Action prioritaire');
-    const medium = screen.getByText('À planifier');
-    const low = screen.getByText('Maintien / veille');
+    const high = screen.getByText('Priorité 1');
+    const medium = screen.getByText('Priorité 2');
+    const low = screen.getByText('Priorité 3');
     // each priority maps to a different class — the exact class names don't
     // matter here, just that they differ (priority is visually distinguished)
     expect(high.className).not.toBe(medium.className);

@@ -71,12 +71,18 @@ def _fallback(result: M2Result, *, degraded: bool = False) -> InterpretationOut:
         "pass": "aucun écart de traitement significatif n'a été détecté",
     }
     phrase = verdicts.get(result.verdict, result.verdict)
+    verdict_fr = {
+        "fail": "Risque élevé", "warn": "Vigilance", "pass": "Risque faible",
+    }.get(result.verdict, result.verdict)
     n_dev = len(result.deviant_cluster_ids)
+    p_txt = (
+        "p < 0,001" if result.p_value < 0.001 else f"p = {result.p_value}"
+    )
     narrative = (
         f"Sur {result.k} groupes de dossiers analysés sans attribut sensible, "
         f"{phrase}. {n_dev} cluster(s) s'écarte(nt) nettement de la moyenne "
-        f"(p={result.p_value}). Score de risque agrégé : "
-        f"{result.risk_score}/100. Verdict : {result.verdict}. "
+        f"({p_txt}). Score de risque agrégé : "
+        f"{result.risk_score}/100. Verdict : {verdict_fr}. "
         f"Les caractéristiques distinctives des clusters déviants peuvent "
         f"être des proxys de critères protégés et méritent un examen manuel."
     )

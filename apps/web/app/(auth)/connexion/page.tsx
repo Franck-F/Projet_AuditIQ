@@ -112,7 +112,7 @@ export default function ConnexionPage() {
     });
     if (error) {
       setAuthError(
-        'Connexion Google indisponible. Vérifiez que le provider est activé dans Supabase.',
+        "La connexion Google est momentanément indisponible. Réessayez ou utilisez l'email.",
       );
     }
   };

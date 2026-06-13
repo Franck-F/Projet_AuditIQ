@@ -34,13 +34,13 @@ function Step5ReviewM1({
   const nPairs = attrs.length * (attrs.length - 1) / 2;
 
   const analyses: string[] = [
-    'Disparate Impact (DI)',
-    'Règle des 4/5',
-    'Demographic Parity',
+    "Écart de taux d'acceptation entre groupes (Disparate Impact)",
+    'Règle des 4/5 (seuil de référence de 80 %)',
+    'Parité démographique',
   ];
   if (values.ground_truth_column) {
-    analyses.push('Equal Opportunity');
-    analyses.push('Equalized Odds');
+    analyses.push('Égalité des chances (Equal Opportunity)');
+    analyses.push('Calibration (Equalized Odds)');
   }
   if (hasPairwise) {
     analyses.push(
@@ -53,14 +53,14 @@ function Step5ReviewM1({
       <h2 className="text-lg font-semibold text-fg">Récapitulatif</h2>
       <p className="text-sm text-fg-secondary">
         Vérifiez les paramètres avant de lancer l&apos;audit. Le calcul prend
-        généralement 5-30 secondes selon la taille du dataset.
+        généralement 5 à 30 secondes selon la taille du jeu de données.
       </p>
 
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
         <p className="text-base font-medium text-fg">{values.title}</p>
         <ReviewRow label="Secteur">{sectorLabel}</ReviewRow>
         {dataset !== null && (
-          <ReviewRow label="Dataset">
+          <ReviewRow label="Jeu de données">
             <strong>{dataset.filename}</strong>{' '}
             ({dataset.row_count.toLocaleString('fr-FR')} lignes)
           </ReviewRow>
@@ -83,7 +83,7 @@ function Step5ReviewM1({
           )}
         </ReviewRow>
         {values.ground_truth_column && (
-          <ReviewRow label="Vérité-terrain">
+          <ReviewRow label="Résultat réel des décisions">
             <code>{values.ground_truth_column}</code>
           </ReviewRow>
         )}
@@ -120,15 +120,15 @@ function Step5ReviewM2({
     <div className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-fg">Récapitulatif</h2>
       <p className="text-sm text-fg-secondary">
-        Vérifiez les paramètres avant de lancer la détection. KMeans + χ²
-        prennent généralement 5-30 secondes selon la taille du dataset.
+        Vérifiez les paramètres avant de lancer la détection. Le calcul prend
+        généralement 5 à 30 secondes selon la taille du jeu de données.
       </p>
 
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
         <p className="text-base font-medium text-fg">{values.title}</p>
         <ReviewRow label="Secteur">{sectorLabel}</ReviewRow>
         {dataset !== null && (
-          <ReviewRow label="Dataset">
+          <ReviewRow label="Jeu de données">
             <strong>{dataset.filename}</strong>{' '}
             ({dataset.row_count.toLocaleString('fr-FR')} lignes)
           </ReviewRow>
@@ -137,8 +137,9 @@ function Step5ReviewM2({
           <code>{values.decision_column}</code> ={' '}
           <code>{values.favorable_value}</code> est l&apos;issue favorable
         </ReviewRow>
-        <ReviewRow label="Paramètres">
-          k = {k}, déviation = {dev} pp, alpha = {alpha}
+        <ReviewRow label="Réglages">
+          {k} groupes recherchés, écart d&apos;alerte = {dev} points, exigence
+          statistique α = {alpha}
         </ReviewRow>
       </div>
 
@@ -147,10 +148,10 @@ function Step5ReviewM2({
           Analyses qui seront produites
         </p>
         <ul className="flex flex-col gap-1 text-sm text-fg-secondary">
-          <li>• KMeans (k={k} clusters sur features comportementales)</li>
-          <li>• χ² par cluster vs taux global de la décision</li>
-          <li>• IQR pré-check (alertes statistiques préalables)</li>
-          <li>• Caractérisation top-3 features par cluster déviant</li>
+          <li>• Détection automatique de {k} groupes de dossiers similaires</li>
+          <li>• Comparaison statistique du taux de décision de chaque groupe au taux global</li>
+          <li>• Vérifications préalables de la qualité des données</li>
+          <li>• Explication des 3 caractéristiques dominantes de chaque groupe atypique</li>
         </ul>
       </div>
     </div>
@@ -173,8 +174,8 @@ function Step5ReviewM3({ values }: Step5ReviewProps): React.ReactElement {
     <div className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-fg">Récapitulatif</h2>
       <p className="text-sm text-fg-secondary">
-        Vérifiez la configuration avant de lancer l&apos;audit LangBiTe.
-        L&apos;audit prend 1-3 minutes selon la latence du chatbot.
+        Vérifiez la configuration avant de lancer l&apos;audit du chatbot.
+        L&apos;audit prend 1 à 3 minutes selon la latence du chatbot.
       </p>
 
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
@@ -193,10 +194,10 @@ function Step5ReviewM3({ values }: Step5ReviewProps): React.ReactElement {
           Analyses qui seront produites
         </p>
         <ul className="flex flex-col gap-1 text-sm text-fg-secondary">
-          <li>• 12 paires de prompts paired-counterfactual × 6 catégories</li>
-          <li>• Métriques : sentiment, longueur de réponse, refus structuré</li>
-          <li>• Métriques de divergence (distribution des scores)</li>
-          <li>• Délai maximum : 45 s par paire de prompts</li>
+          <li>• 12 paires de questions quasi identiques × 6 catégories d&apos;attributs protégés</li>
+          <li>• Comparaison du ton, de la longueur et des refus de réponse</li>
+          <li>• Mesure des écarts entre les réponses de chaque paire</li>
+          <li>• Délai maximum : 45 s par paire de questions</li>
           <li>• AI Act art. 50 + recommandations CNIL</li>
         </ul>
       </div>

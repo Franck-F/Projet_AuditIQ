@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Sécurité & RGPD — AuditIQ',
   description:
-    'Vos données ne quittent pas votre périmètre de confiance. Calcul en mémoire, hébergement souverain UE, chiffrement de bout en bout, conformité RGPD.',
+    'Hébergement en Union européenne, chiffrement en transit et au repos, suppression automatique des jeux de données après 30 jours, conformité RGPD.',
 };
 
 /* ============================================================================
@@ -19,17 +19,17 @@ export default function SecuritePage() {
       <header className="page-head">
         <div className="wrap">
           <p className="kicker">Sécurité &amp; confidentialité</p>
-          <h1>Vos données ne quittent pas votre périmètre de confiance.</h1>
+          <h1>Vos données traitées avec sobriété, en Union européenne.</h1>
           <p className="lead">
-            AuditIQ est conçu pour traiter des données sensibles sans jamais les exposer. Les
-            métriques sont calculées en mémoire, seuls les résultats agrégés sont conservés, et
-            l&apos;ensemble est hébergé en Union européenne.
+            AuditIQ est conçu pour traiter des données sensibles avec un principe simple : ne
+            conserver que le nécessaire, le moins longtemps possible. Les jeux de données importés
+            sont automatiquement supprimés 30 jours après l&apos;import, et l&apos;ensemble est
+            hébergé en Union européenne.
           </p>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '22px' }}>
-            <span className="badge pass"><span className="dot" />SOC 2 Type II</span>
-            <span className="badge pass"><span className="dot" />ISO 27001</span>
             <span className="badge info"><span className="dot" />Hébergé en UE</span>
             <span className="badge info"><span className="dot" />RGPD</span>
+            <span className="badge warn"><span className="dot" />ISO 27001 : démarche en cours</span>
           </div>
         </div>
       </header>
@@ -43,22 +43,22 @@ export default function SecuritePage() {
               <span style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
               </span>
-              <h4 style={{ fontSize: '16px' }}>Calcul en mémoire</h4>
-              <p className="lede" style={{ fontSize: '14px' }}>Les jeux de données sont analysés en mémoire vive le temps de l&apos;audit. Aucune donnée brute ni donnée personnelle n&apos;est écrite sur disque ni conservée après le calcul.</p>
+              <h4 style={{ fontSize: '16px' }}>Conservation limitée à 30 jours</h4>
+              <p className="lede" style={{ fontSize: '14px' }}>Les jeux de données importés servent au calcul des métriques, puis sont automatiquement supprimés 30 jours après l&apos;import. Seuls les résultats agrégés et les rapports restent dans votre espace.</p>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
               <span style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.8 8 9 4.8-1.2 8-4.5 8-9V6l-8-3Z"/></svg>
               </span>
-              <h4 style={{ fontSize: '16px' }}>Hébergement souverain</h4>
-              <p className="lede" style={{ fontSize: '14px' }}>Infrastructure localisée en Union européenne, chez un hébergeur certifié. Aucun transfert hors UE. Une option d&apos;hébergement dédié est disponible sur l&apos;offre Sur devis.</p>
+              <h4 style={{ fontSize: '16px' }}>Hébergement en Union européenne</h4>
+              <p className="lede" style={{ fontSize: '14px' }}>Traitement et stockage des données en Union européenne (Francfort · Paris). L&apos;interprétation en langage clair s&apos;appuie sur le modèle Gemini par défaut, avec une option souveraine Mistral.</p>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
               <span style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.2-8.2M16 5l2 2M14 7l2 2"/></svg>
               </span>
-              <h4 style={{ fontSize: '16px' }}>Chiffrement de bout en bout</h4>
-              <p className="lede" style={{ fontSize: '14px' }}>Chiffrement TLS 1.3 en transit et AES-256 au repos pour les rapports et métadonnées. Cloisonnement strict des données entre organisations.</p>
+              <h4 style={{ fontSize: '16px' }}>Chiffrement en transit et au repos</h4>
+              <p className="lede" style={{ fontSize: '14px' }}>Chiffrement TLS en transit et chiffrement au repos pour les données, rapports et métadonnées. Cloisonnement strict des données entre organisations.</p>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
               <span style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
@@ -98,7 +98,7 @@ export default function SecuritePage() {
                 },
                 {
                   title: 'Durée de conservation',
-                  body: "Données brutes : supprimées dès la fin du calcul. Résultats d'audit et rapports : conservés 5 ans, conformément à l'exigence de traçabilité de l'AI Act, puis supprimés.",
+                  body: "Jeux de données importés : supprimés automatiquement 30 jours après l'import. Résultats d'audit et rapports : conservés dans votre espace tant que votre compte est actif, et supprimés sur demande.",
                 },
                 {
                   title: 'Sous-traitants ultérieurs',
@@ -141,15 +141,15 @@ export default function SecuritePage() {
           <h2 className="title" style={{ marginTop: '12px', maxWidth: '22ch' }}>Les garanties opérationnelles.</h2>
           <div className="g3" style={{ marginTop: '28px' }}>
             {[
-              'Authentification forte (MFA)',
-              'Journal d\'audit complet (audit log)',
-              'Gestion fine des rôles & permissions',
-              'Sauvegardes chiffrées & redondées',
-              'Tests d\'intrusion réguliers',
+              'Authentification par e-mail ou Google (OAuth)',
+              'Suppression automatique des datasets à 30 jours',
               'Cloisonnement par organisation',
-              'SSO (SAML / OIDC) sur devis',
+              'Chiffrement en transit et au repos',
+              'Sauvegardes gérées par l\'hébergeur',
+              'Limitation de débit sur l\'API',
               'Procédure de notification d\'incident',
-              'Réversibilité & export des données',
+              'Réversibilité & export des rapports (PDF, Excel)',
+              'Suppression du compte et des données sur demande',
             ].map((item) => (
               <div
                 key={item}
@@ -161,7 +161,7 @@ export default function SecuritePage() {
             ))}
           </div>
           <div style={{ marginTop: '24px', padding: '16px 18px', borderRadius: '11px', background: 'var(--info-bg)', border: '1px solid var(--info-border)', fontSize: '13.5px', color: 'var(--fg-secondary)', lineHeight: 1.55 }}>
-            <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Documentation sur demande.</strong> Rapport SOC 2, politique de sécurité, registre des sous-traitants et DPA sont communiqués aux clients et prospects qualifiés via{' '}
+            <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Feuille de route sécurité.</strong> Authentification multifacteur (MFA), SSO (SAML / OIDC), rôles et permissions multiples et journal d&apos;audit détaillé sont en cours de développement et seront annoncés à leur disponibilité. Politique de sécurité, registre des sous-traitants et DPA communiqués sur demande via{' '}
             <Link href="/contact" style={{ color: 'var(--accent)' }}>notre équipe</Link>.
           </div>
         </div>

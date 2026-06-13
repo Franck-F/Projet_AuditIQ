@@ -1,5 +1,5 @@
-import { MoreHorizontal } from 'lucide-react';
 import { Topbar } from '@/components/app/Topbar';
+import { PreviewBanner } from '@/components/app/PreviewBanner';
 import { MetricCard } from '@/components/product/MetricCard';
 import { SectionHead } from '@/components/product/SectionHead';
 import { StatusBadge } from '@/components/product/StatusBadge';
@@ -49,10 +49,17 @@ export default function EquipePage() {
           { label: 'Organisation' },
           { label: 'Équipe' },
         ]}
-        actions={<Button variant="primary"><Icons.plus size={16} />Inviter un membre</Button>}
+        actions={
+          <Button variant="primary" disabled>
+            <Icons.plus size={16} />
+            Inviter un membre
+          </Button>
+        }
       />
 
       <div className="page space-y-8">
+        <PreviewBanner />
+
         <div className="grid grid-cols-3 gap-4">
           <MetricCard
             label="Membres actifs"
@@ -113,15 +120,7 @@ export default function EquipePage() {
                           {member.status === 'warn' ? 'Temporaire' : 'Actif'}
                         </StatusBadge>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center size-8 rounded-md hover:bg-surface-2 text-fg-muted hover:text-fg transition-colors"
-                          aria-label="Actions"
-                        >
-                          <MoreHorizontal size={16} />
-                        </button>
-                      </td>
+                      <td className="px-6 py-4 text-right" />
                     </tr>
                   ))}
                 </tbody>

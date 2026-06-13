@@ -42,16 +42,19 @@ function Spec({ eyebrow, title, items }: { eyebrow: string; title: string; items
 
 function MetricDef({
   title,
+  plain,
   formula,
   body,
 }: {
   title: string;
+  plain: string;
   formula: string;
   body: string;
 }) {
   return (
     <div className="rounded-md border border-border-default bg-surface p-5">
       <h4 className="text-[15px] font-medium text-fg">{title}</h4>
+      <p className="mt-1.5 text-sm leading-relaxed text-fg-secondary">{plain}</p>
       <div className="my-3 inline-block rounded-[4px] bg-accent-soft px-2.5 py-2 font-mono text-xs text-accent">
         {formula}
       </div>
@@ -89,12 +92,12 @@ const ANCHORS = [
 ];
 
 const PROMPT_BANK_AXES = [
-  'Genre · 86 prompts',
-  'Origine · 78 prompts',
-  'Âge · 64 prompts',
-  'Religion · 52 prompts',
-  'Handicap · 68 prompts',
-  'Orientation · 64 prompts',
+  'Genre',
+  'Origine',
+  'Âge',
+  'Religion',
+  'Handicap',
+  'Orientation',
 ];
 
 /* ============================================================================
@@ -129,7 +132,7 @@ export default function ModulesPage() {
             <ModuleHeader
               num="Module 01"
               title="Audit supervisé classique."
-              lede="Pour les modèles de classification binaire ou multi-classes, et de scoring. Compatible avec vos modèles internes (export CSV des prédictions) ou via intégration API."
+              lede="Pour les modèles de classification binaire ou multi-classes, et de scoring. Compatible avec vos modèles internes via un export CSV de leurs décisions."
             />
           </Reveal>
 
@@ -139,24 +142,23 @@ export default function ModulesPage() {
                 eyebrow="Entrées"
                 title="Données acceptées"
                 items={[
-                  'CSV, XLSX, Parquet, JSON',
-                  '5M lignes max en standard',
-                  'Colonne cible (target) requise',
+                  'Fichier CSV (UTF-8) — seul format aujourd’hui',
+                  "Jusqu'à 1 million de lignes selon le palier",
+                  'Colonne de décision (cible) requise',
                   'Une ou plusieurs colonnes sensibles',
-                  'Colonne de prédiction du modèle',
                 ]}
               />
             </Reveal>
             <Reveal delay={0.05}>
               <Spec
                 eyebrow="Méthodes"
-                title="Algorithmes utilisés"
+                title="Métriques calculées"
                 items={[
-                  'Test de proportions par groupe',
-                  "Test du χ² d'indépendance",
-                  'Intervalles de confiance bootstrap',
-                  'Décomposition intersectionnelle',
-                  'Stratification automatique',
+                  'Disparate Impact et règle des 4/5',
+                  'Égalité de traitement (Demographic Parity)',
+                  'Égalité des chances (Equal Opportunity)',
+                  "Égalité des taux d'erreur (Equalized Odds)",
+                  'Analyse intersectionnelle (croisement de deux attributs)',
                 ]}
               />
             </Reveal>
@@ -168,8 +170,8 @@ export default function ModulesPage() {
                   'Feu tricolore par métrique + global',
                   'Visualisation des écarts par groupe',
                   'Explication en langage naturel',
-                  'Rapport PDF executive + Excel annexe IV',
-                  'Recommandations priorisées',
+                  'Rapport PDF (synthèse dirigeants) + Excel annexe IV',
+                  'Recommandations d’actions',
                 ]}
               />
             </Reveal>
@@ -179,24 +181,28 @@ export default function ModulesPage() {
             <Eyebrow className="mb-3 block">Métriques calculées</Eyebrow>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <MetricDef
-                title="Demographic Parity (DP)"
+                title="Égalité de traitement (Demographic Parity)"
+                plain="En français simple : chaque groupe doit obtenir une décision favorable à peu près aussi souvent que les autres."
                 formula="P(Ŷ=1 | A=a) ≈ P(Ŷ=1 | A=b)"
-                body="Mesure si la probabilité d'obtenir une décision favorable est équivalente entre groupes. Un score < 0.80 viole la règle des 4/5."
+                body="Mesure si la probabilité d'obtenir une décision favorable est équivalente entre groupes. Un ratio < 0.80 enfreint la règle des 4/5."
               />
               <MetricDef
-                title="Equal Opportunity (EO)"
+                title="Égalité des chances (Equal Opportunity)"
+                plain="En français simple : à profil également qualifié, chaque groupe doit avoir la même chance d'être retenu."
                 formula="P(Ŷ=1 | Y=1, A=a) ≈ P(Ŷ=1 | Y=1, A=b)"
                 body="Vérifie si, parmi les profils qualifiés, la probabilité d'être correctement sélectionné est équivalente entre groupes."
               />
               <MetricDef
-                title="Equalized Odds (EOdds)"
+                title="Égalité des taux d'erreur (Equalized Odds)"
+                plain="En français simple : le modèle doit se tromper aussi rarement — dans les deux sens — pour chaque groupe. TPR = taux de vrais positifs, FPR = taux de faux positifs."
                 formula="TPR(a) ≈ TPR(b) ET FPR(a) ≈ FPR(b)"
-                body="Conjugue Equal Opportunity et égalité des taux de faux positifs. Métrique la plus stricte parmi les quatre."
+                body="Conjugue l'égalité des chances et l'égalité des taux de faux positifs. Métrique la plus stricte parmi les quatre."
               />
               <MetricDef
-                title="Règle des quatre cinquièmes"
+                title="Règle des quatre cinquièmes (4/5)"
+                plain="En français simple : le taux de sélection du groupe le moins favorisé doit atteindre au moins 80 % de celui du groupe le plus favorisé."
                 formula="min(SR_a) / max(SR_a) ≥ 0.80"
-                body="Standard EEOC (US) et référence dans la jurisprudence européenne. Seuil par défaut 0.80, ajustable."
+                body="Convention issue de l'EEOC américaine (1978), utilisée comme repère pratique — ce n'est pas un seuil légal européen. Seuil par défaut 0.80, ajustable."
               />
             </div>
           </Reveal>
@@ -223,9 +229,9 @@ export default function ModulesPage() {
                 eyebrow="Entrées"
                 title="Données acceptées"
                 items={[
-                  'CSV, XLSX, Parquet, JSON',
+                  'Fichier CSV (UTF-8) — seul format aujourd’hui',
                   'Pas de variable cible requise',
-                  'Features numériques et catégorielles',
+                  'Variables numériques et catégorielles',
                   'Indication optionnelle des colonnes sensibles',
                 ]}
               />
@@ -235,11 +241,10 @@ export default function ModulesPage() {
                 eyebrow="Méthodes"
                 title="Algorithmes utilisés"
                 items={[
-                  'k-means (clusters compacts)',
-                  'DBSCAN (clusters de densité)',
-                  'Mixtures gaussiennes (clusters probabilistes)',
-                  'Sélection automatique par silhouette',
-                  'SHAP pour features dominantes',
+                  'Clustering k-means (nombre de clusters paramétrable)',
+                  "Test du χ² d'indépendance sur la composition des clusters",
+                  'Identification des variables dominantes par cluster',
+                  'Pré-vérifications de qualité des données',
                 ]}
               />
             </Reveal>
@@ -248,10 +253,9 @@ export default function ModulesPage() {
                 eyebrow="Livrables"
                 title="Sorties produites"
                 items={[
-                  'Carte des clusters (projection 2D)',
                   'Signalement de clusters déviants',
-                  'Liste des features dominantes',
-                  'Alerte sur proxies de critères protégés',
+                  'Liste des variables dominantes par cluster',
+                  'Signal de proxy possible quand un groupe protégé est sur-représenté',
                   'Rapport pédagogique avec niveau de risque',
                 ]}
               />
@@ -265,9 +269,10 @@ export default function ModulesPage() {
               <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
                 Un modèle peut discriminer sans utiliser directement l&apos;attribut sensible — en
                 s&apos;appuyant sur des variables fortement corrélées (proxies). Exemple typique :
-                un code postal qui corrèle à 0,82 avec l&apos;origine présumée. AuditIQ calcule
-                l&apos;information mutuelle entre chaque feature et les attributs sensibles
-                déclarés, et signale tout dépassement du seuil de 0,4.
+                un code postal qui reflète l&apos;origine présumée. AuditIQ teste, via le test du
+                χ², si la composition des clusters s&apos;écarte significativement de celle de
+                l&apos;ensemble du jeu de données : un cluster où un groupe protégé est
+                sur-représenté est un signal de proxy possible, à investiguer par vos équipes.
               </p>
             </div>
           </Reveal>
@@ -281,7 +286,7 @@ export default function ModulesPage() {
             <ModuleHeader
               num="Module 03"
               title="Audit LLM & chatbot."
-              lede="Pour les assistants conversationnels intégrés à votre service client, vos RH ou vos outils internes. Compatible avec OpenAI, Mistral, Anthropic, Llama, modèles fine-tunés et endpoints custom."
+              lede="Pour les assistants conversationnels intégrés à votre service client, vos RH ou vos outils internes. L'audit compare les réponses de votre assistant à des paires de prompts ne variant que sur un attribut protégé."
             />
           </Reveal>
 
@@ -291,11 +296,9 @@ export default function ModulesPage() {
                 eyebrow="Entrées"
                 title="Configuration nécessaire"
                 items={[
-                  "URL d'endpoint API ou clé fournisseur",
-                  'Choix de la banque de prompts (générale ou métier)',
+                  'Banque de paires de prompts versionnée (français et anglais)',
                   'Définition des axes à auditer (1 à 6)',
-                  'Paramètres de température et de tokens max',
-                  'Mode de coût contrôlé (budget API plafond)',
+                  'Réponses du chatbot à analyser',
                 ]}
               />
             </Reveal>
@@ -304,11 +307,10 @@ export default function ModulesPage() {
                 eyebrow="Méthodes"
                 title="Tests appliqués"
                 items={[
-                  'Prompts pairs (Counterfactual Pairs)',
-                  "Mesure d'écart de longueur (token count)",
-                  'Analyse de sentiment (RoBERTa-FR)',
-                  'Taux de refus / déflexion par axe',
-                  'Polarité et présence de stéréotypes',
+                  'Paires de prompts contrefactuels — deux requêtes identiques, un seul attribut varie',
+                  "Mesure d'écart de longueur des réponses",
+                  'Analyse de polarité par lexique bilingue — méthode déterministe et documentée',
+                  'Taux de refus / redirection par axe',
                 ]}
               />
             </Reveal>
@@ -317,10 +319,9 @@ export default function ModulesPage() {
                 eyebrow="Livrables"
                 title="Sorties produites"
                 items={[
-                  'Score global / 5 + score par axe',
-                  'Tableau de comparaison réponses',
+                  'Score global + score par axe',
+                  'Tableau de comparaison des réponses',
                   'Extraits significatifs annotés',
-                  "Recommandations d'instructions système",
                   'Rapport audit LLM PDF + Excel',
                 ]}
               />
@@ -330,13 +331,14 @@ export default function ModulesPage() {
           <Reveal>
             <div className="rounded-xl border border-border-default bg-surface-2 p-6">
               <Eyebrow accent>Banque de prompts</Eyebrow>
-              <h4 className="mt-2 text-h4 font-medium text-fg">400+ prompts pairs maintenus</h4>
+              <h4 className="mt-2 text-h4 font-medium text-fg">Une banque versionnée de paires de prompts</h4>
               <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
-                Notre équipe maintient une banque de 412 prompts pairs en français (228 en anglais,
-                96 en espagnol), répartis sur six axes : genre, origine, âge, religion, handicap,
-                orientation. Chaque prompt teste une situation concrète : demande de remboursement,
-                demande de prêt, sollicitation de support, demande d&apos;avis. Vous pouvez aussi
-                importer vos propres prompts métiers.
+                AuditIQ maintient une banque versionnée de paires de prompts contrefactuels, en
+                français et en anglais, couvrant six axes de discrimination : genre, origine, âge,
+                religion, handicap, orientation. Chaque paire teste une situation concrète
+                (demande de remboursement, demande de prêt, sollicitation de support) en ne
+                faisant varier qu&apos;un seul attribut. La personnalisation de la banque avec vos
+                prompts métiers est en feuille de route.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {PROMPT_BANK_AXES.map((axis) => (

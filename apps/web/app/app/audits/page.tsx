@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Download, SlidersHorizontal } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
 import { Avatar } from '@/components/product/Avatar';
@@ -12,12 +11,13 @@ import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/ui/icons';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
+import { VERDICT_LABELS } from '@/lib/verdict';
 
 const FILTER_TABS = [
   { id: 'all', label: 'Tous' },
-  { id: 'fail', label: 'Non conformes' },
-  { id: 'warn', label: 'Sous vigilance' },
-  { id: 'pass', label: 'Conformes' },
+  { id: 'fail', label: VERDICT_LABELS.fail },
+  { id: 'warn', label: VERDICT_LABELS.warn },
+  { id: 'pass', label: VERDICT_LABELS.pass },
 ];
 
 const VERDICT_TONE: Record<'fail' | 'warn' | 'pass', StatusTone> = {
@@ -44,7 +44,7 @@ function formatRelativeDate(date: string): string {
 }
 
 export default function AuditsListPage() {
-  const { data, isLoading, isError } = useDashboard();
+  const { data, isLoading, isError, refetch } = useDashboard();
   const [filterTab, setFilterTab] = React.useState('all');
 
   const filteredAudits = React.useMemo(() => {
@@ -80,10 +80,10 @@ export default function AuditsListPage() {
       <main className="page flex-1">
         {/* 4 Metric cards */}
         <div className="grid-4" style={{ marginBottom: 20 }}>
-          <MetricKpi label="Total audits" value={stats.total} hint="depuis janvier" />
-          <MetricKpi label="Conformes" value={stats.pass} tone="pass" hint={`${stats.total > 0 ? Math.round((stats.pass / stats.total) * 100) : 0} %`} />
-          <MetricKpi label="Sous vigilance" value={stats.warn} tone="warn" hint={`${stats.total > 0 ? Math.round((stats.warn / stats.total) * 100) : 0} %`} />
-          <MetricKpi label="Non conformes" value={stats.fail} tone="fail" hint={`${stats.total > 0 ? Math.round((stats.fail / stats.total) * 100) : 0} %`} />
+          <MetricKpi label="Total audits" value={stats.total} />
+          <MetricKpi label={VERDICT_LABELS.pass} value={stats.pass} tone="pass" hint={`${stats.total > 0 ? Math.round((stats.pass / stats.total) * 100) : 0} %`} />
+          <MetricKpi label={VERDICT_LABELS.warn} value={stats.warn} tone="warn" hint={`${stats.total > 0 ? Math.round((stats.warn / stats.total) * 100) : 0} %`} />
+          <MetricKpi label={VERDICT_LABELS.fail} value={stats.fail} tone="fail" hint={`${stats.total > 0 ? Math.round((stats.fail / stats.total) * 100) : 0} %`} />
         </div>
 
         {/* Status messages */}
@@ -94,9 +94,12 @@ export default function AuditsListPage() {
         )}
 
         {isError && (
-          <p role="alert" className="rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail">
-            Impossible de charger les audits. Vérifiez que l&apos;API tourne (port 8000).
-          </p>
+          <div role="alert" className="flex flex-col items-start gap-3 rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail">
+            <p>Connexion au serveur impossible. Réessayez dans quelques instants.</p>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Réessayer
+            </Button>
+          </div>
         )}
 
         {data && (
@@ -146,24 +149,6 @@ export default function AuditsListPage() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { console.log('Filtres clicked'); }}
-                >
-                  <SlidersHorizontal size={14} />
-                  Filtres
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { console.log('Export clicked'); }}
-                >
-                  <Download size={14} />
-                  Exporter
-                </Button>
-              </div>
             </div>
 
             {/* Table */}
@@ -171,7 +156,7 @@ export default function AuditsListPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                    {['Audit', 'Attribut protégé', 'Score fairness', 'Statut', 'Responsable', 'Exécuté', ''].map(
+                    {['Audit', 'Module', 'Score de risque', 'Statut', 'Responsable', 'Exécuté'].map(
                       (h) => (
                         <th
                           key={h}
@@ -196,7 +181,7 @@ export default function AuditsListPage() {
                   {filteredAudits.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={6}
                         style={{
                           padding: '32px 20px',
                           textAlign: 'center',
@@ -378,30 +363,6 @@ function AuditTableRow({ audit }: { audit: RecentAudit }) {
         style={{ padding: '14px 20px', fontSize: 12.5, color: 'var(--fg-muted)' }}
       >
         {formatRelativeDate(audit.created_at)}
-      </td>
-
-      {/* Kebab action */}
-      <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-        <button
-          style={{
-            display: 'inline-flex',
-            width: 30,
-            height: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'none',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            color: 'var(--fg-muted)',
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          aria-label="Actions"
-        >
-          ···
-        </button>
       </td>
     </tr>
   );

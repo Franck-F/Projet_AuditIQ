@@ -122,7 +122,7 @@ describe('rapport detail — R5', () => {
       expect(screen.getAllByText(/résultats fairness/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText(/ancrage réglementaire/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText(/recommandations/i).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(/signature/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/traçabilité/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText(/disclaimer juridique/i).length).toBeGreaterThanOrEqual(1);
     });
 

@@ -8,14 +8,14 @@ import { Eyebrow } from '@/components/marketing/Eyebrow';
 export const metadata: Metadata = {
   title: 'À propos',
   description:
-    "L'équipe, la mission, l'histoire d'AuditIQ. Plateforme française d'audit de fairness IA pour les PME.",
+    "La mission, les principes et l'histoire d'AuditIQ. Plateforme française d'audit de fairness IA pour les PME, en construction et portée par Franck Fambou.",
 };
 
 const PRINCIPLES = [
   {
     n: '01',
     title: 'Souveraineté',
-    body: "Hébergement français. Données qui ne sortent pas d'Europe. Pas de dépendance à un cloud non européen, à aucune étape.",
+    body: "Hébergement en Union européenne (Francfort · Paris). Interprétation en langage clair via Gemini par défaut, avec une option souveraine Mistral.",
   },
   {
     n: '02',
@@ -35,89 +35,39 @@ const PRINCIPLES = [
   {
     n: '05',
     title: 'Accessibilité tarifaire',
-    body: 'Un palier gratuit permanent. Pas de pricing « parlons-en » avant 1 000 €/mois. Transparence sur les coûts cachés.',
+    body: 'Un palier gratuit permanent et des prix affichés publiquement. Transparence sur les limites de chaque palier.',
   },
   {
     n: '06',
-    title: "Stabilité de l'API",
-    body: 'Aucune modification rétroactive de schéma de rapport. Vos audits restent comparables sur 5 ans.',
+    title: 'Stabilité des rapports',
+    body: 'Aucune modification rétroactive de schéma de rapport : vos audits restent comparables dans le temps.',
   },
 ];
 
 const TEAM = [
   {
-    initials: 'CL',
-    name: 'Camille Loiseau',
-    role: 'Cofondatrice · CEO',
-    body: "Docteure en statistique inférentielle (ENS-Cachan). Ex-Data Lead à la CNAM. Membre du groupe d'experts français sur l'IA équitable.",
-  },
-  {
-    initials: 'YB',
-    name: 'Yann Bertin',
-    role: 'Cofondateur · CPO',
-    body: 'Ex-Lead Product Designer à Doctolib. 12 ans en SaaS B2B. Design des outils de conformité aux normes.',
-  },
-  {
-    initials: 'ZK',
-    name: 'Zineb Khelifi',
-    role: 'Cofondatrice · Chief Legal Officer',
-    body: "Avocate au Barreau de Paris, spécialiste droit numérique. Ex-conseillère de la Présidente du CSA. Co-rédactrice d'une note Ministère.",
-  },
-  {
-    initials: 'MR',
-    name: 'Marc Renaud',
-    role: 'Head of Engineering',
-    body: 'Ex-Staff Engineer à Datadog Paris. 15 ans en architecture distribuée. Responsable de la plateforme.',
-  },
-  {
-    initials: 'FA',
-    name: 'Fatou Amadou',
-    role: 'Head of ML',
-    body: 'Docteure en apprentissage profond (Inria). Ex-Mistral AI. Responsable du Module 3 et de la banque de prompts.',
-  },
-  {
-    initials: 'PG',
-    name: 'Pauline Galland',
-    role: 'Head of Compliance Research',
-    body: "Docteure en droit international (Sciences Po). Ex-rapporteure au Conseil d'État. Suivi des évolutions AI Act.",
+    initials: 'FF',
+    name: 'Franck Fambou',
+    role: 'Fondateur',
+    body: "Porte le projet AuditIQ de bout en bout : produit, moteur d'audit, méthodologie et contenu. Conçoit la plateforme pour des responsables conformité, RH et innovation non techniciens.",
   },
 ];
 
 const HISTORY = [
   {
-    date: 'MARS 2024',
-    title: 'Fondation',
-    body: 'Immatriculation de la SAS. Premiers financements famille et amis (180 k€).',
+    date: 'ORIGINE',
+    title: 'Un constat',
+    body: "Aucun outil en français ne permettait à une PME d'auditer la fairness de son IA sans expertise statistique interne. L'AI Act rend pourtant cet exercice incontournable.",
   },
   {
-    date: 'SEPT 2024',
-    title: 'v1 Beta',
-    body: 'Première version produit, Module 1 uniquement. 12 PME pilotes.',
-  },
-  {
-    date: 'NOV 2024',
-    title: 'Premier client payant',
-    body: 'Banque Loiret signe le palier PME annuel.',
-  },
-  {
-    date: 'FEV 2025',
-    title: 'Levée Pre-seed',
-    body: '1,8 M€ avec Elaia Partners et Iris Capital comme lead. Cofondateurs majoritaires.',
-  },
-  {
-    date: 'JUIN 2025',
-    title: 'Module 2 + Module 3',
-    body: 'Lancement des modules non supervisé et LLM. 32 clients payants.',
-  },
-  {
-    date: 'NOV 2025',
-    title: 'Référencement Bpifrance',
-    body: 'AuditIQ intégré au catalogue French Tech « IA & conformité ».',
+    date: 'CONSTRUCTION',
+    title: 'Le produit',
+    body: 'Développement des trois modules : audit supervisé (Disparate Impact, parités, analyse intersectionnelle), détection non supervisée (k-means + test du χ²) et audit LLM (banque versionnée de paires de prompts FR/EN).',
   },
   {
     date: '2026',
     title: "Aujourd'hui",
-    body: "47 clients payants. Préparation de l'expansion DACH et Benelux. Certification ISO 27001 en cours.",
+    body: "Le produit est en construction active et s'ouvre à ses premiers utilisateurs. Démarche ISO 27001 engagée. Les fonctionnalités annoncées en feuille de route le sont explicitement.",
   },
 ];
 
@@ -132,10 +82,10 @@ export default function AProposPage() {
               Nous outillons la conformité IA des PME. Sans jargon, sans promesse.
             </h1>
             <p className="mt-5 max-w-[60ch] text-[clamp(20px,1.5vw,24px)] leading-[1.5] text-fg-secondary">
-              AuditIQ est une SAS française fondée à Paris en 2024 par trois cofondateurs venus de
-              la statistique, du droit numérique et du design produit. Notre équipe compte 14
-              personnes au moment où nous écrivons ces lignes. Notre client le plus petit a 32
-              collaborateurs, le plus grand en a 1 200.
+              AuditIQ est un projet français porté par Franck Fambou. Le produit est en
+              construction : nous préférons vous dire exactement où il en est plutôt que de
+              raconter une histoire enjolivée — c&apos;est la moindre des choses pour un outil de
+              conformité.
             </p>
           </Reveal>
         </Container>
@@ -148,7 +98,7 @@ export default function AProposPage() {
             <Reveal>
               <Eyebrow accent>Notre mission</Eyebrow>
               <h2 className="mt-3 mb-6 text-[clamp(28px,3vw,36px)] font-display font-medium tracking-[-0.02em] text-fg">
-                Rendre la fairness IA accessible aux 320 000 PME européennes qui en ont besoin.
+                Rendre la fairness IA accessible aux PME européennes qui en ont besoin.
               </h2>
               <p className="mb-4 text-base leading-relaxed text-fg-secondary">
                 Les outils existants ont été conçus pour les grandes équipes data des géants tech
@@ -190,13 +140,14 @@ export default function AProposPage() {
       <section className="bg-surface py-24">
         <Container>
           <Reveal className="mb-12 max-w-[720px]">
-            <Eyebrow accent>Équipe</Eyebrow>
+            <Eyebrow accent>Qui porte le projet</Eyebrow>
             <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-              14 personnes, 3 cofondateurs, 1 mission.
+              Un projet porté par son fondateur, ouvert aux contributions.
             </h2>
             <p className="mt-4 text-h4 leading-relaxed text-fg-secondary">
-              Statistique, droit numérique, design produit, ingénierie cloud. Notre équipe combine
-              des profils rares en France et en Europe.
+              Pas d&apos;équipe inventée ni de logos d&apos;investisseurs : AuditIQ est aujourd&apos;hui
+              un projet individuel, construit méthodiquement, qui documente ses méthodes et ses
+              limites.
             </p>
           </Reveal>
 
@@ -218,37 +169,18 @@ export default function AProposPage() {
             ))}
 
             <Reveal delay={0.16}>
-              <div className="rounded-xl border border-border-default bg-surface p-6">
-                <div
-                  aria-hidden
-                  className="mb-3.5 flex size-14 items-center justify-center rounded-full border border-border-default bg-surface-2 font-display text-lg font-semibold text-fg-secondary"
-                >
-                  +8
-                </div>
-                <h4 className="mb-1 text-[15px] font-medium text-fg">L&apos;équipe étendue</h4>
-                <div className="mb-2.5 text-xs text-fg-muted">
-                  Engineering · Customer · Sales
-                </div>
-                <p className="text-xs leading-relaxed text-fg-secondary">
-                  Huit autres personnes basées à Paris, Lyon et Nantes. Linguistes, ingénieurs
-                  full-stack, customer success, account executives.
-                </p>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.2}>
               <div className="flex h-full flex-col justify-center rounded-xl border border-dashed border-border-strong bg-surface-2 p-6">
-                <h4 className="mb-1 text-[15px] font-medium text-fg">Nous recrutons</h4>
-                <div className="mb-3 text-xs text-fg-muted">3 postes ouverts</div>
+                <h4 className="mb-1 text-[15px] font-medium text-fg">Envie de contribuer ?</h4>
+                <div className="mb-3 text-xs text-fg-muted">Retours, pilotes, partenariats</div>
                 <p className="text-xs leading-relaxed text-fg-secondary">
-                  Senior ML Engineer (Module 2), Account Executive secteur banque, Compliance
-                  Researcher.
+                  Vous êtes responsable conformité, DPO, DRH ou data et le sujet vous parle ? Nous
+                  cherchons des retours d&apos;usage et des cas pilotes.
                 </p>
                 <Link
                   href="/contact"
                   className="mt-3 text-xs text-accent transition-colors hover:underline"
                 >
-                  Voir les offres →
+                  Nous écrire →
                 </Link>
               </div>
             </Reveal>
@@ -266,10 +198,11 @@ export default function AProposPage() {
                 L&apos;histoire courte.
               </h2>
               <p className="text-base leading-relaxed text-fg-secondary">
-                Le projet a commencé fin 2023, autour d&apos;un constat partagé : aucun outil
-                français ne permettait à une PME d&apos;auditer la fairness de son IA sans
-                expertise statistique. La société a été immatriculée en mars 2024. Première
-                version produit en septembre 2024, premier client payant en novembre 2024.
+                Le projet est né d&apos;un constat simple : aucun outil en français ne permettait
+                à une PME d&apos;auditer la fairness de son IA sans expertise statistique. AuditIQ
+                est aujourd&apos;hui en construction active — le moteur d&apos;audit, les rapports
+                PDF et Excel et l&apos;interprétation en langage clair fonctionnent, et le reste
+                est annoncé pour ce qu&apos;il est : une feuille de route.
               </p>
             </Reveal>
 
@@ -295,34 +228,6 @@ export default function AProposPage() {
         </Container>
       </section>
 
-      {/* INVESTORS */}
-      <section className="bg-surface py-16">
-        <Container>
-          <Reveal className="text-center">
-            <Eyebrow accent>Soutenus par</Eyebrow>
-          </Reveal>
-          <Reveal className="mt-6">
-            <div className="grid grid-cols-2 items-center gap-8 py-8 opacity-75 md:grid-cols-3 lg:grid-cols-6">
-              {[
-                'Elaia Partners',
-                'Iris Capital',
-                'Bpifrance',
-                'French Tech',
-                'Région IDF',
-                'European AI Office',
-              ].map((label) => (
-                <span
-                  key={label}
-                  className="text-center font-display text-sm font-medium tracking-tight text-fg-muted"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
       {/* CTA */}
       <section className="py-16">
         <Container>
@@ -331,11 +236,11 @@ export default function AProposPage() {
               <div>
                 <Eyebrow accent>Travaillons ensemble</Eyebrow>
                 <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Client, partenaire ou candidat ?
+                  Utilisateur pilote, partenaire ou simple curieux ?
                 </h2>
                 <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  Nous accompagnons des PME, des cabinets de conseil, des intégrateurs. Et nous
-                  recrutons.
+                  Le projet s&apos;adresse aux PME, cabinets de conseil et intégrateurs. Échangeons
+                  sur votre cas d&apos;usage.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -343,7 +248,7 @@ export default function AProposPage() {
                   <Link href="/contact">Nous contacter</Link>
                 </Button>
                 <Button asChild variant="secondary">
-                  <Link href="/contact">Voir les offres d&apos;emploi</Link>
+                  <Link href="/inscription">Essayer gratuitement</Link>
                 </Button>
               </div>
             </div>

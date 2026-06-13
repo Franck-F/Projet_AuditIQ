@@ -36,12 +36,12 @@ describe('ParametresPage — R5 sidenav 8 tabs', () => {
     expect(screen.getByRole('combobox', { name: /Audit par défaut/i })).toBeInTheDocument();
   });
 
-  it('clicking "Rapports" shows "Template PDF" select', async () => {
+  it('clicking "Rapports" shows "Modèle de PDF" select', async () => {
     const user = userEvent.setup();
     render(<ParametresPage />);
     const nav = getNav();
     await user.click(within(nav).getByRole('button', { name: /Rapports/i }));
-    expect(screen.getByRole('combobox', { name: /Template PDF/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Modèle de PDF/i })).toBeInTheDocument();
   });
 
   it('clicking "Facturation" shows "Gérer la facturation" button', async () => {

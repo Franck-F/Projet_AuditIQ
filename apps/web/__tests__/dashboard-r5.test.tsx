@@ -107,15 +107,18 @@ describe('Dashboard R5 — maquette fidelity', () => {
     expect(screen.getByText(/Bonjour/i)).toBeInTheDocument();
   });
 
-  it('renders 4 MetricCard labels matching R9 maquette', () => {
+  it('renders the 3 MetricCard labels (risk-oriented)', () => {
     mockData();
     render(<DashboardPage />);
 
-    // R9 maquette labels
-    expect(screen.getByText('Score de conformité')).toBeInTheDocument();
+    // Libellés orientés risque (plus de « conformité », plus de carte « délai »)
+    expect(screen.getByText('Score de risque moyen')).toBeInTheDocument();
     expect(screen.getByText('Audits actifs')).toBeInTheDocument();
-    expect(screen.getByText('Modèles non conformes')).toBeInTheDocument();
-    expect(screen.getByText("Délai moyen d'audit")).toBeInTheDocument();
+    expect(screen.getByText('Audits à risque élevé')).toBeInTheDocument();
+    // Cartes supprimées dans la refonte
+    expect(screen.queryByText('Score de conformité')).not.toBeInTheDocument();
+    expect(screen.queryByText('Modèles non conformes')).not.toBeInTheDocument();
+    expect(screen.queryByText("Délai moyen d'audit")).not.toBeInTheDocument();
   });
 
   it('renders recent audits section with rows', () => {
@@ -134,19 +137,20 @@ describe('Dashboard R5 — maquette fidelity', () => {
     mockData();
     render(<DashboardPage />);
 
-    const critiques = screen.getAllByText('Critique');
+    const critiques = screen.getAllByText('Risque élevé');
     expect(critiques.length).toBeGreaterThanOrEqual(1);
     const vigilances = screen.getAllByText('Vigilance');
     expect(vigilances.length).toBeGreaterThanOrEqual(1);
-    const conformes = screen.getAllByText('Conforme');
+    const conformes = screen.getAllByText('Risque faible');
     expect(conformes.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders right column with tendance and répartition cards', () => {
+  it('renders right column with répartition card (tendance card removed)', () => {
     mockData();
     render(<DashboardPage />);
 
-    expect(screen.getByText('Conformité globale')).toBeInTheDocument();
+    // La carte « Conformité globale / tendance » a été supprimée ; seule la répartition reste.
+    expect(screen.queryByText('Conformité globale')).not.toBeInTheDocument();
     expect(screen.getByText('Répartition des statuts')).toBeInTheDocument();
   });
 
@@ -155,7 +159,7 @@ describe('Dashboard R5 — maquette fidelity', () => {
     render(<DashboardPage />);
 
     expect(
-      screen.getByText('Lancez un audit en moins de 7 minutes')
+      screen.getByText('Lancez un audit en ~5 minutes')
     ).toBeInTheDocument();
     const commencer = screen.getByText('Commencer');
     expect(commencer.closest('a')).toHaveAttribute('href', '/app/audits/nouveau');
