@@ -6,6 +6,7 @@ import { Reveal } from '@/components/layout/Reveal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 import { StatusPill } from '@/components/marketing/StatusPill';
 import { AnchorNav } from '@/components/marketing/AnchorNav';
 
@@ -701,33 +702,13 @@ export default function ProduitPage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Prochaine étape</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Voyez AuditIQ tourner sur votre propre cas d&apos;usage.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  30 minutes de démo guidée. On apporte les scénarios — vous apportez vos questions
-                  de conformité.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/tarifs">Comparer les paliers</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Prochaine étape"
+        title="Voyez AuditIQ tourner sur votre propre cas d'usage."
+        body="30 minutes de démo guidée. On apporte les scénarios — vous apportez vos questions de conformité."
+        primary={{ label: 'Réserver une démo', href: '/contact' }}
+        secondary={{ label: 'Comparer les paliers', href: '/tarifs' }}
+      />
     </>
   );
 }

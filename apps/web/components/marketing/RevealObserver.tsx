@@ -19,9 +19,10 @@ import * as React from 'react';
 export function RevealObserver() {
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    // Selector list: explicit opt-in (.rv) + every <section> directly under
-    // the marketing main wrapper (auto-reveal for secondary pages).
-    const SELECTOR = '.rv, main#top > section';
+    // Explicit opt-in only (.rv). Reserved for the hero — institutional
+    // content below the fold renders visible immediately (no generalized
+    // fade-up), which is better for credibility, SEO and no-JS.
+    const SELECTOR = '.rv';
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       // Skip entirely — CSS handles the "always visible" branch.

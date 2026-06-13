@@ -5,6 +5,7 @@ import { Reveal } from '@/components/layout/Reveal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 import { StatusPill } from '@/components/marketing/StatusPill';
 
 export const metadata: Metadata = {
@@ -312,33 +313,13 @@ export default function PmePage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Avancez maintenant</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Qualifions ensemble votre exposition.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  30 minutes pour cadrer votre périmètre, lancer un audit pilote et estimer votre
-                  charge de mise en conformité.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/ai-act">Approfondir l&apos;AI Act</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Avancez maintenant"
+        title="Qualifions ensemble votre exposition."
+        body="30 minutes pour cadrer votre périmètre, lancer un audit pilote et estimer votre charge de mise en conformité."
+        primary={{ label: 'Réserver une démo', href: '/contact' }}
+        secondary={{ label: "Approfondir l'AI Act", href: '/ai-act' }}
+      />
     </>
   );
 }

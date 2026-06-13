@@ -41,7 +41,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0f0f0f',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f6f6f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f0f0f' },
+  ],
   width: 'device-width',
   initialScale: 1,
 };
@@ -50,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="fr"
-      data-theme="dark"
+      data-theme="light"
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
     >

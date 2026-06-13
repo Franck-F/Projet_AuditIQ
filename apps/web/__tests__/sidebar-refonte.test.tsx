@@ -71,12 +71,15 @@ describe('Sidebar (refonte)', () => {
     expect(screen.getByText(/Recommandations/)).toBeInTheDocument();
   });
 
-  it('renders theme toggle and switches data-theme on click', async () => {
+  it('renders theme toggle and flips data-theme on click', async () => {
     render(wrap(<Sidebar />));
     const toggle = screen.getByRole('button', { name: /th[èe]me/i });
     expect(toggle).toBeInTheDocument();
+    const before = document.documentElement.getAttribute('data-theme');
     const user = userEvent.setup();
     await user.click(toggle);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    const after = document.documentElement.getAttribute('data-theme');
+    expect(after).not.toBe(before);
+    expect(['light', 'dark']).toContain(after);
   });
 });

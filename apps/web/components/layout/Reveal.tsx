@@ -1,12 +1,19 @@
-'use client';
-
 import * as React from 'react';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
 
 /**
- * Reveal scroll-reveal wrapper. Animates child(ren) once when in view.
- * - Respect prefers-reduced-motion : disables animation.
- * - `as` permet de wrapper sur section/article/li sans imbriquer un div en plus.
+ * Reveal — institutional layout wrapper.
+ *
+ * Vague 2 design decision: the marketing site keeps a SINGLE, minimal animation
+ * system (the CSS `.rv` + RevealObserver), reserved for the hero. Below-the-fold
+ * institutional content renders visible immediately — no generalized fade-up, no
+ * stagger cascade — for credibility, SEO and no-JS resilience.
+ *
+ * These components used to wrap children in framer-motion. They are kept as
+ * plain structural wrappers so the ~10 marketing pages that import them don't
+ * need to change, while framer-motion is dropped from the bundle entirely.
+ *
+ * The `delay`, `y`, `duration`, `once` and `stagger` props are accepted and
+ * ignored (no-op) to preserve call-site compatibility.
  */
 interface RevealProps {
   children: React.ReactNode;
@@ -18,50 +25,13 @@ interface RevealProps {
   as?: 'div' | 'section' | 'article' | 'li' | 'header';
 }
 
-export function Reveal({
-  children,
-  delay = 0,
-  y = 16,
-  duration = 0.6,
-  once = true,
-  className,
-  as = 'div',
-}: RevealProps) {
-  const reduce = useReducedMotion();
-
-  const variants: Variants = reduce
-    ? { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } }
-    : {
-        hidden: { opacity: 0, y },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration, delay, ease: [0.16, 1, 0.3, 1] },
-        },
-      };
-
-  const Component = motion[as] as typeof motion.div;
-
-  return (
-    <Component
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, margin: '-15% 0px -10% 0px' }}
-      variants={variants}
-      className={className}
-    >
-      {children}
-    </Component>
-  );
+export function Reveal({ children, className, as = 'div' }: RevealProps) {
+  const Component = as;
+  return <Component className={className}>{children}</Component>;
 }
 
-/**
- * Stagger container for lists / grids. Children must be wrapped in
- * <RevealItem> to participate in the stagger.
- */
 export function RevealStagger({
   children,
-  stagger = 0.08,
   className,
   as = 'div',
 }: {
@@ -70,47 +40,20 @@ export function RevealStagger({
   className?: string;
   as?: 'div' | 'section' | 'ul' | 'ol';
 }) {
-  const reduce = useReducedMotion();
-  const variants: Variants = {
-    hidden: {},
-    visible: { transition: reduce ? {} : { staggerChildren: stagger } },
-  };
-  const Component = motion[as] as typeof motion.div;
-  return (
-    <Component
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-10% 0px' }}
-      variants={variants}
-      className={className}
-    >
-      {children}
-    </Component>
-  );
+  const Component = as;
+  return <Component className={className}>{children}</Component>;
 }
 
 export function RevealItem({
   children,
   className,
   as = 'div',
-  y = 16,
 }: {
   children: React.ReactNode;
   className?: string;
   as?: 'div' | 'li' | 'article';
   y?: number;
 }) {
-  const reduce = useReducedMotion();
-  const variants: Variants = reduce
-    ? { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } }
-    : {
-        hidden: { opacity: 0, y },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
-      };
-  const Component = motion[as] as typeof motion.div;
-  return (
-    <Component variants={variants} className={className}>
-      {children}
-    </Component>
-  );
+  const Component = as;
+  return <Component className={className}>{children}</Component>;
 }

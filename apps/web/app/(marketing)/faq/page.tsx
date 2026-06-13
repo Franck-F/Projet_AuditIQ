@@ -2,8 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Reveal } from '@/components/layout/Reveal';
-import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 import { FaqItem } from '@/components/marketing/FaqItem';
 
 export const metadata: Metadata = {
@@ -346,31 +346,13 @@ export default function FaqPage() {
         </Container>
       </section>
 
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Question non listée</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  On vous répond.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  Notre équipe répond en moins de 24h ouvrées, même avant la signature.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Poser une question</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Question non listée"
+        title="On vous répond."
+        body="Notre équipe répond en moins de 24h ouvrées, même avant la signature."
+        primary={{ label: 'Poser une question', href: '/contact' }}
+        secondary={{ label: 'Réserver une démo', href: '/contact' }}
+      />
     </>
   );
 }

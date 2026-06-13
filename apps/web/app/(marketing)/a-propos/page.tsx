@@ -2,8 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Reveal } from '@/components/layout/Reveal';
-import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 
 export const metadata: Metadata = {
   title: 'À propos',
@@ -228,33 +228,13 @@ export default function AProposPage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Travaillons ensemble</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Utilisateur pilote, partenaire ou simple curieux ?
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  Le projet s&apos;adresse aux PME, cabinets de conseil et intégrateurs. Échangeons
-                  sur votre cas d&apos;usage.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Nous contacter</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/inscription">Essayer gratuitement</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Travaillons ensemble"
+        title="Utilisateur pilote, partenaire ou simple curieux ?"
+        body="Le projet s'adresse aux PME, cabinets de conseil et intégrateurs. Échangeons sur votre cas d'usage."
+        primary={{ label: 'Nous contacter', href: '/contact' }}
+        secondary={{ label: 'Essayer gratuitement', href: '/inscription' }}
+      />
     </>
   );
 }

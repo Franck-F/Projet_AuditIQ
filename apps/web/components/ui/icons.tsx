@@ -22,6 +22,7 @@ import {
   HelpCircle,
   Plus,
   X,
+  Menu,
   type LucideProps,
 } from 'lucide-react';
 
@@ -65,4 +66,5 @@ export const Icons = {
   helpCircle: wrap(HelpCircle),
   plus: wrap(Plus),
   x: wrap(X),
+  menu: wrap(Menu),
 } as const;
