@@ -361,14 +361,8 @@ export default function LandingPage() {
       >
         <div className="wrap">
           <div
-            className="card"
-            style={{
-              padding: 'clamp(28px,4vw,48px)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '48px',
-              alignItems: 'center',
-            }}
+            className="card split2"
+            style={{ padding: 'clamp(28px,4vw,48px)' }}
           >
             <div>
               <p className="eyebrow acc">Ancrage réglementaire</p>

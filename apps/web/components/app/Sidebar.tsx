@@ -142,7 +142,7 @@ export function Sidebar() {
           </div>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em' }}>AuditIQ</div>
-            <div className="eyebrow" style={{ fontSize: 9.5, letterSpacing: '0.14em' }}>FAIRNESS PLATFORM</div>
+            <div className="eyebrow" style={{ fontSize: 9.5, letterSpacing: '0.14em' }}>AUDIT DE FAIRNESS</div>
           </div>
         </Link>
       </div>
