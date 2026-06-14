@@ -532,9 +532,7 @@ export default function LandingPage() {
                   Pour une routine de conformité.
                 </p>
               </div>
-              <div className="price-amt">
-                490 €<small> / mois HT</small>
-              </div>
+              <div className="price-amt">Sur mesure</div>
               <ul>
                 <li>
                   <Check size={17} strokeWidth={2} />
@@ -554,13 +552,13 @@ export default function LandingPage() {
                 </li>
               </ul>
               <Link className="btn btn-primary" href="/contact" style={{ width: '100%' }}>
-                Demander un devis
+                Programmer une démo
               </Link>
             </div>
           </div>
 
           <p className="lede" style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
-            Besoin de plus ? Les paliers <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Entreprise (1 490 €/mois)</strong>{' '}
+            Besoin de plus ? Les paliers <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Entreprise (sur devis)</strong>{' '}
             et <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Souverain (sur devis)</strong> sont détaillés sur{' '}
             <Link href="/tarifs" style={{ color: 'var(--accent)' }}>la page tarifs</Link>.
           </p>

@@ -234,8 +234,7 @@ export default function TarifsPage() {
                 badge="Recommandé PME"
                 name="PME"
                 tagline="Pour une routine de conformité."
-                price="490 €"
-                period="/ mois"
+                price="Sur mesure"
                 bullets={[
                   'Audits illimités · 3 modules',
                   "Dataset jusqu'à 1M lignes",
@@ -245,7 +244,7 @@ export default function TarifsPage() {
                   'Support sous 24h ouvrées',
                   'Onboarding accompagné',
                 ]}
-                cta="Demander une démo"
+                cta="Programmer une démo"
                 ctaHref="/contact"
               />
             </Reveal>
@@ -253,8 +252,7 @@ export default function TarifsPage() {
               <PriceCard
                 name="Entreprise"
                 tagline="Multi-entité, sécurité renforcée."
-                price="1 490 €"
-                period="/ mois"
+                price="Sur devis"
                 bullets={[
                   'Tout PME +',
                   'Datasets illimités · LLM illimité',
