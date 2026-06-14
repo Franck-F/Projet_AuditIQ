@@ -385,6 +385,7 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           decision_column: v.decision_column,
           favorable_value: v.favorable_value,
           config,
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       } else {
         audit = await createAudit({
@@ -392,6 +393,7 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           module: 'M3',
           target: buildTarget(v),
           lang: v.lang,
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       }
       onComplete(audit.id);

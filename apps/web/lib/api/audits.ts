@@ -211,6 +211,7 @@ export type M2AuditCreate = {
   decision_column: string;
   favorable_value: string;
   config?: M2ConfigIn;
+  sector?: Sector;
 };
 
 export type TargetIn = {
@@ -226,6 +227,7 @@ export type M3AuditCreate = {
   module: 'M3';
   target: TargetIn;
   lang: string;
+  sector?: Sector;
 };
 
 export type CategoryStatOut = {
