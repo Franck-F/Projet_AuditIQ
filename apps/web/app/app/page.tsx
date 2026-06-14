@@ -11,6 +11,7 @@ import { Meter } from '@/components/product/Meter';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
 import { riskTone, VERDICT_LABELS } from '@/lib/verdict';
+import { moduleNaming } from '@/lib/modules';
 
 /* ─── Metric card ────────────────────────────────────────────────────────── */
 type StatusTone = 'pass' | 'warn' | 'fail' | 'neutral';
@@ -111,6 +112,7 @@ function MetricCard({
 
 /* ─── Recent audit row ───────────────────────────────────────────────────── */
 function AuditRow({ audit }: { audit: RecentAudit }) {
+  const naming = moduleNaming(audit.module);
   const tone =
     audit.verdict === 'fail'
       ? 'fail'
@@ -143,12 +145,12 @@ function AuditRow({ audit }: { audit: RecentAudit }) {
             className="mono"
             style={{ fontSize: 11.5, color: 'var(--fg-muted)', marginTop: 2 }}
           >
-            {audit.code ?? audit.id} · {audit.module}
+            {audit.code ?? audit.id} · {naming?.full ?? audit.module}
           </div>
         </Link>
       </td>
       <td style={{ padding: '12px 18px' }}>
-        <span className="chip">{audit.module}</span>
+        <span className="chip">{naming?.short ?? audit.module}</span>
       </td>
       <td
         className="tbl-num"

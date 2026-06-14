@@ -88,6 +88,9 @@ def test_build_excel_m1_has_sheets_and_not_a_certificate():
     assert "n'est pas un certificat" in t
     assert "AUD-2026-001" in t
     assert "Disparate Impact" in t
+    # Nom canonique du module (déployeur), pas « audit supervisé ».
+    assert "Module 1 · Caractéristique connue" in t
+    assert "supervisé" not in t
 
 
 def test_build_excel_m2_renders_cluster_detail():
@@ -95,6 +98,9 @@ def test_build_excel_m2_renders_cluster_detail():
     assert "AUD-2026-002" in t
     assert "p-value" in t or "Khi-deux" in t
     assert "n'est pas un certificat" in t
+    # Nom canonique du module, pas « détection non supervisée ».
+    assert "Module 2 · Biais cachés" in t
+    assert "non supervisée" not in t
 
 
 def _m3_audit() -> AuditOut:
@@ -137,6 +143,9 @@ def test_build_excel_m3_section():
     assert "AUD-2026-030" in text
     assert "genre" in text
     assert "n'est pas un certificat" in text
+    # Nom canonique du module, pas « audit LLM/chatbot ».
+    assert "Module 3 · Assistant conversationnel" in text
+    assert "LLM/chatbot" not in text
 
 
 def _m1_audit_with_eo() -> AuditOut:

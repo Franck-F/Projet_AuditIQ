@@ -9,7 +9,7 @@ import { AnchorNav } from '@/components/marketing/AnchorNav';
 export const metadata: Metadata = {
   title: 'Modules',
   description:
-    "Détail des 3 modules d'audit AuditIQ : audit supervisé, détection non supervisée, audit LLM. Métriques, méthodes, livrables.",
+    "Détail des 3 modules d'audit AuditIQ : caractéristique connue, biais cachés, assistant conversationnel. Métriques, méthodes, livrables.",
 };
 
 /* ============================================================================
@@ -85,9 +85,9 @@ function ModuleHeader({
 }
 
 const ANCHORS = [
-  { href: '#supervise', label: '01 · Audit supervisé' },
-  { href: '#non-supervise', label: '02 · Détection non supervisée' },
-  { href: '#llm', label: '03 · Audit LLM' },
+  { href: '#supervise', label: '01 · Caractéristique connue' },
+  { href: '#non-supervise', label: '02 · Biais cachés' },
+  { href: '#llm', label: '03 · Assistant conversationnel' },
 ];
 
 const PROMPT_BANK_AXES = [
@@ -130,7 +130,7 @@ export default function ModulesPage() {
           <Reveal>
             <ModuleHeader
               num="Module 01"
-              title="Audit supervisé classique."
+              title="Caractéristique connue."
               lede="Pour les modèles de classification binaire ou multi-classes, et de scoring. Compatible avec vos modèles internes via un export CSV de leurs décisions."
             />
           </Reveal>
@@ -217,7 +217,7 @@ export default function ModulesPage() {
           <Reveal>
             <ModuleHeader
               num="Module 02"
-              title="Détection non supervisée."
+              title="Biais cachés."
               lede="Pour les jeux de données sans modèle entraîné. Utile en amont de l'entraînement, sur des datasets d'entraînement bruts, ou pour analyser des bases clients avant déploiement d'une IA."
             />
           </Reveal>
@@ -284,7 +284,7 @@ export default function ModulesPage() {
           <Reveal>
             <ModuleHeader
               num="Module 03"
-              title="Audit LLM & chatbot."
+              title="Assistant conversationnel."
               lede="Pour les assistants conversationnels intégrés à votre service client, vos RH ou vos outils internes. L'audit compare les réponses de votre assistant à des paires de prompts ne variant que sur un attribut protégé."
             />
           </Reveal>

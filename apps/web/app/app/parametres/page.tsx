@@ -25,6 +25,7 @@ import { InlineNote } from '@/components/product/InlineNote';
 import { Toggle } from '@/components/product/Toggle';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { moduleNaming, type ModuleCode } from '@/lib/modules';
 
 type TabId =
   | 'org'
@@ -271,9 +272,11 @@ function TabAudit() {
           desc="Type de module lancé par défaut lors de la création d'un audit."
         >
           <SelectInput aria-label="Audit par défaut" defaultValue="M1" style={{ maxWidth: 200 }}>
-            <option value="M1">Module 1 — Audit supervisé</option>
-            <option value="M2">Module 2 — Détection non supervisée</option>
-            <option value="M3">Module 3 — Audit LLM &amp; chatbot</option>
+            {(['M1', 'M2', 'M3'] as ModuleCode[]).map((code) => (
+              <option key={code} value={code}>
+                {moduleNaming(code)?.full ?? code}
+              </option>
+            ))}
           </SelectInput>
         </PrefRow>
         <PrefRow

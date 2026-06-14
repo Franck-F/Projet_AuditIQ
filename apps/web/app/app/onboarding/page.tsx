@@ -137,21 +137,21 @@ export default function OnboardingPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M1</span>
-                  <h4 className="font-medium text-fg">Module 1 — Audit supervisé</h4>
+                  <h4 className="font-medium text-fg">Module 1 · Caractéristique connue</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
                     Vous avez un jeu de données avec la décision réelle et un attribut protégé.
                   </p>
                 </div>
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M2</span>
-                  <h4 className="font-medium text-fg">Module 2 — Détection non supervisée</h4>
+                  <h4 className="font-medium text-fg">Module 2 · Biais cachés</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
                     Vous n&apos;avez pas d&apos;attribut protégé explicite — on cherche des groupes au traitement atypique.
                   </p>
                 </div>
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M3</span>
-                  <h4 className="font-medium text-fg">Module 3 — Audit LLM &amp; chatbot</h4>
+                  <h4 className="font-medium text-fg">Module 3 · Assistant conversationnel</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
                     Vous testez un chatbot ou un assistant IA via des paires de questions quasi identiques.
                   </p>
@@ -309,37 +309,37 @@ export default function OnboardingPage() {
               {[
                 {
                   id: 'rh-scoring',
-                  module: 'Module 1 — supervisé',
+                  module: 'Module 1 · Caractéristique connue',
                   title: 'Scoring de candidatures (CV / recrutement)',
                   desc: 'Détection de biais par genre, âge, origine.',
                 },
                 {
                   id: 'rh-promotion',
-                  module: 'Module 1 — supervisé',
+                  module: 'Module 1 · Caractéristique connue',
                   title: 'Attribution prime / promotion',
                   desc: 'Audit d\'un modèle de décision RH interne.',
                 },
                 {
                   id: 'credit',
-                  module: 'Module 2 — non supervisé',
+                  module: 'Module 2 · Biais cachés',
                   title: 'Scoring de crédit / acceptation',
                   desc: 'Détection de proxies sans accès aux attributs sensibles.',
                 },
                 {
                   id: 'assurance',
-                  module: 'Module 2 — non supervisé',
+                  module: 'Module 2 · Biais cachés',
                   title: 'Tarification assurance',
                   desc: 'Identification de clusters tarifaires déviants.',
                 },
                 {
                   id: 'chatbot',
-                  module: 'Module 3 — LLM',
+                  module: 'Module 3 · Assistant conversationnel',
                   title: 'Chatbot SAV ou support client',
                   desc: 'Test de l\'équité des réponses selon genre, origine, handicap.',
                 },
                 {
                   id: 'assistant',
-                  module: 'Module 3 — LLM',
+                  module: 'Module 3 · Assistant conversationnel',
                   title: 'Assistant IA interne (RH, juridique)',
                   desc: 'Audit d\'un copilote sur 6 axes sensibles.',
                 },
@@ -367,7 +367,7 @@ export default function OnboardingPage() {
             <div className="rounded-lg border border-border-subtle bg-surface-2 p-4">
               <p className="text-[13px] leading-relaxed text-fg-secondary">
                 <strong>À noter :</strong> Le module recommandé dépend du dataset disponible. Si vous n&apos;avez pas la
-                variable sensible, AuditIQ vous orientera automatiquement vers le Module 2 (non supervisé).
+                variable sensible, AuditIQ vous orientera automatiquement vers le Module 2 · Biais cachés.
               </p>
             </div>
 

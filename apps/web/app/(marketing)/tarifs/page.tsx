@@ -91,17 +91,17 @@ const MATRIX_GROUPS: {
     group: 'Audits',
     rows: [
       {
-        name: 'Audit Module 1 (supervisé)',
+        name: 'Audit Module 1 · Caractéristique connue',
         desc: 'Disparate Impact, parités, analyse intersectionnelle',
         values: ['1 / mois', 'Illimité', 'Illimité', 'Illimité'],
       },
       {
-        name: 'Audit Module 2 (non supervisé)',
+        name: 'Audit Module 2 · Biais cachés',
         desc: 'Clustering k-means + test du χ²',
         values: ['—', '✓', '✓', '✓'],
       },
       {
-        name: 'Audit Module 3 (LLM)',
+        name: 'Audit Module 3 · Assistant conversationnel',
         desc: 'Banque versionnée de paires de prompts FR/EN',
         values: ['—', '✓', '✓', '✓'],
       },
@@ -238,7 +238,7 @@ export default function TarifsPage() {
                 bullets={[
                   'Audits illimités · 3 modules',
                   "Dataset jusqu'à 1M lignes",
-                  'Module LLM (banque de prompts FR/EN)',
+                  'Module 3 · Assistant conversationnel (banque de prompts FR/EN)',
                   'Rapports PDF & Excel structurés AI Act',
                   'Historique des audits dans votre espace',
                   'Support sous 24h ouvrées',

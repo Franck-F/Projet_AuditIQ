@@ -12,6 +12,7 @@ import { Icons } from '@/components/ui/icons';
 import type { RecentAudit } from '@/lib/api/dashboard';
 import { useDashboard } from '@/lib/query/use-dashboard';
 import { VERDICT_LABELS } from '@/lib/verdict';
+import { moduleNaming } from '@/lib/modules';
 
 const FILTER_TABS = [
   { id: 'all', label: 'Tous' },
@@ -258,6 +259,7 @@ function MetricKpi({
 
 /* ─── Table row ──────────────────────────────────────────────────────────── */
 function AuditTableRow({ audit }: { audit: RecentAudit }) {
+  const naming = moduleNaming(audit.module);
   const verdict = audit.verdict ?? null;
   const tone: StatusTone = verdict ? VERDICT_TONE[verdict] : 'neutral';
   const scoreColor = verdict ? STATUS_COLORS[verdict] : 'var(--fg-muted)';
@@ -292,18 +294,18 @@ function AuditTableRow({ audit }: { audit: RecentAudit }) {
             className="mono"
             style={{ fontSize: 11.5, color: 'var(--fg-muted)', marginTop: 2 }}
           >
-            {audit.code ?? audit.id} · {audit.module}
+            {audit.code ?? audit.id} · {naming?.full ?? audit.module}
           </div>
         </Link>
       </td>
 
-      {/* Protected attribute chip */}
+      {/* Module chip */}
       <td style={{ padding: '14px 20px' }}>
         <span
           className="chip"
           style={{ color: 'var(--fg-muted)' }}
         >
-          {audit.module}
+          {naming?.short ?? audit.module}
         </span>
       </td>
 

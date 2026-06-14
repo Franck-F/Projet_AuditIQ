@@ -175,6 +175,8 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
           decision_column: 'approved',
           favorable_value: '1',
           protected_attributes: expect.arrayContaining(['sex']),
+          // Sector chosen in step 1 (Crédit & scoring) maps to the API enum 'credit'
+          sector: 'credit',
         }),
       ),
     );

@@ -294,7 +294,7 @@ export default function LandingPage() {
             {/* Module 01 */}
             <div className="card mod">
               <span className="step-n">Module 01</span>
-              <h3 className="sub">Audit supervisé</h3>
+              <h3 className="sub">Caractéristique connue</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
                 Pour les modèles de classification ou de scoring (RH, crédit, assurance). Métriques
                 fairness canoniques et écarts visualisés.
@@ -314,7 +314,7 @@ export default function LandingPage() {
             {/* Module 02 */}
             <div className="card mod">
               <span className="step-n">Module 02</span>
-              <h3 className="sub">Détection non supervisée</h3>
+              <h3 className="sub">Biais cachés</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
                 Pour les jeux de données sans variable cible. Identification de clusters déviants
                 où un groupe protégé est sur-représenté — un signal possible de proxy.
@@ -334,7 +334,7 @@ export default function LandingPage() {
             {/* Module 03 */}
             <div className="card mod">
               <span className="step-n">Module 03</span>
-              <h3 className="sub">Audit LLM &amp; chatbot</h3>
+              <h3 className="sub">Assistant conversationnel</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
                 Pour les assistants conversationnels (SAV, RH, médical). Paires de prompts
                 contrefactuels, comparaison des réponses, scoring multi-axes.
@@ -503,7 +503,7 @@ export default function LandingPage() {
               <ul>
                 <li>
                   <Check size={17} strokeWidth={2} />
-                  1 audit supervisé par mois
+                  1 audit Module 1 · Caractéristique connue par mois
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />

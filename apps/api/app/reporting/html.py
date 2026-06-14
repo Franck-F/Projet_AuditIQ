@@ -6,7 +6,12 @@ from __future__ import annotations
 
 from html import escape
 
-from app.reporting.format import p_value_display, status_label, verdict_label
+from app.reporting.format import (
+    module_label,
+    p_value_display,
+    status_label,
+    verdict_label,
+)
 from app.schemas.audit import (
     RECOMMENDATION_CATEGORY_LABELS,
     AuditOut,
@@ -79,7 +84,7 @@ def _detail(audit: AuditOut) -> str:
             for d in m.divergent_examples
         )
         return (
-            f"<h2>Module 3 — audit LLM/chatbot</h2>"
+            f"<h2>{_e(module_label('M3'))}</h2>"
             f"<table class='kv'>{head}</table>"
             f"<table class='grid'><thead><tr><th>Catégorie</th><th>Écart "
             f"long.</th><th>Écart sent.</th><th>Taux refus</th><th>Score</th>"
@@ -107,7 +112,7 @@ def _detail(audit: AuditOut) -> str:
             for c in m.clusters
         )
         return (
-            f"<h2>Module 2 — détection non supervisée</h2>"
+            f"<h2>{_e(module_label('M2'))}</h2>"
             f"<table class='kv'>{head}</table>"
             f"<table class='grid'><thead><tr><th>Cluster</th><th>Effectif"
             f"</th><th>Taux fav.</th><th>Écart (pts)</th><th>Déviant</th>"
@@ -119,7 +124,7 @@ def _detail(audit: AuditOut) -> str:
         # section par attribut.
         single_attr = len(m.marginals) == 1
         if single_attr:
-            base = "<h2>Module 1 — audit supervisé</h2>"
+            base = f"<h2>{_e(module_label('M1'))}</h2>"
         else:
             head = _rows(
                 [
@@ -135,7 +140,7 @@ def _detail(audit: AuditOut) -> str:
                 for g in m.groups
             )
             base = (
-                f"<h2>Module 1 — audit supervisé</h2>"
+                f"<h2>{_e(module_label('M1'))}</h2>"
                 f"<table class='kv'>{head}</table>"
                 f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
                 f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
@@ -467,7 +472,7 @@ border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6p
 <table class="kv">
 <tr><th>Audit</th><td>{_e(audit.code or audit.id)}</td></tr>
 <tr><th>Titre</th><td>{_e(audit.title)}</td></tr>
-<tr><th>Module</th><td>{_e(audit.module)}</td></tr>
+<tr><th>Module</th><td>{_e(module_label(audit.module))}</td></tr>
 <tr><th>Statut</th><td>{_e(status_label(audit.status))}</td></tr>
 <tr><th>Verdict</th><td><span class="badge">{_e(label)}</span></td></tr>
 <tr><th>Score de risque</th><td>{_e(risk)}/100</td></tr>

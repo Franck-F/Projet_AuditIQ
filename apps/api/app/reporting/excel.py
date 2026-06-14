@@ -8,7 +8,12 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.reporting.format import p_value_display, status_label, verdict_label
+from app.reporting.format import (
+    module_label,
+    p_value_display,
+    status_label,
+    verdict_label,
+)
 from app.schemas.audit import (
     RECOMMENDATION_CATEGORY_LABELS,
     AuditOut,
@@ -94,7 +99,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
             [],
             ["Audit", audit.code or str(audit.id)],
             ["Titre", audit.title],
-            ["Module", audit.module],
+            ["Module", module_label(audit.module)],
             ["Statut", status_label(audit.status)],
             ["Verdict", _VERDICT_BADGE_FR.get(str(verdict), str(verdict))],
             ["Score de risque", f"{risk}/100"],
@@ -110,7 +115,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
         _rows(
             detail,
             [
-                ["Module 2 — détection non supervisée"],
+                [module_label("M2")],
                 ["Test du Khi-deux (p-value)", p_value_display(m.p_value)],
                 ["χ²", m.chi2, "ddl", m.dof],
                 ["Taux favorable global", m.global_positive_rate],
@@ -128,7 +133,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
         _rows(
             detail,
             [
-                ["Module 3 — audit LLM/chatbot"],
+                [module_label("M3")],
                 ["Score global", m.global_score],
                 ["Verdict", verdict_label(m.verdict)],
                 ["Paires", m.n_pairs, "Appels échoués", m.n_calls_failed],
@@ -147,12 +152,12 @@ def build_excel_report(audit: AuditOut) -> bytes:
         # section par attribut.
         single_attr = len(m.marginals) == 1
         if single_attr:
-            _rows(detail, [["Module 1 — audit supervisé"]])
+            _rows(detail, [[module_label("M1")]])
         else:
             _rows(
                 detail,
                 [
-                    ["Module 1 — audit supervisé"],
+                    [module_label("M1")],
                     ["Disparate Impact", m.disparate_impact],
                     ["Demographic Parity (écart)", m.demographic_parity_diff],
                     ["Groupe le plus défavorisé", m.worst_group],

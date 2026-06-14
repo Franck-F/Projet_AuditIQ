@@ -177,7 +177,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Puis-je tester AuditIQ avant de m'engager ?",
-    a: 'Oui. Le palier Découverte est gratuit et permanent : un audit supervisé par mois. Aucune carte bancaire requise.',
+    a: 'Oui. Le palier Découverte est gratuit et permanent : un audit Module 1 · Caractéristique connue par mois. Aucune carte bancaire requise.',
   },
 ];
 
@@ -338,7 +338,7 @@ export default function CommentCaMarchePage() {
                 Moins de 10 minutes
               </h2>
               <p className="mx-auto mt-4 max-w-[50ch] leading-relaxed text-fg-secondary">
-                Pour un premier audit supervisé classique, de l&apos;import du fichier au rapport
+                Pour un premier audit Module 1 · Caractéristique connue, de l&apos;import du fichier au rapport
                 téléchargé. Comptez davantage pour interpréter les résultats avec vos équipes.
               </p>
             </div>

@@ -370,6 +370,7 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           protected_attribute: protectedAttrs[0] ?? '',
           privileged_value: v.privileged_value || null,
           ...(v.ground_truth_column ? { ground_truth_column: v.ground_truth_column } : {}),
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       } else if (mod === 'M2') {
         if (!dataset) return;

@@ -187,6 +187,26 @@ async function clickTab(label: string) {
   await userEvent.click(tab);
 }
 
+/* ─── Module naming in verdict hero ─────────────────────────────────── */
+describe('R5 — module pastille uses canonical naming', () => {
+  it('shows the M1 short pastille « Connue » instead of the raw code', () => {
+    setup(M1_FIXTURE);
+    expect(screen.getByText('Connue')).toBeInTheDocument();
+    // The raw module code must not be rendered as the badge label
+    expect(screen.queryByText(/^M1$/)).not.toBeInTheDocument();
+  });
+
+  it('shows the M2 short pastille « Cachés »', () => {
+    setup(M2_FIXTURE);
+    expect(screen.getByText('Cachés')).toBeInTheDocument();
+  });
+
+  it('shows the M3 short pastille « Chatbot »', () => {
+    setup(M3_FIXTURE);
+    expect(screen.getByText('Chatbot')).toBeInTheDocument();
+  });
+});
+
 /* ─── M1 — RatioBar ─────────────────────────────────────────────────── */
 describe('R5 M1 — RatioBar in Groupes tab', () => {
   it('renders the Groupes tab and shows RatioBar (role=img)', async () => {

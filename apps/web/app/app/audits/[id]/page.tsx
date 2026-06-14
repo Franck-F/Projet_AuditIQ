@@ -29,6 +29,7 @@ import {
   type ReportFormat,
 } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
+import { moduleNaming } from '@/lib/modules';
 import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS, verdictLabel, formatPValue } from '@/lib/verdict';
 import { Scale } from 'lucide-react';
 
@@ -1377,9 +1378,12 @@ export default function AuditResultPage() {
                     {data.code}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-muted">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-muted"
+                  title={moduleNaming(data.module)?.full ?? data.module}
+                >
                   <Icons.flag size={12} />
-                  {data.module}
+                  {moduleNaming(data.module)?.short ?? data.module}
                 </span>
               </div>
             </div>

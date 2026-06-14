@@ -102,9 +102,9 @@ const MATRIX_GROUPS: {
   {
     group: 'Couverture technique',
     rows: [
-      { name: 'Module supervisé', values: ['✓', '✓', '✓', '~', '✓'] },
-      { name: 'Module non supervisé', values: ['✓', '~', '~', '—', '~'] },
-      { name: 'Module LLM / chatbot', values: ['✓', '—', '✓', '—', '—'] },
+      { name: 'Module 1 · Caractéristique connue', values: ['✓', '✓', '✓', '~', '✓'] },
+      { name: 'Module 2 · Biais cachés', values: ['✓', '~', '~', '—', '~'] },
+      { name: 'Module 3 · Assistant conversationnel', values: ['✓', '—', '✓', '—', '—'] },
       { name: 'Détection de proxies', values: ['✓', '~', '✓', '—', '~'] },
     ],
   },
