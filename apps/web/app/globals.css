@@ -393,6 +393,10 @@ p, ul, ol { margin: 0; }
   max-width: min(var(--maxw-pct), 1240px);
 }
 .page.wide { max-width: min(var(--maxw-pct), 1400px); }
+/* Dense workspace pages (wizard) span ~95% of the viewport instead of the
+   default reading width. Topbar-inner opts into the same width to stay aligned. */
+.page.workspace,
+.topbar-inner.workspace { max-width: min(95vw, 1800px); }
 .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
 
 /* ---------- Buttons -------------------------------------------------------- */

@@ -404,8 +404,8 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '236px 1fr 300px',
-          gap: 24,
+          gridTemplateColumns: '236px minmax(0, 1fr) 264px',
+          gap: 28,
           alignItems: 'start',
         }}
       >
@@ -432,6 +432,7 @@ export default function NouveauPage() {
   return (
     <>
       <Topbar
+        wide
         title="Nouvel audit"
         crumbs={[
           { label: 'AuditIQ' },
@@ -447,7 +448,7 @@ export default function NouveauPage() {
           </Button>
         }
       />
-      <main className="page flex-1">
+      <main className="page workspace flex-1">
         <WizardProvider totalSteps={STEPS.length}>
           <WizardInner onComplete={(id) => router.push(`/app/audits/${id}`)} />
         </WizardProvider>
