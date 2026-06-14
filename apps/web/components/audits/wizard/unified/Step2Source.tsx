@@ -117,8 +117,9 @@ export function Step2Source({
           Importez votre jeu de données
         </h2>
         <p className="text-sm text-fg-secondary">
-          Glissez-déposez un fichier CSV. Après l&apos;import, AuditIQ analyse
-          automatiquement vos colonnes pour suggérer les bons paramètres.
+          Glissez-déposez un fichier CSV ou Excel. Après l&apos;import, AuditIQ
+          analyse automatiquement vos colonnes pour suggérer les bons
+          paramètres.
         </p>
         <DatasetUploadCard
           busy={busy}

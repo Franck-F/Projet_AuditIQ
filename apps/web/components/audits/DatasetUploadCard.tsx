@@ -27,7 +27,7 @@ interface ConnectorCategory {
 /**
  * Connecteurs de la feuille de route (Phase 2). Rien ici n'est encore
  * fonctionnel : la section est purement informative et clairement étiquetée
- * « Bientôt ». L'import réel se fait via l'onglet « Fichier local » (CSV).
+ * « Bientôt ». L'import réel se fait via l'onglet « Fichier local » (CSV ou Excel).
  */
 const CONNECTOR_CATEGORIES: ConnectorCategory[] = [
   {
@@ -145,7 +145,7 @@ export function DatasetUploadCard({ busy, onSelected }: DatasetUploadCardProps) 
                 : 'border-border-default bg-surface-2 hover:border-border-strong',
               busy && 'cursor-not-allowed opacity-60',
             )}
-            aria-label="Glisser-déposer un fichier CSV ou cliquer pour parcourir"
+            aria-label="Glisser-déposer un fichier CSV ou Excel ou cliquer pour parcourir"
           >
             <div
               aria-hidden
@@ -157,7 +157,7 @@ export function DatasetUploadCard({ busy, onSelected }: DatasetUploadCardProps) 
               <p className="text-[15px] font-medium text-fg">
                 {filename
                   ? `Fichier sélectionné : ${filename}`
-                  : 'Glissez-déposez votre fichier CSV ici'}
+                  : 'Glissez-déposez votre fichier CSV ou Excel ici'}
               </p>
               <p className="mt-1 text-sm text-fg-secondary">
                 {filename ? 'Cliquez pour en choisir un autre.' : 'ou cliquez pour parcourir'}
@@ -171,14 +171,14 @@ export function DatasetUploadCard({ busy, onSelected }: DatasetUploadCardProps) 
               id="csv"
               data-testid="csv-input"
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               disabled={busy}
               onChange={(e) => void handleFiles(e.target.files)}
               className="sr-only"
             />
           </div>
           <p className="mt-4 text-xs text-fg-muted">
-            Format CSV (UTF-8 recommandé). Le fichier est stocké de façon chiffrée et
+            Format CSV ou Excel (.xlsx). Le fichier est stocké de façon chiffrée et
             supprimé automatiquement après 30 jours. Taille maximum 10 Mo.
           </p>
         </div>
