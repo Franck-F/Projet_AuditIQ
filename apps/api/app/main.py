@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.ratelimit import limiter, rate_limit_handler
-from app.routers import audits, auth, dashboard, datasets, health
+from app.routers import audits, auth, dashboard, datasets, health, org
 
 API_PREFIX = "/api/v1"
 
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(datasets.router, prefix=API_PREFIX)
     app.include_router(audits.router, prefix=API_PREFIX)
     app.include_router(dashboard.router, prefix=API_PREFIX)
+    app.include_router(org.router, prefix=API_PREFIX)
     return app
 
 

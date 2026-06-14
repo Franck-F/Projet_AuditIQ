@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends, Header
@@ -12,7 +13,7 @@ from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.errors import AuthError
 from app.core.security import resolve_signing_key, verify_token
-from app.models import Organization, User
+from app.models import Invitation, Organization, User
 from app.schemas.auth import CurrentUser
 
 
@@ -25,7 +26,54 @@ def _bearer(authorization: str | None) -> str:
     return token
 
 
+async def _find_pending_invitation(
+    session: AsyncSession, email: str
+) -> Invitation | None:
+    """Return the most recent non-expired ``pending`` invitation for ``email``.
+
+    The expiry check is done in Python so the comparison is timezone-aware and
+    portable across SQLite (tests) and PostgreSQL.
+    """
+    now = datetime.now(timezone.utc)
+    rows = (
+        await session.execute(
+            select(Invitation)
+            .where(Invitation.email == email, Invitation.status == "pending")
+            .order_by(Invitation.created_at.desc())
+        )
+    ).scalars()
+    for inv in rows:
+        expires = inv.expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        if expires > now:
+            return inv
+    return None
+
+
 async def _provision(session: AsyncSession, uid: uuid.UUID, email: str) -> User:
+    invitation = await _find_pending_invitation(session, email)
+    if invitation is not None:
+        user = User(
+            id=uid,
+            org_id=invitation.org_id,
+            email=email,
+            role=invitation.role,
+        )
+        session.add(user)
+        invitation.status = "accepted"
+        try:
+            await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            existing = (
+                await session.execute(select(User).where(User.id == uid))
+            ).scalar_one_or_none()
+            if existing is None:
+                raise
+            return existing
+        return user
+
     domain = email.split("@")[-1] if "@" in email else "organisation"
     org = Organization(name=domain)
     session.add(org)
