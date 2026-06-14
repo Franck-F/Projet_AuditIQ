@@ -1,94 +1,165 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import type { MeOut, OrgOut } from '@/lib/api/org';
+
+/* ── Mocks ─────────────────────────────────────────────────────────────── */
+const mutate = vi.hoisted(() => ({
+  org: vi.fn(),
+  settings: vi.fn(),
+  me: vi.fn(),
+}));
+
+const hooks = vi.hoisted(() => ({
+  useMe: vi.fn(),
+  useOrg: vi.fn(),
+  useUpdateOrg: vi.fn(),
+  useUpdateOrgSettings: vi.fn(),
+  useUpdateMe: vi.fn(),
+}));
+
+vi.mock('@/lib/query/use-org', () => hooks);
+
+const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+vi.mock('sonner', () => ({ toast: toastMock }));
+
 import ParametresPage from '@/app/app/parametres/page';
 
-describe('ParametresPage — R5 sidenav 8 tabs', () => {
-  function getNav() {
-    return screen.getByRole('navigation', { name: /Navigation paramètres/i });
-  }
+/* ── Fixtures ──────────────────────────────────────────────────────────── */
+const ME_ADMIN: MeOut = {
+  id: 'u-me',
+  email: 'admin@cabinet.fr',
+  first_name: 'Claire',
+  role: 'admin',
+  org_id: 'org-1',
+};
 
-  it('renders 9 sidenav buttons', () => {
+const ORG: OrgOut = {
+  id: 'org-1',
+  name: 'Mon Cabinet SAS',
+  siren: '824561832',
+  sector: 'hr',
+  country: 'FR',
+  company_size: 'pme',
+  dpo_name: 'Claire Dupont',
+  settings: { di_threshold: 0.8, retention_days: 30, report_options: {} },
+};
+
+function setupHooks(over: {
+  me?: Partial<ReturnType<typeof hooks.useMe>>;
+  org?: Partial<ReturnType<typeof hooks.useOrg>>;
+} = {}) {
+  hooks.useMe.mockReturnValue({ data: ME_ADMIN, isLoading: false, isError: false, ...over.me });
+  hooks.useOrg.mockReturnValue({ data: ORG, isLoading: false, isError: false, ...over.org });
+  hooks.useUpdateOrg.mockReturnValue({ mutateAsync: mutate.org, isPending: false });
+  hooks.useUpdateOrgSettings.mockReturnValue({ mutateAsync: mutate.settings, isPending: false });
+  hooks.useUpdateMe.mockReturnValue({ mutateAsync: mutate.me, isPending: false });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  setupHooks();
+});
+
+function getNav() {
+  return screen.getByRole('navigation', { name: /Navigation paramètres/i });
+}
+
+describe('ParametresPage — câblage réel', () => {
+  it('n’affiche que les 4 onglets conservés (plus de Facturation/Intégrations/Sécurité)', () => {
     render(<ParametresPage />);
     const nav = getNav();
-    const buttons = within(nav).getAllByRole('button');
-    expect(buttons).toHaveLength(9);
+    expect(within(nav).getAllByRole('button')).toHaveLength(4);
+    expect(within(nav).getByRole('button', { name: /Entreprise/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /Profil/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /Audit & seuils/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /Rapports/i })).toBeInTheDocument();
+    expect(within(nav).queryByRole('button', { name: /Facturation/i })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('button', { name: /Intégrations/i })).not.toBeInTheDocument();
   });
 
-  it('sidenav contains all 8 expected labels', () => {
+  it('n’affiche plus la bannière « Aperçu »', () => {
     render(<ParametresPage />);
-    const nav = getNav();
-    const labels = ['Entreprise', 'Audit', 'Seuils', 'Rapports', 'Intégrations', 'Sécurité', 'Facturation', 'Notifications'];
-    for (const label of labels) {
-      expect(within(nav).getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument();
-    }
+    expect(screen.queryByText(/section est en\s+cours de développement/i)).not.toBeInTheDocument();
   });
 
-  it('defaults to Entreprise tab', () => {
+  it('pré-remplit Entreprise avec les vraies valeurs de /org', () => {
     render(<ParametresPage />);
-    expect(screen.getByDisplayValue('Cabinet Tessier & Associés')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Mon Cabinet SAS')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('824561832')).toBeInTheDocument();
+    // Plus de valeurs fictives.
+    expect(screen.queryByDisplayValue(/Cabinet Tessier/)).not.toBeInTheDocument();
   });
 
-  it('clicking "Audit" shows "Audit par défaut" select', async () => {
+  it('persiste les infos Entreprise via PATCH /org', async () => {
+    mutate.org.mockResolvedValue(ORG);
     const user = userEvent.setup();
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /^Audit$/i }));
-    expect(screen.getByRole('combobox', { name: /Audit par défaut/i })).toBeInTheDocument();
+    const name = screen.getByLabelText('Raison sociale');
+    await user.clear(name);
+    await user.type(name, 'Nouveau Nom');
+    await user.click(screen.getByRole('button', { name: /^Enregistrer$/i }));
+    expect(mutate.org).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Nouveau Nom', siren: '824561832', sector: 'hr' }),
+    );
+    expect(toastMock.success).toHaveBeenCalled();
   });
 
-  it('clicking "Rapports" shows "Modèle de PDF" select', async () => {
-    const user = userEvent.setup();
+  it('désactive le formulaire Entreprise pour un non-admin', () => {
+    setupHooks({ me: { data: { ...ME_ADMIN, role: 'viewer' } } });
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Rapports/i }));
-    expect(screen.getByRole('combobox', { name: /Modèle de PDF/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Raison sociale')).toBeDisabled();
+    expect(screen.getByText(/Seuls les administrateurs peuvent modifier/i)).toBeInTheDocument();
   });
 
-  it('clicking "Facturation" shows "Gérer la facturation" button', async () => {
+  it('Profil : prénom éditable, e-mail en lecture seule', async () => {
+    mutate.me.mockResolvedValue(ME_ADMIN);
     const user = userEvent.setup();
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Facturation/i }));
-    expect(screen.getByRole('button', { name: /Gérer la facturation/i })).toBeInTheDocument();
+    await user.click(within(getNav()).getByRole('button', { name: /Profil/i }));
+    expect(screen.getByDisplayValue('Claire')).toBeInTheDocument();
+    expect(screen.getByLabelText('E-mail')).toHaveAttribute('readonly');
+    const first = screen.getByLabelText('Prénom');
+    await user.clear(first);
+    await user.type(first, 'Marie');
+    await user.click(screen.getByRole('button', { name: /^Enregistrer$/i }));
+    expect(mutate.me).toHaveBeenCalledWith({ first_name: 'Marie' });
   });
 
-  it('clicking "Facturation" shows plan card with siege info', async () => {
+  it('Audit & seuils : persiste di_threshold et retention_days via PATCH /org/settings', async () => {
+    mutate.settings.mockResolvedValue(ORG);
     const user = userEvent.setup();
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Facturation/i }));
-    expect(screen.getByText(/Plan Équipe/i)).toBeInTheDocument();
-    // "Sièges utilisés" KPI card — unique text
-    expect(screen.getByText(/Sièges utilisés/i)).toBeInTheDocument();
+    await user.click(within(getNav()).getByRole('button', { name: /Audit & seuils/i }));
+    await user.selectOptions(screen.getByLabelText(/Seuil de disparate impact/i), '0.9');
+    await user.selectOptions(screen.getByLabelText(/Rétention des datasets/i), '90');
+    await user.click(screen.getByRole('button', { name: /^Enregistrer$/i }));
+    expect(mutate.settings).toHaveBeenCalledWith({ di_threshold: 0.9, retention_days: 90 });
   });
 
-  it('clicking "Facturation" shows last 3 invoices', async () => {
-    const user = userEvent.setup();
+  it('ne contient plus de fausse clé API', () => {
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Facturation/i }));
-    expect(screen.getByText('INV-2026-05')).toBeInTheDocument();
-    expect(screen.getByText('INV-2026-04')).toBeInTheDocument();
-    expect(screen.getByText('INV-2026-03')).toBeInTheDocument();
+    expect(screen.queryByText(/clé API/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sk-/i)).not.toBeInTheDocument();
   });
 
-  it('clicking "Notifications" shows 6 Toggle controls', async () => {
+  it('Rapports : persiste report_options via PATCH /org/settings', async () => {
+    mutate.settings.mockResolvedValue(ORG);
     const user = userEvent.setup();
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Notifications/i }));
-    const toggles = screen.getAllByRole('switch');
-    expect(toggles.length).toBeGreaterThanOrEqual(4);
+    await user.click(within(getNav()).getByRole('button', { name: /Rapports/i }));
+    // Active le filigrane confidentiel (off par défaut).
+    await user.click(screen.getByRole('switch', { name: /Filigrane/i }));
+    await user.click(screen.getByRole('button', { name: /^Enregistrer$/i }));
+    expect(mutate.settings).toHaveBeenCalledWith(
+      expect.objectContaining({ report_options: expect.objectContaining({ confidential_watermark: true }) }),
+    );
   });
 
-  it('clicking "Sécurité" shows 2FA toggle', async () => {
-    const user = userEvent.setup();
+  it('affiche un état d’erreur si /org échoue', () => {
+    setupHooks({ org: { data: undefined, isLoading: false, isError: true } });
     render(<ParametresPage />);
-    const nav = getNav();
-    await user.click(within(nav).getByRole('button', { name: /Sécurité/i }));
-    // Toggle with aria-label "Double authentification" must exist
-    expect(screen.getByRole('switch', { name: /Double authentification/i })).toBeInTheDocument();
-    // Visible label text
-    expect(screen.getByText(/Authentification à deux facteurs/i)).toBeInTheDocument();
+    expect(screen.getByText(/Impossible de charger les paramètres/i)).toBeInTheDocument();
   });
 });

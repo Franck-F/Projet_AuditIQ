@@ -1,6 +1,5 @@
 import { Zap, Book, Scale, LayoutDashboard, ShieldCheck, Settings2, Mail } from 'lucide-react';
 import { Topbar } from '@/components/app/Topbar';
-import { PreviewBanner } from '@/components/app/PreviewBanner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -81,8 +80,6 @@ export default function SupportPage() {
       />
 
       <div className="page space-y-8">
-        <PreviewBanner />
-
         {/* Hero */}
         <div className="rounded-lg border border-border-default bg-surface p-9 text-center">
           <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-fg">
