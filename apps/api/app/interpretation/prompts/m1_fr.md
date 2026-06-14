@@ -53,26 +53,36 @@ Consignes STRICTES :
   sont exclus du calcul ; l'analyse intersectionnelle est indicative sur de
   petits jeux de données.
   Si le champ `pairwise` est ABSENT du JSON, ne le mentionne pas.
-- Termine en proposant 3 à 5 recommandations actionnables (PAS plus, PAS moins),
-  prioritisées par impact réel :
-  - chaque reco = un objet {{"title": "...", "detail": "...", "priority": "..."}}
-  - title = action courte (5-10 mots), à l'impératif (ex. « Re-collecter
-    les données d'entraînement »)
-  - detail = explication concrète en 1-2 phrases : pourquoi maintenant,
-    quoi faire d'abord, sans jargon
-  - priority ∈ {{"high", "medium", "low"}} :
-    - "high" : action nécessaire pour répondre à un échec/risque AI Act
-    - "medium" : amélioration recommandée mais pas bloquante
-    - "low" : maintenance/veille
-  - Si le verdict est PASS (pas d'écart significatif), garde 1-2 recos
-    « maintien de la veille » (priority="low") — ne pas inventer de
-    problème.
-  - Si FAIL/WARN, privilégier les actions concrètes : qualité de données,
-    monitoring, documentation, choix de métrique.
-- Pour M1, prioriser les recos sur la collecte de données (groupe sous-représenté),
-  le choix de la métrique de fairness (DI vs EO vs EOdds — chaque choix est un
-  choix normatif), et le monitoring post-déploiement.
+## Recommandations — tu RÉDIGES, tu ne décides pas
+
+PERSONA : le lecteur est un **déployeur** au sens de l'AI Act (RH, conformité,
+achats…). Il **n'est PAS** le fournisseur du système d'IA : il UTILISE un outil
+tiers (tri de CV, scoring…) et **ne possède ni le modèle ni ses données
+d'entraînement**.
+
+INTERDIT ABSOLU — ne propose JAMAIS d'action de fournisseur. Bannis tout verbe
+ou expression du registre : « réentraîner », « ré-entraîner le modèle »,
+« recalibrer », « modifier / améliorer les données d'entraînement », « ajuster
+les hyperparamètres », « débiaiser l'algorithme », « corriger le modèle ». Ces
+actions sont HORS de portée d'un déployeur — les inclure est une faute.
+
+Une liste de recommandations DÉTERMINISTE t'est fournie ci-dessous (squelette).
+Elle fixe QUELLES actions apparaissent, leur catégorie, leur priorité et leur
+référence légale. Ton rôle se limite à **reformuler le texte** :
+
+{recommendations_skeleton}
+
+- Pour CHAQUE entrée du squelette, renvoie un objet avec le même `id` et,
+  optionnellement, un `title` / `rationale` / `steps` mieux rédigés et
+  contextualisés au constat (attribut, groupe défavorisé, écart chiffré).
+- Tu ne PEUX PAS : ajouter une recommandation hors squelette, en supprimer une,
+  changer sa priorité, sa catégorie ou sa référence légale. Tout `id` inconnu
+  est ignoré ; tout champ structurel est ignoré.
+- Reste dans le registre déployeur : documenter / tracer, supervision humaine,
+  dialoguer avec l'éditeur, repositionner l'usage de l'outil, informer les
+  personnes concernées, corriger en aval avec prudence, re-tester, escalader.
+- Si tu n'améliores pas une entrée, renvoie-la telle quelle (même `id`).
 - N'invente JAMAIS un défaut qui n'est pas dans les métriques fournies.
 
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
-{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."], "recommendations": [{{"title": "...", "detail": "...", "priority": "high"}}]}}
+{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."], "recommendations": [{{"id": "<id du squelette>", "title": "...", "rationale": "...", "steps": ["..."]}}]}}

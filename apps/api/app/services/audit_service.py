@@ -509,7 +509,9 @@ async def compute_m1_audit(
     )
 
     metrics_out = _to_metrics_out(result)
-    interpretation = await interpret_m1(result, provider=llm_provider)
+    interpretation = await interpret_m1(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,
@@ -569,7 +571,9 @@ async def compute_m2_audit(
 
     result = run_m2(df, m2_cfg)
     metrics_out = _to_m2_metrics_out(result)
-    interpretation = await interpret_m2(result, provider=llm_provider)
+    interpretation = await interpret_m2(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,
@@ -654,7 +658,9 @@ async def compute_m3_audit(
 
     result = run_m3(M3Responses(records=tuple(records)), M3Config(lang=lang))
     metrics_out = _to_m3_metrics_out(result)
-    interpretation = await interpret_m3(result, provider=llm_provider)
+    interpretation = await interpret_m3(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,

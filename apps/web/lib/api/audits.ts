@@ -12,6 +12,10 @@ export type DatasetOut = {
   expires_at: string | null;
 };
 
+/** Secteur d'usage (contexte AI Act du déployeur) — contextualise les
+ * recommandations et les références légales côté API. */
+export type Sector = 'hr' | 'credit' | 'insurance' | 'other';
+
 export type AuditCreate = {
   dataset_id: string;
   title: string;
@@ -22,6 +26,7 @@ export type AuditCreate = {
   privileged_value: string | null;
   ground_truth_column?: string | null;
   secondary_privileged_value?: string | null;
+  sector?: Sector;
 };
 
 export type GroupStatOut = {
@@ -114,10 +119,43 @@ export type M1MetricsOut = {
   pairwise: IntersectionalOut[];
 };
 
+/** Catégories de recommandation du moteur déployeur (clé → libellé FR géré
+ * côté API). */
+export type RecommendationCategory =
+  | 'documentation'
+  | 'supervision_humaine'
+  | 'relation_fournisseur'
+  | 'usage_outil'
+  | 'correction_aval'
+  | 'conformite'
+  | 'surveillance'
+  | 'escalade';
+
+export type RecommendationOwner =
+  | 'RH'
+  | 'DPO'
+  | 'Juridique'
+  | 'Achats'
+  | 'Direction';
+
+export type RecommendationHorizon = 'immediat' | 'court_terme' | 'continu';
+
 export type RecommendationOut = {
   title: string;
+  /** Le « pourquoi » destiné au lecteur (alias de `rationale`). */
   detail: string;
+  /** Littéral historique dérivé de `priority_level` (back-compat). */
   priority: 'high' | 'medium' | 'low';
+  // --- Champs structurés du moteur déployeur (additifs) ---
+  id?: string;
+  rationale?: string;
+  category?: RecommendationCategory;
+  /** 1 = haute, 2 = moyenne, 3 = basse. */
+  priority_level?: number;
+  owner?: RecommendationOwner;
+  horizon?: RecommendationHorizon;
+  legal_ref?: string | null;
+  steps?: string[];
 };
 
 export type InterpretationOut = {
