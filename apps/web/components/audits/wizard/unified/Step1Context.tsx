@@ -19,7 +19,7 @@ export function Step1Context(): React.ReactElement {
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="mb-2 text-lg font-semibold text-fg">Contexte de l'audit</h2>
-        <p className="text-sm text-fg-secondary">Donnez un nom à votre audit, choisissez le type d'artefact à auditer, et précisez le secteur d'usage.</p>
+        <p className="text-sm text-fg-secondary">Donnez un nom à votre audit, choisissez le type d'outil que vous souhaitez auditer, et précisez le secteur d'usage.</p>
       </div>
 
       <div className="flex flex-col gap-1.5">

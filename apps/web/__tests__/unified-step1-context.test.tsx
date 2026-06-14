@@ -20,9 +20,9 @@ describe('Unified Step1Context', () => {
 
   it('renders 3 audit type cards', () => {
     render(<WizardProvider totalSteps={5}><Harness /></WizardProvider>);
-    expect(screen.getByText(/Audit supervisé.*attribut protégé à tester/i)).toBeInTheDocument();
-    expect(screen.getByText(/Détection non supervisée.*biais peut se cacher/i)).toBeInTheDocument();
-    expect(screen.getByText(/Audit LLM & chatbot/i)).toBeInTheDocument();
+    expect(screen.getByText(/outil qui prend des décisions, avec une caractéristique sensible à tester/i)).toBeInTheDocument();
+    expect(screen.getByText(/outil qui prend des décisions, sans savoir où le biais se cache/i)).toBeInTheDocument();
+    expect(screen.getByText(/assistant conversationnel \/ chatbot/i)).toBeInTheDocument();
   });
 
   it('renders 4 sector cards', () => {
@@ -36,7 +36,7 @@ describe('Unified Step1Context', () => {
   it('clicking an audit type card selects it (visual selected state)', async () => {
     render(<WizardProvider totalSteps={5}><Harness /></WizardProvider>);
     const user = userEvent.setup();
-    const card = screen.getByRole('button', { name: /Audit supervisé : j'ai un attribut protégé à tester/i });
+    const card = screen.getByRole('button', { name: /outil qui prend des décisions, avec une caractéristique sensible à tester/i });
     await user.click(card);
     expect(card).toHaveAttribute('aria-pressed', 'true');
   });

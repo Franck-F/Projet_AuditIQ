@@ -10,32 +10,32 @@ interface CardDef<TValue extends string> {
 export const AUDIT_TYPE_CARDS: ReadonlyArray<CardDef<AuditType>> = [
   {
     value: 'tabular-known',
-    title: 'Module 1 — Audit supervisé : j\'ai un attribut protégé à tester',
-    description: 'Vous avez un fichier CSV des décisions du modèle ET vous savez quelle caractéristique (sexe, âge, origine…) pourrait être discriminante.',
+    title: 'Un outil qui prend des décisions, avec une caractéristique sensible à tester',
+    description: 'Vous utilisez un logiciel (tri de CV, scoring crédit, sélection de dossiers…) et vous disposez d\'un fichier de ses décisions ET vous savez quelle caractéristique (sexe, âge, origine…) pourrait être source de discrimination.',
     bullets: [
-      'Écart de taux d\'acceptation entre groupes — règle des 4/5 : le groupe défavorisé doit atteindre au moins 80 % du taux du groupe de référence',
-      'Égalité des chances à profil égal (si le résultat réel des décisions est fourni)',
-      'Analyse croisée de deux attributs protégés (option)',
+      'Compare les taux de décision favorable entre les groupes (règle des 4/5 : le groupe défavorisé doit atteindre au moins 80 % du taux du groupe de référence)',
+      'Vérifie que des personnes au profil comparable sont traitées de la même façon (si la décision réellement attendue est fournie)',
+      'Permet de croiser deux caractéristiques sensibles (par exemple sexe et âge) en option',
     ],
   },
   {
     value: 'tabular-unknown',
-    title: 'Module 2 — Détection non supervisée : je cherche où le biais peut se cacher',
-    description: 'Vous avez un fichier CSV de décisions mais aucun attribut protégé déclaré. AuditIQ repère automatiquement des groupes au traitement atypique.',
+    title: 'Un outil qui prend des décisions, sans savoir où le biais se cache',
+    description: 'Vous avez un fichier de décisions de votre outil mais aucune caractéristique sensible déclarée. AuditIQ repère automatiquement les groupes de dossiers traités différemment.',
     bullets: [
-      'Détection automatique de groupes au traitement atypique',
-      'Explication des caractéristiques dominantes de chaque groupe signalé',
-      'Aucune donnée sensible requise (compatible RGPD)',
+      'Détecte automatiquement les groupes de dossiers traités différemment des autres',
+      'Décrit en clair ce qui distingue chaque groupe signalé',
+      'Ne nécessite aucune donnée sensible (compatible RGPD)',
     ],
   },
   {
     value: 'llm-api',
-    title: 'Module 3 — Audit LLM & chatbot : j\'audite un agent conversationnel via API',
-    description: 'AuditIQ envoie 12 paires de questions quasi identiques (seul l\'attribut protégé change) à votre chatbot et compare les réponses.',
+    title: 'Un assistant conversationnel / chatbot que vous utilisez',
+    description: 'Vous voulez vérifier qu\'un chatbot (service client, présélection…) traite les utilisateurs de façon équitable. AuditIQ lui envoie des paires de messages comparables et mesure les écarts.',
     bullets: [
-      '12 paires de questions × 6 catégories d\'attributs protégés',
-      'Comparaison du ton, de la longueur et des refus de réponse',
-      'AI Act art. 50 + recommandations CNIL',
+      'Envoie 12 paires de messages quasi identiques (seule la caractéristique sensible change)',
+      'Compare le ton, la longueur et les refus de réponse entre les deux messages',
+      'S\'appuie sur l\'AI Act (art. 50) et les recommandations CNIL',
     ],
   },
 ];

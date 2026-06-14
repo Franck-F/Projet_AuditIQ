@@ -19,7 +19,7 @@ describe('audit wizard', () => {
   it('shows the unified wizard with audit type cards', async () => {
     render(<NouveauPage />);
     expect(await screen.findByRole('textbox', { name: /titre/i })).toBeInTheDocument();
-    expect(screen.getByText(/Audit supervisé.*attribut protégé à tester/i)).toBeInTheDocument();
-    expect(screen.getByText(/Audit LLM & chatbot/i)).toBeInTheDocument();
+    expect(screen.getByText(/outil qui prend des décisions, avec une caractéristique sensible à tester/i)).toBeInTheDocument();
+    expect(screen.getByText(/assistant conversationnel \/ chatbot/i)).toBeInTheDocument();
   });
 });
