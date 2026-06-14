@@ -81,7 +81,7 @@ describe('audit result page — R3 refonte', () => {
     // title appears in both Topbar and hero
     expect(screen.getAllByText('Scoring crédit — Particuliers Q2').length).toBeGreaterThan(0);
     // verdict text
-    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Risque élevé').length).toBeGreaterThan(0);
   });
 
   it('renders 4 tabs with role=tab', () => {
@@ -139,7 +139,7 @@ describe('audit result page — R3 refonte', () => {
     expect(screen.getByText(/analyse en cours/i)).toBeInTheDocument();
   });
 
-  it('renames Groupes tab to Clusters for M2', () => {
+  it('renames Groupes tab to Groupes détectés for M2', () => {
     useAudit.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -180,7 +180,7 @@ describe('audit result page — R3 refonte', () => {
     render(<AuditResultPage />);
     const tabs = screen.getAllByRole('tab');
     const labels = tabs.map((t) => t.textContent);
-    expect(labels).toContain('Clusters');
+    expect(labels).toContain('Groupes détectés');
     expect(labels).not.toContain('Groupes');
   });
 

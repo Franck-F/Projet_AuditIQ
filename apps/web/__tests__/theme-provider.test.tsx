@@ -28,31 +28,48 @@ describe('ThemeProvider', () => {
     };
 
     vi.stubGlobal('localStorage', localStorageMock);
+    // matchMedia: no OS dark preference unless a test overrides it.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    );
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('defaults to dark when no localStorage value', () => {
+  it('defaults to light when no localStorage value and no OS dark preference', () => {
+    render(<ThemeProvider><ProbeButton /></ThemeProvider>);
+    expect(screen.getByTestId('probe').textContent).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('follows prefers-color-scheme: dark when no stored value', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
     render(<ThemeProvider><ProbeButton /></ThemeProvider>);
     expect(screen.getByTestId('probe').textContent).toBe('dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
-  it('hydrates from localStorage if present', () => {
+  it('hydrates from localStorage if present (overrides OS preference)', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
     localStorage.setItem('aiq-theme', 'light');
     render(<ThemeProvider><ProbeButton /></ThemeProvider>);
     expect(screen.getByTestId('probe').textContent).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
-  it('toggle switches dark→light→dark and persists', async () => {
+  it('toggle switches light→dark→light and persists', async () => {
     render(<ThemeProvider><ProbeButton /></ThemeProvider>);
     const user = userEvent.setup();
     await user.click(screen.getByTestId('probe'));
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-    expect(localStorage.getItem('aiq-theme')).toBe('light');
-    await user.click(screen.getByTestId('probe'));
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(localStorage.getItem('aiq-theme')).toBe('dark');
+    await user.click(screen.getByTestId('probe'));
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('aiq-theme')).toBe('light');
   });
 
   it('useTheme throws outside provider', () => {

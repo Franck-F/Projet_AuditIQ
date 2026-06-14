@@ -128,7 +128,7 @@ describe('M1 multi-attribute result page', () => {
     useAudit.mockReturnValue({ isLoading: false, isError: false, data: M1_MULTI_FIXTURE });
     render(<AuditResultPage />);
     expect(screen.getAllByText('Recrutement multi-attributs').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Non conforme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Risque élevé').length).toBeGreaterThan(0);
   });
 
   it('shows the narrative from interpretation', () => {

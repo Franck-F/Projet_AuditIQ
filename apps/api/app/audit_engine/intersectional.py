@@ -74,9 +74,9 @@ def run_intersectional_pair(
                 continue
             if n < config.min_group_warn:
                 warnings.append(
-                    f"Sous-groupe « {pv} × {sv} » : effectif faible "
-                    f"(n={n} < {config.min_group_warn}) — résultat peu "
-                    f"concluant pour ce sous-groupe."
+                    f"Effectif faible : sous-groupe « {pv} × {sv} » "
+                    f"(n={n} < {config.min_group_warn}) — résultats à "
+                    f"interpréter avec prudence pour ce sous-groupe."
                 )
             raw[(pv, sv)] = {"n": n, "fav": int((mask & fav_mask).sum())}
 

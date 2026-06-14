@@ -4,12 +4,13 @@ import { Container } from '@/components/layout/Container';
 import { Reveal } from '@/components/layout/Reveal';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 import { StatusPill } from '@/components/marketing/StatusPill';
 
 export const metadata: Metadata = {
   title: 'Comment ça marche',
   description:
-    "Le parcours AuditIQ en 4 étapes : importer, configurer, analyser, exporter. Une heure de travail, aucune ligne de code.",
+    'Le parcours AuditIQ en 4 étapes : importer, configurer, analyser, exporter. Premier audit en moins de 10 minutes, aucune ligne de code.',
 };
 
 /* ============================================================================
@@ -156,7 +157,7 @@ function FileRow({
 const FAQ_ITEMS = [
   {
     q: 'Combien de temps faut-il pour démarrer ?',
-    a: 'Compter une demi-journée pour mettre la plateforme en main, avec un de nos consultants en accompagnement (palier PME et Entreprise). Le premier audit est généralement bouclé le jour de la démo, sur vos propres données.',
+    a: "Quelques minutes : créez un compte, importez un fichier CSV et lancez votre premier audit. Sur les paliers payants, un accompagnement à la prise en main est inclus.",
   },
   {
     q: 'Faut-il une équipe data interne ?',
@@ -164,19 +165,19 @@ const FAQ_ITEMS = [
   },
   {
     q: "Qu'est-ce qui distingue AuditIQ d'un outil open source comme Fairlearn ?",
-    a: "Fairlearn est une bibliothèque Python utilisée par des data scientists. AuditIQ est un produit SaaS : pas de code, interface en français, ancrage AI Act, rapports opposables, gestion d'équipe, conservation 5 ans. Voir la page comparatif pour le détail.",
+    a: 'Fairlearn est une bibliothèque Python utilisée par des data scientists. AuditIQ est un produit SaaS : pas de code, interface en français, ancrage AI Act, rapports documentés et traçables, explications en langage clair. Voir la page comparatif pour le détail.',
   },
   {
     q: "Que se passe-t-il si un audit révèle un biais important ?",
-    a: "AuditIQ documente l'écart, propose des recommandations hiérarchisées, et rattache la situation aux articles applicables. La décision de remédiation reste votre prérogative. AuditIQ n'effectue pas de correction automatique du modèle.",
+    a: "AuditIQ documente l'écart, propose des recommandations d'actions, et rattache la situation aux articles applicables. La décision de remédiation reste votre prérogative. AuditIQ n'effectue pas de correction automatique du modèle.",
   },
   {
     q: "Mes données sortent-elles d'Europe ?",
-    a: 'Non. Hébergement OVHcloud Roubaix, traitement et stockage sur sol français. Aucun transfert hors UE.',
+    a: "Le traitement et le stockage sont réalisés en Union européenne (Francfort · Paris). L'interprétation en langage clair s'appuie sur le modèle Gemini par défaut, avec une option souveraine Mistral.",
   },
   {
     q: "Puis-je tester AuditIQ avant de m'engager ?",
-    a: 'Oui. Le palier Découverte est gratuit et permanent : un audit supervisé par mois, jusqu’à trois utilisateurs. Aucune carte bancaire requise.',
+    a: 'Oui. Le palier Découverte est gratuit et permanent : un audit supervisé par mois. Aucune carte bancaire requise.',
   },
 ];
 
@@ -195,9 +196,9 @@ export default function CommentCaMarchePage() {
               Un parcours pensé pour des responsables, pas pour des data scientists.
             </h1>
             <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.3vw,20px)] leading-relaxed text-fg-secondary">
-              Quatre étapes. Trois personae : conformité, RH, dirigeant. Une seule heure entre la
-              première connexion et le rapport d&apos;audit téléchargé. Voici exactement ce qui se
-              passe.
+              Quatre étapes. Trois profils : conformité, RH, dirigeant. Moins de 10 minutes entre
+              la première connexion et le premier rapport d&apos;audit téléchargé. Voici exactement
+              ce qui se passe.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="primary">
@@ -215,14 +216,14 @@ export default function CommentCaMarchePage() {
         <Container>
           <Stage
             num="01"
-            time="10 minutes"
-            title="Importez vos données ou connectez votre IA."
-            lede="CSV, Excel, Google Sheets, ou intégration directe à votre base via clé API. Pour un audit LLM, une simple clé d'API OpenAI, Mistral ou Anthropic suffit. Aucune installation locale."
+            time="2 minutes"
+            title="Importez vos données."
+            lede="Un fichier CSV exporté depuis votre outil suffit. Aucune installation locale, aucun connecteur à configurer."
             items={[
-              "Formats supportés : CSV, XLSX, Parquet, JSON. Jusqu'à 5 millions de lignes en standard.",
-              'Connecteurs natifs : Workday, BambooHR, Snowflake, BigQuery, PostgreSQL.',
-              'Validation automatique : taille, encodage, schéma, valeurs manquantes signalées.',
-              'Données stockées en France, chiffrées, supprimables sur demande sous 72h.',
+              "Format supporté aujourd'hui : CSV (UTF-8). D'autres formats et des connecteurs sont en feuille de route.",
+              "Jusqu'à 5 000 lignes (palier Découverte) ou 1 million de lignes (palier PME).",
+              'Validation automatique : taille, encodage, colonnes, valeurs manquantes signalées.',
+              'Données hébergées en Union européenne, chiffrées, supprimées automatiquement après 30 jours.',
             ]}
             mock={
               <div className="rounded-md border border-dashed border-border-strong bg-surface-2 p-8 text-center text-sm text-fg-secondary">
@@ -242,20 +243,19 @@ export default function CommentCaMarchePage() {
 
           <Stage
             num="02"
-            time="15 minutes"
+            time="3 minutes"
             title="Configurez l'audit en quelques clics."
             lede={
-              "Désignez la variable de décision que votre IA produit (par exemple : « short-listé », « accepté », « score ≥ 60 »). Identifiez les attributs sensibles à surveiller. AuditIQ propose des paramètres par défaut adaptés à votre secteur, ajustables par votre responsable conformité."
+              "Désignez la variable de décision que votre IA produit (par exemple : « short-listé », « accepté », « score ≥ 60 »). Identifiez les attributs sensibles à surveiller. AuditIQ propose des paramètres par défaut, ajustables par votre responsable conformité."
             }
             items={[
               'Suggestions automatiques de colonnes sensibles, validées manuellement.',
-              "Seuils par défaut basés sur les standards académiques et l'article 10 de l'AI Act.",
-              'Configuration sauvegardée — re-applicable sur de futurs audits du même modèle.',
-              "Mode expert pour ajuster les métriques, agrégations et intervalles de confiance.",
+              'Seuils par défaut basés sur les standards reconnus (règle des 4/5), ajustables.',
+              'Paramètres avancés accessibles pour les équipes data (seuils, nombre de clusters).',
             ]}
             mock={
               <div className="flex flex-col gap-3.5">
-                <FieldMock label="Variable cible (target)" value="short_listed" />
+                <FieldMock label="Variable de décision" value="short_listed" />
                 <FieldMock label="Attribut sensible" value="genre" />
                 <FieldMock label="Métriques" value="4 sélectionnées" />
                 <FieldMock label="Seuil règle 4/5" value="0.80" />
@@ -265,14 +265,14 @@ export default function CommentCaMarchePage() {
 
           <Stage
             num="03"
-            time="20–30 minutes"
+            time="Quelques minutes"
             title="Analysez les résultats — comme un dossier qu'on parcourt."
-            lede="Feu tricolore global. Détail par métrique. Visualisation des écarts entre groupes. Chaque résultat est expliqué en deux à trois phrases compréhensibles, avec un lien direct vers le ou les articles de l'AI Act concernés. Votre responsable conformité peut commenter, valider, demander un complément."
+            lede="Feu tricolore global. Détail par métrique. Visualisation des écarts entre groupes. Chaque résultat est expliqué en deux à trois phrases compréhensibles, avec un rattachement aux articles de l'AI Act concernés."
             items={[
-              'Vue executive (1 écran) pour la direction et le CODIR.',
+              'Vue synthétique (1 écran) pour la direction et le CODIR.',
               'Vue détaillée par métrique pour le responsable conformité et le DPO.',
-              'Vue technique avancée pour les équipes data (intervalles, agrégations alternatives).',
-              "Commentaires internes et historique des annotations.",
+              'Détails techniques accessibles pour les équipes data.',
+              'Explication en langage clair générée pour chaque écart.',
             ]}
             mock={
               <>
@@ -299,14 +299,14 @@ export default function CommentCaMarchePage() {
 
           <Stage
             num="04"
-            time="5 minutes"
-            title="Exportez une trace opposable."
-            lede="Deux exports prêts à transmettre : un PDF executive summary pour les décideurs et un Excel structuré conformément à l'annexe IV de l'AI Act, prêt à intégrer dans votre registre des systèmes d'IA. L'historique est conservé cinq ans."
+            time="1 minute"
+            title="Exportez une trace documentée."
+            lede="Deux exports prêts à transmettre : un PDF de synthèse pour les décideurs et un Excel structuré conformément à l'annexe IV de l'AI Act, prêt à intégrer dans votre registre des systèmes d'IA."
             items={[
-              'PDF executive — 1 à 2 pages, signé numériquement, audit ID horodaté.',
-              'Excel réglementaire — 10 à 25 pages selon le module, structure annexe IV.',
-              'API export pour intégration GRC (Governance, Risk, Compliance).',
-              "Archive zippée des données analysées, conservée chiffrée 5 ans.",
+              "Synthèse dirigeants PDF — identifiant d'audit et horodatage.",
+              'Excel réglementaire — structure annexe IV.',
+              "L'historique des rapports reste disponible dans votre espace.",
+              'Les jeux de données sources sont supprimés automatiquement après 30 jours.',
             ]}
             mock={
               <div className="flex flex-col gap-3">
@@ -314,19 +314,13 @@ export default function CommentCaMarchePage() {
                   ext="PDF"
                   tone="fail"
                   name="rapport-A-2026-0314.pdf"
-                  sub="Executive summary · 2 pages"
+                  sub="Synthèse dirigeants · 2 pages"
                 />
                 <FileRow
                   ext="XLSX"
                   tone="pass"
                   name="annexe-IV-2026-0314.xlsx"
-                  sub="Structure AI Act · 14 onglets"
-                />
-                <FileRow
-                  ext="ZIP"
-                  tone="neutral"
-                  name="archive-A-2026-0314.zip"
-                  sub="Données analysées · chiffrée AES-256"
+                  sub="Structure AI Act"
                 />
               </div>
             }
@@ -341,11 +335,11 @@ export default function CommentCaMarchePage() {
             <div className="rounded-2xl border border-border-default bg-surface p-12 text-center">
               <Eyebrow accent>Temps total</Eyebrow>
               <h2 className="mt-3 font-display text-[clamp(48px,5vw,64px)] font-medium tracking-[-0.02em] text-fg">
-                50 minutes
+                Moins de 10 minutes
               </h2>
               <p className="mx-auto mt-4 max-w-[50ch] leading-relaxed text-fg-secondary">
-                Pour un premier audit supervisé classique. Comptez deux heures pour un audit LLM
-                complet sur 400 prompts pairs.
+                Pour un premier audit supervisé classique, de l&apos;import du fichier au rapport
+                téléchargé. Comptez davantage pour interpréter les résultats avec vos équipes.
               </p>
             </div>
           </Reveal>
@@ -386,32 +380,13 @@ export default function CommentCaMarchePage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Prêt à essayer</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Faites votre premier audit sur vos données.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  Notre équipe vous guide pas à pas pendant la démo. Vous repartez avec un rapport.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/inscription">Démarrer en autonomie</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Prêt à essayer"
+        title="Faites votre premier audit sur vos données."
+        body="Notre équipe vous guide pas à pas pendant la démo. Vous repartez avec un rapport."
+        primary={{ label: 'Réserver une démo', href: '/contact' }}
+        secondary={{ label: 'Démarrer en autonomie', href: '/inscription' }}
+      />
     </>
   );
 }

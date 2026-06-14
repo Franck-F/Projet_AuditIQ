@@ -98,9 +98,11 @@ describe('M1 result — ground-truth status row', () => {
     render(<AuditResultPage />);
 
     expect(
-      screen.getByText(/Aucune donnée de vérité-terrain/i),
+      screen.getByText(/Votre fichier ne contient pas le résultat réel des décisions/i),
     ).toBeInTheDocument();
-    // and it must NOT claim to compute a non-existent "calibration" metric
-    expect(screen.queryByText(/calibration/i)).not.toBeInTheDocument();
+    // and it must state that the dependent metrics (calibration incluse) could NOT be computed
+    expect(
+      screen.getByText(/n'ont pas pu être calculées/i),
+    ).toBeInTheDocument();
   });
 });

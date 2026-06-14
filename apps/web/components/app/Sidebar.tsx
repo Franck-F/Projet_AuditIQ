@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { Icons } from '@/components/ui/icons';
 import { useTheme } from '@/components/app/ThemeProvider';
+import { useSidebar } from '@/components/app/SidebarContext';
 import { createClient } from '@/lib/supabase/client';
 
 /** Local-part of an email, capped to fit a 2-letter avatar. */
@@ -77,6 +78,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggle } = useTheme();
+  const { closeNav } = useSidebar();
   const [user, setUser] = React.useState<SessionUser | null>(null);
   // Defer theme-dependent rendering until after hydration to avoid Sun/Moon
   // mismatch (server can't know the localStorage value).
@@ -131,16 +133,16 @@ export function Sidebar() {
   const initials = user ? initialsFrom(user.name ?? user.email) : '··';
 
   return (
-    <aside className="sidebar" aria-label="Navigation principale">
+    <aside className="sidebar" id="app-sidebar" aria-label="Navigation principale">
       {/* Brand */}
       <div className="sb-brand">
-        <Link href="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+        <Link href="/app" onClick={closeNav} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
           <div className="sb-logo">
             <Icons.shield size={17} />
           </div>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em' }}>AuditIQ</div>
-            <div className="eyebrow" style={{ fontSize: 9.5, letterSpacing: '0.14em' }}>FAIRNESS PLATFORM</div>
+            <div className="eyebrow" style={{ fontSize: 9.5, letterSpacing: '0.14em' }}>AUDIT DE FAIRNESS</div>
           </div>
         </Link>
       </div>
@@ -161,6 +163,7 @@ export function Sidebar() {
             <Link
               key={entry.key}
               href={entry.href}
+              onClick={closeNav}
               className={`sb-item${active ? ' active' : ''}${entry.accent ? ' sb-item--accent' : ''}`}
               aria-current={active ? 'page' : undefined}
             >

@@ -7,9 +7,10 @@ import { Icons } from '@/components/ui/icons';
 
 /* ============================================================================
    Notifications popover anchored to the topbar bell button.
-   - Sample/mock items until the alerts backend is wired (no GET /api/v1/alerts
-     endpoint yet — see CLAUDE.md §6.3 + §5.1 alerts table).
-   - Click outside / ESC closes. Bell shows a dot when there are unread items.
+   - Aucune fausse donnée : tant que le backend des alertes n'est pas branché
+     (pas de GET /api/v1/alerts — voir CLAUDE.md §6.3 + §5.1 alerts table),
+     la liste reste vide et aucune pastille n'est affichée.
+   - Click outside / ESC closes.
    ============================================================================ */
 
 type Severity = 'info' | 'warn' | 'fail' | 'pass';
@@ -21,35 +22,6 @@ type Notification = {
   href?: string;
   receivedAt: string; // ISO timestamp
 };
-
-// Visual sample — once the backend exposes /api/v1/alerts, swap this for a
-// useQuery hook + websocket subscription.
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'n-1',
-    severity: 'fail',
-    title: 'Audit non conforme',
-    body: 'Scoring crédit Q2 (AUD-2418) : biais significatif détecté sur le genre.',
-    href: '/app/audits/AUD-2418',
-    receivedAt: '2026-06-05T07:42:00Z',
-  },
-  {
-    id: 'n-2',
-    severity: 'warn',
-    title: 'Audit sous vigilance',
-    body: 'Tri CV Recrutement tech (AUD-2417) : écart âge > 0.10.',
-    href: '/app/audits/AUD-2417',
-    receivedAt: '2026-06-04T17:30:00Z',
-  },
-  {
-    id: 'n-3',
-    severity: 'info',
-    title: 'Synthèse trimestrielle disponible',
-    body: 'Le rapport RPT-Q2 (28 p.) est prêt à signer.',
-    href: '/app/rapports',
-    receivedAt: '2026-06-03T09:15:00Z',
-  },
-];
 
 function severityColor(s: Severity): string {
   return {
@@ -75,7 +47,8 @@ function relativeFromNow(iso: string): string {
 export function NotificationsPopover() {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const items = MOCK_NOTIFICATIONS;
+  // Branché sur une liste vide tant que l'endpoint d'alertes n'existe pas.
+  const items: Notification[] = [];
   const unread = items.length;
 
   // Click outside closes
@@ -261,26 +234,11 @@ export function NotificationsPopover() {
               padding: 12,
               borderTop: '1px solid var(--border-subtle)',
               display: 'flex',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               alignItems: 'center',
               background: 'var(--surface-2)',
             }}
           >
-            <button
-              type="button"
-              className="btn-ghost"
-              style={{
-                fontSize: 12.5,
-                color: 'var(--fg-secondary)',
-                padding: '6px 10px',
-                borderRadius: 6,
-              }}
-              onClick={() => {
-                // Placeholder until backend mark-as-read endpoint exists.
-              }}
-            >
-              Tout marquer comme lu
-            </button>
             <Link
               href="/app/parametres?tab=notifications"
               onClick={() => setOpen(false)}

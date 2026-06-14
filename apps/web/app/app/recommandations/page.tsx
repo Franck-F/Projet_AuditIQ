@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Sparkles, TrendingUp, Sliders } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
@@ -23,17 +23,17 @@ const PRIORITY_MAP: Record<
 > = {
   high: {
     status: 'fail',
-    label: 'Correctif prioritaire',
+    label: 'Priorité 1',
     numColor: 'var(--status-fail)',
   },
   medium: {
     status: 'warn',
-    label: 'Atténuation',
+    label: 'Priorité 2',
     numColor: 'var(--status-warn)',
   },
   low: {
     status: 'info',
-    label: 'Gouvernance',
+    label: 'Priorité 3',
     numColor: 'var(--status-info)',
   },
 };
@@ -88,58 +88,11 @@ function RecommendationCard({ reco, index }: RecommendationCardProps) {
               color: 'var(--fg-secondary)',
               lineHeight: 1.55,
               maxWidth: 640,
-              marginBottom: 12,
             }}
           >
             {reco.detail}
           </p>
-          {/* Chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 12px',
-                borderRadius: 99,
-                border: '1px solid var(--border-subtle)',
-                background: 'var(--surface-2)',
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--fg-secondary)',
-              }}
-            >
-              <TrendingUp
-                size={12}
-                style={{ color: 'var(--status-pass)' }}
-              />
-              Impact · Variable
-            </span>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 12px',
-                borderRadius: 99,
-                border: '1px solid var(--border-subtle)',
-                background: 'var(--surface-2)',
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--fg-secondary)',
-              }}
-            >
-              <Sliders size={12} />
-              Effort · —
-            </span>
-          </div>
         </div>
-
-        {/* Appliquer button */}
-        <Button variant="outline" size="sm">
-          Appliquer
-          <ArrowRight size={13} />
-        </Button>
       </div>
     </Card>
   );
@@ -147,7 +100,7 @@ function RecommendationCard({ reco, index }: RecommendationCardProps) {
 
 /* ─── Audit-specific reco list ──────────────────────────────────────────── */
 function AuditRecoList({ auditId }: { auditId: string }) {
-  const { data: audit, isLoading, isError } = useAudit(auditId);
+  const { data: audit, isLoading, isError, refetch } = useAudit(auditId);
 
   if (isLoading) {
     return (
@@ -162,18 +115,19 @@ function AuditRecoList({ auditId }: { auditId: string }) {
 
   if (isError || !audit) {
     return (
-      <p
+      <div
         role="alert"
-        className="rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail"
+        className="flex flex-col items-start gap-3 rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail"
       >
-        Impossible de charger l&apos;audit. Vérifiez que l&apos;API tourne
-        (port 8000).
-      </p>
+        <p>Connexion au serveur impossible. Réessayez dans quelques instants.</p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Réessayer
+        </Button>
+      </div>
     );
   }
 
   const recommendations = audit.interpretation?.recommendations ?? [];
-  const riskScore = audit.metrics?.risk_score ?? null;
 
   return (
     <>
@@ -195,7 +149,7 @@ function AuditRecoList({ auditId }: { auditId: string }) {
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 style={{ fontSize: 15.5, fontWeight: 500, marginBottom: 4 }}>
-            Plan de remédiation — {audit.title}
+            Plan d&apos;action — {audit.title}
           </h2>
           {recommendations.length > 0 && (
             <p
@@ -205,12 +159,8 @@ function AuditRecoList({ auditId }: { auditId: string }) {
                 lineHeight: 1.5,
               }}
             >
-              En appliquant les premières actions, l&apos;audit pourrait
-              repasser{' '}
-              <strong style={{ color: 'var(--status-pass)', fontWeight: 500 }}>
-                conforme
-              </strong>
-              .
+              Ces actions visent à réduire les écarts détectés lors du prochain
+              audit.
             </p>
           )}
           {recommendations.length === 0 && (
@@ -224,39 +174,6 @@ function AuditRecoList({ auditId }: { auditId: string }) {
             </p>
           )}
         </div>
-        {/* Score projection */}
-        {riskScore != null && (
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'var(--fg-muted)',
-                marginBottom: 4,
-              }}
-            >
-              Projection
-            </div>
-            <div
-              className="tnum"
-              style={{
-                fontSize: 26,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span style={{ color: 'var(--status-fail)' }}>{riskScore}</span>
-              <ArrowRight size={16} style={{ display: 'inline' }} />
-              <span style={{ color: 'var(--status-pass)' }}>
-                {Math.min(100, riskScore + 27)}
-              </span>
-            </div>
-          </div>
-        )}
       </Card>
 
       {/* Reco cards */}
@@ -275,7 +192,7 @@ function AuditRecoList({ auditId }: { auditId: string }) {
 
 /* ─── Dashboard-level reco list (no auditId) ─────────────────────────────── */
 function DashboardRecoList() {
-  const { data, isLoading, isError } = useDashboard();
+  const { data, isLoading, isError, refetch } = useDashboard();
 
   if (isLoading) {
     return (
@@ -290,13 +207,15 @@ function DashboardRecoList() {
 
   if (isError || !data) {
     return (
-      <p
+      <div
         role="alert"
-        className="rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail"
+        className="flex flex-col items-start gap-3 rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail"
       >
-        Impossible de charger les audits. Vérifiez que l&apos;API tourne (port
-        8000).
-      </p>
+        <p>Connexion au serveur impossible. Réessayez dans quelques instants.</p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Réessayer
+        </Button>
+      </div>
     );
   }
 

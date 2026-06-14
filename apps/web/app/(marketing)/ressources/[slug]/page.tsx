@@ -2,8 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Reveal } from '@/components/layout/Reveal';
-import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 
 export const metadata: Metadata = {
   title: "AI Act pour PME : ce qui change le 2 août 2026",
@@ -433,32 +433,13 @@ export default async function ArticlePage({
         </Container>
       </section>
 
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Prochaine étape</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Lancez votre audit AI Act sur vos données.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  30 minutes de démo guidée pour identifier vos systèmes à haut risque et lancer un
-                  premier audit pilote.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/ressources">Voir tous les articles</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Prochaine étape"
+        title="Lancez votre audit AI Act sur vos données."
+        body="30 minutes de démo guidée pour identifier vos systèmes à haut risque et lancer un premier audit pilote."
+        primary={{ label: 'Réserver une démo', href: '/contact' }}
+        secondary={{ label: 'Voir tous les articles', href: '/ressources' }}
+      />
     </>
   );
 }

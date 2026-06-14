@@ -63,7 +63,7 @@ describe('RapportsPage', () => {
     expect(screen.getByText('Rapports générés')).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
 
-    const signedCard = screen.getByText('Signés & opposables').closest('div');
+    const signedCard = screen.getByText('Horodatés & archivés').closest('div');
     expect(signedCard).toBeInTheDocument();
     expect(within(signedCard!).getByText('2')).toBeInTheDocument();
 
@@ -122,7 +122,7 @@ describe('RapportsPage', () => {
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBe(4);
 
-    const signedLabels = screen.getAllByText('Signé');
+    const signedLabels = screen.getAllByText('Généré');
     expect(signedLabels.length).toBe(2);
 
     const draftLabels = screen.getAllByText('Brouillon');

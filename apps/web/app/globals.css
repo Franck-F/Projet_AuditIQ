@@ -255,6 +255,30 @@ p, ul, ol { margin: 0; }
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
   background: var(--surface); border-right: 1px solid var(--border-subtle);
 }
+
+/* Mobile off-canvas drawer (default desktop: above-the-fold sticky column).
+   Below 768px the grid collapses to a single full-width column and the
+   sidebar slides in over the content. */
+.shell-scrim { display: none; }
+.topbar-burger { display: none; }
+
+@media (max-width: 768px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60; width: min(86vw, 300px);
+    transform: translateX(-100%); transition: transform .24s var(--ease-out);
+    box-shadow: var(--shadow-lg);
+  }
+  .shell-nav-open .sidebar { transform: none; }
+  .shell-scrim {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgba(0,0,0,0.4); border: 0;
+  }
+  .topbar-burger { display: grid; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
+}
 .sb-brand { display: flex; align-items: center; gap: 11px; padding: 18px 18px 16px; cursor: pointer; }
 .sb-logo {
   width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0;
@@ -325,16 +349,29 @@ p, ul, ol { margin: 0; }
   align-items: center;
 }
 .topbar-inner {
-  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
   width: 100%;
   max-width: min(var(--maxw-pct), 1240px);
   margin-inline: auto;
+}
+/* Tighter app-shell gutters on phones so page content isn't a single column
+   of one-word lines (the old mobile bug). */
+@media (max-width: 768px) {
+  :root { --app-pad-x: 18px; }
+  .topbar { min-height: 60px; }
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .searchbox {
   display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 11px;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
   color: var(--fg-muted); width: 280px; transition: border-color .14s, background .14s;
+}
+/* Reclaim space below ~1080px so the page title never collapses under the
+   search box (intermediate-width bug); hide it entirely on phones. */
+@media (max-width: 1080px) { .searchbox { width: 200px; } }
+@media (max-width: 860px) {
+  .searchbox { display: none; }
+  .searchbox-kbd { display: none; }
 }
 .searchbox:focus-within { border-color: var(--accent-border); background: var(--surface); }
 .searchbox input { flex: 1; background: none; border: 0; outline: none; color: var(--fg); font-size: 13.5px; min-width: 0; }

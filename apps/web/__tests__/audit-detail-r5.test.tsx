@@ -220,7 +220,7 @@ describe('R5 M1 — RatioBar in Groupes tab', () => {
 describe('R5 M2 — ClusterMap in Clusters tab', () => {
   it('renders the Clusters tab and shows ClusterMap (role=img SVG)', async () => {
     setup(M2_FIXTURE);
-    await clickTab('Clusters');
+    await clickTab('Groupes détectés');
 
     // ClusterMap renders an SVG with role="img"
     const clusterMap = screen.getByRole('img', { name: /carte de clusters/i });
@@ -229,7 +229,7 @@ describe('R5 M2 — ClusterMap in Clusters tab', () => {
 
   it('ClusterMap aria-label mentions all 5 clusters', async () => {
     setup(M2_FIXTURE);
-    await clickTab('Clusters');
+    await clickTab('Groupes détectés');
 
     const map = screen.getByRole('img', { name: /carte de clusters/i });
     const label = map.getAttribute('aria-label') ?? '';
@@ -241,16 +241,16 @@ describe('R5 M2 — ClusterMap in Clusters tab', () => {
 
   it('shows the feature rank list card', async () => {
     setup(M2_FIXTURE);
-    await clickTab('Clusters');
+    await clickTab('Groupes détectés');
 
-    expect(screen.getByText(/classement des clusters par risque/i)).toBeInTheDocument();
+    expect(screen.getByText(/classement des groupes par risque/i)).toBeInTheDocument();
   });
 
   it('shows instruction to click a cluster when none selected', async () => {
     setup(M2_FIXTURE);
-    await clickTab('Clusters');
+    await clickTab('Groupes détectés');
 
-    expect(screen.getByText(/cliquez sur un cluster/i)).toBeInTheDocument();
+    expect(screen.getByText(/cliquez sur un groupe/i)).toBeInTheDocument();
   });
 });
 

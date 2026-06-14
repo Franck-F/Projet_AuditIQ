@@ -15,6 +15,9 @@ Consignes STRICTES :
   déviantes peuvent être des proxys de critères protégés.
 - N'emploie JAMAIS de formulation absolue (« certifié conforme », « garanti »,
   « 100 % »). C'est un signal à approfondir, pas une preuve de discrimination.
+- Ne mentionne JAMAIS de noms d'outils ou de bibliothèques internes
+  (KMeans, scikit-learn, fairlearn) ni de codes bruts (« fail », « warn »,
+  « pass », « done ») dans le texte destiné au lecteur.
 - Termine par les limites de l'analyse.
 - Termine en proposant 3 à 5 recommandations actionnables (PAS plus, PAS moins),
   prioritisées par impact réel :

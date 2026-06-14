@@ -111,8 +111,9 @@ def _marginal_audit(
             )
         if n < config.min_group_warn:
             warnings.append(
-                f"Effectif faible (n={n} < {config.min_group_warn}) pour le "
-                f"groupe « {g} » — résultat peu concluant."
+                f"Effectif faible : groupe « {g} » "
+                f"(n={n} < {config.min_group_warn}) — résultats à "
+                f"interpréter avec prudence."
             )
         counts[g] = n
         favs[g] = int((mask & (dc_str == fav)).sum())

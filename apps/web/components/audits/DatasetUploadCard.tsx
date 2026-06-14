@@ -37,7 +37,7 @@ const SAMPLES: SampleDescriptor[] = [
     filename: 'recrutement-rh.csv',
     title: 'Recrutement RH',
     description:
-      'Décisions d\'embauche × genre (hommes 75 % / femmes 30 %). Disparate Impact ≈ 0.40 — règle des 4/5 violée.',
+      'Les femmes sont embauchées 2,5 fois moins souvent que les hommes (30 % contre 75 %) — bien en dessous du seuil de référence de 80 % (règle des 4/5).',
     module: 'M1',
     rows: 80,
     hint: 'Attribut protégé : genre · Décision : embauche · Valeur favorable : oui',
@@ -48,7 +48,7 @@ const SAMPLES: SampleDescriptor[] = [
     filename: 'credit-bancaire.csv',
     title: 'Crédit bancaire',
     description:
-      'Accord crédit × origine déclarée (françaises 67.5 % / étrangères 37.5 %). DI ≈ 0.56 — vigilance.',
+      'Les personnes d\'origine étrangère obtiennent un crédit presque deux fois moins souvent (37,5 % contre 67,5 %) — situation de vigilance.',
     module: 'M1',
     rows: 80,
     hint: 'Attribut protégé : origine · Décision : accord_credit · Valeur favorable : oui',
@@ -59,7 +59,7 @@ const SAMPLES: SampleDescriptor[] = [
     filename: 'employes-clustering.csv',
     title: 'Décisions employés',
     description:
-      'Aucune donnée sensible déclarée. KMeans + χ² détecte 4 clusters avec des taux de décision très contrastés (0 % vs 100 %).',
+      'Aucune donnée sensible déclarée. La détection automatique repère 4 groupes aux taux de décision très contrastés (0 % contre 100 %).',
     module: 'M2',
     rows: 48,
     hint: 'Colonne de décision : decision · Valeur favorable : oui',
@@ -70,7 +70,7 @@ const SAMPLES: SampleDescriptor[] = [
     filename: 'compensation-equite.csv',
     title: 'Équité de rémunération',
     description:
-      'Promotions × (expérience, niveau, formation, salaire). Anomalie : un cluster formation=doctorat sur-promu vs cluster bts identique en expérience.',
+      'Promotions selon expérience, niveau, formation et salaire. Anomalie : à expérience égale, les profils « doctorat » sont promus beaucoup plus souvent que les profils « BTS ».',
     module: 'M2',
     rows: 48,
     hint: 'Colonne de décision : promotion · Valeur favorable : oui',
@@ -92,7 +92,7 @@ const EXTERNAL_CONNECTORS: ExternalConnectorDescriptor[] = [
   },
   {
     name: 'MySQL / MariaDB',
-    description: 'Compatible toutes versions ≥ 5.7. Read-only utilisateur dédié recommandé.',
+    description: 'Compatible toutes versions ≥ 5.7. Utilisateur dédié en lecture seule recommandé.',
     icon: Database,
   },
   {
@@ -240,9 +240,8 @@ export function DatasetUploadCard({ module, busy, onSelected }: DatasetUploadCar
             />
           </div>
           <p className="mt-4 text-xs text-fg-muted">
-            Format CSV (UTF-8 recommandé). Le fichier est stocké de façon sécurisée et
-            supprimé après la durée de rétention de votre organisation (30 jours par défaut).
-            Taille maximum 10 Mo.
+            Format CSV (UTF-8 recommandé). Le fichier est stocké de façon chiffrée et
+            supprimé automatiquement après 30 jours. Taille maximum 10 Mo.
           </p>
         </div>
       )}

@@ -140,8 +140,10 @@ describe('RecommandationsPage — R3 refonte', () => {
 
       render(<RecommandationsPage />, { wrapper: Wrapper });
 
-      // Check hero card
-      expect(screen.getByText(/Plan de remédiation.*Scoring crédit Q2/i)).toBeInTheDocument();
+      // Check hero card — "Plan d'action — {titre}"
+      expect(screen.getByText(/Plan d'action/i)).toHaveTextContent(
+        "Plan d'action — Scoring crédit Q2",
+      );
 
       // Check 3 recommendation titles
       expect(screen.getByText('Recalibrer le seuil de décision par groupe')).toBeInTheDocument();
@@ -149,9 +151,9 @@ describe('RecommandationsPage — R3 refonte', () => {
       expect(screen.getByText('Documenter la justification métier du seuil')).toBeInTheDocument();
 
       // Check priority badges
-      expect(screen.getByText('Correctif prioritaire')).toBeInTheDocument();
-      expect(screen.getByText('Atténuation')).toBeInTheDocument();
-      expect(screen.getByText('Gouvernance')).toBeInTheDocument();
+      expect(screen.getByText('Priorité 1')).toBeInTheDocument();
+      expect(screen.getByText('Priorité 2')).toBeInTheDocument();
+      expect(screen.getByText('Priorité 3')).toBeInTheDocument();
 
       // Check numbered cards (1, 2, 3)
       const numberDivs = screen.getAllByText(/^[123]$/);

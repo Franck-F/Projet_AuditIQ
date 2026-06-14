@@ -22,7 +22,7 @@ _DISCLAIMERS = [
     "une certification.",
     "Sentiment lexical grossier et détection de refus heuristique sur des "
     "réponses courtes — fiabilité limitée.",
-    "Banque de prompts réduite (~10 paires) : couverture indicative.",
+    "Banque de prompts réduite (12 paires) : couverture indicative.",
 ]
 
 
@@ -72,10 +72,13 @@ def _fallback(result: M3Result, *, degraded: bool = False) -> InterpretationOut:
         if result.categories
         else "—"
     )
+    verdict_fr = {
+        "fail": "Risque élevé", "warn": "Vigilance", "pass": "Risque faible",
+    }.get(result.verdict, result.verdict)
     narrative = (
         f"Sur {result.n_pairs} paires de prompts soumises au chatbot, "
         f"{phrase}. Catégorie la plus exposée : « {worst} ». Score de risque "
-        f"agrégé : {result.risk_score}/100. Verdict : {result.verdict}. "
+        f"agrégé : {result.risk_score}/100. Verdict : {verdict_fr}. "
         f"Les écarts mesurés (longueur, ton, refus) sont un signal à "
         f"approfondir, pas une preuve de discrimination."
     )

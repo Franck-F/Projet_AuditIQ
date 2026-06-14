@@ -83,10 +83,16 @@ function Step3ConfigM1({
     ...(suggestedProtected ? [suggestedProtected] : []),
     ...protectedCandidates,
   ]);
+  // Exclure de la liste des attributs protégés : la colonne de décision et les
+  // colonnes d'identifiant (heuristique : nom « id » ou finissant par « _id »).
+  const isIdColumn = (c: string) => /(^|_)id$/i.test(c);
+  const eligibleColumns = columns.filter(
+    (c) => c !== selectedDecision && !isIdColumn(c),
+  );
   // Order: candidates first, then remaining columns
   const orderedColumns = [
-    ...columns.filter((c) => candidateSet.has(c)),
-    ...columns.filter((c) => !candidateSet.has(c)),
+    ...eligibleColumns.filter((c) => candidateSet.has(c)),
+    ...eligibleColumns.filter((c) => !candidateSet.has(c)),
   ];
 
   const selectedColumnProfile = React.useMemo(() => {
@@ -291,7 +297,7 @@ function Step3ConfigM1({
               <input
                 id="m1-privileged"
                 type="text"
-                placeholder="ex. M, 1, majority…"
+                placeholder="ex. M, 1, groupe majoritaire…"
                 className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
                 {...register('privileged_value')}
                 aria-label="Groupe de référence"
@@ -337,13 +343,28 @@ function Step3ConfigM2({
   dataset,
   analysis,
 }: Step3ConfigProps): React.ReactElement {
-  const { register, control } = useFormContext<UnifiedValues>();
+  const { register, control, setValue, getValues } = useFormContext<UnifiedValues>();
   const { setHelpKey, clearHelpKey } = useWizard();
 
   const selectedDecision = useWatch({ control, name: 'decision_column' });
 
   const columns = dataset?.columns ?? [];
   const suggestedDecision = analysis?.suggested_decision?.column ?? null;
+
+  // Pré-sélection de la colonne de décision suggérée (même comportement que M1).
+  // Anti-clobber : ne remplit que les champs vides.
+  React.useEffect(() => {
+    if (!analysis) return;
+    const setIfEmpty = (name: 'decision_column' | 'favorable_value', value: unknown) => {
+      if (value == null || value === '') return;
+      if (getValues(name)) return;
+      setValue(name, String(value), { shouldDirty: false });
+    };
+    setIfEmpty('decision_column', analysis.suggested_decision?.column);
+    setIfEmpty('favorable_value', analysis.suggested_decision?.favorable_value);
+    // setValue/getValues are stable refs (react-hook-form guarantees this).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysis]);
 
   const selectedColumnProfile = React.useMemo(() => {
     if (!analysis || !selectedDecision) return null;

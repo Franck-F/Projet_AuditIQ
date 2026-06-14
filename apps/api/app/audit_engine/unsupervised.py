@@ -132,7 +132,7 @@ def run_m2(df: pd.DataFrame, config: M2Config) -> M2Result:
     for c in range(config.k):
         if 0 < sizes[c] < config.min_cluster_warn:
             warnings.append(
-                f"Cluster {c} de faible effectif (n={sizes[c]} < "
+                f"Effectif faible : cluster {c} (n={sizes[c]} < "
                 f"{config.min_cluster_warn}) — caractérisation peu concluante."
             )
 

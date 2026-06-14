@@ -5,40 +5,17 @@ import { Container } from '@/components/layout/Container';
 import { Reveal } from '@/components/layout/Reveal';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 
 export const metadata: Metadata = {
   title: 'Tarifs',
   description:
-    "Tarification AuditIQ adaptée à la maturité de votre PME. Quatre paliers, du gratuit à l'enterprise. Engagement annuel sans pénalité.",
+    'Tarification AuditIQ adaptée à la maturité de votre PME. Quatre paliers, du gratuit au sur-mesure. Sans engagement de durée.',
 };
 
 /* ============================================================================
    Page-local components
    ============================================================================ */
-
-function BillingToggle() {
-  return (
-    <div className="mt-8 inline-flex gap-0.5 rounded-full border border-border-default bg-surface p-1">
-      <button
-        type="button"
-        className="rounded-full bg-surface-3 px-4 py-2 text-sm font-medium text-fg"
-        aria-pressed="true"
-      >
-        Mensuel
-      </button>
-      <button
-        type="button"
-        className="rounded-full px-4 py-2 text-sm font-medium text-fg-secondary transition-colors hover:text-fg"
-        aria-pressed="false"
-      >
-        Annuel
-        <span className="ml-1.5 rounded-[4px] bg-accent-soft px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-accent">
-          −15 %
-        </span>
-      </button>
-    </div>
-  );
-}
 
 function PriceCard({
   name,
@@ -115,74 +92,58 @@ const MATRIX_GROUPS: {
     rows: [
       {
         name: 'Audit Module 1 (supervisé)',
-        desc: 'Métriques fairness canoniques',
+        desc: 'Disparate Impact, parités, analyse intersectionnelle',
         values: ['1 / mois', 'Illimité', 'Illimité', 'Illimité'],
       },
       {
         name: 'Audit Module 2 (non supervisé)',
-        desc: 'Clustering, proxies',
+        desc: 'Clustering k-means + test du χ²',
         values: ['—', '✓', '✓', '✓'],
       },
       {
         name: 'Audit Module 3 (LLM)',
-        desc: 'Prompts pairs, scoring',
-        values: ['—', '1 000 prompts/mois', 'Illimité', 'Illimité'],
+        desc: 'Banque versionnée de paires de prompts FR/EN',
+        values: ['—', '✓', '✓', '✓'],
       },
-      { name: 'Banque de prompts personnalisée', values: ['—', '—', '✓', '✓'] },
-      { name: 'Taille de dataset max', values: ['5 000 lignes', '1M lignes', 'Illimité', 'Illimité'] },
+      { name: 'Taille de dataset max', desc: 'Fichier CSV', values: ['5 000 lignes', '1M lignes', 'Illimité', 'Illimité'] },
     ],
   },
   {
     group: 'Rapports & documentation',
     rows: [
-      { name: 'Rapport PDF executive', values: ['Basique', '✓', '✓', '✓'] },
-      { name: 'Rapport Excel Annexe IV', values: ['—', '✓', '✓', '✓'] },
-      { name: 'Comparaison entre audits', values: ['—', '✓', '✓', '✓'] },
-      {
-        name: 'Personnalisation du rapport',
-        desc: 'Logo, charte, sections',
-        values: ['—', '—', '✓', '✓'],
-      },
-      { name: 'Conservation des audits', values: ['3 mois', '5 ans', '5 ans', 'Illimitée'] },
+      { name: 'Rapport PDF (synthèse dirigeants)', values: ['✓', '✓', '✓', '✓'] },
+      { name: 'Rapport Excel structuré Annexe IV', values: ['—', '✓', '✓', '✓'] },
+      { name: 'Explication en langage clair (LLM)', desc: 'Gemini par défaut · option Mistral', values: ['✓', '✓', '✓', '✓'] },
+      { name: 'Historique des audits dans votre espace', values: ['✓', '✓', '✓', '✓'] },
     ],
   },
   {
-    group: 'Équipe & gouvernance',
+    group: 'Données & sécurité',
     rows: [
-      { name: 'Utilisateurs inclus', values: ['3', '15', '50', 'Illimité'] },
-      {
-        name: 'Permissions par rôle',
-        desc: 'Admin · Auditeur · Lecteur',
-        values: ['—', '✓', '✓', '✓'],
-      },
-      {
-        name: "Journal d'activité",
-        values: ['30 jours', '1 an', '5 ans', 'Illimité'],
-      },
-      { name: 'Multi-entités / multi-pays', values: ['—', '—', '✓', '✓'] },
-    ],
-  },
-  {
-    group: 'Sécurité',
-    rows: [
-      { name: 'Hébergement', values: ['OVH FR', 'OVH FR', 'OVH FR + DRP', 'SecNumCloud dédié'] },
-      { name: 'SSO SAML 2.0 / OIDC', values: ['—', '—', '✓', '✓'] },
-      { name: 'BYOK (clé client)', values: ['—', '—', '—', '✓'] },
-      {
-        name: 'Audit log inviolable horodaté',
-        values: ['—', '—', 'Standard', 'Notarié'],
-      },
+      { name: 'Hébergement', values: ['UE', 'UE', 'UE', 'UE (option dédiée à l’étude)'] },
+      { name: 'Suppression automatique des datasets', values: ['30 jours', '30 jours', '30 jours', '30 jours'] },
+      { name: 'Chiffrement en transit et au repos', values: ['✓', '✓', '✓', '✓'] },
     ],
   },
   {
     group: 'Support & accompagnement',
     rows: [
-      { name: 'Support', values: ['Communautaire', '24h ouvrées', '4h', 'SLA dédié'] },
-      { name: 'Onboarding accompagné', values: ['—', '4h', '1 jour', '2 jours + formation'] },
-      { name: 'Consultant AI Act dédié', values: ['—', '—', '4h/mois', 'Dédié'] },
-      { name: "API d'intégration GRC", values: ['—', '—', '✓', '✓'] },
+      { name: 'Support', values: ['E-mail', '24h ouvrées', 'Prioritaire', 'Personnalisé'] },
+      { name: 'Onboarding accompagné', values: ['—', '✓', '✓', '✓ + formation'] },
+      { name: 'Accompagnement expert AI Act', values: ['—', '—', '✓', '✓'] },
     ],
   },
+];
+
+// Fonctionnalités annoncées mais pas encore livrées — affichées honnêtement.
+const ROADMAP_ITEMS = [
+  'Connecteurs de données (au-delà du CSV : XLSX, entrepôts de données)',
+  'Rôles et permissions multiples (administrateur, auditeur, lecteur)',
+  'SSO (SAML / OIDC) et authentification multifacteur (MFA)',
+  'API publique REST',
+  'Banque de prompts personnalisable',
+  'Comparaison entre audits et alertes de dérive',
+  'Personnalisation des rapports (logo, charte)',
 ];
 
 const FAQ_ITEMS = [
@@ -192,27 +153,23 @@ const FAQ_ITEMS = [
   },
   {
     q: "Y a-t-il une période d'essai sur les paliers payants ?",
-    a: "Oui — 14 jours d'essai gratuit sur le palier PME, sans engagement et sans carte bancaire. Vous accédez à toutes les fonctionnalités, sur vos propres données.",
+    a: "Le palier Découverte, gratuit et permanent, sert d'essai : vous testez le produit sur vos propres données, sans carte bancaire. Pour évaluer les modules 2 et 3 avant de vous engager, contactez-nous pour une démonstration.",
   },
   {
     q: 'Comment se passe la facturation ?',
-    a: "Facturation mensuelle ou annuelle par carte bancaire (SEPA disponible pour l'annuel). Les factures sont émises automatiquement au 1ᵉʳ de chaque mois et envoyées par email. L'annuel offre 15 % de remise sur l'année.",
+    a: "Les paliers payants sont mis en place avec vous, sur devis et facture — il n'y a pas encore de paiement en ligne automatisé. Facturation mensuelle, sans durée minimale d'engagement.",
   },
   {
     q: "Puis-je changer de palier en cours d'abonnement ?",
-    a: "Oui, sans pénalité. Une montée de palier est immédiate avec un prorata calculé à la journée. Une descente de palier prend effet à la fin de la période en cours.",
+    a: "Oui, sans pénalité. Une montée de palier est immédiate. Une descente de palier prend effet à la fin de la période en cours.",
   },
   {
     q: 'Existe-t-il des tarifs spécifiques associations / éducation / secteur public ?',
-    a: "Oui. Tarifs réduits de 40 % pour les associations reconnues d'intérêt général, les laboratoires de recherche publique et les établissements d'enseignement supérieur. Contactez-nous avec un justificatif officiel.",
-  },
-  {
-    q: 'Que se passe-t-il si je dépasse le quota de prompts LLM ?',
-    a: 'Vous recevez une alerte à 80 % et 100 % du quota. Au-delà, deux options : passer au palier supérieur ou acheter un pack additionnel de 1 000 prompts à 80 € HT, valable 90 jours.',
+    a: "Oui, des conditions adaptées sont possibles pour les associations reconnues d'intérêt général, les laboratoires de recherche publique et les établissements d'enseignement. Contactez-nous avec un justificatif officiel.",
   },
   {
     q: 'Acceptez-vous les bons de commande publics ?',
-    a: "Oui sur les paliers Entreprise et Souverain. Notre direction financière émet des devis sur 30 ou 60 jours et accepte les bons de commande émis par les collectivités, hôpitaux et établissements publics.",
+    a: 'Oui, sur devis, pour les paliers Entreprise et Souverain. Contactez-nous pour les modalités.',
   },
 ];
 
@@ -243,9 +200,8 @@ export default function TarifsPage() {
             <p className="mt-5 max-w-[60ch] text-[clamp(18px,1.3vw,20px)] leading-relaxed text-fg-secondary">
               Démarrez gratuitement, sans carte bancaire. Passez en payant le jour où vos audits
               deviennent récurrents. Pas d&apos;engagement caché, pas de pénalité de sortie. Tarifs
-              HT, applicables aux organisations établies en Europe.
+              HT mensuels, applicables aux organisations établies en Europe.
             </p>
-            <BillingToggle />
           </Reveal>
         </Container>
       </header>
@@ -263,10 +219,10 @@ export default function TarifsPage() {
                 bullets={[
                   '1 audit Module 1 / mois',
                   "Dataset jusqu'à 5 000 lignes",
-                  'Rapport PDF basique',
-                  '3 utilisateurs',
-                  'Support communautaire',
-                  'Conservation 3 mois',
+                  'Rapport PDF',
+                  '1 compte propriétaire',
+                  'Support par e-mail',
+                  'Datasets supprimés après 30 jours',
                 ]}
                 cta="Créer un compte"
                 ctaHref="/inscription"
@@ -278,19 +234,17 @@ export default function TarifsPage() {
                 badge="Recommandé PME"
                 name="PME"
                 tagline="Pour une routine de conformité."
-                price="490 €"
-                period="/ mois"
+                price="Sur mesure"
                 bullets={[
                   'Audits illimités · 3 modules',
                   "Dataset jusqu'à 1M lignes",
-                  'Module LLM · 1000 prompts/mois',
+                  'Module LLM (banque de prompts FR/EN)',
                   'Rapports PDF & Excel structurés AI Act',
-                  '15 utilisateurs · permissions par rôle',
-                  "Historique 5 ans · comparaison d'audits",
+                  'Historique des audits dans votre espace',
                   'Support sous 24h ouvrées',
-                  'Onboarding accompagné 4h',
+                  'Onboarding accompagné',
                 ]}
-                cta="Demander une démo"
+                cta="Programmer une démo"
                 ctaHref="/contact"
               />
             </Reveal>
@@ -298,16 +252,13 @@ export default function TarifsPage() {
               <PriceCard
                 name="Entreprise"
                 tagline="Multi-entité, sécurité renforcée."
-                price="1 490 €"
-                period="/ mois"
+                price="Sur devis"
                 bullets={[
                   'Tout PME +',
                   'Datasets illimités · LLM illimité',
-                  'SSO SAML 2.0 · audit log avancé',
-                  '50 utilisateurs · multi-entités',
-                  'Recommandations expert AI Act 4h/mois',
-                  'SLA 99,9 % · support sous 4h',
-                  "API d'intégration GRC",
+                  'Accompagnement expert AI Act',
+                  'Support prioritaire',
+                  'Accès anticipé à la feuille de route (SSO, rôles multiples)',
                 ]}
                 cta="Demander un devis"
                 ctaHref="/contact"
@@ -320,12 +271,10 @@ export default function TarifsPage() {
                 price="Sur devis"
                 bullets={[
                   'Tout Entreprise +',
-                  'Hébergement souverain dédié (SecNumCloud)',
-                  'Chiffrement clé client (BYOK)',
-                  'Audit log inviolable horodaté',
-                  'Consultants AI Act dédiés',
-                  'Formation équipe 2 jours',
-                  'Engagement & SLA personnalisés',
+                  'Interprétation LLM souveraine (Mistral)',
+                  'Étude d’un hébergement dédié',
+                  'Formation de vos équipes',
+                  'Engagement & conditions personnalisés',
                 ]}
                 cta="Nous contacter"
                 ctaHref="/contact"
@@ -410,6 +359,25 @@ export default function TarifsPage() {
               </table>
             </div>
           </Reveal>
+
+          <Reveal delay={0.08}>
+            <div className="mt-8 rounded-xl border border-dashed border-border-strong bg-surface-2 p-6">
+              <Eyebrow accent>Feuille de route — pas encore disponible</Eyebrow>
+              <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
+                Les fonctionnalités suivantes sont en cours de développement. Elles ne sont{' '}
+                <strong className="font-medium text-fg">pas incluses aujourd&apos;hui</strong>, quel
+                que soit le palier, et seront annoncées à leur disponibilité :
+              </p>
+              <ul className="mt-3 grid grid-cols-1 gap-2 text-sm text-fg-secondary md:grid-cols-2">
+                {ROADMAP_ITEMS.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span aria-hidden className="mt-[7px] inline-block size-1 rounded-full bg-fg-muted" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
         </Container>
       </section>
 
@@ -444,33 +412,13 @@ export default function TarifsPage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Pas sûr du palier</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Discutons-en. 15 minutes, pas plus.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  On vous aide à choisir le palier adapté à votre maturité de conformité et à votre
-                  volume d&apos;audits prévisionnel.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver un appel</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/comparatif">Comparer aux alternatives</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Pas sûr du palier"
+        title="Discutons-en. 15 minutes, pas plus."
+        body="On vous aide à choisir le palier adapté à votre maturité de conformité et à votre volume d'audits prévisionnel."
+        primary={{ label: 'Réserver un appel', href: '/contact' }}
+        secondary={{ label: 'Comparer aux alternatives', href: '/comparatif' }}
+      />
     </>
   );
 }

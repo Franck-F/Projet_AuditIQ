@@ -28,10 +28,13 @@ Consignes STRICTES :
 - Si les champs `demographic_parity_ratio`, `equal_opportunity_ratio` ou
   `equalized_odds_ratio` sont présents dans le JSON (au niveau marginal ou pairwise),
   tu DOIS les mentionner de façon **informative** : ces ratios (min/max des taux par
-  groupe, alignés fairlearn) complètent les différences absolues mais
+  groupe) complètent les différences absolues mais
   **n'influencent pas le verdict**. Rappelle que diff et ratio se lisent conjointement
   (un grand écart absolu peut coexister avec un ratio correct si les taux de base sont
   faibles). Ne présente jamais un ratio comme un verdict de conformité.
+- Ne mentionne JAMAIS de noms d'outils ou de bibliothèques internes
+  (fairlearn, scikit-learn, KMeans) ni de codes bruts (« fail », « warn »,
+  « pass », « done ») dans le texte destiné au lecteur.
 - Si le champ `marginals` est présent dans le JSON ci-dessus (plusieurs attributs
   protégés analysés), tu DOIS :
   (a) pour chaque attribut, présenter brièvement son Disparate Impact et son

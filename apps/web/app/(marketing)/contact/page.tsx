@@ -10,7 +10,9 @@ import Link from 'next/link';
    ============================================================================ */
 
 export default function ContactPage() {
-  const [status, setStatus] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [status, setStatus] = React.useState<
+    'idle' | 'sending' | 'sent' | 'error' | 'unavailable'
+  >('idle');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,7 +24,13 @@ export default function ContactPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      setStatus(res.ok ? 'sent' : 'error');
+      if (res.ok) {
+        setStatus('sent');
+      } else if (res.status === 503) {
+        setStatus('unavailable');
+      } else {
+        setStatus('error');
+      }
     } catch {
       setStatus('error');
     }
@@ -36,9 +44,9 @@ export default function ContactPage() {
           <p className="kicker">Contact</p>
           <h1>Parlons de votre conformité.</h1>
           <p className="lead">
-            Une question sur le produit, un devis pour l&apos;offre Sur devis, un questionnaire de
-            sécurité&nbsp;? Écrivez-nous — un membre de l&apos;équipe vous répond sous 24 heures
-            ouvrées. Pour démarrer tout de suite, l&apos;essai est gratuit et immédiat.
+            Une question sur le produit, un devis pour les paliers PME, Entreprise ou Souverain,
+            un questionnaire de sécurité&nbsp;? Écrivez-nous — nous revenons vers vous au plus
+            vite. Pour démarrer tout de suite, le palier Découverte est gratuit et immédiat.
           </p>
         </div>
       </header>
@@ -81,7 +89,7 @@ export default function ContactPage() {
                 <div>
                   <h4 style={{ fontSize: '15px' }}>Adresse</h4>
                   <p className="lede" style={{ fontSize: '13.5px', marginTop: '2px' }}>Siège social</p>
-                  <p className="mono" style={{ fontSize: '13.5px', color: 'var(--fg-secondary)' }}>12 rue de la Conformité, 75002 Paris</p>
+                  <p className="mono" style={{ fontSize: '13.5px', color: 'var(--fg-secondary)' }}>Communiquée sur demande — voir les mentions légales</p>
                 </div>
               </div>
 
@@ -103,7 +111,7 @@ export default function ContactPage() {
               <div className="card" style={{ padding: '28px', textAlign: 'center' }}>
                 <div style={{ fontSize: '28px', marginBottom: '12px' }}>✓</div>
                 <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Message envoyé.</h3>
-                <p className="lede" style={{ fontSize: '14px' }}>Un membre de l&apos;équipe vous répond sous 24 heures ouvrées.</p>
+                <p className="lede" style={{ fontSize: '14px' }}>Nous revenons vers vous au plus vite à l&apos;adresse indiquée.</p>
               </div>
             ) : (
               <form className="card" style={{ padding: '28px' }} onSubmit={handleSubmit} noValidate>
@@ -134,7 +142,7 @@ export default function ContactPage() {
                       <div style={{ position: 'relative' }}>
                         <select id="sujet" name="sujet" className="select">
                           <option>Découvrir le produit</option>
-                          <option>Demander un devis (offre Sur devis)</option>
+                          <option>Demander un devis (PME, Entreprise, Souverain)</option>
                           <option>Questionnaire de sécurité / RGPD</option>
                           <option>Support technique</option>
                           <option>Autre</option>
@@ -170,7 +178,17 @@ export default function ContactPage() {
                   </div>
 
                   {status === 'error' && (
-                    <p style={{ fontSize: '13px', color: 'var(--fail)' }}>Une erreur est survenue. Merci de réessayer ou de nous écrire directement.</p>
+                    <p style={{ fontSize: '13px', color: 'var(--fail)' }}>
+                      Une erreur est survenue et votre message n&apos;a pas été envoyé. Merci de
+                      réessayer ou de nous écrire directement à{' '}
+                      <a href="mailto:contact@auditiq.fr" style={{ color: 'var(--accent)' }}>contact@auditiq.fr</a>.
+                    </p>
+                  )}
+                  {status === 'unavailable' && (
+                    <p style={{ fontSize: '13px', color: 'var(--warn)' }}>
+                      Le formulaire est momentanément indisponible — écrivez-nous à{' '}
+                      <a href="mailto:contact@auditiq.fr" style={{ color: 'var(--accent)' }}>contact@auditiq.fr</a>.
+                    </p>
                   )}
                 </div>
               </form>

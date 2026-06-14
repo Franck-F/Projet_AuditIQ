@@ -14,10 +14,27 @@ const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
 const STORAGE_KEY = 'aiq-theme';
 
+/**
+ * Resolve the initial theme. Mirrors public/theme-bootstrap.js so SSR markup
+ * and the pre-hydration paint agree:
+ *   1. explicit choice in localStorage
+ *   2. OS preference (prefers-color-scheme)
+ *   3. default: light — a non-tech visitor lands on the editorial light theme.
+ */
 function readInitial(): Theme {
-  if (typeof window === 'undefined') return 'dark';
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === 'light' ? 'light' : 'dark';
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    // localStorage unavailable — fall through to media query.
+  }
+  try {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
+  } catch {
+    // matchMedia unavailable — fall through.
+  }
+  return 'light';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {

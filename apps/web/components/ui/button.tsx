@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium leading-tight transition-[background,border-color,color,transform] duration-200 ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:pointer-events-none disabled:opacity-50 hover:-translate-y-px active:translate-y-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[9px] text-sm font-medium leading-tight transition-[background,border-color,color] duration-150 ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -13,7 +13,7 @@ const buttonVariants = cva(
           'bg-transparent text-fg border border-border-strong hover:border-border-prominent hover:bg-surface-2',
         outline:
           'bg-transparent text-fg border border-border-default hover:border-border-strong hover:bg-surface-2',
-        ghost: 'rounded-md text-fg-secondary hover:text-fg hover:bg-surface-2',
+        ghost: 'text-fg-secondary hover:text-fg hover:bg-surface-2',
         destructive:
           'bg-status-fail text-fg border border-status-fail-border hover:bg-status-fail/90',
         dark: 'bg-bg text-fg border border-fg hover:bg-surface',

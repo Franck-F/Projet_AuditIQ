@@ -468,7 +468,9 @@ def test_html_includes_recommendations_section_when_present() -> None:
     assert '<section class="recommendations">' in html
     assert "Recommandations" in html
     assert "Re-collecter" in html
-    assert "Action prioritaire" in html
+    # Liste numérotée simple : aucune étiquette de priorité répétée
+    assert "Action prioritaire" not in html
+    assert "<ol>" in html
 
 
 def test_html_omits_recommendations_section_when_empty() -> None:

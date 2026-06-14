@@ -6,6 +6,7 @@ import { Reveal } from '@/components/layout/Reveal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eyebrow } from '@/components/marketing/Eyebrow';
+import { FinalCta } from '@/components/marketing/FinalCta';
 import { StatusPill } from '@/components/marketing/StatusPill';
 import { AnchorNav } from '@/components/marketing/AnchorNav';
 
@@ -206,17 +207,17 @@ const TRANSVERSE_CARDS = [
   {
     n: '04',
     title: 'Rapport exportable PDF / Excel',
-    body: "Deux vues : un executive summary pour le CODIR (1 page) et une vue réglementaire complète (10 à 25 pages selon le module). Format Excel structuré pour intégration dans votre registre des systèmes d'IA.",
+    body: "Deux vues : une synthèse dirigeants pour le CODIR et une vue réglementaire complète structurée selon l'annexe IV. Format Excel prêt à intégrer dans votre registre des systèmes d'IA.",
   },
   {
     n: '05',
     title: 'Historique des audits',
-    body: "Tous vos audits sont conservés cinq ans (durée recommandée par l'AI Act). Comparez deux versions d'un même modèle. Suivez la dérive dans le temps. Construisez votre dossier de preuve.",
+    body: "Vos rapports et résultats restent disponibles dans votre espace. Les jeux de données sources sont automatiquement supprimés 30 jours après l'import — vous gardez la trace, pas les données brutes.",
   },
   {
     n: '06',
-    title: 'Équipe & permissions',
-    body: "Trois rôles intégrés : Administrateur, Auditeur, Lecteur. Journal d'activité complet. Invitations par email professionnel. SSO sur les paliers Entreprise et Souverain.",
+    title: 'Compte & gouvernance',
+    body: "Un compte propriétaire unique aujourd'hui, avec cloisonnement strict par organisation. Rôles multiples (administrateur, auditeur, lecteur), invitations et SSO sont en feuille de route.",
   },
 ];
 
@@ -282,8 +283,9 @@ export default function ProduitPage() {
             </p>
             <ul className="flex flex-col gap-3.5">
               <CheckListItem>
-                Quatre métriques canoniques : Demographic Parity, Equal Opportunity, Equalized
-                Odds, règle des quatre cinquièmes.
+                Quatre métriques canoniques : égalité de traitement (Demographic Parity), égalité
+                des chances (Equal Opportunity), égalité des taux d&apos;erreur (Equalized Odds),
+                règle des quatre cinquièmes.
               </CheckListItem>
               <CheckListItem>
                 Décomposition par groupe et sous-groupe — intersectionalité (genre × tranche
@@ -315,7 +317,7 @@ export default function ProduitPage() {
           <Reveal delay={0.08}>
             <MockCard
               title="Recrutement_2024.csv · Module 1"
-              sub="412 lignes · sensitive: genre · target: short_listed"
+              sub="412 lignes · attribut : genre · décision : short_listed"
               pill={<StatusPill tone="warn">Vigilance</StatusPill>}
             >
               <MetricRow
@@ -361,19 +363,18 @@ export default function ProduitPage() {
             </p>
             <ul className="flex flex-col gap-3.5">
               <CheckListItem>
-                Clustering automatique (k-means, DBSCAN, mixtures gaussiennes) — choix du nombre de
-                clusters guidé.
+                Clustering k-means — choix du nombre de clusters guidé.
               </CheckListItem>
               <CheckListItem>
-                Détection de clusters déviants par densité et par composition relative.
+                Détection de clusters déviants par test du χ² sur leur composition.
               </CheckListItem>
               <CheckListItem>
-                Identification des features dominantes par cluster — qu&apos;est-ce qui caractérise
+                Identification des variables dominantes par cluster — qu&apos;est-ce qui caractérise
                 chaque groupe.
               </CheckListItem>
               <CheckListItem>
-                Signalement automatique de proxies de critères protégés (code postal ↔ origine
-                présumée, etc.).
+                Signal de proxy possible quand un groupe protégé est sur-représenté dans un
+                cluster (code postal ↔ origine présumée, etc.).
               </CheckListItem>
               <CheckListItem>
                 Restitution pédagogique avec niveau de risque qualifié et explication des raisons.
@@ -392,7 +393,7 @@ export default function ProduitPage() {
           <Reveal delay={0.08} className="order-2 lg:order-1">
             <MockCard
               title="Demandes_credit_Q3.csv · Module 2"
-              sub="2 840 lignes · 12 features · 4 clusters détectés"
+              sub="2 840 lignes · 12 variables · 4 clusters détectés"
               pill={<StatusPill tone="fail">Critique</StatusPill>}
             >
               <ClusterViz />
@@ -407,7 +408,7 @@ export default function ProduitPage() {
                   <StatusPill tone="fail">Proxy détecté</StatusPill>
                 </div>
                 <p className="mt-2.5 text-sm leading-relaxed text-fg-secondary">
-                  Le code postal apparaît comme feature dominante (corrélation 0,82). Risque de
+                  Le code postal apparaît comme variable dominante du cluster. Signal possible de
                   proxy géographique pour l&apos;origine présumée.
                 </p>
               </div>
@@ -428,23 +429,27 @@ export default function ProduitPage() {
               Testez vos assistants conversationnels sur six axes de discrimination.
             </h2>
             <p className="mb-6 text-h4 leading-relaxed text-fg-secondary">
-              Connectez votre API LLM (OpenAI, Mistral, Anthropic, modèles fine-tunés). AuditIQ
-              envoie une banque de prompts pairs et compare les réponses pour mesurer les écarts.
+              AuditIQ compare les réponses de votre assistant à des paires de prompts
+              contrefactuels — deux requêtes identiques, un seul attribut varie — pour mesurer les
+              écarts de traitement.
             </p>
             <ul className="flex flex-col gap-3.5">
               <CheckListItem>
                 Six axes : genre, origine présumée, âge, religion, handicap, orientation.
               </CheckListItem>
               <CheckListItem>
-                400+ prompts pairs, maintenus en français, anglais et espagnol par notre équipe.
+                Une banque versionnée de paires de prompts, en français et en anglais.
               </CheckListItem>
               <CheckListItem>
-                Métriques par axe : écart de longueur, sentiment, taux de refus, polarité.
+                Métriques par axe : écart de longueur, polarité (analyse par lexique bilingue,
+                déterministe et documentée), taux de refus.
               </CheckListItem>
               <CheckListItem>
                 Score global et score par axe, avec extraits significatifs annotés.
               </CheckListItem>
-              <CheckListItem>Compatible avec vos prompts métiers — banque personnalisable.</CheckListItem>
+              <CheckListItem>
+                Personnalisation de la banque avec vos prompts métiers : en feuille de route.
+              </CheckListItem>
             </ul>
             <div className="mt-8 flex gap-3">
               <Button asChild variant="secondary">
@@ -459,7 +464,7 @@ export default function ProduitPage() {
           <Reveal delay={0.08}>
             <MockCard
               title="Chatbot SAV · Module 3"
-              sub="Mistral-7B-instruct · 412 prompts pairs"
+              sub="Banque de prompts FR/EN · 6 axes"
               pill={<StatusPill tone="warn">Vigilance</StatusPill>}
             >
               <div className="grid grid-cols-2 gap-3">
@@ -595,9 +600,9 @@ export default function ProduitPage() {
                   <div className="rounded-md border border-border-default bg-surface-2 p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="text-sm font-medium text-fg">Audits récents</div>
-                      <Link href="#" className="text-xs text-accent">
+                      <span className="text-xs text-accent" aria-hidden>
                         Voir tous →
-                      </Link>
+                      </span>
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between rounded-md bg-surface px-2.5 py-2">
@@ -618,7 +623,7 @@ export default function ProduitPage() {
               </div>
             </div>
             <p className="mt-4 text-center text-xs text-fg-muted">
-              Capture du produit — exemple PME, secteur RH.
+              Aperçu illustratif — organisation et chiffres fictifs.
             </p>
           </Reveal>
         </Container>
@@ -663,23 +668,24 @@ export default function ProduitPage() {
                 Vos données ne sortent pas d&apos;Europe.
               </h2>
               <p className="text-base leading-relaxed text-fg-secondary">
-                Hébergement OVHcloud Roubaix (FR), chiffrement AES-256 au repos et TLS 1.3 en
-                transit. Vos données sont supprimées sur demande sous 72 heures. Audits de sécurité
-                annuels. Conforme RGPD, en cours de certification ISO 27001 (Q3 2026).
+                Hébergement en Union européenne (Francfort · Paris), chiffrement en transit et au
+                repos. Les jeux de données importés sont automatiquement supprimés 30 jours après
+                l&apos;import. Conçu pour le RGPD ; démarche ISO 27001 en cours. Interprétation en
+                langage clair via Gemini, avec option souveraine Mistral.
               </p>
             </Reveal>
             <Reveal delay={0.08}>
               <div className="rounded-2xl border border-border-default bg-surface-2 p-6">
                 <div className="flex flex-col gap-3.5">
                   {[
-                    { label: 'Hébergement', value: <Badge variant="mono">OVHcloud · FR</Badge> },
-                    { label: 'Chiffrement', value: <Badge variant="mono">AES-256 · TLS 1.3</Badge> },
-                    { label: 'Conformité', value: <StatusPill tone="pass">RGPD</StatusPill> },
+                    { label: 'Hébergement', value: <Badge variant="mono">UE · Francfort / Paris</Badge> },
+                    { label: 'Chiffrement', value: <Badge variant="mono">En transit & au repos</Badge> },
+                    { label: 'Rétention des datasets', value: <Badge variant="mono">30 jours</Badge> },
                     {
                       label: 'ISO 27001',
-                      value: <StatusPill tone="info">En cours Q3 2026</StatusPill>,
+                      value: <StatusPill tone="info">Démarche en cours</StatusPill>,
                     },
-                    { label: 'SSO & SAML 2.0', value: <Badge>Entreprise</Badge> },
+                    { label: 'SSO & MFA', value: <Badge>Feuille de route</Badge> },
                   ].map((row, i) => (
                     <React.Fragment key={row.label}>
                       <div className="flex items-center justify-between">
@@ -696,33 +702,13 @@ export default function ProduitPage() {
         </Container>
       </section>
 
-      {/* CTA */}
-      <section className="py-16">
-        <Container>
-          <Reveal>
-            <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-border-default bg-surface p-[clamp(40px,6vw,64px)] lg:grid-cols-[1fr_auto]">
-              <div>
-                <Eyebrow accent>Prochaine étape</Eyebrow>
-                <h2 className="mt-3 text-h2 font-display font-medium tracking-tight text-fg">
-                  Voyez AuditIQ tourner sur votre propre cas d&apos;usage.
-                </h2>
-                <p className="mt-3 max-w-[56ch] text-fg-secondary">
-                  30 minutes de démo guidée. On apporte les scénarios — vous apportez vos questions
-                  de conformité.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="primary" size="lg">
-                  <Link href="/contact">Réserver une démo</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link href="/tarifs">Comparer les paliers</Link>
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
+      <FinalCta
+        eyebrow="Prochaine étape"
+        title="Voyez AuditIQ tourner sur votre propre cas d'usage."
+        body="30 minutes de démo guidée. On apporte les scénarios — vous apportez vos questions de conformité."
+        primary={{ label: 'Réserver une démo', href: '/contact' }}
+        secondary={{ label: 'Comparer les paliers', href: '/tarifs' }}
+      />
     </>
   );
 }

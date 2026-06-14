@@ -56,7 +56,7 @@ describe('Step5Review — tabular-known (M1)', () => {
     render(<Step5Review values={values} dataset={dataset} />);
     expect(screen.getByText(/Disparate Impact/i)).toBeInTheDocument();
     expect(screen.getByText(/Règle des 4\/5/i)).toBeInTheDocument();
-    expect(screen.getByText(/Demographic Parity/i)).toBeInTheDocument();
+    expect(screen.getByText(/Parité démographique/i)).toBeInTheDocument();
   });
 
   it('does NOT show EO/EOdds when ground_truth_column is empty', () => {
@@ -116,25 +116,30 @@ describe('Step5Review — tabular-unknown (M2)', () => {
 
   it('shows default params (k=5, dev=20, alpha=0.05) when fields are empty', () => {
     render(<Step5Review values={values} dataset={null} />);
-    expect(screen.getByText(/k = 5/)).toBeInTheDocument();
-    expect(screen.getByText(/déviation = 20 pp/)).toBeInTheDocument();
-    expect(screen.getByText(/alpha = 0\.05/)).toBeInTheDocument();
+    // Réglages affichés en clair : "{k} groupes recherchés, écart d'alerte = {dev} points, exigence statistique α = {alpha}"
+    const reglages = screen.getByText(/groupes recherchés, écart d'alerte =/);
+    expect(reglages).toHaveTextContent(
+      "5 groupes recherchés, écart d'alerte = 20 points, exigence statistique α = 0.05",
+    );
   });
 
   it('shows custom params when set', () => {
     const v = makeValues({ ...values, k: '8', deviation_pp: '15', chi2_alpha: '0.01' });
     render(<Step5Review values={v} dataset={null} />);
-    expect(screen.getByText(/k = 8/)).toBeInTheDocument();
-    expect(screen.getByText(/déviation = 15 pp/)).toBeInTheDocument();
-    expect(screen.getByText(/alpha = 0\.01/)).toBeInTheDocument();
+    const reglages = screen.getByText(/groupes recherchés, écart d'alerte =/);
+    expect(reglages).toHaveTextContent(
+      "8 groupes recherchés, écart d'alerte = 15 points, exigence statistique α = 0.01",
+    );
   });
 
-  it('shows KMeans + χ² + IQR + caractérisation analyses', () => {
+  it('shows the detection analyses produced for M2', () => {
     render(<Step5Review values={values} dataset={null} />);
-    expect(screen.getAllByText(/KMeans/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/χ²/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/IQR/i)).toBeInTheDocument();
-    expect(screen.getByText(/Caractérisation top-3/i)).toBeInTheDocument();
+    expect(screen.getByText(/Détection automatique de/i)).toHaveTextContent(
+      'Détection automatique de 5 groupes de dossiers similaires',
+    );
+    expect(screen.getByText(/Comparaison statistique du taux de décision/i)).toBeInTheDocument();
+    expect(screen.getByText(/Vérifications préalables de la qualité des données/i)).toBeInTheDocument();
+    expect(screen.getByText(/3 caractéristiques dominantes de chaque groupe atypique/i)).toBeInTheDocument();
   });
 });
 
@@ -188,11 +193,11 @@ describe('Step5Review — llm-api (M3)', () => {
     expect(screen.getByText(/English/i)).toBeInTheDocument();
   });
 
-  it('shows LangBiTe analyses list: 12 paires, métriques, divergence, délai', () => {
+  it('shows LLM analyses list: 12 paires, ton/longueur/refus, écarts, délai', () => {
     render(<Step5Review values={values} dataset={null} />);
-    expect(screen.getByText(/12 paires/i)).toBeInTheDocument();
-    expect(screen.getByText(/sentiment/i)).toBeInTheDocument();
-    expect(screen.getByText(/divergence/i)).toBeInTheDocument();
+    expect(screen.getByText(/12 paires de questions/i)).toBeInTheDocument();
+    expect(screen.getByText(/du ton, de la longueur et des refus/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mesure des écarts entre les réponses/i)).toBeInTheDocument();
     expect(screen.getByText(/45 s/i)).toBeInTheDocument();
   });
 });

@@ -83,7 +83,7 @@ def test_build_excel_m1_has_sheets_and_not_a_certificate():
     wb = load_workbook(io.BytesIO(b))
     assert "Résumé" in wb.sheetnames
     assert "Détail" in wb.sheetnames
-    assert "Conformité" in wb.sheetnames
+    assert "Références" in wb.sheetnames
     t = _text(b)
     assert "n'est pas un certificat" in t
     assert "AUD-2026-001" in t
@@ -379,9 +379,12 @@ def test_excel_includes_recommendations_sheet_when_present() -> None:
     assert "Recommandations" in wb.sheetnames
     ws = wb["Recommandations"]
     rows = list(ws.iter_rows(values_only=True))
-    assert rows[0] == ("#", "Priorité", "Action", "Détail")
-    assert rows[1] == (1, "Action prioritaire", "Re-collecter données", "Détail 1.")
-    assert rows[2] == (2, "À planifier", "Audit features", "Détail 2.")
+    # Liste numérotée simple : l'ordre vaut priorité, aucune étiquette
+    assert rows[0] == ("#", "Action", "Détail")
+    assert rows[1] == (1, "Re-collecter données", "Détail 1.")
+    assert rows[2] == (2, "Audit features", "Détail 2.")
+    flat = " ".join(str(c) for r in rows for c in r if c is not None)
+    assert "Action prioritaire" not in flat
 
 
 def test_excel_omits_recommendations_sheet_when_empty() -> None:

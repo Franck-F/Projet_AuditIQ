@@ -116,7 +116,7 @@ export default function OnboardingPage() {
             <SectionHead
               eyebrow="Étape 1 · Bienvenue"
               title="Bienvenue chez AuditIQ."
-              sub="Nous allons configurer votre premier audit de fairness IA en 5 étapes. Comptez environ 8 minutes pour la configuration, puis 25 minutes pour le premier audit complet."
+              sub="Nous allons configurer votre premier audit de fairness IA en 5 étapes. Comptez environ 5 minutes pour configurer et lancer un audit ; le calcul prend ensuite 5 à 30 secondes."
             />
 
             <div className="space-y-6">
@@ -126,10 +126,10 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <h4 className="mb-1 font-medium text-fg">
-                    Vous êtes au bon endroit pour démarrer un audit conforme AI Act.
+                    Vous êtes au bon endroit pour documenter vos systèmes d&apos;IA dans l&apos;esprit de l&apos;AI Act.
                   </h4>
                   <p className="text-[13px] leading-relaxed text-fg-secondary">
-                    AuditIQ détecte, explique et documente les biais — sans modifier vos modèles. Vous obtiendrez un rapport exploitable, signé, exportable en PDF / Excel, aligné sur le règlement (UE) 2024/1689.
+                    AuditIQ détecte, explique et documente les biais — sans modifier vos modèles. Vous obtiendrez un rapport documenté, exportable en PDF / Excel, aligné sur le règlement (UE) 2024/1689.
                   </p>
                 </div>
               </div>
@@ -137,23 +137,23 @@ export default function OnboardingPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M1</span>
-                  <h4 className="font-medium text-fg">Audit supervisé</h4>
+                  <h4 className="font-medium text-fg">Module 1 — Audit supervisé</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
-                    Vous avez un dataset avec la décision réelle et une variable sensible.
+                    Vous avez un jeu de données avec la décision réelle et un attribut protégé.
                   </p>
                 </div>
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M2</span>
-                  <h4 className="font-medium text-fg">Non supervisé</h4>
+                  <h4 className="font-medium text-fg">Module 2 — Détection non supervisée</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
-                    Vous n&apos;avez pas d&apos;attribut sensible explicite — on cherche des proxies.
+                    Vous n&apos;avez pas d&apos;attribut protégé explicite — on cherche des groupes au traitement atypique.
                   </p>
                 </div>
                 <div className="space-y-2 rounded-lg border border-border-subtle bg-surface p-4">
                   <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-accent">M3</span>
-                  <h4 className="font-medium text-fg">Audit LLM</h4>
+                  <h4 className="font-medium text-fg">Module 3 — Audit LLM &amp; chatbot</h4>
                   <p className="text-[12px] leading-relaxed text-fg-muted">
-                    Vous testez un chatbot ou un assistant IA via prompts pairs.
+                    Vous testez un chatbot ou un assistant IA via des paires de questions quasi identiques.
                   </p>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function OnboardingPage() {
                       )}
                       placeholder="824 561 832"
                     />
-                    <p className="text-[11px] text-fg-muted">Utilisé sur les rapports de conformité signés</p>
+                    <p className="text-[11px] text-fg-muted">Utilisé sur les rapports générés</p>
                   </div>
                   <div className="space-y-2">
                     <label className="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-muted">
@@ -309,37 +309,37 @@ export default function OnboardingPage() {
               {[
                 {
                   id: 'rh-scoring',
-                  module: 'M1 supervisé',
+                  module: 'Module 1 — supervisé',
                   title: 'Scoring de candidatures (CV / recrutement)',
                   desc: 'Détection de biais par genre, âge, origine.',
                 },
                 {
                   id: 'rh-promotion',
-                  module: 'M1 supervisé',
+                  module: 'Module 1 — supervisé',
                   title: 'Attribution prime / promotion',
                   desc: 'Audit d\'un modèle de décision RH interne.',
                 },
                 {
                   id: 'credit',
-                  module: 'M2 non supervisé',
+                  module: 'Module 2 — non supervisé',
                   title: 'Scoring de crédit / acceptation',
                   desc: 'Détection de proxies sans accès aux attributs sensibles.',
                 },
                 {
                   id: 'assurance',
-                  module: 'M2 non supervisé',
+                  module: 'Module 2 — non supervisé',
                   title: 'Tarification assurance',
                   desc: 'Identification de clusters tarifaires déviants.',
                 },
                 {
                   id: 'chatbot',
-                  module: 'M3 LLM',
+                  module: 'Module 3 — LLM',
                   title: 'Chatbot SAV ou support client',
                   desc: 'Test de l\'équité des réponses selon genre, origine, handicap.',
                 },
                 {
                   id: 'assistant',
-                  module: 'M3 LLM',
+                  module: 'Module 3 — LLM',
                   title: 'Assistant IA interne (RH, juridique)',
                   desc: 'Audit d\'un copilote sur 6 axes sensibles.',
                 },
@@ -391,7 +391,7 @@ export default function OnboardingPage() {
             <SectionHead
               eyebrow="Étape 4 · Préparation"
               title="Préparons votre premier audit."
-              sub="Voici la checklist de démarrage. Vous pouvez la compléter dans l'ordre — chaque élément débloque le suivant. Comptez environ 8 minutes pour tout valider."
+              sub="Voici la checklist de démarrage. Vous pouvez la compléter dans l'ordre — chaque élément débloque le suivant. Comptez quelques minutes pour tout valider."
             />
 
             <div className="space-y-3">
@@ -444,14 +444,14 @@ export default function OnboardingPage() {
                     className="mt-1 h-4 w-4 rounded border border-border-strong accent-accent"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-fg">Importer votre premier dataset</div>
+                    <div className="font-medium text-fg">Importer votre premier jeu de données</div>
                     <div className="mt-1 text-[13px] text-fg-muted">
-                      CSV, Excel ou Parquet · jusqu&apos;à 500 000 lignes en plan Équipe
+                      Format CSV · jusqu&apos;à 10 Mo
                     </div>
                   </div>
                 </label>
                 <Button variant="secondary" size="sm" asChild>
-                  <Link href="#" className="gap-1">
+                  <Link href="/app/audits/nouveau" className="gap-1">
                     Importer <ArrowRight size={14} />
                   </Link>
                 </Button>
@@ -469,12 +469,12 @@ export default function OnboardingPage() {
                   <div className="flex-1">
                     <div className="font-medium text-fg">Inviter votre équipe (optionnel)</div>
                     <div className="mt-1 text-[13px] text-fg-muted">
-                      Vous pourrez ajouter Auditeurs et Spectateurs ensuite
+                      Vous pourrez attribuer les rôles Administrateur, Éditeur ou Lecture seule ensuite
                     </div>
                   </div>
                 </label>
                 <Button variant="secondary" size="sm" asChild>
-                  <Link href="#" className="gap-1">
+                  <Link href="/app/equipe" className="gap-1">
                     Inviter
                   </Link>
                 </Button>
@@ -486,7 +486,7 @@ export default function OnboardingPage() {
                 <div className="flex-1">
                   <div className="font-medium text-fg">Lancer votre premier audit</div>
                   <div className="mt-1 text-[13px] text-fg-muted">
-                    Comptez environ 25 min pour 10 000 lignes
+                    Le calcul prend 5 à 30 secondes
                   </div>
                 </div>
                 <div className="flex items-center text-[11px] font-mono text-fg-muted">À débloquer</div>
@@ -511,9 +511,9 @@ export default function OnboardingPage() {
         {state.step === 5 && (
           <div className="space-y-8">
             <SectionHead
-              eyebrow="Étape 5 · Tutoriel guidé"
-              title="Vous êtes prête à lancer votre premier audit."
-              sub="Suivez le tutoriel guidé qui démarre dans le Module 1 — ou allez directement au dashboard."
+              eyebrow="Étape 5 · Premier audit"
+              title="Tout est prêt pour lancer votre premier audit."
+              sub="Lancez le wizard d'audit — ou allez directement au tableau de bord."
             />
 
             <div className="space-y-4 rounded-lg border border-accent-border bg-accent-softer p-6">
@@ -522,57 +522,30 @@ export default function OnboardingPage() {
                   <Sparkles size={28} />
                 </div>
                 <div className="flex-1">
-                  <h4 className="mb-1 font-medium text-fg">Tutoriel guidé — Mon premier audit M1</h4>
+                  <h4 className="mb-1 font-medium text-fg">Premier audit guidé — Module 1</h4>
                   <p className="text-[13px] text-fg-secondary">
-                    8 étapes commentées · ~25 min · données d&apos;exemple recrutement.csv
+                    Le wizard (~5 min) propose un échantillon « Recrutement RH » de 80 lignes à
+                    l&apos;étape 2 — idéal pour une première prise en main.
                   </p>
                 </div>
                 <Button asChild className="gap-2">
-                  <Link href="#" className="gap-2">
+                  <Link href="/app/audits/nouveau" className="gap-2">
                     Démarrer <ArrowRight size={16} />
                   </Link>
                 </Button>
-              </div>
-
-              <div className="border-t border-accent-border/50 pt-4">
-                <ol className="space-y-2 text-[13px]">
-                  {[
-                    { num: '01', title: 'Importer le dataset CSV', desc: '412 lignes · 18 colonnes' },
-                    { num: '02', title: 'Mapper les colonnes du dataset', desc: 'Identifier ID, variables explicatives, décision' },
-                    { num: '03', title: 'Choisir la variable cible et l\'attribut sensible', desc: 'Cible : décision_finale · Attribut : genre' },
-                    { num: '04', title: 'Configurer les métriques fairness', desc: '4 métriques activées par défaut' },
-                    { num: '05', title: 'Lancer l\'audit (environ 12 min)', desc: 'Vous pouvez fermer l\'onglet, vous serez notifiée' },
-                    { num: '06', title: 'Lire les résultats — feu tricolore', desc: 'Comprendre le score global et le détail' },
-                    { num: '07', title: 'Examiner les écarts par groupe', desc: 'Voir les graphiques de répartition' },
-                    { num: '08', title: 'Générer et exporter le rapport', desc: 'PDF signé · Excel détaillé' },
-                  ].map((step) => (
-                    <li key={step.num} className="flex gap-3">
-                      <span className="font-mono font-semibold text-fg-muted">{step.num}</span>
-                      <div>
-                        <div className="font-medium text-fg">{step.title}</div>
-                        <div className="text-[12px] text-fg-muted">{step.desc}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
               </div>
             </div>
 
             <div className="flex gap-3">
               <Button variant="secondary" asChild>
-                <Link href="/app">Aller au dashboard sans tutoriel</Link>
-              </Button>
-              <Button asChild className="gap-2">
-                <Link href="#" className="gap-2">
-                  Lancer le tutoriel <ArrowRight size={16} />
-                </Link>
+                <Link href="/app">Aller au tableau de bord</Link>
               </Button>
             </div>
 
             <div className="rounded-lg border border-border-subtle bg-surface-2 p-4">
               <p className="text-[13px] leading-relaxed text-fg-secondary">
-                <strong>Confidentialité :</strong> Vos données restent dans l&apos;Union Européenne (hébergement OVH,
-                Roubaix). Aucune donnée n&apos;est envoyée à des modèles tiers.
+                <strong>Confidentialité :</strong> Vos fichiers sont stockés de façon chiffrée dans
+                l&apos;Union européenne et supprimés automatiquement après 30 jours.
               </p>
             </div>
 

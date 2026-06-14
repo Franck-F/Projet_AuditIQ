@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -62,19 +62,19 @@ describe('AuditsListPage - R4 Refonte', () => {
     render(<AuditsListPage />);
 
     expect(screen.getByText('Total audits')).toBeInTheDocument();
-    // MetricCard labels are in small uppercase text
-    expect(screen.getAllByText('Conformes')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Sous vigilance')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Non conformes')[0]).toBeInTheDocument();
+    // MetricCard labels reprennent les libellés de verdict orientés risque
+    expect(screen.getAllByText('Risque faible')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Vigilance')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Risque élevé')[0]).toBeInTheDocument();
   });
 
   it('renders 4 filter tabs', () => {
     render(<AuditsListPage />);
 
     expect(screen.getByRole('tab', { name: 'Tous' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Non conformes' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Sous vigilance' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Conformes' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Risque élevé' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Vigilance' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Risque faible' })).toBeInTheDocument();
   });
 
   it('shows 4 audits in "Tous" tab by default', () => {
@@ -90,7 +90,7 @@ describe('AuditsListPage - R4 Refonte', () => {
     const user = userEvent.setup();
     render(<AuditsListPage />);
 
-    const tab = screen.getByRole('tab', { name: 'Non conformes' });
+    const tab = screen.getByRole('tab', { name: 'Risque élevé' });
     await user.click(tab);
 
     // Should show only the 'fail' audit
@@ -103,7 +103,7 @@ describe('AuditsListPage - R4 Refonte', () => {
     const user = userEvent.setup();
     render(<AuditsListPage />);
 
-    const tab = screen.getByRole('tab', { name: 'Sous vigilance' });
+    const tab = screen.getByRole('tab', { name: 'Vigilance' });
     await user.click(tab);
 
     // Should show the 2 'warn' audits
@@ -118,7 +118,7 @@ describe('AuditsListPage - R4 Refonte', () => {
     const user = userEvent.setup();
     render(<AuditsListPage />);
 
-    const tab = screen.getByRole('tab', { name: 'Conformes' });
+    const tab = screen.getByRole('tab', { name: 'Risque faible' });
     await user.click(tab);
 
     // Should show only the 'pass' audit
@@ -149,14 +149,16 @@ describe('AuditsListPage - R4 Refonte', () => {
   it('renders status badges for each audit', () => {
     render(<AuditsListPage />);
 
-    // StatusBadge renders specific labels
-    const conforme = screen.getByText('Conforme');
-    const vigilance = screen.getAllByText('Vigilance');
-    const critique = screen.getByText('Critique');
+    // Les libellés de verdict apparaissent aussi dans les KPI et les onglets :
+    // on restreint la vérification aux badges de statut du tableau.
+    const table = screen.getByRole('table');
+    const conforme = within(table).getAllByText('Risque faible');
+    const vigilance = within(table).getAllByText('Vigilance');
+    const critique = within(table).getAllByText('Risque élevé');
 
-    expect(conforme).toBeInTheDocument();
-    expect(vigilance.length).toBe(2);
-    expect(critique).toBeInTheDocument();
+    expect(conforme.length).toBe(1); // 1 pass
+    expect(vigilance.length).toBe(2); // 2 warn
+    expect(critique.length).toBe(1); // 1 fail
   });
 
   it('displays loading state when isLoading is true', () => {
@@ -186,9 +188,12 @@ describe('AuditsListPage - R4 Refonte', () => {
     expect(screen.getByRole('link', { name: /Nouvel audit/ })).toBeInTheDocument();
   });
 
-  it('shows "Filtres" and "Exporter" buttons in table header', () => {
+  it('shows the filter tab strip in the table header (no more Filtres/Exporter buttons)', () => {
     render(<AuditsListPage />);
-    expect(screen.getByRole('button', { name: /Filtres/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Exporter/ })).toBeInTheDocument();
+    // La barre d'outils ne contient plus de boutons « Filtres »/« Exporter »
+    expect(screen.queryByRole('button', { name: /Filtres/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Exporter/ })).not.toBeInTheDocument();
+    // Elle expose désormais les 4 onglets de filtre par verdict
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
   });
 });

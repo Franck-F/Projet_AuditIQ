@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { VERDICT_LABELS } from '@/lib/verdict';
 
 export type StatusTone = 'pass' | 'warn' | 'fail' | 'info' | 'neutral';
 
@@ -20,9 +21,7 @@ const DOT: Record<StatusTone, string> = {
 };
 
 const LABELS: Record<StatusTone, string> = {
-  pass: 'Conforme',
-  warn: 'Vigilance',
-  fail: 'Critique',
+  ...VERDICT_LABELS,
   info: 'Info',
   neutral: 'Neutre',
 };

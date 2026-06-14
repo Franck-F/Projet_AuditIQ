@@ -149,7 +149,7 @@ export default function InscriptionPage() {
     });
     if (error) {
       setAuthError(
-        'Inscription Google indisponible. Vérifiez que le provider est activé dans Supabase.',
+        "La connexion Google est momentanément indisponible. Réessayez ou utilisez l'email.",
       );
     }
   };
@@ -158,7 +158,7 @@ export default function InscriptionPage() {
     <AuthShell
       activeTab="signup"
       heading="Commencez gratuitement"
-      intro="14 jours d'essai, sans carte bancaire."
+      intro="Palier Découverte gratuit — sans carte bancaire."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         <button

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useParams } from 'next/navigation';
-import { Download, Hash, FileText, Shield, AlertCircle } from 'lucide-react';
+import { Download, Hash, Shield, AlertCircle } from 'lucide-react';
 
 import { Topbar } from '@/components/app/Topbar';
 import { TocSticky } from '@/components/product/TocSticky';
@@ -16,7 +16,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RegulatoryCallout } from '@/components/rapport/RegulatoryCallout';
 import { useAudit } from '@/lib/query/use-audit';
-import type { M1MetricsOut } from '@/lib/api/audits';
+import { downloadReport, type M1MetricsOut, type ReportFormat } from '@/lib/api/audits';
+import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS } from '@/lib/verdict';
 
 /* ─── TOC items (7 sections) ─────────────────────────────────────────── */
 
@@ -26,64 +27,135 @@ const TOC_ITEMS = [
   { id: 'findings', label: 'Résultats fairness' },
   { id: 'regulatory', label: 'Ancrage réglementaire' },
   { id: 'recommendations', label: 'Recommandations' },
-  { id: 'signature', label: 'Signature & traçabilité' },
+  { id: 'signature', label: 'Traçabilité' },
   { id: 'disclaimer', label: 'Disclaimer juridique' },
 ];
 
-/* ─── Regulatory articles ─────────────────────────────────────────────── */
+/* ─── Regulatory articles ──────────────────────────────────────────────
+   Les statuts ne sont PAS évalués automatiquement par le moteur : seul
+   l'article 10 (biais des données) est rapproché du résultat réel de
+   l'audit. Les autres articles sont présentés « à évaluer » par vos soins. */
 
-const REGULATORY_ARTICLES = [
-  {
-    article: 'Art. 10 · AI Act',
-    title: 'Qualité, représentativité et absence de biais des données d\'entraînement',
-    body: '« Les jeux de données d\'entraînement, de validation et d\'essai […] examinent l\'existence de possibles biais […] susceptibles d\'avoir une incidence sur la santé et la sécurité des personnes, d\'avoir une incidence négative sur les droits fondamentaux ou d\'entraîner une discrimination interdite par le droit de l\'Union. »',
-    url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
-    status: 'fail' as StatusTone,
-    finding: 'Biais détecté · DP < 0.80',
-  },
-  {
-    article: 'Art. 13 · AI Act',
-    title: 'Information des utilisateurs et explicabilité des résultats',
-    body: '« Les systèmes d\'IA à haut risque sont conçus et développés […] pour permettre aux utilisateurs d\'interpréter le résultat […] et de l\'utiliser de manière appropriée. »',
-    url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
-    status: 'warn' as StatusTone,
-    finding: 'Explications partielles',
-  },
-  {
-    article: 'Art. 15 · AI Act',
-    title: 'Niveau d\'exactitude approprié et résistance aux erreurs',
-    body: '« Les systèmes d\'IA à haut risque sont conçus […] de manière à atteindre, compte tenu de leur finalité, un niveau d\'exactitude, de robustesse et de cybersécurité appropriés. »',
-    url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
-    status: 'pass' as StatusTone,
-    finding: 'Acceptable',
-  },
-  {
-    article: 'Art. L.1132-1 · Code du travail',
-    title: 'Principe de non-discrimination à l\'embauche',
-    body: '« Aucune personne ne peut être écartée d\'une procédure de recrutement […] en raison de son […] sexe, de son orientation sexuelle, de son identité de genre, de son âge, de sa situation de famille […] »',
-    url: 'https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000037388707',
-    status: 'fail' as StatusTone,
-    finding: 'Risque élevé',
-  },
-  {
-    article: 'RGPD · Art. 22',
-    title: 'Décision individuelle automatisée',
-    body: '« La personne concernée a le droit de ne pas faire l\'objet d\'une décision fondée exclusivement sur un traitement automatisé […] produisant des effets juridiques la concernant ou l\'affectant de manière significative. »',
-    url: 'https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000037090275',
-    status: 'warn' as StatusTone,
-    finding: 'À documenter',
-  },
-];
+interface RegulatoryArticle {
+  article: string;
+  title: string;
+  body: string;
+  url: string;
+  status: StatusTone;
+  finding: string;
+}
+
+function buildRegulatoryArticles(m1: M1MetricsOut | null): RegulatoryArticle[] {
+  const art10Status: StatusTone = m1 ? (m1.verdict as StatusTone) : 'info';
+  const art10Finding = m1
+    ? m1.disparate_impact < 0.8
+      ? `Écart détecté · ratio ${(m1.disparate_impact * 100).toFixed(0)} % < 80 %`
+      : 'Aucun écart majeur détecté'
+    : 'À évaluer';
+  return [
+    {
+      article: 'Art. 10 · AI Act',
+      title: 'Qualité, représentativité et absence de biais des données d\'entraînement',
+      body: '« Les jeux de données d\'entraînement, de validation et d\'essai […] examinent l\'existence de possibles biais […] susceptibles d\'avoir une incidence sur la santé et la sécurité des personnes, d\'avoir une incidence négative sur les droits fondamentaux ou d\'entraîner une discrimination interdite par le droit de l\'Union. »',
+      url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
+      status: art10Status,
+      finding: art10Finding,
+    },
+    {
+      article: 'Art. 13 · AI Act',
+      title: 'Information des utilisateurs et explicabilité des résultats',
+      body: '« Les systèmes d\'IA à haut risque sont conçus et développés […] pour permettre aux utilisateurs d\'interpréter le résultat […] et de l\'utiliser de manière appropriée. »',
+      url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
+      status: 'info',
+      finding: 'À évaluer',
+    },
+    {
+      article: 'Art. 15 · AI Act',
+      title: 'Niveau d\'exactitude approprié et résistance aux erreurs',
+      body: '« Les systèmes d\'IA à haut risque sont conçus […] de manière à atteindre, compte tenu de leur finalité, un niveau d\'exactitude, de robustesse et de cybersécurité appropriés. »',
+      url: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32024R1689',
+      status: 'info',
+      finding: 'À évaluer',
+    },
+    {
+      article: 'Art. L.1132-1 · Code du travail',
+      title: 'Principe de non-discrimination à l\'embauche',
+      body: '« Aucune personne ne peut être écartée d\'une procédure de recrutement […] en raison de son […] sexe, de son orientation sexuelle, de son identité de genre, de son âge, de sa situation de famille […] »',
+      url: 'https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000037388707',
+      status: 'info',
+      finding: 'À évaluer',
+    },
+    {
+      article: 'RGPD · Art. 22',
+      title: 'Décision individuelle automatisée',
+      body: '« La personne concernée a le droit de ne pas faire l\'objet d\'une décision fondée exclusivement sur un traitement automatisé […] produisant des effets juridiques la concernant ou l\'affectant de manière significative. »',
+      url: 'https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000037090275',
+      status: 'info',
+      finding: 'À évaluer',
+    },
+  ];
+}
 
 /* ─── Helpers ─────────────────────────────────────────────────────────── */
 
 type Verdict = 'pass' | 'warn' | 'fail';
 
-const VERDICT_LABELS: Record<Verdict, string> = {
-  fail: 'Critique',
-  warn: 'Vigilance',
-  pass: 'Conforme',
-};
+const VERDICT_LABELS: Record<Verdict, string> = CENTRAL_VERDICT_LABELS;
+
+/* ─── Download buttons (même mécanisme que la page audit) ─────────────── */
+
+function ReportDownloadButtons({
+  auditId,
+  layout = 'row',
+}: {
+  auditId: string;
+  layout?: 'row' | 'column';
+}) {
+  const [busy, setBusy] = React.useState<ReportFormat | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const onDownload = async (fmt: ReportFormat) => {
+    setError(null);
+    setBusy(fmt);
+    try {
+      await downloadReport(auditId, fmt);
+    } catch {
+      setError('Le téléchargement du rapport a échoué. Réessayez dans quelques instants.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className={layout === 'row' ? 'flex items-center gap-2' : 'flex flex-col gap-2'}>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={busy !== null}
+        className={layout === 'row' ? 'gap-1.5' : 'w-full justify-center gap-1.5'}
+        onClick={() => void onDownload('xlsx')}
+      >
+        <Download size={14} aria-hidden />
+        {busy === 'xlsx' ? 'Téléchargement…' : 'Télécharger Excel'}
+      </Button>
+      <Button
+        variant="primary"
+        size="sm"
+        disabled={busy !== null}
+        className={layout === 'row' ? 'gap-1.5' : 'w-full justify-center gap-1.5'}
+        onClick={() => void onDownload('pdf')}
+      >
+        <Download size={14} aria-hidden />
+        {busy === 'pdf' ? 'Téléchargement…' : 'Télécharger PDF'}
+      </Button>
+      {error && (
+        <p role="alert" className="text-xs text-status-fail">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 const PRIORITY_COLORS = {
   high: {
@@ -143,6 +215,48 @@ export default function RapportDetailPage() {
   const narrative = data.interpretation?.narrative ?? null;
   const reportCode = data.code ?? `RPT-${data.id.slice(0, 8).toUpperCase()}`;
 
+  /* Métriques du rapport — mêmes valeurs et seuils que la page audit. */
+  const findingMetrics = m1
+    ? [
+        {
+          name: 'Règle des 4/5 (80 %)',
+          value: m1.disparate_impact,
+          threshold: 0.8,
+          max: 1,
+          status:
+            m1.disparate_impact >= 0.8
+              ? 'pass'
+              : m1.disparate_impact >= 0.65
+                ? 'warn'
+                : 'fail',
+          plain:
+            m1.disparate_impact < 0.8
+              ? `Le groupe défavorisé est retenu ${(m1.disparate_impact * 100).toFixed(0)} % aussi souvent que le groupe de référence — en dessous du seuil de référence de 80 % (règle des 4/5, convention internationale).`
+              : "Le ratio d'acceptation entre groupes respecte le seuil de référence de 80 % (règle des 4/5, convention internationale).",
+          fmt: (v: number) => `${(v * 100).toFixed(0)} %`,
+        },
+        {
+          name: 'Parité démographique',
+          value: m1.demographic_parity_diff,
+          threshold: 0.1,
+          max: 0.4,
+          status:
+            m1.demographic_parity_diff <= 0.1
+              ? 'pass'
+              : m1.demographic_parity_diff <= 0.2
+                ? 'warn'
+                : 'fail',
+          plain:
+            m1.demographic_parity_diff > 0.1
+              ? `Écart de ${m1.demographic_parity_diff.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} point entre les taux d'acceptation — au-delà de la tolérance de 0,10.`
+              : "L'écart entre taux d'acceptation reste dans la tolérance de 0,10.",
+          fmt: (v: number) => v.toLocaleString('fr-FR', { maximumFractionDigits: 2 }),
+        },
+      ]
+    : [];
+  const failingMetricCount = findingMetrics.filter((f) => f.status === 'fail').length;
+  const regulatoryArticles = buildRegulatoryArticles(m1);
+
   return (
     <>
       <Topbar
@@ -150,18 +264,7 @@ export default function RapportDetailPage() {
           { label: 'Rapports', href: '/app/rapports' },
           { label: data.title },
         ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" className="gap-1.5">
-              <Download size={14} aria-hidden />
-              Télécharger Excel
-            </Button>
-            <Button variant="primary" size="sm" className="gap-1.5">
-              <Download size={14} aria-hidden />
-              Télécharger PDF
-            </Button>
-          </div>
-        }
+        actions={<ReportDownloadButtons auditId={data.id} layout="row" />}
       />
 
       <main className="page flex-1">
@@ -205,7 +308,8 @@ export default function RapportDetailPage() {
                     {m && (
                       <Gauge
                         value={m.risk_score}
-                        label="Score fairness"
+                        label="Score de risque"
+                        caption="Score de risque"
                         className="max-w-[120px]"
                       />
                     )}
@@ -213,7 +317,7 @@ export default function RapportDetailPage() {
                   <div className="min-w-0">
                     <div className="mb-1.5 flex items-center gap-2">
                       <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-                        Verdict
+                        Résultat
                       </span>
                       <StatusBadge tone={verdict as StatusTone}>
                         {VERDICT_LABELS[verdict]}
@@ -239,8 +343,11 @@ export default function RapportDetailPage() {
                 >
                   {[
                     {
-                      value: m1.disparate_impact.toFixed(2),
-                      label: 'Disparate Impact',
+                      value: m1.disparate_impact.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                      label: "Ratio d'acceptation entre groupes",
                       tone: m1.disparate_impact >= 0.8 ? 'pass' : m1.disparate_impact >= 0.65 ? 'warn' : 'fail',
                     },
                     {
@@ -249,14 +356,20 @@ export default function RapportDetailPage() {
                       tone: 'neutral',
                     },
                     {
-                      value: `${((1 - m1.disparate_impact) * 100).toFixed(0)} %`,
-                      label: 'Écart entre groupes',
+                      value: m1.demographic_parity_diff.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                      label: 'Écart de parité entre groupes (tolérance 0,10)',
                       tone: 'neutral',
                     },
                     {
-                      value: `${m1.groups.length > 0 ? '3/4' : '—'}`,
-                      label: 'Métriques non conformes',
-                      tone: verdict,
+                      value:
+                        findingMetrics.length > 0
+                          ? `${failingMetricCount}/${findingMetrics.length}`
+                          : '—',
+                      label: 'Métriques en échec',
+                      tone: failingMetricCount > 0 ? 'fail' : 'pass',
                     },
                   ].map(({ value, label, tone }) => (
                     <div
@@ -361,32 +474,7 @@ export default function RapportDetailPage() {
 
               {m1 ? (
                 <div className="flex flex-col gap-3">
-                  {[
-                    {
-                      name: 'Règle des 4/5 (Disparate Impact)',
-                      value: m1.disparate_impact,
-                      threshold: 0.8,
-                      max: 1,
-                      status: m1.disparate_impact >= 0.8 ? 'pass' : m1.disparate_impact >= 0.65 ? 'warn' : 'fail',
-                      plain:
-                        m1.disparate_impact < 0.8
-                          ? `Le groupe défavorisé est retenu ${(m1.disparate_impact * 100).toFixed(0)} % aussi souvent que le groupe de référence — en dessous du seuil légal de 80 %.`
-                          : 'Le ratio d\'acceptation entre groupes respecte le seuil légal de 80 %.',
-                      fmt: (v: number) => `${(v * 100).toFixed(0)} %`,
-                    },
-                    {
-                      name: 'Parité démographique',
-                      value: 1 - m1.demographic_parity_diff,
-                      threshold: 0.9,
-                      max: 1,
-                      status: m1.demographic_parity_diff <= 0.1 ? 'pass' : m1.demographic_parity_diff <= 0.2 ? 'warn' : 'fail',
-                      plain:
-                        m1.demographic_parity_diff > 0.1
-                          ? `Écart de ${m1.demographic_parity_diff.toFixed(2)} pts entre taux d'acceptation — au-delà de la tolérance.`
-                          : 'L\'écart reste dans la tolérance.',
-                      fmt: (v: number) => `${(v * 100).toFixed(0)} %`,
-                    },
-                  ].map((metric) => (
+                  {findingMetrics.map((metric) => (
                     <Card key={metric.name}>
                       <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0 flex-1">
@@ -442,7 +530,7 @@ export default function RapportDetailPage() {
               />
 
               <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                {REGULATORY_ARTICLES.map((art) => (
+                {regulatoryArticles.map((art) => (
                   <RegulatoryCallout
                     key={art.article}
                     article={art.article}
@@ -486,7 +574,7 @@ export default function RapportDetailPage() {
                       p === 'high' ? PRIORITY_COLORS.high.border
                       : p === 'medium' ? PRIORITY_COLORS.medium.border
                       : PRIORITY_COLORS.low.border;
-                    const label = p === 'high' ? 'PRIORITÉ 1' : p === 'medium' ? 'PRIORITÉ 2' : 'PRIORITÉ 3';
+                    const label = p === 'high' ? 'Priorité 1' : p === 'medium' ? 'Priorité 2' : 'Priorité 3';
                     return (
                       <Card
                         key={reco.title}
@@ -521,7 +609,7 @@ export default function RapportDetailPage() {
               )}
             </section>
 
-            {/* 6. Signature */}
+            {/* 6. Traçabilité */}
             <section
               id="signature"
               className="border-t border-border-subtle pt-8"
@@ -529,27 +617,9 @@ export default function RapportDetailPage() {
             >
               <SectionHead
                 eyebrow="06"
-                title="Signature & traçabilité"
-                sub="Horodatage électronique et hachage du dataset audité."
+                title="Traçabilité"
+                sub="Référence, date de génération et version de ce rapport."
               />
-
-              <Card className="mb-4 flex items-start gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-[#0b1410]">
-                  <FileText size={20} aria-hidden />
-                </span>
-                <div>
-                  <h4 className="text-[15px] font-medium text-fg">Signature électronique horodatée</h4>
-                  <p className="mt-1 text-[13px] leading-relaxed text-fg-secondary">
-                    Rapport généré par AuditIQ. Horodatage :{' '}
-                    <strong className="text-fg">
-                      {data.completed_at
-                        ? new Date(data.completed_at).toLocaleString('fr-FR')
-                        : '—'}
-                    </strong>
-                    . La signature couvre l&apos;intégralité de ce document.
-                  </p>
-                </div>
-              </Card>
 
               <Card className="overflow-hidden p-0">
                 <table className="w-full text-[13px]">
@@ -559,15 +629,19 @@ export default function RapportDetailPage() {
                         Élément
                       </th>
                       <th className="px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.06em] text-fg-muted">
-                        Hachage / référence
+                        Référence
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {[
-                      ['Identifiant rapport', reportCode],
-                      ['Moteur AuditIQ', 'audit-engine 2026.05.001'],
-                      ['Hachage SHA-256 (dataset)', '— (placeholder)'],
+                      ['Référence du rapport', reportCode],
+                      [
+                        'Date de génération',
+                        data.completed_at
+                          ? new Date(data.completed_at).toLocaleString('fr-FR')
+                          : new Date(data.created_at).toLocaleString('fr-FR'),
+                      ],
                       ['Version', `${data.module} · v1`],
                     ].map(([k, v]) => (
                       <tr key={k} className="border-b border-border-subtle last:border-b-0">
@@ -633,18 +707,9 @@ export default function RapportDetailPage() {
                 <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-fg-muted">
                   Exporter
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Button variant="primary" size="sm" className="w-full justify-center gap-1.5">
-                    <Download size={13} aria-hidden />
-                    PDF signé
-                  </Button>
-                  <Button variant="secondary" size="sm" className="w-full justify-center gap-1.5">
-                    <Download size={13} aria-hidden />
-                    Excel · données
-                  </Button>
-                </div>
+                <ReportDownloadButtons auditId={data.id} layout="column" />
                 <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">
-                  Le PDF inclut signature électronique horodatée et hachage du dataset audité.
+                  Le PDF reprend l&apos;intégralité des sections de ce rapport.
                 </p>
               </Card>
             </div>

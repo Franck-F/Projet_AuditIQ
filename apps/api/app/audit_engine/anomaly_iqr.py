@@ -28,13 +28,17 @@ def iqr_precheck(
             largest = int(counts.max())
             for label, n in counts.items():
                 n = int(n)
-                if n < min_group_abs or (
-                    largest > 0 and n / largest < min_group_ratio
-                ):
+                if n < min_group_abs:
                     warnings.append(
-                        f"Déséquilibre : groupe « {label} » de faible "
-                        f"effectif (n={n}) — résultats à interpréter avec "
-                        f"prudence."
+                        f"Effectif faible : groupe « {label} » "
+                        f"(n={n} < {min_group_abs}) — résultats à "
+                        f"interpréter avec prudence."
+                    )
+                elif largest > 0 and n / largest < min_group_ratio:
+                    warnings.append(
+                        f"Déséquilibre : groupe « {label} » très minoritaire "
+                        f"(n={n} pour {largest} dans le groupe le plus "
+                        f"nombreux) — résultats à interpréter avec prudence."
                     )
 
     cols = numeric_columns or []

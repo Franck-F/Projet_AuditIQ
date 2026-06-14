@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { Icons } from '@/components/ui/icons';
 import { NotificationsPopover } from '@/components/app/NotificationsPopover';
+import { useSidebar } from '@/components/app/SidebarContext';
 
 interface Crumb {
   label: string;
@@ -30,10 +31,21 @@ export function Topbar({
   onSearch,
   actions,
 }: TopbarProps): React.ReactElement {
+  const { navOpen, openNav } = useSidebar();
   return (
     <div className="topbar">
       <div className="topbar-inner">
-        <div style={{ minWidth: 0 }}>
+        <button
+          type="button"
+          className="topbar-burger icon-btn"
+          aria-label="Ouvrir le menu"
+          aria-expanded={navOpen}
+          aria-controls="app-sidebar"
+          onClick={openNav}
+        >
+          <Icons.menu size={18} />
+        </button>
+        <div style={{ minWidth: 0, flex: 1 }}>
         {crumbs.length > 0 && (
           <nav
             aria-label="Fil d'Ariane"

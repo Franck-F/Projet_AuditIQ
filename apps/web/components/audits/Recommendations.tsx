@@ -8,9 +8,9 @@ interface RecommendationsProps {
 }
 
 const PRIORITY_LABEL: Record<RecommendationOut['priority'], string> = {
-  high: 'Action prioritaire',
-  medium: 'À planifier',
-  low: 'Maintien / veille',
+  high: 'Priorité 1',
+  medium: 'Priorité 2',
+  low: 'Priorité 3',
 };
 
 const PRIORITY_CLASS: Record<RecommendationOut['priority'], string> = {

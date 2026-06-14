@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check, CircleAlert } from 'lucide-react';
 
+import { FinalCta } from '@/components/marketing/FinalCta';
+
 export const metadata: Metadata = {
-  title: 'AuditIQ — Auditez la fairness de votre IA',
+  title: { absolute: 'AuditIQ — Auditez la fairness de votre IA' },
   description:
-    "Plateforme SaaS d'audit de biais des systèmes d'IA pour PME. Détectez, expliquez et documentez les écarts en moins d'une heure, conformément à l'AI Act européen.",
+    "Plateforme SaaS d'audit de biais des systèmes d'IA pour PME. Détectez, expliquez et documentez les écarts — premier audit en moins de 10 minutes. Pensé pour les exigences de l'AI Act européen.",
 };
 
 /* ============================================================================
@@ -18,42 +20,21 @@ export default function LandingPage() {
     <>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <header className="hero">
-        {/* Tunnel rings (decorative) */}
-        <div className="tunnel" aria-hidden="true">
-          <div className="tunnel-glow" />
-          <div className="tunnel-rings">
-            <i style={{ animationDelay: '0s', transform: 'translate(-50%,-50%) scale(0.060)' }} />
-            <i style={{ animationDelay: '-0.57s', transform: 'translate(-50%,-50%) scale(0.132)' }} />
-            <i style={{ animationDelay: '-1.14s', transform: 'translate(-50%,-50%) scale(0.205)' }} />
-            <i style={{ animationDelay: '-1.71s', transform: 'translate(-50%,-50%) scale(0.277)' }} />
-            <i style={{ animationDelay: '-2.29s', transform: 'translate(-50%,-50%) scale(0.349)' }} />
-            <i style={{ animationDelay: '-2.86s', transform: 'translate(-50%,-50%) scale(0.422)' }} />
-            <i style={{ animationDelay: '-3.43s', transform: 'translate(-50%,-50%) scale(0.494)' }} />
-            <i style={{ animationDelay: '-4.00s', transform: 'translate(-50%,-50%) scale(0.566)' }} />
-            <i style={{ animationDelay: '-4.57s', transform: 'translate(-50%,-50%) scale(0.639)' }} />
-            <i style={{ animationDelay: '-5.14s', transform: 'translate(-50%,-50%) scale(0.711)' }} />
-            <i style={{ animationDelay: '-5.71s', transform: 'translate(-50%,-50%) scale(0.783)' }} />
-            <i style={{ animationDelay: '-6.29s', transform: 'translate(-50%,-50%) scale(0.855)' }} />
-            <i style={{ animationDelay: '-6.86s', transform: 'translate(-50%,-50%) scale(0.928)' }} />
-            <i style={{ animationDelay: '-7.43s', transform: 'translate(-50%,-50%) scale(1.000)' }} />
-          </div>
-        </div>
-
         <div className="wrap">
-          <div className="hero-lead rv">
-            <p className="hero-kicker">Audit de fairness · Conforme AI Act</p>
+          <div className="hero-grid rv">
+          <div className="hero-lead">
+            <p className="hero-kicker">Audit de fairness · Pensé pour l&apos;AI Act</p>
             <h1>
               Détectez les biais de votre IA. Documentez votre <em>conformité</em>.
             </h1>
             <p className="hero-sub">
               AuditIQ mesure l&apos;équité de vos modèles et chatbots, explique chaque écart en
-              langage clair et génère un rapport opposable, aligné sur l&apos;AI Act. Sans écrire
-              une ligne de code.
+              langage clair et génère un rapport documenté et traçable, aligné sur l&apos;AI Act.
+              Sans écrire une ligne de code.
             </p>
             <div className="hero-cta">
               <Link className="btn btn-primary lg" href="/inscription">
                 Essayer gratuitement
-                <ArrowRight size={17} strokeWidth={1.7} />
               </Link>
               <a className="tlink" href="#etapes">
                 Voir comment ça marche
@@ -63,12 +44,12 @@ export default function LandingPage() {
             <div className="hero-meta">
               <span><b />Premier audit gratuit</span>
               <span><b />Hébergement européen</span>
-              <span><b />Résultat en moins d&apos;une heure</span>
+              <span><b />Premier audit en moins de 10 minutes</span>
             </div>
           </div>
 
-          {/* Ledger card */}
-          <div className="ledger rv">
+          {/* Ledger card — vrai artefact produit, statique */}
+          <div className="ledger">
             <div className="ledger-top">
               <div className="ledger-id">
                 <span className="mono" style={{ fontSize: '12px', letterSpacing: '.05em', color: 'var(--fg-muted)', textTransform: 'uppercase' }}>
@@ -93,7 +74,7 @@ export default function LandingPage() {
               {/* Metric 1 — Demographic Parity */}
               <div className="ledger-metric">
                 <div className="lv">
-                  <span className="eyebrow" style={{ fontSize: '11px' }}>Demographic Parity</span>
+                  <span className="eyebrow" style={{ fontSize: '11px' }}>Égalité de traitement (Demographic Parity)</span>
                   <span className="val" style={{ color: 'var(--warn)' }}>0.78</span>
                 </div>
                 <div className="meter">
@@ -108,7 +89,7 @@ export default function LandingPage() {
               {/* Metric 2 — Equal Opportunity */}
               <div className="ledger-metric">
                 <div className="lv">
-                  <span className="eyebrow" style={{ fontSize: '11px' }}>Equal Opportunity</span>
+                  <span className="eyebrow" style={{ fontSize: '11px' }}>Égalité des chances (Equal Opportunity)</span>
                   <span className="val" style={{ color: 'var(--accent)' }}>0.92</span>
                 </div>
                 <div className="meter">
@@ -123,7 +104,7 @@ export default function LandingPage() {
               {/* Metric 3 — Equalized Odds */}
               <div className="ledger-metric">
                 <div className="lv">
-                  <span className="eyebrow" style={{ fontSize: '11px' }}>Equalized Odds</span>
+                  <span className="eyebrow" style={{ fontSize: '11px' }}>Égalité des taux d&apos;erreur (Equalized Odds)</span>
                   <span className="val" style={{ color: 'var(--warn)' }}>0.74</span>
                 </div>
                 <div className="meter">
@@ -141,36 +122,25 @@ export default function LandingPage() {
               <span>Aperçu produit — valeurs issues d&apos;un scénario RH fictif, à titre d&apos;illustration.</span>
             </div>
           </div>
+          </div>
 
-          {/* Marquee */}
-          <div className="cloud-wrap rv" style={{ marginTop: 'clamp(48px,6vw,72px)' }}>
-            <p className="eyebrow" style={{ textAlign: 'center', marginBottom: '18px' }}>
+          {/* Références méthodologiques — rangée statique */}
+          <div className="refs" style={{ marginTop: 'clamp(40px,5vw,56px)' }}>
+            <p className="eyebrow" style={{ marginBottom: '14px' }}>
               S&apos;appuie sur les outils et méthodes de référence de la fairness
             </p>
-            <div className="marquee">
-              <div className="marquee-track">
-                <span className="marquee-item">Fairlearn</span>
-                <span className="marquee-item">AIF360</span>
-                <span className="marquee-item">Aequitas</span>
-                <span className="marquee-item">SHAP</span>
-                <span className="marquee-item">scikit-learn</span>
-                <span className="marquee-item">Fairness Indicators</span>
-                <span className="marquee-item">Demographic Parity</span>
-                <span className="marquee-item">Equal Opportunity</span>
-                <span className="marquee-item">Règle des 4/5</span>
-                <span className="marquee-item">Equalized Odds</span>
-                {/* duplicate for infinite loop */}
-                <span className="marquee-item" aria-hidden="true">Fairlearn</span>
-                <span className="marquee-item" aria-hidden="true">AIF360</span>
-                <span className="marquee-item" aria-hidden="true">Aequitas</span>
-                <span className="marquee-item" aria-hidden="true">SHAP</span>
-                <span className="marquee-item" aria-hidden="true">scikit-learn</span>
-                <span className="marquee-item" aria-hidden="true">Fairness Indicators</span>
-                <span className="marquee-item" aria-hidden="true">Demographic Parity</span>
-                <span className="marquee-item" aria-hidden="true">Equal Opportunity</span>
-                <span className="marquee-item" aria-hidden="true">Règle des 4/5</span>
-                <span className="marquee-item" aria-hidden="true">Equalized Odds</span>
-              </div>
+            <div className="refs-list">
+              <span className="refs-item">Disparate Impact</span>
+              <span className="refs-item">Règle des 4/5</span>
+              <span className="refs-item">Demographic Parity</span>
+              <span className="refs-item">Equal Opportunity</span>
+              <span className="refs-item">Equalized Odds</span>
+              <span className="refs-item">Analyse intersectionnelle</span>
+              <span className="refs-item">Clustering k-means</span>
+              <span className="refs-item">Test du χ²</span>
+              <span className="refs-item">Prompts contrefactuels</span>
+              <span className="refs-item">Fairlearn</span>
+              <span className="refs-item">scikit-learn</span>
             </div>
           </div>
         </div>
@@ -179,25 +149,25 @@ export default function LandingPage() {
       {/* ── PROBLEM ──────────────────────────────────────────────────────── */}
       <section id="produit">
         <div className="wrap g2">
-          <div className="rv">
+          <div>
             <p className="eyebrow acc">Le problème</p>
             <h2 className="title" style={{ marginTop: '12px' }}>
               L&apos;AI Act s&apos;applique. Votre PME n&apos;a ni data scientist, ni juriste IA.
             </h2>
             <p className="lede" style={{ marginTop: '18px', fontSize: '17px' }}>
-              Dès août 2026, les systèmes d&apos;IA à haut risque devront prouver l&apos;absence de
-              discrimination, sous peine d&apos;amendes allant jusqu&apos;à 7 % du chiffre
-              d&apos;affaires mondial.
+              Dès août 2026, les systèmes d&apos;IA à haut risque devront documenter la détection
+              et la maîtrise de leurs biais, sous peine d&apos;amendes pouvant atteindre 3 % du
+              chiffre d&apos;affaires mondial (article 99 du règlement).
             </p>
             <p className="lede" style={{ marginTop: '14px' }}>
               AuditIQ traduit la complexité technique et réglementaire en un produit que vos équipes
               savent utiliser : vous chargez vos données, nous calculons les métriques reconnues,
-              expliquons les écarts et produisons un rapport opposable.
+              expliquons les écarts et produisons un rapport documenté et traçable.
             </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="card prob rv">
+            <div className="card prob">
               <span className="prob-mark">!</span>
               <div>
                 <h4 style={{ fontSize: '16px' }}>Des biais invisibles</h4>
@@ -207,7 +177,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="card prob rv">
+            <div className="card prob">
               <span className="prob-mark">!</span>
               <div>
                 <h4 style={{ fontSize: '16px' }}>Une expertise hors budget</h4>
@@ -217,7 +187,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="card prob rv">
+            <div className="card prob">
               <span className="prob-mark">!</span>
               <div>
                 <h4 style={{ fontSize: '16px' }}>Des outils pour data teams</h4>
@@ -227,7 +197,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="card prob rv">
+            <div className="card prob">
               <span className="prob-mark">!</span>
               <div>
                 <h4 style={{ fontSize: '16px' }}>Une charge documentaire lourde</h4>
@@ -247,10 +217,10 @@ export default function LandingPage() {
         style={{ borderBlock: '1px solid var(--border-subtle)', background: 'var(--surface)' }}
       >
         <div className="wrap">
-          <div className="sec-center rv">
+          <div className="sec-center">
             <p className="eyebrow acc">Comment ça marche</p>
             <h2 className="title" style={{ marginTop: '12px' }}>
-              Quatre étapes. Une heure. Aucune ligne de code.
+              Quatre étapes. Quelques minutes. Aucune ligne de code.
             </h2>
             <p className="lede" style={{ marginTop: '14px', fontSize: '17px' }}>
               Un parcours conçu pour des responsables RH, conformité ou innovation — pas pour des
@@ -275,15 +245,15 @@ export default function LandingPage() {
           </div>
 
           <div className="g4" style={{ marginTop: '44px' }}>
-            <div className="card step rv">
+            <div className="card step">
               <span className="step-n">Étape 01</span>
               <h4 style={{ fontSize: '16px' }}>Importez vos données</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>
-                CSV, Excel ou API. Mapping automatique des colonnes. Pour un chatbot, une simple clé
-                suffit.
+                Un fichier CSV suffit aujourd&apos;hui. Les colonnes sont détectées et suggérées
+                automatiquement.
               </p>
             </div>
-            <div className="card step rv">
+            <div className="card step">
               <span className="step-n">Étape 02</span>
               <h4 style={{ fontSize: '16px' }}>Configurez l&apos;audit</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>
@@ -291,7 +261,7 @@ export default function LandingPage() {
                 défaut ou ajustez-les.
               </p>
             </div>
-            <div className="card step rv">
+            <div className="card step">
               <span className="step-n">Étape 03</span>
               <h4 style={{ fontSize: '16px' }}>Recevez le diagnostic</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>
@@ -299,7 +269,7 @@ export default function LandingPage() {
                 réglementaire.
               </p>
             </div>
-            <div className="card step rv">
+            <div className="card step">
               <span className="step-n">Étape 04</span>
               <h4 style={{ fontSize: '16px' }}>Exportez la trace</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>
@@ -314,7 +284,7 @@ export default function LandingPage() {
       {/* ── MODULES ──────────────────────────────────────────────────────── */}
       <section id="modules">
         <div className="wrap">
-          <div className="rv" style={{ maxWidth: '720px' }}>
+          <div style={{ maxWidth: '720px' }}>
             <p className="eyebrow acc">Trois modules d&apos;audit</p>
             <h2 className="title" style={{ marginTop: '12px' }}>
               Une couverture calée sur les IA réellement déployées en PME.
@@ -322,7 +292,7 @@ export default function LandingPage() {
           </div>
           <div className="g3" style={{ marginTop: '40px' }}>
             {/* Module 01 */}
-            <div className="card mod rv">
+            <div className="card mod">
               <span className="step-n">Module 01</span>
               <h3 className="sub">Audit supervisé</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
@@ -330,9 +300,9 @@ export default function LandingPage() {
                 fairness canoniques et écarts visualisés.
               </p>
               <ul>
-                <li>Demographic Parity, Equal Opportunity, Equalized Odds</li>
-                <li>Règle des quatre cinquièmes (4/5)</li>
-                <li>Décomposition par groupe et sous-groupe</li>
+                <li>Égalité de traitement, égalité des chances, égalité des taux d&apos;erreur</li>
+                <li>Disparate Impact et règle des quatre cinquièmes (4/5)</li>
+                <li>Analyse intersectionnelle par groupe et sous-groupe</li>
                 <li>Explication en langage naturel</li>
               </ul>
               <Link className="mod-link" href="/modules">
@@ -342,17 +312,17 @@ export default function LandingPage() {
             </div>
 
             {/* Module 02 */}
-            <div className="card mod rv">
+            <div className="card mod">
               <span className="step-n">Module 02</span>
               <h3 className="sub">Détection non supervisée</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
-                Pour les datasets sans variable cible. Identification de clusters déviants et
-                signalement de proxies de critères protégés.
+                Pour les jeux de données sans variable cible. Identification de clusters déviants
+                où un groupe protégé est sur-représenté — un signal possible de proxy.
               </p>
               <ul>
-                <li>Clustering automatique paramétré</li>
-                <li>Features dominantes par cluster</li>
-                <li>Proxies signalés (code postal ⇆ origine…)</li>
+                <li>Clustering k-means paramétré</li>
+                <li>Test du χ² sur la composition des clusters</li>
+                <li>Variables dominantes par cluster</li>
                 <li>Lecture pédagogique du risque</li>
               </ul>
               <Link className="mod-link" href="/modules">
@@ -362,17 +332,17 @@ export default function LandingPage() {
             </div>
 
             {/* Module 03 */}
-            <div className="card mod rv">
+            <div className="card mod">
               <span className="step-n">Module 03</span>
               <h3 className="sub">Audit LLM &amp; chatbot</h3>
               <p className="lede" style={{ fontSize: '13.5px' }}>
-                Pour les assistants conversationnels (SAV, RH, médical). Prompts pairs, comparaison
-                des réponses, scoring multi-axes.
+                Pour les assistants conversationnels (SAV, RH, médical). Paires de prompts
+                contrefactuels, comparaison des réponses, scoring multi-axes.
               </p>
               <ul>
-                <li>Banque de 400+ prompts pairs à jour</li>
-                <li>Longueur, sentiment, taux de refus</li>
-                <li>Score par axe : genre, origine, âge, handicap</li>
+                <li>Banque versionnée de paires de prompts (FR/EN)</li>
+                <li>Longueur, polarité, taux de refus</li>
+                <li>6 axes : genre, origine, âge, religion, handicap, orientation</li>
                 <li>Extraits significatifs annotés</li>
               </ul>
               <Link className="mod-link" href="/modules">
@@ -391,14 +361,8 @@ export default function LandingPage() {
       >
         <div className="wrap">
           <div
-            className="card rv"
-            style={{
-              padding: 'clamp(28px,4vw,48px)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '48px',
-              alignItems: 'center',
-            }}
+            className="card split2"
+            style={{ padding: 'clamp(28px,4vw,48px)' }}
           >
             <div>
               <p className="eyebrow acc">Ancrage réglementaire</p>
@@ -487,7 +451,6 @@ export default function LandingPage() {
           </div>
 
           <div
-            className="rv"
             style={{
               marginTop: '18px',
               padding: '16px 18px',
@@ -514,21 +477,22 @@ export default function LandingPage() {
         style={{ borderBlock: '1px solid var(--border-subtle)', background: 'var(--surface)' }}
       >
         <div className="wrap">
-          <div className="sec-center rv">
+          <div className="sec-center">
             <p className="eyebrow acc">Tarifs</p>
             <h2 className="title" style={{ marginTop: '12px' }}>
               Commencez gratuitement. Passez à l&apos;échelle quand vous voulez.
             </h2>
             <p className="lede" style={{ marginTop: '14px', fontSize: '17px' }}>
-              Deux offres, sans engagement caché ni carte bancaire pour démarrer.
+              Quatre paliers — Découverte, PME, Entreprise, Souverain. Sans carte bancaire pour
+              démarrer.
             </p>
           </div>
 
           <div className="price-grid" style={{ marginTop: '44px' }}>
-            {/* Gratuit */}
-            <div className="card price rv">
+            {/* Découverte */}
+            <div className="card price">
               <div>
-                <h3 style={{ fontSize: '20px' }}>Gratuit</h3>
+                <h3 style={{ fontSize: '20px' }}>Découverte</h3>
                 <p className="lede" style={{ fontSize: '13.5px', marginTop: '4px' }}>
                   Pour auditer un premier modèle.
                 </p>
@@ -543,11 +507,11 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />
-                  Rapport PDF
+                  Jusqu&apos;à 5 000 lignes par fichier
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />
-                  Jusqu&apos;à 3 utilisateurs
+                  Rapport PDF
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />
@@ -559,18 +523,16 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Sur devis */}
-            <div className="card price feat rv">
+            {/* PME */}
+            <div className="card price feat">
               <span className="price-tag">Recommandé</span>
               <div>
-                <h3 style={{ fontSize: '20px' }}>Sur devis</h3>
+                <h3 style={{ fontSize: '20px' }}>PME</h3>
                 <p className="lede" style={{ fontSize: '13.5px', marginTop: '4px' }}>
-                  Pour une conformité en continu, à votre échelle.
+                  Pour une routine de conformité.
                 </p>
               </div>
-              <div className="price-amt" style={{ fontSize: '38px' }}>
-                Sur devis
-              </div>
+              <div className="price-amt">Sur mesure</div>
               <ul>
                 <li>
                   <Check size={17} strokeWidth={2} />
@@ -578,59 +540,39 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />
+                  Jusqu&apos;à 1 million de lignes par fichier
+                </li>
+                <li>
+                  <Check size={17} strokeWidth={2} />
                   Rapports PDF &amp; Excel structurés AI Act
                 </li>
                 <li>
                   <Check size={17} strokeWidth={2} />
-                  Utilisateurs illimités · rôles &amp; permissions
-                </li>
-                <li>
-                  <Check size={17} strokeWidth={2} />
-                  Historique 5 ans &amp; comparaison d&apos;audits
-                </li>
-                <li>
-                  <Check size={17} strokeWidth={2} />
-                  SSO, audit log &amp; hébergement souverain
-                </li>
-                <li>
-                  <Check size={17} strokeWidth={2} />
-                  Accompagnement expert AI Act
+                  Support sous 24 h ouvrées
                 </li>
               </ul>
               <Link className="btn btn-primary" href="/contact" style={{ width: '100%' }}>
-                Nous contacter
+                Programmer une démo
               </Link>
             </div>
           </div>
+
+          <p className="lede" style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
+            Besoin de plus ? Les paliers <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Entreprise (sur devis)</strong>{' '}
+            et <strong style={{ color: 'var(--fg)', fontWeight: 500 }}>Souverain (sur devis)</strong> sont détaillés sur{' '}
+            <Link href="/tarifs" style={{ color: 'var(--accent)' }}>la page tarifs</Link>.
+          </p>
         </div>
       </section>
 
       {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
-      <section>
-        <div className="wrap">
-          <div className="card final rv">
-            <div>
-              <p className="eyebrow acc">Passez à l&apos;action</p>
-              <h2 className="title" style={{ marginTop: '12px' }}>
-                Lancez votre premier audit fairness aujourd&apos;hui.
-              </h2>
-              <p className="lede" style={{ marginTop: '14px', maxWidth: '54ch' }}>
-                Gratuit, sans carte bancaire. Importez vos données, obtenez un diagnostic et un
-                rapport opposable en moins d&apos;une heure.
-              </p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link className="btn btn-primary lg" href="/inscription">
-                Essayer gratuitement
-                <ArrowRight size={17} strokeWidth={1.7} />
-              </Link>
-              <Link className="btn btn-outline lg" href="/contact">
-                Contactez-nous
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FinalCta
+        eyebrow="Passez à l'action"
+        title="Lancez votre premier audit fairness aujourd'hui."
+        body="Gratuit, sans carte bancaire. Importez vos données, obtenez un diagnostic et un rapport documenté et traçable — premier audit en moins de 10 minutes."
+        primary={{ label: 'Essayer gratuitement', href: '/inscription' }}
+        secondary={{ label: 'Contactez-nous', href: '/contact' }}
+      />
     </>
   );
 }

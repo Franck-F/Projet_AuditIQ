@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { createClient } from '@/lib/supabase/client';
 
-export default function VerificationEmailPage() {
+function VerificationEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
 
@@ -104,5 +104,25 @@ export default function VerificationEmailPage() {
         </div>
       </div>
     </AuthShell>
+  );
+}
+
+export default function VerificationEmailPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <AuthShell
+          activeTab="signup"
+          heading="Vérifiez votre adresse email."
+          intro="Cliquez sur le lien dans l'email pour activer votre compte."
+        >
+          <div className="w-full py-8 text-center text-sm text-fg-secondary">
+            Chargement…
+          </div>
+        </AuthShell>
+      }
+    >
+      <VerificationEmailContent />
+    </React.Suspense>
   );
 }

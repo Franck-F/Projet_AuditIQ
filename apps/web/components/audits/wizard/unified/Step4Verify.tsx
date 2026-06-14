@@ -41,24 +41,24 @@ function Step4VerifyM1(): React.ReactElement {
           <li className="flex items-start gap-2">
             <span className="mt-0.5 text-fg-muted">•</span>
             <span>
-              <strong>Disparate Impact</strong> + règle des{' '}
-              <strong>4/5</strong>
+              <strong>Écart de taux d&apos;acceptation entre groupes</strong> (Disparate
+              Impact) + règle des <strong>4/5</strong>
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="mt-0.5 text-fg-muted">•</span>
             <span>
-              <strong>Demographic Parity</strong>
+              <strong>Parité démographique</strong> (Demographic Parity)
             </span>
           </li>
           {groundTruth && (
             <li className="flex items-start gap-2">
               <span className="mt-0.5 text-fg-muted">•</span>
               <span>
-                <strong>Equal Opportunity</strong> /{' '}
-                <strong>Equalized Odds</strong>{' '}
+                <strong>Égalité des chances</strong> et <strong>calibration</strong>{' '}
+                (Equal Opportunity / Equalized Odds){' '}
                 <span className="text-fg-muted">
-                  (vérité-terrain fournie : <code>{groundTruth}</code>)
+                  (résultat réel des décisions fourni : <code>{groundTruth}</code>)
                 </span>
               </span>
             </li>
@@ -105,9 +105,9 @@ function Step4VerifyM2(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-fg">Paramètres KMeans</h2>
+      <h2 className="text-lg font-semibold text-fg">Réglages de la détection de groupes</h2>
       <p className="text-sm text-fg-secondary">
-        Les valeurs par défaut conviennent à la plupart des situations.
+        Les valeurs par défaut conviennent dans la grande majorité des cas.
         Ajustez uniquement si vous avez une raison précise.
       </p>
 
@@ -118,7 +118,7 @@ function Step4VerifyM2(): React.ReactElement {
           className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-fg"
           aria-expanded={expanded}
         >
-          <span>Personnaliser les paramètres KMeans</span>
+          <span>Personnaliser les réglages</span>
           <span
             className="ml-2 text-fg-muted transition-transform"
             style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -143,7 +143,7 @@ function Step4VerifyM2(): React.ReactElement {
                 htmlFor="s4-k"
                 className="text-sm font-medium text-fg-secondary"
               >
-                Nombre de clusters (k)
+                Nombre de groupes recherchés (k)
               </label>
               <input
                 id="s4-k"
@@ -155,7 +155,7 @@ function Step4VerifyM2(): React.ReactElement {
                 {...register('k')}
                 onFocus={() => setHelpKey('wizard.step4.advanced')}
                 onBlur={() => clearHelpKey()}
-                aria-label="Nombre de clusters"
+                aria-label="Nombre de groupes recherchés"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -183,7 +183,7 @@ function Step4VerifyM2(): React.ReactElement {
                 htmlFor="s4-alpha"
                 className="text-sm font-medium text-fg-secondary"
               >
-                Seuil χ² (alpha)
+                Niveau d&apos;exigence statistique (α)
               </label>
               <input
                 id="s4-alpha"
@@ -196,7 +196,7 @@ function Step4VerifyM2(): React.ReactElement {
                 {...register('chi2_alpha')}
                 onFocus={() => setHelpKey('wizard.step4.advanced')}
                 onBlur={() => clearHelpKey()}
-                aria-label="Seuil χ²"
+                aria-label="Niveau d'exigence statistique"
               />
             </div>
           </div>
@@ -244,10 +244,14 @@ function Step4VerifyM3({ values }: { values: UnifiedValues }): React.ReactElemen
           reason: result.reason ?? 'Erreur inconnue',
         });
       }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Erreur réseau';
-      setState({ status: 'done', ok: false, reason: message });
+    } catch {
+      // Pas de message technique brut (Axios) à l'écran : message français générique.
+      setState({
+        status: 'done',
+        ok: false,
+        reason:
+          "La vérification n'a pas pu être effectuée. Vérifiez l'URL et l'authentification, puis réessayez.",
+      });
     }
   }, [values]);
 
@@ -259,8 +263,8 @@ function Step4VerifyM3({ values }: { values: UnifiedValues }): React.ReactElemen
 
       <div className="rounded-md border border-border-default bg-surface-muted p-4">
         <p className="text-sm text-fg-secondary">
-          Étape FACULTATIVE — vous pouvez sauter avec Suivant. L&apos;échec ne bloque
-          pas l&apos;audit complet.
+          Étape facultative&nbsp;: vous pouvez passer à l&apos;étape suivante. Un échec
+          du test ne bloque pas l&apos;audit complet.
         </p>
       </div>
 
