@@ -189,8 +189,11 @@ describe('EquipePage — données réelles', () => {
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'link@cabinet.fr');
     await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
-    expect(await within(dialog).findByDisplayValue('https://app/inv/xyz')).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: /Copier le lien/i })).toBeInTheDocument();
+    // Après la mutation, la modal re-rend (form -> vue « lien à copier »). On
+    // re-cherche via screen.findBy* (qui réessaie) plutôt que de réutiliser le
+    // nœud `dialog` capturé avant le re-render — sinon flake en CI.
+    expect(await screen.findByDisplayValue('https://app/inv/xyz')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Copier le lien/i })).toBeInTheDocument();
   });
 
   it('affiche le détail d’erreur 409 (déjà membre)', async () => {
