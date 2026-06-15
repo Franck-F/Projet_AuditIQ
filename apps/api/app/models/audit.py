@@ -51,3 +51,8 @@ class Audit(Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # NULL = audit actif ; non-NULL = archivé (date d'archivage). L'archivage
+    # est non destructif : il masque l'audit du dashboard sans le supprimer.
+    archived_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

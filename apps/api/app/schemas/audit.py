@@ -475,11 +475,41 @@ class AuditOut(BaseModel):
     privileged_value: str | None = None
     created_at: datetime.datetime
     completed_at: datetime.datetime | None = None
+    archived_at: datetime.datetime | None = None
     error: str | None = None
     metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | None = None
     interpretation: InterpretationOut | None = None
     pre_check: list[str] = []
     config: dict[str, object] | None = None
+
+
+class AuditArchiveIn(BaseModel):
+    """Corps de PATCH /audits/{id} : archive (true) ou désarchive (false)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    archived: bool
+
+
+class AuditListItem(BaseModel):
+    """Ligne du tableau « Mes audits » / « Archivés » (liste org-scopée).
+
+    Reprend la forme exposée par le dashboard (« recent_audits ») pour la
+    cohérence côté web, en ajoutant ``status`` et ``archived_at`` utiles à la
+    distinction actifs/archivés.
+    """
+
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+    id: uuid.UUID
+    code: str | None
+    title: str
+    module: str
+    status: str
+    verdict: Verdict | None
+    risk_score: int | None
+    created_at: datetime.datetime
+    archived_at: datetime.datetime | None
 
 
 class M3TestConnectionIn(BaseModel):

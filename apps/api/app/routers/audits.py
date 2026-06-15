@@ -8,12 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
 from app.core.deps import get_current_user
+from app.core.errors import APIError
 from app.integrations.llm_target import TargetConfig, assert_public_url
 from app.integrations.storage import Storage, get_report_storage
 from app.interpretation.base import LLMProvider
 from app.interpretation.gemini import get_llm_provider
+from app.routers.datasets import get_storage_dep
 from app.schemas.audit import (
+    AuditArchiveIn,
     AuditCreate,
+    AuditListItem,
     AuditOut,
     M3TestConnectionIn,
     M3TestConnectionOut,
@@ -21,10 +25,25 @@ from app.schemas.audit import (
     M3ValidateUrlOut,
 )
 from app.schemas.auth import CurrentUser
+from app.schemas.org import ADMIN_ROLES
 from app.services import audit_service, report_service
 from app.services.llm_test_connection import check_connection
 
 router = APIRouter(prefix="/audits", tags=["audits"])
+
+
+class ForbiddenError(APIError):
+    status = 403
+    title = "Forbidden"
+
+
+def _require_owner_or_admin(user: CurrentUser) -> None:
+    # La suppression est destructive : réservée owner/admin (même règle que
+    # les actions d'administration de l'organisation).
+    if user.role not in ADMIN_ROLES:
+        raise ForbiddenError(
+            "La suppression d'un audit est réservée aux administrateurs."
+        )
 
 
 def get_llm_provider_dep() -> LLMProvider | None:
@@ -55,6 +74,17 @@ async def create_audit(
     return out
 
 
+@router.get("", response_model=list[AuditListItem])
+async def list_audits(
+    archived: bool = False,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+) -> list[AuditListItem]:
+    return await audit_service.list_audits(
+        session, org_id=user.org_id, archived=archived
+    )
+
+
 @router.get("/{audit_id}", response_model=AuditOut)
 async def get_audit(
     audit_id: uuid.UUID,
@@ -62,6 +92,40 @@ async def get_audit(
     session: AsyncSession = Depends(get_session),  # noqa: B008
 ) -> AuditOut:
     return await audit_service.get_audit(session, audit_id, org_id=user.org_id)
+
+
+@router.patch("/{audit_id}", response_model=AuditOut)
+async def set_audit_archived(
+    audit_id: uuid.UUID,
+    body: AuditArchiveIn,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+) -> AuditOut:
+    # Garde : membre de l'org (404 si l'audit n'appartient pas à l'org).
+    return await audit_service.set_audit_archived(
+        session, audit_id, org_id=user.org_id, archived=body.archived
+    )
+
+
+@router.delete("/{audit_id}", status_code=204)
+async def delete_audit(
+    audit_id: uuid.UUID,
+    user: CurrentUser = Depends(get_current_user),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+    report_storage: Storage = Depends(get_report_storage_dep),  # noqa: B008
+    dataset_storage: Storage = Depends(get_storage_dep),  # noqa: B008
+) -> Response:
+    # Garde : owner/admin (403 sinon — action destructive). 404 si l'audit
+    # n'est pas dans l'org (résolu dans le service).
+    _require_owner_or_admin(user)
+    await audit_service.delete_audit(
+        session,
+        audit_id,
+        org_id=user.org_id,
+        report_storage=report_storage,
+        dataset_storage=dataset_storage,
+    )
+    return Response(status_code=204)
 
 
 @router.get("/{audit_id}/report.xlsx")

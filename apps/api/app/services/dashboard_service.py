@@ -22,7 +22,7 @@ async def get_summary(
                 AuditResult.audit_id == Audit.id,
                 isouter=True,
             )
-            .where(Audit.org_id == org_id)
+            .where(Audit.org_id == org_id, Audit.archived_at.is_(None))
             .order_by(Audit.created_at.desc())
         )
     ).all()
