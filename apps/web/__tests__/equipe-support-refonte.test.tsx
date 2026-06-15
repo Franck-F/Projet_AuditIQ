@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -140,7 +140,7 @@ describe('EquipePage — données réelles', () => {
     const user = userEvent.setup();
     render(<EquipePage />);
     await user.click(screen.getByRole('button', { name: /Révoquer/i }));
-    expect(mutate.revoke).toHaveBeenCalledWith('inv-1');
+    await waitFor(() => expect(mutate.revoke).toHaveBeenCalledWith('inv-1'));
   });
 
   it('change le rôle d’un membre éditable', async () => {
@@ -149,7 +149,7 @@ describe('EquipePage — données réelles', () => {
     render(<EquipePage />);
     const select = screen.getByLabelText(/Rôle de karim@cabinet.fr/i);
     await user.selectOptions(select, 'admin');
-    expect(mutate.updateRole).toHaveBeenCalledWith({ userId: 'u-2', role: 'admin' });
+    await waitFor(() => expect(mutate.updateRole).toHaveBeenCalledWith({ userId: 'u-2', role: 'admin' }));
   });
 
   it('désactive le bouton d’invitation et les actions pour un viewer', () => {
@@ -173,8 +173,13 @@ describe('EquipePage — données réelles', () => {
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'new@cabinet.fr');
     await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
-    expect(mutate.createInvitation).toHaveBeenCalledWith({ email: 'new@cabinet.fr', role: 'viewer' });
-    expect(toastMock.success).toHaveBeenCalledWith(expect.stringContaining('new@cabinet.fr'));
+    // handleSubmit est async : on attend que la promesse (et le toast) se règle.
+    await waitFor(() =>
+      expect(mutate.createInvitation).toHaveBeenCalledWith({ email: 'new@cabinet.fr', role: 'viewer' }),
+    );
+    await waitFor(() =>
+      expect(toastMock.success).toHaveBeenCalledWith(expect.stringContaining('new@cabinet.fr')),
+    );
   });
 
   it('affiche le lien à copier quand email_sent est faux', async () => {
@@ -206,7 +211,9 @@ describe('EquipePage — données réelles', () => {
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'dup@cabinet.fr');
     await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
-    expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.');
+    await waitFor(() =>
+      expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.'),
+    );
   });
 });
 
