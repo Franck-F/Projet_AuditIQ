@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 const { useAudit } = vi.hoisted(() => ({ useAudit: vi.fn() }));
 vi.mock('@/lib/query/use-audit', () => ({ useAudit }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'a1' }) }));
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: 'a1' }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+}));
 
 const { downloadReport } = vi.hoisted(() => ({ downloadReport: vi.fn() }));
 vi.mock('@/lib/api/audits', async (orig) => ({
@@ -11,6 +14,8 @@ vi.mock('@/lib/api/audits', async (orig) => ({
   downloadReport,
 }));
 
+vi.mock('@/lib/query/use-org', () => ({ useMe: () => ({ data: undefined }) }));
+vi.mock('@/components/audits/AuditRowActions', () => ({ AuditRowActions: () => null }));
 import AuditResultPage from '@/app/app/audits/[id]/page';
 
 const _TL_REASON =

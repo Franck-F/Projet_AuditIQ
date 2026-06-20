@@ -9,10 +9,27 @@ import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/ui/icons';
-import type { RecentAudit } from '@/lib/api/dashboard';
+import type { AuditListItem } from '@/lib/api/audits';
+import type { Role } from '@/lib/api/org';
 import { useDashboard } from '@/lib/query/use-dashboard';
+import { useAuditsList } from '@/lib/query/use-audits';
+import { useMe } from '@/lib/query/use-org';
+import { AuditRowActions } from '@/components/audits/AuditRowActions';
 import { VERDICT_LABELS } from '@/lib/verdict';
 import { moduleNaming } from '@/lib/modules';
+
+/** Champs communs à `RecentAudit` (actifs) et `AuditListItem` (archivés). */
+type AuditRow = {
+  id: string;
+  code: string | null;
+  title: string;
+  module: string;
+  verdict: 'pass' | 'warn' | 'fail' | null;
+  risk_score: number | null;
+  created_at: string;
+};
+
+type Scope = 'active' | 'archived';
 
 const FILTER_TABS = [
   { id: 'all', label: 'Tous' },
@@ -46,13 +63,27 @@ function formatRelativeDate(date: string): string {
 
 export default function AuditsListPage() {
   const { data, isLoading, isError, refetch } = useDashboard();
+  const { data: me } = useMe();
+  const role = me?.role;
   const [filterTab, setFilterTab] = React.useState('all');
+  const [scope, setScope] = React.useState<Scope>('active');
+
+  const archivedQuery = useAuditsList(true);
+
+  // Liste source selon l'onglet Actifs / Archivés.
+  const sourceAudits: AuditRow[] = React.useMemo(() => {
+    if (scope === 'archived') return (archivedQuery.data ?? []) as AuditListItem[];
+    return data?.recent_audits ?? [];
+  }, [scope, archivedQuery.data, data]);
 
   const filteredAudits = React.useMemo(() => {
-    if (!data) return [];
-    if (filterTab === 'all') return data.recent_audits;
-    return data.recent_audits.filter((a) => a.verdict === filterTab);
-  }, [data, filterTab]);
+    if (filterTab === 'all') return sourceAudits;
+    return sourceAudits.filter((a) => a.verdict === filterTab);
+  }, [sourceAudits, filterTab]);
+
+  const isScopeLoading = scope === 'archived' ? archivedQuery.isLoading : isLoading;
+  const isScopeError = scope === 'archived' ? archivedQuery.isError : isError;
+  const scopeRefetch = scope === 'archived' ? archivedQuery.refetch : refetch;
 
   const stats = React.useMemo(() => {
     if (!data) return { total: 0, pass: 0, warn: 0, fail: 0 };
@@ -87,23 +118,57 @@ export default function AuditsListPage() {
           <MetricKpi label={VERDICT_LABELS.fail} value={stats.fail} tone="fail" hint={`${stats.total > 0 ? Math.round((stats.fail / stats.total) * 100) : 0} %`} />
         </div>
 
+        {/* Sélecteur Actifs / Archivés */}
+        <div
+          role="tablist"
+          aria-label="Filtrer les audits"
+          style={{ display: 'inline-flex', gap: 4, marginBottom: 16, padding: 4, border: '1px solid var(--border-default)', borderRadius: 'var(--r-md)', background: 'var(--surface)' }}
+        >
+          {(
+            [
+              { id: 'active', label: 'Actifs' },
+              { id: 'archived', label: 'Archivés' },
+            ] as const
+          ).map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={scope === s.id}
+              onClick={() => setScope(s.id)}
+              style={{
+                padding: '6px 16px',
+                fontSize: 13,
+                fontWeight: scope === s.id ? 500 : 400,
+                color: scope === s.id ? 'var(--fg)' : 'var(--fg-muted)',
+                background: scope === s.id ? 'var(--surface-2)' : 'transparent',
+                border: 'none',
+                borderRadius: 'var(--r-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         {/* Status messages */}
-        {isLoading && (
+        {isScopeLoading && (
           <p role="status" className="rounded-lg border border-border-default bg-surface px-6 py-8 text-sm text-fg-secondary">
             Chargement de l&apos;historique…
           </p>
         )}
 
-        {isError && (
+        {isScopeError && (
           <div role="alert" className="flex flex-col items-start gap-3 rounded-lg border border-status-fail bg-surface px-6 py-8 text-sm text-status-fail">
             <p>Connexion au serveur impossible. Réessayez dans quelques instants.</p>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            <Button variant="outline" size="sm" onClick={() => void scopeRefetch()}>
               Réessayer
             </Button>
           </div>
         )}
 
-        {data && (
+        {!isScopeLoading && !isScopeError && (
           <Card style={{ padding: 0 }}>
             {/* Filter tabs + action buttons */}
             <div
@@ -157,13 +222,13 @@ export default function AuditsListPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                    {['Audit', 'Module', 'Score de risque', 'Statut', 'Responsable', 'Exécuté'].map(
+                    {['Audit', 'Module', 'Score de risque', 'Statut', 'Responsable', 'Exécuté', 'Actions'].map(
                       (h) => (
                         <th
                           key={h}
                           style={{
                             padding: '10px 20px',
-                            textAlign: 'left',
+                            textAlign: h === 'Actions' ? 'right' : 'left',
                             fontSize: 11,
                             fontWeight: 600,
                             color: 'var(--fg-muted)',
@@ -182,7 +247,7 @@ export default function AuditsListPage() {
                   {filteredAudits.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         style={{
                           padding: '32px 20px',
                           textAlign: 'center',
@@ -190,12 +255,19 @@ export default function AuditsListPage() {
                           color: 'var(--fg-secondary)',
                         }}
                       >
-                        Aucun audit dans cette catégorie.
+                        {scope === 'archived'
+                          ? 'Aucun rapport archivé.'
+                          : 'Aucun audit dans cette catégorie.'}
                       </td>
                     </tr>
                   ) : (
                     filteredAudits.map((audit) => (
-                      <AuditTableRow key={audit.id} audit={audit} />
+                      <AuditTableRow
+                        key={audit.id}
+                        audit={audit}
+                        archived={scope === 'archived'}
+                        role={role}
+                      />
                     ))
                   )}
                 </tbody>
@@ -258,7 +330,15 @@ function MetricKpi({
 }
 
 /* ─── Table row ──────────────────────────────────────────────────────────── */
-function AuditTableRow({ audit }: { audit: RecentAudit }) {
+function AuditTableRow({
+  audit,
+  archived,
+  role,
+}: {
+  audit: AuditRow;
+  archived: boolean;
+  role: Role | undefined;
+}) {
   const naming = moduleNaming(audit.module);
   const verdict = audit.verdict ?? null;
   const tone: StatusTone = verdict ? VERDICT_TONE[verdict] : 'neutral';
@@ -365,6 +445,17 @@ function AuditTableRow({ audit }: { audit: RecentAudit }) {
         style={{ padding: '14px 20px', fontSize: 12.5, color: 'var(--fg-muted)' }}
       >
         {formatRelativeDate(audit.created_at)}
+      </td>
+
+      {/* Actions (archiver / désarchiver / supprimer) */}
+      <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+        <AuditRowActions
+          auditId={audit.id}
+          auditTitle={audit.title}
+          archived={archived}
+          role={role}
+          noun="audit"
+        />
       </td>
     </tr>
   );

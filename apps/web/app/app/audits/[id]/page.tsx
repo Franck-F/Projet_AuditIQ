@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { Topbar } from '@/components/app/Topbar';
 import { AuditRunningState } from '@/components/audits/AuditRunningState';
+import { AuditRowActions } from '@/components/audits/AuditRowActions';
 import { Gauge } from '@/components/product/Gauge';
 import { Stoplight } from '@/components/product/Stoplight';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
@@ -29,6 +30,7 @@ import {
   type ReportFormat,
 } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
+import { useMe } from '@/lib/query/use-org';
 import { moduleNaming } from '@/lib/modules';
 import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS, verdictLabel, formatPValue } from '@/lib/verdict';
 import { Scale } from 'lucide-react';
@@ -1183,8 +1185,10 @@ function MethodoTab({ audit }: { audit: ReturnType<typeof useAudit>['data'] }) {
 
 export default function AuditResultPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = typeof params?.id === 'string' ? params.id : '';
   const { data, isLoading, isError } = useAudit(id);
+  const { data: me } = useMe();
 
   const [tab, setTab] = React.useState('synthese');
 
@@ -1303,6 +1307,14 @@ export default function AuditResultPage() {
                 Voir les actions
               </Link>
             </Button>
+            <AuditRowActions
+              auditId={data.id}
+              auditTitle={data.title}
+              archived={data.archived_at !== null}
+              role={me?.role}
+              noun="audit"
+              onDeleted={() => router.push('/app/audits')}
+            />
           </>
         }
       />
