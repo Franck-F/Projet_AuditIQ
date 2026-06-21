@@ -1334,6 +1334,29 @@ export default function AuditResultPage() {
           </div>
         )}
 
+        {isM3 && m !== null && 'n_calls_failed' in m && (m.n_calls_failed > 0 || m.warnings.length > 0) && (
+          <div
+            role="note"
+            className="mb-4 rounded-md border border-status-warn-border bg-status-warn-bg p-3 text-sm text-status-warn"
+          >
+            <p className="font-medium">Fiabilité du résultat</p>
+            {m.n_calls_failed > 0 && (
+              <p className="mt-1">
+                {m.n_calls_failed} appel{m.n_calls_failed > 1 ? 's' : ''} au chatbot{' '}
+                {m.n_calls_failed > 1 ? 'ont' : 'a'} échoué. Les écarts mesurés ne portent que sur les appels
+                réussis — à interpréter avec prudence.
+              </p>
+            )}
+            {m.warnings.length > 0 && (
+              <ul className="mt-1 list-disc pl-5">
+                {m.warnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {/* VERDICT HERO */}
         <Card className="mb-4 overflow-hidden p-0">
           <div

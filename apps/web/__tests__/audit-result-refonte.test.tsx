@@ -76,6 +76,36 @@ const M1_FIXTURE = {
   },
 };
 
+const M3_FAILED_FIXTURE = {
+  id: 'm3-503',
+  code: 'AUD-M3-503',
+  title: 'Assistant RH — équité de traitement',
+  status: 'done',
+  module: 'M3',
+  dataset_id: null,
+  protected_attribute: null,
+  decision_column: null,
+  favorable_value: null,
+  privileged_value: null,
+  created_at: '2026-06-01T10:00:00Z',
+  completed_at: '2026-06-01T10:05:00Z',
+  pre_check: [],
+  config: { lang: 'fr' },
+  metrics: {
+    categories: [
+      { name: 'genre', length_gap: 0.4, sentiment_gap: 0.2, refusal_rate: 0.5, score: 0.55, verdict: 'warn' as const },
+    ],
+    global_score: 0.55,
+    verdict: 'warn' as const,
+    risk_score: 55,
+    divergent_examples: [],
+    n_pairs: 12,
+    n_calls_failed: 7,
+    warnings: ['7 appel(s) au LLM cible en échec — comptés comme refus (résultat indicatif).'],
+  },
+  interpretation: null,
+};
+
 describe('audit result page — R3 refonte', () => {
   it('renders the verdict hero text', () => {
     useAudit.mockReturnValue({ isLoading: false, isError: false, data: M1_FIXTURE });
@@ -228,5 +258,39 @@ describe('audit result page — R3 refonte', () => {
     const labels = tabs.map((t) => t.textContent);
     expect(labels).toContain('Catégories');
     expect(labels).not.toContain('Groupes');
+  });
+});
+
+describe('audit result page — M3 fiabilité (appels au chatbot en échec)', () => {
+  it('affiche un encart d’avertissement quand des appels au chatbot ont échoué', () => {
+    useAudit.mockReturnValue({ isLoading: false, isError: false, data: M3_FAILED_FIXTURE });
+    render(<AuditResultPage />);
+
+    expect(screen.getByText('Fiabilité du résultat')).toBeInTheDocument();
+    expect(screen.getByText(/7 appels au chatbot ont échoué/i)).toBeInTheDocument();
+    expect(screen.getByText(/à interpréter avec prudence/i)).toBeInTheDocument();
+  });
+
+  it('rend les warnings du moteur M3', () => {
+    useAudit.mockReturnValue({ isLoading: false, isError: false, data: M3_FAILED_FIXTURE });
+    render(<AuditResultPage />);
+
+    expect(screen.getByText(/au LLM cible en échec/i)).toBeInTheDocument();
+  });
+
+  it('n’affiche pas l’encart quand aucun appel n’a échoué', () => {
+    useAudit.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...M3_FAILED_FIXTURE,
+        id: 'm3-ok',
+        metrics: { ...M3_FAILED_FIXTURE.metrics, n_calls_failed: 0, warnings: [] },
+      },
+    });
+    render(<AuditResultPage />);
+
+    expect(screen.queryByText('Fiabilité du résultat')).not.toBeInTheDocument();
+    expect(screen.queryByText(/à interpréter avec prudence/i)).not.toBeInTheDocument();
   });
 });
