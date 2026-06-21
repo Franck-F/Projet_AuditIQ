@@ -112,6 +112,26 @@
   --fail-border: oklch(66% 0.19 25 / 0.32);
   --info-border: oklch(70% 0.12 245 / 0.32);
 
+  /* Alias nus de la tricolore pour usage en STYLE INLINE / arbitrary values
+     (style={{ color: 'var(--status-fail)' }}, shadow-[...var(--status-fail-bg)]).
+     Les classes utilitaires text/bg/border-status-* viennent du bloc @theme ;
+     ces alias rendent aussi les usages var(--status-*) valides. Definis une fois
+     dans :root : --pass/--warn/--fail etant surcharges par theme, var() les
+     re-resout au point d'usage, donc correct en clair comme en sombre. */
+  --status-pass: var(--pass);
+  --status-warn: var(--warn);
+  --status-fail: var(--fail);
+  --status-info: var(--info);
+  --status-neutral: var(--neutral);
+  --status-pass-bg: var(--pass-bg);
+  --status-warn-bg: var(--warn-bg);
+  --status-fail-bg: var(--fail-bg);
+  --status-info-bg: var(--info-bg);
+  --status-pass-border: var(--pass-border);
+  --status-warn-border: var(--warn-border);
+  --status-fail-border: var(--fail-border);
+  --status-info-border: var(--info-border);
+
   --focus-ring: oklch(72% 0.135 162 / 0.55);
   --track: #2a2a2a;
 
