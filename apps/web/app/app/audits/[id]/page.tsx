@@ -1242,11 +1242,21 @@ export default function AuditResultPage() {
             role="alert"
             className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail"
           >
-            <strong>L&apos;audit a échoué.</strong>
-            <p className="mt-1">
-              Une erreur est survenue pendant le calcul. Relancez l&apos;audit ou contactez le
-              support si le problème persiste.
-            </p>
+            <strong>L&apos;audit n&apos;a pas pu être réalisé.</strong>
+            {typeof data.error === 'string' && /effectif insuffisant/i.test(data.error) ? (
+              <p className="mt-1">
+                Certains groupes de la caractéristique analysée comptent trop peu de personnes
+                pour un résultat fiable. Cela arrive souvent avec une caractéristique très
+                variée (âge, ancienneté, salaire…) qui crée beaucoup de petits groupes. Choisissez
+                plutôt une caractéristique à quelques catégories (sexe, origine…) et relancez
+                l&apos;audit.
+              </p>
+            ) : (
+              <p className="mt-1">
+                Une erreur est survenue pendant le calcul. Relancez l&apos;audit ou contactez le
+                support si le problème persiste.
+              </p>
+            )}
             {data.error && (
               <details className="mt-2 text-xs">
                 <summary className="cursor-pointer select-none">Détail technique</summary>

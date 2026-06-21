@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 
 import { Topbar } from '@/components/app/Topbar';
@@ -50,7 +51,8 @@ export function launchErrorMessage(err: unknown): string {
   const fieldMsgs = data?.fields
     ? Object.values(data.fields)
         .filter((m): m is string => typeof m === 'string' && m.length > 0)
-        .map((m) => m.replace(/^module M[123]\s*:\s*/i, ''))
+        // Retire les préfixes techniques « Value error, » (Pydantic) et « module Mx : ».
+        .map((m) => m.replace(/^(value error,\s*)?module M[123]\s*:\s*/i, ''))
     : [];
   if (fieldMsgs.length > 0) return fieldMsgs.join(' ');
   if (typeof data?.detail === 'string' && data.detail !== 'La requête est invalide.') {
@@ -416,7 +418,9 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
       }
       onComplete(audit.id);
     } catch (err) {
-      setSubmitError(launchErrorMessage(err));
+      const msg = launchErrorMessage(err);
+      setSubmitError(msg);
+      toast.error(msg);
     }
   };
 

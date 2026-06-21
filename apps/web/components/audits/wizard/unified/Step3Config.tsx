@@ -110,6 +110,20 @@ function Step3ConfigM1({
   const currentSelected: string[] = Array.isArray(selectedAttributes) ? selectedAttributes : [];
   const atMax = currentSelected.length >= MAX_PROTECTED_ATTRIBUTES;
 
+  // Cardinalité par colonne (issue de l'analyse). Une caractéristique très
+  // variée (âge, ancienneté…) crée beaucoup de petits groupes ; l'audit échoue
+  // si un groupe compte moins de ~5 personnes. On prévient en amont.
+  const rowCount = dataset?.row_count ?? 0;
+  const uniqueByColumn = React.useMemo(() => {
+    const m = new Map<string, number>();
+    (analysis?.columns ?? []).forEach((c) => m.set(c.name, c.unique_count));
+    return m;
+  }, [analysis]);
+  const isTooGranular = (col: string): boolean => {
+    const u = uniqueByColumn.get(col);
+    return !!u && rowCount > 0 && u > 6 && rowCount / u < 8;
+  };
+
   const handleCheckboxChange = (col: string, checked: boolean) => {
     const current = getValues('protected_attributes') as string[];
     const currentArr = Array.isArray(current) ? current : [];
@@ -255,6 +269,11 @@ function Step3ConfigM1({
                 <span className="text-fg">{col}</span>
                 {isSuggested && (
                   <span className="text-xs text-fg-muted">— Suggéré</span>
+                )}
+                {isChecked && isTooGranular(col) && (
+                  <span className="text-xs text-status-warn">
+                    — beaucoup de valeurs distinctes, l&apos;audit risque d&apos;échouer
+                  </span>
                 )}
               </label>
             );
