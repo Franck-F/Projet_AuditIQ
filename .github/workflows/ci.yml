@@ -79,4 +79,8 @@ jobs:
         run: pnpm --filter @auditiq/web typecheck
 
       - name: Vitest
-        run: pnpm --filter @auditiq/web test
+        # --no-file-parallelism : le runner CI (2 cœurs) sur-souscrit avec le
+        # parallélisme par défaut, ce qui affame les tests async (RTL findBy/
+        # waitFor) et provoque des flakes. L'exécution séquentielle est stable
+        # (~2 min) et déterministe ; le dev local garde le parallélisme via `test`.
+        run: pnpm --filter @auditiq/web exec vitest run --no-file-parallelism
