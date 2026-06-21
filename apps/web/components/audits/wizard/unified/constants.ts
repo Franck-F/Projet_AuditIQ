@@ -10,8 +10,8 @@ interface CardDef<TValue extends string> {
 export const AUDIT_TYPE_CARDS: ReadonlyArray<CardDef<AuditType>> = [
   {
     value: 'tabular-known',
-    title: 'Un outil qui prend des décisions, avec une caractéristique sensible à tester',
-    description: 'Vous utilisez un logiciel (tri de CV, scoring crédit, sélection de dossiers…) et vous disposez d\'un fichier de ses décisions ET vous savez quelle caractéristique (sexe, âge, origine…) pourrait être source de discrimination.',
+    title: 'Une caractéristique sensible à tester',
+    description: 'Vous utilisez un logiciel qui prend des décisions (tri de CV, scoring crédit, sélection de dossiers…), vous disposez d\'un fichier de ses décisions ET vous savez quelle caractéristique (sexe, âge, origine…) pourrait être source de discrimination.',
     bullets: [
       'Compare les taux de décision favorable entre les groupes (règle des 4/5 : le groupe défavorisé doit atteindre au moins 80 % du taux du groupe de référence)',
       'Vérifie que des personnes au profil comparable sont traitées de la même façon (si la décision réellement attendue est fournie)',
@@ -20,8 +20,8 @@ export const AUDIT_TYPE_CARDS: ReadonlyArray<CardDef<AuditType>> = [
   },
   {
     value: 'tabular-unknown',
-    title: 'Un outil qui prend des décisions, sans savoir où le biais se cache',
-    description: 'Vous avez un fichier de décisions de votre outil mais aucune caractéristique sensible déclarée. AuditIQ repère automatiquement les groupes de dossiers traités différemment.',
+    title: 'Un biais à découvrir',
+    description: 'Vous avez un fichier de décisions de votre outil, mais sans savoir où le biais se cache : aucune caractéristique sensible n\'est déclarée. AuditIQ repère automatiquement les groupes de dossiers traités différemment.',
     bullets: [
       'Détecte automatiquement les groupes de dossiers traités différemment des autres',
       'Décrit en clair ce qui distingue chaque groupe signalé',
@@ -30,8 +30,8 @@ export const AUDIT_TYPE_CARDS: ReadonlyArray<CardDef<AuditType>> = [
   },
   {
     value: 'llm-api',
-    title: 'Un assistant conversationnel / chatbot que vous utilisez',
-    description: 'Vous voulez vérifier qu\'un chatbot (service client, présélection…) traite les utilisateurs de façon équitable. AuditIQ lui envoie des paires de messages comparables et mesure les écarts.',
+    title: 'Un chatbot à auditer',
+    description: 'Vous voulez vérifier qu\'un assistant conversationnel / chatbot (service client, présélection…) traite les utilisateurs de façon équitable. AuditIQ lui envoie des paires de messages comparables et mesure les écarts.',
     bullets: [
       'Envoie 12 paires de messages quasi identiques (seule la caractéristique sensible change)',
       'Compare le ton, la longueur et les refus de réponse entre les deux messages',

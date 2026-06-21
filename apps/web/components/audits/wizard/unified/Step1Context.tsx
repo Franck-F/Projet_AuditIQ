@@ -42,23 +42,32 @@ export function Step1Context(): React.ReactElement {
           {AUDIT_TYPE_CARDS.map((c) => {
             const selected = auditType === c.value;
             return (
-              <button
+              <div
                 key={c.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setValue('audit_type', c.value as AuditType, { shouldValidate: true })}
-                onFocus={() => setHelpKey('wizard.step1.audit_type')}
-                onBlur={() => setHelpKey('wizard.step1')}
-                className={`flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${
-                  selected ? 'border-accent bg-accent-soft' : 'border-border bg-surface hover:border-border-strong'
+                className={`overflow-hidden rounded-xl border transition-colors ${
+                  selected ? 'border-accent bg-accent-soft' : 'border-border bg-surface'
                 }`}
               >
-                <p className="text-sm font-medium text-fg">{c.title}</p>
-                <p className="text-xs text-fg-secondary">{c.description}</p>
-                <ul className="mt-1 flex flex-col gap-1 text-xs text-fg-muted">
-                  {c.bullets.map((b) => <li key={b}>• {b}</li>)}
-                </ul>
-              </button>
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setValue('audit_type', c.value as AuditType, { shouldValidate: true })}
+                  onFocus={() => setHelpKey('wizard.step1.audit_type')}
+                  onBlur={() => setHelpKey('wizard.step1')}
+                  className="w-full p-4 text-left text-sm font-medium text-fg"
+                >
+                  {c.title}
+                </button>
+                <details className="border-t border-border-subtle px-4 py-2.5">
+                  <summary className="cursor-pointer select-none text-xs font-medium text-accent">
+                    En savoir plus
+                  </summary>
+                  <p className="mt-2 text-xs text-fg-secondary">{c.description}</p>
+                  <ul className="mt-1.5 flex flex-col gap-1 text-xs text-fg-muted">
+                    {c.bullets.map((b) => <li key={b}>• {b}</li>)}
+                  </ul>
+                </details>
+              </div>
             );
           })}
         </div>

@@ -10,10 +10,11 @@ import { type Page, expect } from '@playwright/test';
  * valide (cf. `STEPS[i].isValid` dans la page) — chaque helper remplit donc les
  * champs requis avant de cliquer, et attend que le bouton soit activé.
  *
- * Libellés EXACTS des cartes de l'étape 1 (constants.ts) :
- *   M1 = « Un outil qui prend des décisions, avec une caractéristique sensible à tester »
- *   M2 = « Un outil qui prend des décisions, sans savoir où le biais se cache »
- *   M3 = « Un assistant conversationnel / chatbot que vous utilisez »
+ * Titres courts des cartes de l'étape 1 (constants.ts ; le détail est dans
+ * « En savoir plus ») :
+ *   M1 = « Une caractéristique sensible à tester »
+ *   M2 = « Un biais à découvrir »
+ *   M3 = « Un chatbot à auditer »
  * Secteurs : « Ressources humaines », « Crédit & scoring financier »,
  *            « Assurance », « Autre usage à fort enjeu ».
  */
@@ -30,12 +31,10 @@ const SECTOR_TITLE: Record<Sector, RegExp> = {
 };
 
 const TYPE_CARD: Record<'M1' | 'M2' | 'M3', RegExp> = {
-  // « …avec une caractéristique sensible à tester »
-  M1: /avec une caractéristique sensible à tester/i,
-  // « …sans savoir où le biais se cache »
-  M2: /sans savoir où le biais se cache/i,
-  // « Un assistant conversationnel / chatbot que vous utilisez »
-  M3: /assistant conversationnel\s*\/\s*chatbot/i,
+  // Titre court de la carte (le détail est dans « En savoir plus »).
+  M1: /Une caractéristique sensible à tester/i,
+  M2: /Un biais à découvrir/i,
+  M3: /Un chatbot à auditer/i,
 };
 
 /* ─── Navigation primitives ─────────────────────────────────────────────── */
