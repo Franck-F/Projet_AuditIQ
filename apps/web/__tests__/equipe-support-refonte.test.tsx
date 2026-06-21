@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -172,7 +172,10 @@ describe('EquipePage — données réelles', () => {
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'new@cabinet.fr');
-    await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
     // handleSubmit est async : on attend que la promesse (et le toast) se règle.
     await waitFor(() =>
       expect(mutate.createInvitation).toHaveBeenCalledWith({ email: 'new@cabinet.fr', role: 'viewer' }),
@@ -194,7 +197,10 @@ describe('EquipePage — données réelles', () => {
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'link@cabinet.fr');
-    await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
     // Après la mutation, la modal re-rend (form -> vue « lien à copier »). On
     // re-cherche via screen.findBy* (qui réessaie) plutôt que de réutiliser le
     // nœud `dialog` capturé avant le re-render — sinon flake en CI.
@@ -211,7 +217,10 @@ describe('EquipePage — données réelles', () => {
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'dup@cabinet.fr');
-    await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
     await waitFor(
       () => expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.'),
       { timeout: 5000 },
