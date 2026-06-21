@@ -285,15 +285,7 @@ function StepPanel({
       {submitError && (
         <div
           role="alert"
-          style={{
-            marginTop: 16,
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: '1px solid var(--status-fail-border)',
-            background: 'var(--status-fail-bg)',
-            color: 'var(--status-fail)',
-            fontSize: 13,
-          }}
+          className="mt-4 rounded-md border border-status-fail-border bg-status-fail-bg p-3 text-sm text-status-fail"
         >
           {submitError}
         </div>
