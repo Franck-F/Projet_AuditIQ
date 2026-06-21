@@ -171,7 +171,7 @@ describe('EquipePage — données réelles', () => {
     render(<EquipePage />);
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
-    await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'new@cabinet.fr');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'new@cabinet.fr' } });
     // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
     // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
     // pas. On soumet le formulaire directement → handleSubmit déterministe.
@@ -196,7 +196,7 @@ describe('EquipePage — données réelles', () => {
     render(<EquipePage />);
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
-    await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'link@cabinet.fr');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'link@cabinet.fr' } });
     // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
     // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
     // pas. On soumet le formulaire directement → handleSubmit déterministe.
@@ -216,7 +216,7 @@ describe('EquipePage — données réelles', () => {
     render(<EquipePage />);
     await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
     const dialog = screen.getByRole('dialog');
-    await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'dup@cabinet.fr');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'dup@cabinet.fr' } });
     // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
     // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
     // pas. On soumet le formulaire directement → handleSubmit déterministe.
