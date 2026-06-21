@@ -222,9 +222,9 @@ const TRANSVERSE_CARDS = [
 ];
 
 const ANCHORS = [
-  { href: '#supervise', label: 'Audit supervisé' },
-  { href: '#non-supervise', label: 'Détection non supervisée' },
-  { href: '#llm', label: 'Audit LLM' },
+  { href: '#supervise', label: 'Caractéristique connue' },
+  { href: '#non-supervise', label: 'Biais cachés' },
+  { href: '#llm', label: 'Assistant conversationnel' },
   { href: '#dashboard', label: 'Dashboard' },
   { href: '#couche', label: 'Couche transversale' },
   { href: '#securite', label: 'Sécurité & gouvernance' },
@@ -272,7 +272,7 @@ export default function ProduitPage() {
           className="grid grid-cols-1 gap-10 py-20 lg:grid-cols-2 lg:gap-16 scroll-mt-32"
         >
           <Reveal>
-            <Eyebrow accent>Module 01 · Audit supervisé</Eyebrow>
+            <Eyebrow accent>Module 01 · Caractéristique connue</Eyebrow>
             <h2 className="mt-3 mb-4 text-h2 font-display font-medium tracking-[-0.015em] text-fg">
               Mesurez l&apos;écart entre groupes sur vos modèles de scoring.
             </h2>
@@ -352,7 +352,7 @@ export default function ProduitPage() {
           className="grid grid-cols-1 gap-10 border-t border-border-subtle py-20 lg:grid-cols-2 lg:gap-16 scroll-mt-32"
         >
           <Reveal className="order-1 lg:order-2">
-            <Eyebrow accent>Module 02 · Détection non supervisée</Eyebrow>
+            <Eyebrow accent>Module 02 · Biais cachés</Eyebrow>
             <h2 className="mt-3 mb-4 text-h2 font-display font-medium tracking-[-0.015em] text-fg">
               Repérez les biais dans vos données — même sans variable de décision.
             </h2>
@@ -424,7 +424,7 @@ export default function ProduitPage() {
           className="grid grid-cols-1 gap-10 border-t border-border-subtle py-20 lg:grid-cols-2 lg:gap-16 scroll-mt-32"
         >
           <Reveal>
-            <Eyebrow accent>Module 03 · Audit LLM &amp; chatbot</Eyebrow>
+            <Eyebrow accent>Module 03 · Assistant conversationnel</Eyebrow>
             <h2 className="mt-3 mb-4 text-h2 font-display font-medium tracking-[-0.015em] text-fg">
               Testez vos assistants conversationnels sur six axes de discrimination.
             </h2>

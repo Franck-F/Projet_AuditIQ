@@ -53,7 +53,7 @@ export default function CasUsagePage() {
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
-                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 1 (supervisé). Variable cible&nbsp;: <span className="mono" style={{ color: 'var(--accent)' }}>short_listed</span>. Attribut sensible&nbsp;: genre. 412 candidatures de 2024 analysées, quatre métriques calculées.</p>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 1 · Caractéristique connue. Variable cible&nbsp;: <span className="mono" style={{ color: 'var(--accent)' }}>short_listed</span>. Attribut sensible&nbsp;: genre. 412 candidatures de 2024 analysées, quatre métriques calculées.</p>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
@@ -121,7 +121,7 @@ export default function CasUsagePage() {
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
-                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 2 (non supervisé) pour détecter d&apos;éventuels proxies, puis Module 1 (supervisé) sur la fonction de décision. 2 840 demandes du Q3 2025 analysées.</p>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 2 · Biais cachés pour détecter d&apos;éventuels proxies, puis Module 1 · Caractéristique connue sur la fonction de décision. 2 840 demandes du Q3 2025 analysées.</p>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
@@ -148,7 +148,7 @@ export default function CasUsagePage() {
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>L&apos;audit AuditIQ</h4>
-                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 3 (LLM). 412 prompts pairs sur six axes, métriques par axe&nbsp;: longueur, sentiment, taux de refus. Test en condition de production, sans modifier l&apos;endpoint.</p>
+                  <p className="lede" style={{ fontSize: '14px', lineHeight: 1.6 }}>Module 3 · Assistant conversationnel. 412 prompts pairs sur six axes, métriques par axe&nbsp;: longueur, sentiment, taux de refus. Test en condition de production, sans modifier l&apos;endpoint.</p>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '15px', marginBottom: '5px' }}>Le résultat</h4>
@@ -207,37 +207,37 @@ export default function CasUsagePage() {
               <span className="eyebrow acc">Assurance</span>
               <h4 style={{ fontSize: '16px' }}>Tarification d&apos;assurance auto</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Modèle de tarification ML d&apos;une mutuelle régionale. Audit Module 1 sur l&apos;âge, par tranches de 5 ans. Détection d&apos;une sur-tarification non justifiée sur les 18–22 ans.</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Audit supervisé</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Caractéristique connue</div>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
               <span className="eyebrow acc">Marketing</span>
               <h4 style={{ fontSize: '16px' }}>Ciblage publicitaire B2C</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Scoring d&apos;appétence pour un e-commerce mode. Audit Module 2 pour détecter des proxies de genre dans les features comportementales (navigation, panier moyen).</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Non supervisé</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Biais cachés</div>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
               <span className="eyebrow acc">Service client</span>
               <h4 style={{ fontSize: '16px' }}>Routage automatique de tickets</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Classification de tickets entre niveaux 1, 2 et 3 chez un éditeur SaaS. Audit Module 1 sur la priorité, attributs déduits du contenu — sous-traitement systématique détecté.</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Audit supervisé</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 01 · Caractéristique connue</div>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
               <span className="eyebrow acc">Santé</span>
               <h4 style={{ fontSize: '16px' }}>Triage en téléconsultation</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Système de triage symptômes-vers-urgence d&apos;une plateforme de téléconsultation. Audit Module 3 avec banque de prompts médicaux, axes genre et origine.</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · LLM</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · Assistant conversationnel</div>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
               <span className="eyebrow acc">RH</span>
               <h4 style={{ fontSize: '16px' }}>IA d&apos;évaluation annuelle</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Synthèse automatique d&apos;évaluation d&apos;objectifs chez un éditeur SaaS. Audit Module 3 sur les commentaires générés, axes genre et âge.</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · LLM</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 03 · Assistant conversationnel</div>
             </div>
             <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '9px', height: '100%' }}>
               <span className="eyebrow acc">Logistique</span>
               <h4 style={{ fontSize: '16px' }}>Modèle de churn client B2B</h4>
               <p className="lede" style={{ fontSize: '13.5px' }}>Prédiction de churn pour une PME logistique. Audit Module 2 sur le dataset CRM, recherche de clusters déviants sur la taille d&apos;entreprise et le secteur.</p>
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Non supervisé</div>
+              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--fg-muted)' }}>Module 02 · Biais cachés</div>
             </div>
           </div>
         </div>

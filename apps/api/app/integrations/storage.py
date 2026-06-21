@@ -13,6 +13,8 @@ class Storage(Protocol):
 
     async def download(self, path: str) -> bytes: ...
 
+    async def remove(self, path: str) -> None: ...
+
 
 class MemoryStorage:
     """In-process storage for tests and local dev. Not persistent."""
@@ -25,6 +27,9 @@ class MemoryStorage:
 
     async def download(self, path: str) -> bytes:
         return self._blobs[path]
+
+    async def remove(self, path: str) -> None:
+        self._blobs.pop(path, None)
 
 
 class SupabaseStorage:
@@ -47,6 +52,12 @@ class SupabaseStorage:
     async def download(self, path: str) -> bytes:
         return await asyncio.to_thread(
             self._client.storage.from_(self._bucket).download, path
+        )
+
+    async def remove(self, path: str) -> None:
+        # Supabase remove() prend une liste de chemins ; idempotent côté API.
+        await asyncio.to_thread(
+            self._client.storage.from_(self._bucket).remove, [path]
         )
 
 

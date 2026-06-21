@@ -12,6 +12,21 @@ export type DatasetOut = {
   expires_at: string | null;
 };
 
+/** Secteur d'usage (contexte AI Act du déployeur) — contextualise les
+ * recommandations et les références légales côté API. */
+export type Sector =
+  | 'hr'
+  | 'credit'
+  | 'insurance'
+  | 'health'
+  | 'education'
+  | 'public_services'
+  | 'justice'
+  | 'housing'
+  | 'marketing'
+  | 'content_moderation'
+  | 'other';
+
 export type AuditCreate = {
   dataset_id: string;
   title: string;
@@ -22,6 +37,7 @@ export type AuditCreate = {
   privileged_value: string | null;
   ground_truth_column?: string | null;
   secondary_privileged_value?: string | null;
+  sector?: Sector;
 };
 
 export type GroupStatOut = {
@@ -114,10 +130,43 @@ export type M1MetricsOut = {
   pairwise: IntersectionalOut[];
 };
 
+/** Catégories de recommandation du moteur déployeur (clé → libellé FR géré
+ * côté API). */
+export type RecommendationCategory =
+  | 'documentation'
+  | 'supervision_humaine'
+  | 'relation_fournisseur'
+  | 'usage_outil'
+  | 'correction_aval'
+  | 'conformite'
+  | 'surveillance'
+  | 'escalade';
+
+export type RecommendationOwner =
+  | 'RH'
+  | 'DPO'
+  | 'Juridique'
+  | 'Achats'
+  | 'Direction';
+
+export type RecommendationHorizon = 'immediat' | 'court_terme' | 'continu';
+
 export type RecommendationOut = {
   title: string;
+  /** Le « pourquoi » destiné au lecteur (alias de `rationale`). */
   detail: string;
+  /** Littéral historique dérivé de `priority_level` (back-compat). */
   priority: 'high' | 'medium' | 'low';
+  // --- Champs structurés du moteur déployeur (additifs) ---
+  id?: string;
+  rationale?: string;
+  category?: RecommendationCategory;
+  /** 1 = haute, 2 = moyenne, 3 = basse. */
+  priority_level?: number;
+  owner?: RecommendationOwner;
+  horizon?: RecommendationHorizon;
+  legal_ref?: string | null;
+  steps?: string[];
 };
 
 export type InterpretationOut = {
@@ -173,6 +222,7 @@ export type M2AuditCreate = {
   decision_column: string;
   favorable_value: string;
   config?: M2ConfigIn;
+  sector?: Sector;
 };
 
 export type TargetIn = {
@@ -188,6 +238,7 @@ export type M3AuditCreate = {
   module: 'M3';
   target: TargetIn;
   lang: string;
+  sector?: Sector;
 };
 
 export type CategoryStatOut = {
@@ -234,11 +285,47 @@ export type AuditOut = {
   privileged_value: string | null;
   created_at: string;
   completed_at: string | null;
+  archived_at: string | null;
   metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | null;
   interpretation: InterpretationOut | null;
   pre_check: string[];
   config: Record<string, unknown> | null;
 };
+
+/** Ligne synthétique d'audit pour les listes (actifs / archivés). */
+export type AuditListItem = {
+  id: string;
+  code: string | null;
+  title: string;
+  module: string;
+  status: string;
+  verdict: Verdict | null;
+  risk_score: number | null;
+  created_at: string;
+  archived_at: string | null;
+};
+
+/** Liste les audits de l'organisation, actifs (défaut) ou archivés. */
+export async function listAudits(archived = false): Promise<AuditListItem[]> {
+  const { data } = await api.get<AuditListItem[]>('/audits', {
+    params: { archived },
+  });
+  return data;
+}
+
+/** Archive (`archived: true`) ou désarchive (`false`) un audit. Non destructif. */
+export async function archiveAudit(
+  id: string,
+  archived: boolean,
+): Promise<AuditOut> {
+  const { data } = await api.patch<AuditOut>(`/audits/${id}`, { archived });
+  return data;
+}
+
+/** Supprime définitivement un audit (rapport, résultat, dataset). Owner/admin. */
+export async function deleteAudit(id: string): Promise<void> {
+  await api.delete(`/audits/${id}`);
+}
 
 export async function uploadDataset(file: File): Promise<DatasetOut> {
   const form = new FormData();

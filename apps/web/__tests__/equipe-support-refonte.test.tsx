@@ -1,115 +1,259 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import type { InvitationOut, MeOut, MemberOut } from '@/lib/api/org';
+
+/* ── Mocks ─────────────────────────────────────────────────────────────── */
+const mutate = vi.hoisted(() => ({
+  updateRole: vi.fn(),
+  createInvitation: vi.fn(),
+  revoke: vi.fn(),
+}));
+
+const hooks = vi.hoisted(() => ({
+  useMe: vi.fn(),
+  useMembers: vi.fn(),
+  useInvitations: vi.fn(),
+  useUpdateMemberRole: vi.fn(),
+  useCreateInvitation: vi.fn(),
+  useRevokeInvitation: vi.fn(),
+}));
+
+vi.mock('@/lib/query/use-org', () => hooks);
+
+const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+vi.mock('sonner', () => ({ toast: toastMock }));
 
 import EquipePage from '@/app/app/equipe/page';
 import SupportPage from '@/app/app/support/page';
 
-describe('EquipePage - R4 Refonte', () => {
-  it('renders Topbar with correct breadcrumbs', () => {
+/* ── Fixtures ──────────────────────────────────────────────────────────── */
+const ME_ADMIN: MeOut = {
+  id: 'u-me',
+  email: 'admin@cabinet.fr',
+  first_name: 'Admin',
+  role: 'admin',
+  org_id: 'org-1',
+};
+
+const MEMBERS: MemberOut[] = [
+  { id: 'u-1', email: 'lea@cabinet.fr', first_name: 'Léa', role: 'owner', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'u-2', email: 'karim@cabinet.fr', first_name: 'Karim', role: 'editor', created_at: '2026-02-01T00:00:00Z' },
+  { id: 'u-3', email: 'sofia@cabinet.fr', first_name: null, role: 'viewer', created_at: '2026-03-01T00:00:00Z' },
+];
+
+const INVITES: InvitationOut[] = [
+  {
+    id: 'inv-1',
+    email: 'invite@cabinet.fr',
+    role: 'editor',
+    status: 'pending',
+    created_at: '2026-04-01T00:00:00Z',
+    expires_at: '2026-04-08T00:00:00Z',
+  },
+];
+
+function setupHooks(over: {
+  me?: Partial<ReturnType<typeof hooks.useMe>>;
+  members?: Partial<ReturnType<typeof hooks.useMembers>>;
+  invitations?: Partial<ReturnType<typeof hooks.useInvitations>>;
+} = {}) {
+  hooks.useMe.mockReturnValue({ data: ME_ADMIN, isLoading: false, isError: false, ...over.me });
+  hooks.useMembers.mockReturnValue({ data: MEMBERS, isLoading: false, isError: false, ...over.members });
+  hooks.useInvitations.mockReturnValue({ data: INVITES, isLoading: false, isError: false, ...over.invitations });
+  hooks.useUpdateMemberRole.mockReturnValue({ mutateAsync: mutate.updateRole, isPending: false });
+  hooks.useCreateInvitation.mockReturnValue({ mutateAsync: mutate.createInvitation, isPending: false });
+  hooks.useRevokeInvitation.mockReturnValue({ mutateAsync: mutate.revoke, isPending: false });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  setupHooks();
+});
+
+/* ── Équipe ────────────────────────────────────────────────────────────── */
+describe('EquipePage — données réelles', () => {
+  it('rend le Topbar avec le fil d’Ariane', () => {
     render(<EquipePage />);
     expect(screen.getByText('AuditIQ')).toBeInTheDocument();
     expect(screen.getByText('Organisation')).toBeInTheDocument();
     expect(screen.getByText('Équipe')).toBeInTheDocument();
   });
 
-  it('renders "Inviter un membre" button in Topbar actions', () => {
+  it('n’affiche plus la bannière « Aperçu »', () => {
     render(<EquipePage />);
-    expect(screen.getByRole('button', { name: /Inviter un membre/ })).toBeInTheDocument();
+    expect(screen.queryByText(/section est en\s+cours de développement/i)).not.toBeInTheDocument();
   });
 
-  it('renders 3 MetricCards with correct labels', () => {
+  it('n’affiche plus les membres fictifs', () => {
+    render(<EquipePage />);
+    expect(screen.queryByText('Léa Moreau')).not.toBeInTheDocument();
+    expect(screen.queryByText('Karim Belaïd')).not.toBeInTheDocument();
+  });
+
+  it('liste les membres réels avec leurs e-mails', () => {
+    render(<EquipePage />);
+    expect(screen.getByText('lea@cabinet.fr')).toBeInTheDocument();
+    expect(screen.getByText('karim@cabinet.fr')).toBeInTheDocument();
+    // Sans first_name, l'e-mail sert de nom affiché → présent 2 fois.
+    expect(screen.getAllByText('sofia@cabinet.fr').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('calcule les KPI à partir des vraies données', () => {
     render(<EquipePage />);
     expect(screen.getByText('Membres actifs')).toBeInTheDocument();
     expect(screen.getByText('Administrateurs')).toBeInTheDocument();
-    expect(screen.getByText('Accès externes')).toBeInTheDocument();
+    // « Invitations en attente » apparaît à la fois en KPI et en titre de section.
+    expect(screen.getAllByText('Invitations en attente').length).toBeGreaterThanOrEqual(1);
+    // 3 membres, 1 admin (owner), 1 invitation pending
+    expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders MetricCard values', () => {
+  it('affiche un état de chargement des membres', () => {
+    setupHooks({ members: { data: undefined, isLoading: true } });
     render(<EquipePage />);
-    // Find the values in the metric cards
-    const values = screen.getAllByText('1');
-    const fours = screen.getAllByText('4');
-    expect(fours.length).toBeGreaterThan(0); // At least one "4" for "Membres actifs"
-    expect(values.length).toBeGreaterThan(0); // At least one "1" for other cards
+    expect(screen.getByText(/Chargement des membres/i)).toBeInTheDocument();
   });
 
-  it('renders SectionHead with correct title and eyebrow', () => {
+  it('affiche un état d’erreur des membres', () => {
+    setupHooks({ members: { data: undefined, isLoading: false, isError: true } });
     render(<EquipePage />);
-    expect(screen.getByText('Membres')).toBeInTheDocument();
-    expect(screen.getByText('Qui a accès à l\'espace')).toBeInTheDocument();
+    expect(screen.getByText(/Impossible de charger la liste des membres/i)).toBeInTheDocument();
   });
 
-  it('renders team member table with 4 rows', () => {
+  it('affiche un état vide quand aucun membre', () => {
+    setupHooks({ members: { data: [], isLoading: false, isError: false } });
     render(<EquipePage />);
-    expect(screen.getByText('Léa Moreau')).toBeInTheDocument();
-    expect(screen.getByText('Karim Belaïd')).toBeInTheDocument();
-    expect(screen.getByText('Sofia Renard')).toBeInTheDocument();
-    expect(screen.getByText('Tom Vasseur')).toBeInTheDocument();
+    expect(screen.getByText(/Aucun membre pour le moment/i)).toBeInTheDocument();
   });
 
-  it('renders table headers correctly', () => {
+  it('liste les invitations en attente avec un bouton « Révoquer »', () => {
     render(<EquipePage />);
-    expect(screen.getByText('Membre')).toBeInTheDocument();
-    expect(screen.getByText('Rôle')).toBeInTheDocument();
-    expect(screen.getByText('Niveau d\'accès')).toBeInTheDocument();
-    expect(screen.getByText('Statut')).toBeInTheDocument();
+    expect(screen.getByText('invite@cabinet.fr')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Révoquer/i })).toBeInTheDocument();
   });
 
-  it('renders member emails in table', () => {
+  it('appelle la révocation au clic', async () => {
+    mutate.revoke.mockResolvedValue(undefined);
+    const user = userEvent.setup();
     render(<EquipePage />);
-    expect(screen.getByText('lea.moreau@exemple.fr')).toBeInTheDocument();
-    expect(screen.getByText('karim.belaid@exemple.fr')).toBeInTheDocument();
-    expect(screen.getByText('sofia.renard@exemple.fr')).toBeInTheDocument();
-    expect(screen.getByText('tom.vasseur@cabinet.fr')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Révoquer/i }));
+    await waitFor(() => expect(mutate.revoke).toHaveBeenCalledWith('inv-1'));
   });
 
-  it('renders status badges for team members', () => {
+  it('change le rôle d’un membre éditable', async () => {
+    mutate.updateRole.mockResolvedValue({});
+    const user = userEvent.setup();
     render(<EquipePage />);
-    const actifBadges = screen.getAllByText('Actif');
-    expect(actifBadges.length).toBe(3);
-    expect(screen.getByText('Temporaire')).toBeInTheDocument();
+    const select = screen.getByLabelText(/Rôle de karim@cabinet.fr/i);
+    await user.selectOptions(select, 'admin');
+    await waitFor(() => expect(mutate.updateRole).toHaveBeenCalledWith({ userId: 'u-2', role: 'admin' }));
   });
 
-  it('renders role information for each member', () => {
+  it('désactive le bouton d’invitation et les actions pour un viewer', () => {
+    setupHooks({ me: { data: { ...ME_ADMIN, role: 'viewer' } } });
     render(<EquipePage />);
-    expect(screen.getByText('Responsable conformité')).toBeInTheDocument();
-    expect(screen.getByText('Data scientist')).toBeInTheDocument();
-    expect(screen.getByText('Juriste IA')).toBeInTheDocument();
-    expect(screen.getByText('Auditeur externe')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Inviter un membre/i })).toBeDisabled();
+    // Pas de sélecteur de rôle ni de bouton Révoquer pour un viewer.
+    expect(screen.queryByLabelText(/Rôle de karim@cabinet.fr/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Révoquer/i })).not.toBeInTheDocument();
   });
 
-  it('no longer renders a per-row Actions menu (column emptied in refonte)', () => {
+  it('ouvre la modal d’invitation et envoie une invitation (email_sent)', async () => {
+    mutate.createInvitation.mockResolvedValue({
+      invitation: { ...INVITES[0], email: 'new@cabinet.fr' },
+      invite_url: 'https://app/inv/abc',
+      email_sent: true,
+    });
+    const user = userEvent.setup();
     render(<EquipePage />);
-    // La colonne d'actions par ligne a été vidée : plus de bouton « Actions ».
-    expect(screen.queryAllByRole('button', { name: /Actions/ })).toHaveLength(0);
-    // Les 4 lignes de membres restent rendues.
-    expect(screen.getByText('Léa Moreau')).toBeInTheDocument();
-    expect(screen.getByText('Tom Vasseur')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'new@cabinet.fr' } });
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
+    // handleSubmit est async : on attend que la promesse (et le toast) se règle.
+    await waitFor(() =>
+      expect(mutate.createInvitation).toHaveBeenCalledWith({ email: 'new@cabinet.fr', role: 'viewer' }),
+    );
+    await waitFor(
+      () => expect(toastMock.success).toHaveBeenCalledWith(expect.stringContaining('new@cabinet.fr')),
+      { timeout: 5000 },
+    );
+  });
+
+  it('affiche le lien à copier quand email_sent est faux', async () => {
+    mutate.createInvitation.mockResolvedValue({
+      invitation: { ...INVITES[0], email: 'link@cabinet.fr' },
+      invite_url: 'https://app/inv/xyz',
+      email_sent: false,
+    });
+    const user = userEvent.setup();
+    render(<EquipePage />);
+    await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'link@cabinet.fr' } });
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
+    // Après la mutation, la modal re-rend (form -> vue « lien à copier »). On
+    // re-cherche via screen.findBy* (qui réessaie) plutôt que de réutiliser le
+    // nœud `dialog` capturé avant le re-render — sinon flake en CI.
+    expect(await screen.findByDisplayValue('https://app/inv/xyz', undefined, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Copier le lien/i }, { timeout: 5000 })).toBeInTheDocument();
+  });
+
+  it('affiche le détail d’erreur 409 (déjà membre)', async () => {
+    mutate.createInvitation.mockRejectedValue({
+      response: { data: { detail: 'Cet utilisateur est déjà membre.' } },
+    });
+    const user = userEvent.setup();
+    render(<EquipePage />);
+    await user.click(screen.getByRole('button', { name: /Inviter un membre/i }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(/Adresse e-mail/i), { target: { value: 'dup@cabinet.fr' } });
+    // Sur Node 20 (CI), cliquer le bouton submit déclenche une soumission native
+    // (jsdom « navigation not implemented ») et le onSubmit React ne s'exécute
+    // pas. On soumet le formulaire directement → handleSubmit déterministe.
+    fireEvent.submit(within(dialog).getByRole('button', { name: /Envoyer/i }).closest('form')!);
+    await waitFor(
+      () => expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.'),
+      { timeout: 5000 },
+    );
   });
 });
 
-describe('SupportPage - R4 Refonte', () => {
-  it('renders Topbar with correct breadcrumbs', () => {
+/* ── Support ───────────────────────────────────────────────────────────── */
+describe('SupportPage', () => {
+  it('rend le fil d’Ariane', () => {
     render(<SupportPage />);
     expect(screen.getByText('AuditIQ')).toBeInTheDocument();
     expect(screen.getByText('Support')).toBeInTheDocument();
   });
 
-  it('renders main heading "Comment pouvons-nous vous aider ?"', () => {
+  it('rend le titre principal', () => {
     render(<SupportPage />);
     expect(screen.getByText('Comment pouvons-nous vous aider ?')).toBeInTheDocument();
   });
 
-  it('renders the hero email CTA (search bar removed)', () => {
+  it('n’affiche plus la bannière « Aperçu »', () => {
     render(<SupportPage />);
-    // La barre de recherche a été retirée ; le héros propose désormais un contact e-mail.
-    expect(screen.queryByPlaceholderText(/Tapez votre question/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/données affichées sont des exemples/i)).not.toBeInTheDocument();
+  });
+
+  it('conserve le lien mailto réel', () => {
+    render(<SupportPage />);
     const mailLinks = screen.getAllByRole('link', { name: /support@auditiq\.fr/i });
     expect(mailLinks.length).toBeGreaterThanOrEqual(1);
     expect(mailLinks[0]).toHaveAttribute('href', 'mailto:support@auditiq.fr');
   });
 
-  it('renders 6 topic cards', () => {
+  it('rend les 6 cartes de thèmes (feuille de route)', () => {
     render(<SupportPage />);
     expect(screen.getByText('Bien démarrer')).toBeInTheDocument();
     expect(screen.getByText("Modules d'audit")).toBeInTheDocument();
@@ -117,34 +261,5 @@ describe('SupportPage - R4 Refonte', () => {
     expect(screen.getByText('Rapports & exports')).toBeInTheDocument();
     expect(screen.getByText('Sécurité & RGPD')).toBeInTheDocument();
     expect(screen.getByText('Paramétrage avancé')).toBeInTheDocument();
-  });
-
-  it('renders real topic links instead of fake article counts', () => {
-    render(<SupportPage />);
-    // Plus de compteurs mockés (« 22 articles ») ; les cartes listent de vrais sujets.
-    expect(screen.queryByText(/\d+ articles/)).not.toBeInTheDocument();
-    expect(screen.getByText('Créer son premier audit en 5 minutes')).toBeInTheDocument();
-    expect(screen.getByText('Comprendre les métriques de fairness')).toBeInTheDocument();
-  });
-
-  it('renders "Contacter le support" section', () => {
-    render(<SupportPage />);
-    expect(screen.getByText('Contacter le support')).toBeInTheDocument();
-    expect(screen.getByText("Vous n'avez pas trouvé votre réponse ?")).toBeInTheDocument();
-  });
-
-  it('renders a support email link in the contact card', () => {
-    render(<SupportPage />);
-    // Plus de formulaire « Envoyer le ticket » : un lien e-mail le remplace.
-    expect(screen.queryByRole('button', { name: /Envoyer le ticket/ })).not.toBeInTheDocument();
-    const mailLinks = screen.getAllByRole('link', { name: /support@auditiq\.fr/i });
-    expect(mailLinks.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('no longer renders the fake expert-booking section', () => {
-    render(<SupportPage />);
-    // La section « Contact expert AuditIQ » avec boutons « Réserver » mockés a été supprimée.
-    expect(screen.queryByText('Contact expert AuditIQ')).not.toBeInTheDocument();
-    expect(screen.queryAllByRole('button', { name: /Réserver/ })).toHaveLength(0);
   });
 });

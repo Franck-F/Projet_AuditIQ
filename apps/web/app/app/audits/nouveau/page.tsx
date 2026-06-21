@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 
 import { Topbar } from '@/components/app/Topbar';
@@ -40,6 +41,25 @@ const STEPS = [
 ] as const;
 
 const N_NUMS = ['01', '02', '03', '04', '05'];
+
+/** Extrait un message lisible d'une erreur de lancement d'audit (problem+json
+ *  de l'API : `detail` générique + `fields` avec le vrai motif de validation). */
+export function launchErrorMessage(err: unknown): string {
+  const data = (
+    err as { response?: { data?: { detail?: unknown; fields?: Record<string, unknown> } } }
+  )?.response?.data;
+  const fieldMsgs = data?.fields
+    ? Object.values(data.fields)
+        .filter((m): m is string => typeof m === 'string' && m.length > 0)
+        // Retire les préfixes techniques « Value error, » (Pydantic) et « module Mx : ».
+        .map((m) => m.replace(/^(value error,\s*)?module M[123]\s*:\s*/i, ''))
+    : [];
+  if (fieldMsgs.length > 0) return fieldMsgs.join(' ');
+  if (typeof data?.detail === 'string' && data.detail !== 'La requête est invalide.') {
+    return data.detail;
+  }
+  return "Le lancement de l'audit a échoué. Vérifiez votre configuration et réessayez.";
+}
 
 /* ─── Vertical stepper rail ──────────────────────────────────────────────── */
 function StepRail() {
@@ -219,23 +239,6 @@ function StepPanel({
 
   return (
     <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      {submitError && (
-        <div
-          role="alert"
-          style={{
-            marginBottom: 16,
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: '1px solid var(--status-fail-border)',
-            background: 'var(--status-fail-bg)',
-            color: 'var(--status-fail)',
-            fontSize: 13,
-          }}
-        >
-          {submitError}
-        </div>
-      )}
-
       {/* Eyebrow */}
       <div
         className="mono"
@@ -278,6 +281,15 @@ function StepPanel({
         {currentStep === 4 && <Step4Verify values={values} />}
         {currentStep === 5 && <Step5Review values={values} dataset={dataset} />}
       </div>
+
+      {submitError && (
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-status-fail-border bg-status-fail-bg p-3 text-sm text-status-fail"
+        >
+          {submitError}
+        </div>
+      )}
 
       {/* Footer nav */}
       <div
@@ -370,6 +382,7 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           protected_attribute: protectedAttrs[0] ?? '',
           privileged_value: v.privileged_value || null,
           ...(v.ground_truth_column ? { ground_truth_column: v.ground_truth_column } : {}),
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       } else if (mod === 'M2') {
         if (!dataset) return;
@@ -384,6 +397,7 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           decision_column: v.decision_column,
           favorable_value: v.favorable_value,
           config,
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       } else {
         audit = await createAudit({
@@ -391,11 +405,14 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
           module: 'M3',
           target: buildTarget(v),
           lang: v.lang,
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       }
       onComplete(audit.id);
-    } catch {
-      setSubmitError("Le lancement de l'audit a échoué. Réessayez.");
+    } catch (err) {
+      const msg = launchErrorMessage(err);
+      setSubmitError(msg);
+      toast.error(msg);
     }
   };
 
@@ -404,8 +421,8 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '236px 1fr 300px',
-          gap: 24,
+          gridTemplateColumns: '236px minmax(0, 1fr) 264px',
+          gap: 28,
           alignItems: 'start',
         }}
       >
@@ -432,6 +449,7 @@ export default function NouveauPage() {
   return (
     <>
       <Topbar
+        wide
         title="Nouvel audit"
         crumbs={[
           { label: 'AuditIQ' },
@@ -447,7 +465,7 @@ export default function NouveauPage() {
           </Button>
         }
       />
-      <main className="page flex-1">
+      <main className="page workspace flex-1">
         <WizardProvider totalSteps={STEPS.length}>
           <WizardInner onComplete={(id) => router.push(`/app/audits/${id}`)} />
         </WizardProvider>

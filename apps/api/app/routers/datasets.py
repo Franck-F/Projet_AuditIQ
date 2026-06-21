@@ -44,6 +44,7 @@ async def upload_dataset(
         filename=file.filename or "dataset.csv",
         raw=raw,
         retention_days=get_settings().retention_days_default,
+        content_type=file.content_type,
     )
     return DatasetOut.model_validate(dataset)
 

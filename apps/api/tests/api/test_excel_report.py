@@ -88,6 +88,9 @@ def test_build_excel_m1_has_sheets_and_not_a_certificate():
     assert "n'est pas un certificat" in t
     assert "AUD-2026-001" in t
     assert "Disparate Impact" in t
+    # Nom canonique du module (déployeur), pas « audit supervisé ».
+    assert "Module 1 · Caractéristique connue" in t
+    assert "supervisé" not in t
 
 
 def test_build_excel_m2_renders_cluster_detail():
@@ -95,6 +98,9 @@ def test_build_excel_m2_renders_cluster_detail():
     assert "AUD-2026-002" in t
     assert "p-value" in t or "Khi-deux" in t
     assert "n'est pas un certificat" in t
+    # Nom canonique du module, pas « détection non supervisée ».
+    assert "Module 2 · Biais cachés" in t
+    assert "non supervisée" not in t
 
 
 def _m3_audit() -> AuditOut:
@@ -137,6 +143,9 @@ def test_build_excel_m3_section():
     assert "AUD-2026-030" in text
     assert "genre" in text
     assert "n'est pas un certificat" in text
+    # Nom canonique du module, pas « audit LLM/chatbot ».
+    assert "Module 3 · Assistant conversationnel" in text
+    assert "LLM/chatbot" not in text
 
 
 def _m1_audit_with_eo() -> AuditOut:
@@ -369,20 +378,51 @@ def _sample_audit_with_recommendations(recs: list[RecommendationOut]) -> AuditOu
 
 
 def test_excel_includes_recommendations_sheet_when_present() -> None:
-    """Excel workbook gains a 'Recommandations' sheet when interpretation has recos."""
+    """La feuille « Recommandations » expose les colonnes du moteur déployeur :
+    priorité graduée, catégorie, responsable, horizon, réf. légale, étapes."""
     audit = _sample_audit_with_recommendations([
-        RecommendationOut(title="Re-collecter données", detail="Détail 1.", priority="high"),
-        RecommendationOut(title="Audit features", detail="Détail 2.", priority="medium"),
+        RecommendationOut(
+            id="doc_proof",
+            title="Conserver ce rapport horodaté",
+            detail="Tracer le constat.",
+            rationale="Tracer le constat.",
+            priority_level=1,
+            category="documentation",
+            owner="DPO",
+            horizon="immediat",
+            legal_ref="AI Act Art. 26",
+            steps=["Archiver le PDF.", "Consigner la version."],
+        ),
+        RecommendationOut(
+            id="human_review",
+            title="Revue humaine du groupe lésé",
+            detail="Superviser.",
+            rationale="Superviser.",
+            priority_level=2,
+            category="supervision_humaine",
+            owner="RH",
+            horizon="court_terme",
+            legal_ref="AI Act Art. 14",
+        ),
     ])
     data = build_excel_report(audit)
     wb = load_workbook(io.BytesIO(data))
     assert "Recommandations" in wb.sheetnames
     ws = wb["Recommandations"]
     rows = list(ws.iter_rows(values_only=True))
-    # Liste numérotée simple : l'ordre vaut priorité, aucune étiquette
-    assert rows[0] == ("#", "Action", "Détail")
-    assert rows[1] == (1, "Re-collecter données", "Détail 1.")
-    assert rows[2] == (2, "Audit features", "Détail 2.")
+    assert rows[0] == (
+        "#", "Priorité", "Catégorie", "Action", "Pourquoi (constat)",
+        "Responsable", "Horizon", "Référence légale", "Sous-étapes",
+    )
+    assert rows[1][0] == 1
+    assert rows[1][1] == 1  # priority_level
+    assert rows[1][2] == "Documenter & tracer"
+    assert rows[1][3] == "Conserver ce rapport horodaté"
+    assert rows[1][5] == "DPO"
+    assert rows[1][6] == "Immédiat"
+    assert rows[1][7] == "AI Act Art. 26"
+    assert "Archiver le PDF." in str(rows[1][8])
+    assert rows[2][5] == "RH"
     flat = " ".join(str(c) for r in rows for c in r if c is not None)
     assert "Action prioritaire" not in flat
 

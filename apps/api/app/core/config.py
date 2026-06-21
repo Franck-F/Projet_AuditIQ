@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = "gemini-2.5-flash"  # 1.5 models retired in 2025
     api_rate_limit_default: str = "60/minute"
+    resend_api_key: SecretStr = SecretStr("")
+    email_from: str = "AuditIQ <noreply@auditiq.app>"
+    app_base_url: str = "http://localhost:3000"
 
     @property
     def cors_origins(self) -> list[str]:

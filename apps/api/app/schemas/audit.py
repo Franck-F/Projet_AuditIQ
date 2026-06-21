@@ -7,6 +7,11 @@ from typing import Any, Literal
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, model_validator
 
 Verdict = Literal["pass", "warn", "fail"]
+# Secteur d'usage déclaré dans le wizard (contexte AI Act du déployeur).
+Sector = Literal[
+    "hr", "credit", "insurance", "health", "education", "public_services",
+    "justice", "housing", "marketing", "content_moderation", "other",
+]
 
 
 class M2ConfigIn(BaseModel):
@@ -46,6 +51,10 @@ class AuditCreate(BaseModel):
     config: M2ConfigIn | None = None
     target: TargetIn | None = None
     lang: str = "fr"
+    # Secteur d'usage (contexte AI Act du déployeur) — additif, optionnel.
+    # Contextualise les recommandations et les références légales. Absent →
+    # secteur générique « other ». Accepté pour les trois modules.
+    sector: Sector | None = None
 
     @model_validator(mode="after")
     def _per_module(self) -> AuditCreate:
@@ -348,12 +357,95 @@ class M3MetricsOut(BaseModel):
     warnings: list[str]
 
 
+# Persona « déployeur » (AI Act) : l'utilisateur d'AuditIQ n'est pas le
+# fournisseur du modèle ; il UTILISE un outil tiers. Les recommandations sont
+# donc des actions de déployeur (documenter, superviser, escalader, dialoguer
+# avec l'éditeur…), jamais des actions de fournisseur (réentraîner, recalibrer).
+RecommendationCategory = Literal[
+    "documentation",
+    "supervision_humaine",
+    "relation_fournisseur",
+    "usage_outil",
+    "correction_aval",
+    "conformite",
+    "surveillance",
+    "escalade",
+]
+RecommendationOwner = Literal[
+    "RH", "DPO", "Juridique", "Achats", "Direction"
+]
+RecommendationHorizon = Literal["immediat", "court_terme", "continu"]
+
+# Libellés FR des catégories — contrat partagé avec le web et les rapports.
+RECOMMENDATION_CATEGORY_LABELS: dict[str, str] = {
+    "documentation": "Documenter & tracer",
+    "supervision_humaine": "Supervision humaine",
+    "relation_fournisseur": "Relation fournisseur",
+    "usage_outil": "Usage de l'outil",
+    "correction_aval": "Correction en aval",
+    "conformite": "Conformité réglementaire",
+    "surveillance": "Surveillance & re-test",
+    "escalade": "Escalade",
+}
+
+# Mapping back-compat priorité entière (1=haute) ↔ littéral historique.
+_PRIORITY_INT_TO_LITERAL: dict[int, Literal["high", "medium", "low"]] = {
+    1: "high", 2: "medium", 3: "low",
+}
+_PRIORITY_LITERAL_TO_INT: dict[str, int] = {
+    "high": 1, "medium": 2, "low": 3,
+}
+
+
 class RecommendationOut(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=1, max_length=200)
+    # `detail` reste le « pourquoi » destiné au lecteur (= rationale). Conservé
+    # pour la rétro-compatibilité du web et des rapports existants.
     detail: str = Field(min_length=1, max_length=1000)
-    priority: Literal["high", "medium", "low"]
+    # `priority` littéral historique (high/medium/low) — dérivé de la gradation
+    # entière ci-dessous. Conservé pour la rétro-compatibilité du web. La valeur
+    # par défaut est resynchronisée depuis `priority_level` par le validateur.
+    priority: Literal["high", "medium", "low"] = "medium"
+
+    # --- Champs structurés du moteur déployeur (additifs) ---
+    id: str = ""
+    rationale: str = ""
+    """Le « pourquoi », rattaché au constat précis (attribut, groupe lésé,
+    écart chiffré). Égal à `detail` ; champ nommé pour le nouveau contrat."""
+    category: RecommendationCategory = "documentation"
+    priority_level: int = Field(default=2, ge=1, le=3)
+    """1 = haute, 2 = moyenne, 3 = basse. Vraie gradation par sévérité."""
+    owner: RecommendationOwner = "Direction"
+    horizon: RecommendationHorizon = "court_terme"
+    legal_ref: str | None = None
+    steps: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_legacy_inbound(cls, data: object) -> object:
+        # Entrées legacy (LLM historique) ne fournissent que `priority` littéral
+        # sans `priority_level`. On dérive l'entier depuis le littéral.
+        if isinstance(data, dict) and "priority_level" not in data:
+            prio = data.get("priority")
+            if isinstance(prio, str) and prio in _PRIORITY_LITERAL_TO_INT:
+                data = {**data, "priority_level": _PRIORITY_LITERAL_TO_INT[prio]}
+        return data
+
+    @model_validator(mode="after")
+    def _sync_back_compat(self) -> RecommendationOut:
+        # `rationale` et `detail` sont deux noms du même texte : si l'un manque,
+        # on le dérive de l'autre (entrées LLM legacy ne fournissent que detail).
+        if not self.rationale and self.detail:
+            object.__setattr__(self, "rationale", self.detail)
+        elif self.rationale and not self.detail:
+            object.__setattr__(self, "detail", self.rationale)
+        # `priority` littéral dérivé de `priority_level` entier (source de vérité).
+        object.__setattr__(
+            self, "priority", _PRIORITY_INT_TO_LITERAL[self.priority_level]
+        )
+        return self
 
 
 class InterpretationOut(BaseModel):
@@ -386,11 +478,41 @@ class AuditOut(BaseModel):
     privileged_value: str | None = None
     created_at: datetime.datetime
     completed_at: datetime.datetime | None = None
+    archived_at: datetime.datetime | None = None
     error: str | None = None
     metrics: M1MetricsOut | M2MetricsOut | M3MetricsOut | None = None
     interpretation: InterpretationOut | None = None
     pre_check: list[str] = []
     config: dict[str, object] | None = None
+
+
+class AuditArchiveIn(BaseModel):
+    """Corps de PATCH /audits/{id} : archive (true) ou désarchive (false)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    archived: bool
+
+
+class AuditListItem(BaseModel):
+    """Ligne du tableau « Mes audits » / « Archivés » (liste org-scopée).
+
+    Reprend la forme exposée par le dashboard (« recent_audits ») pour la
+    cohérence côté web, en ajoutant ``status`` et ``archived_at`` utiles à la
+    distinction actifs/archivés.
+    """
+
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+
+    id: uuid.UUID
+    code: str | None
+    title: str
+    module: str
+    status: str
+    verdict: Verdict | None
+    risk_score: int | None
+    created_at: datetime.datetime
+    archived_at: datetime.datetime | None
 
 
 class M3TestConnectionIn(BaseModel):

@@ -117,17 +117,38 @@ describe('RecommandationsPage — R3 refonte', () => {
               {
                 title: 'Recalibrer le seuil de décision par groupe',
                 detail: 'Appliquer un seuil ajusté pour rétablir la parité.',
+                rationale: 'Appliquer un seuil ajusté pour rétablir la parité.',
                 priority: 'high',
+                priority_level: 1,
+                category: 'correction_aval',
+                owner: 'Direction',
+                horizon: 'immediat',
+                legal_ref: 'AI Act art. 10',
+                steps: ['Définir le seuil cible', 'Valider avec le métier'],
               },
               {
                 title: 'Réentraîner sans la variable « code postal »',
                 detail: 'Cette variable agit comme proxy de l\'origine.',
+                rationale: 'Cette variable agit comme proxy de l\'origine.',
                 priority: 'medium',
+                priority_level: 2,
+                category: 'usage_outil',
+                owner: 'DPO',
+                horizon: 'court_terme',
+                legal_ref: null,
+                steps: [],
               },
               {
                 title: 'Documenter la justification métier du seuil',
                 detail: 'Si l\'écart est partiellement justifié.',
+                rationale: 'Si l\'écart est partiellement justifié.',
                 priority: 'low',
+                priority_level: 3,
+                category: 'documentation',
+                owner: 'Juridique',
+                horizon: 'continu',
+                legal_ref: null,
+                steps: [],
               },
             ],
           },
@@ -158,6 +179,19 @@ describe('RecommandationsPage — R3 refonte', () => {
       // Check numbered cards (1, 2, 3)
       const numberDivs = screen.getAllByText(/^[123]$/);
       expect(numberDivs.length).toBeGreaterThanOrEqual(3);
+
+      // Structured fields surfaced from the deployer engine
+      expect(screen.getByText('Correction en aval')).toBeInTheDocument();
+      expect(screen.getByText("Usage de l'outil")).toBeInTheDocument();
+      expect(screen.getByText('Documenter & tracer')).toBeInTheDocument();
+      expect(screen.getByText(/Responsable\s*:\s*Direction/)).toBeInTheDocument();
+      expect(screen.getByText('Immédiat')).toBeInTheDocument();
+      expect(screen.getByText('Court terme')).toBeInTheDocument();
+      expect(screen.getByText('En continu')).toBeInTheDocument();
+      expect(screen.getByText(/AI Act art\. 10/)).toBeInTheDocument();
+      // Steps render only when non-empty
+      expect(screen.getByText('Définir le seuil cible')).toBeInTheDocument();
+      expect(screen.getByText('Valider avec le métier')).toBeInTheDocument();
     });
 
     it('shows InlineNote when audit has no recommendations', () => {

@@ -62,7 +62,7 @@ const HISTORY = [
   {
     date: 'CONSTRUCTION',
     title: 'Le produit',
-    body: 'Développement des trois modules : audit supervisé (Disparate Impact, parités, analyse intersectionnelle), détection non supervisée (k-means + test du χ²) et audit LLM (banque versionnée de paires de prompts FR/EN).',
+    body: 'Développement des trois modules : Caractéristique connue (Disparate Impact, parités, analyse intersectionnelle), Biais cachés (k-means + test du χ²) et Assistant conversationnel (banque versionnée de paires de prompts FR/EN).',
   },
   {
     date: '2026',

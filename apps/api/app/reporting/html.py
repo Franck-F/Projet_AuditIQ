@@ -6,8 +6,30 @@ from __future__ import annotations
 
 from html import escape
 
-from app.reporting.format import p_value_display, status_label, verdict_label
-from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
+from app.reporting.format import (
+    module_label,
+    p_value_display,
+    status_label,
+    verdict_label,
+)
+from app.schemas.audit import (
+    RECOMMENDATION_CATEGORY_LABELS,
+    AuditOut,
+    M1MetricsOut,
+    M2MetricsOut,
+    M3MetricsOut,
+    RecommendationOut,
+)
+
+_PRIORITY_LABEL = {1: "Priorité 1", 2: "Priorité 2", 3: "Priorité 3"}
+_PRIORITY_COLOR = {1: "#b42318", 2: "#b54708", 3: "#475467"}
+_OWNER_LABEL = {
+    "RH": "RH", "DPO": "DPO", "Juridique": "Juridique",
+    "Achats": "Achats", "Direction": "Direction",
+}
+_HORIZON_LABEL = {
+    "immediat": "Immédiat", "court_terme": "Court terme", "continu": "Continu",
+}
 
 _VERDICT_COLOR = {
     "fail": "#b42318",
@@ -62,7 +84,7 @@ def _detail(audit: AuditOut) -> str:
             for d in m.divergent_examples
         )
         return (
-            f"<h2>Module 3 — audit LLM/chatbot</h2>"
+            f"<h2>{_e(module_label('M3'))}</h2>"
             f"<table class='kv'>{head}</table>"
             f"<table class='grid'><thead><tr><th>Catégorie</th><th>Écart "
             f"long.</th><th>Écart sent.</th><th>Taux refus</th><th>Score</th>"
@@ -90,7 +112,7 @@ def _detail(audit: AuditOut) -> str:
             for c in m.clusters
         )
         return (
-            f"<h2>Module 2 — détection non supervisée</h2>"
+            f"<h2>{_e(module_label('M2'))}</h2>"
             f"<table class='kv'>{head}</table>"
             f"<table class='grid'><thead><tr><th>Cluster</th><th>Effectif"
             f"</th><th>Taux fav.</th><th>Écart (pts)</th><th>Déviant</th>"
@@ -102,7 +124,7 @@ def _detail(audit: AuditOut) -> str:
         # section par attribut.
         single_attr = len(m.marginals) == 1
         if single_attr:
-            base = "<h2>Module 1 — audit supervisé</h2>"
+            base = f"<h2>{_e(module_label('M1'))}</h2>"
         else:
             head = _rows(
                 [
@@ -118,7 +140,7 @@ def _detail(audit: AuditOut) -> str:
                 for g in m.groups
             )
             base = (
-                f"<h2>Module 1 — audit supervisé</h2>"
+                f"<h2>{_e(module_label('M1'))}</h2>"
                 f"<table class='kv'>{head}</table>"
                 f"<table class='grid'><thead><tr><th>Groupe</th><th>Effectif</th>"
                 f"<th>Favorables</th><th>Taux</th><th>DI</th></tr></thead>"
@@ -340,21 +362,50 @@ def _detail(audit: AuditOut) -> str:
     return "<p>Résultats indisponibles pour cet audit.</p>"
 
 
-def _render_recommendations(recs: list[RecommendationOut]) -> str:
-    """Liste numérotée simple : l'ordre vaut priorité, sans étiquette."""
-    if not recs:
-        return ""
-    items = "".join(
-        '<li class="rec">'
-        '<span class="rec-title">' + escape(r.title) + '</span>'
-        '<p class="rec-detail">' + escape(r.detail) + '</p>'
-        '</li>'
-        for r in recs
+def _render_recommendation(r: RecommendationOut) -> str:
+    cat = RECOMMENDATION_CATEGORY_LABELS.get(r.category, r.category)
+    prio_label = _PRIORITY_LABEL.get(r.priority_level, f"Priorité {r.priority_level}")
+    prio_color = _PRIORITY_COLOR.get(r.priority_level, "#475467")
+    owner = _OWNER_LABEL.get(r.owner, r.owner)
+    horizon = _HORIZON_LABEL.get(r.horizon, r.horizon)
+    meta = (
+        f'<span class="rec-cat">{escape(cat)}</span>'
+        f'<span class="rec-meta">Responsable : {escape(owner)}</span>'
+        f'<span class="rec-meta">Horizon : {escape(horizon)}</span>'
+    )
+    steps = ""
+    if r.steps:
+        lis = "".join(f"<li>{escape(s)}</li>" for s in r.steps)
+        steps = f'<ul class="rec-steps">{lis}</ul>'
+    legal = (
+        f'<p class="rec-legal">Réf. : {escape(r.legal_ref)}</p>'
+        if r.legal_ref else ""
     )
     return (
+        '<li class="rec">'
+        '<div class="rec-head">'
+        f'<span class="rec-title">{escape(r.title)}</span>'
+        f'<span class="rec-prio" style="background:{prio_color}">'
+        f'{escape(prio_label)}</span>'
+        '</div>'
+        f'<div class="rec-tags">{meta}</div>'
+        f'<p class="rec-detail">{escape(r.rationale or r.detail)}</p>'
+        + steps + legal +
+        '</li>'
+    )
+
+
+def _render_recommendations(recs: list[RecommendationOut]) -> str:
+    """Recommandations déployeur : catégorie, priorité graduée, responsable,
+    horizon, référence légale et sous-étapes concrètes."""
+    if not recs:
+        return ""
+    items = "".join(_render_recommendation(r) for r in recs)
+    return (
         '<section class="recommendations">'
-        '<h3>Recommandations</h3>'
-        '<p class="note">Recommandations présentées par ordre de priorité.</p>'
+        '<h3>Recommandations (déployeur)</h3>'
+        '<p class="note">Actions à la portée du déployeur de l\'outil — '
+        'présentées par priorité.</p>'
         '<ol>' + items + '</ol>'
         '</section>'
     )
@@ -403,15 +454,25 @@ color:#475467;font-size:10px}}
 .recommendations h3{{font-size:14px;font-weight:600;margin-bottom:8px}}
 .recommendations ol{{padding-left:20px;margin:0}}
 .recommendations .rec{{border:1px solid #d4d4d8;border-radius:6px;padding:12px;margin-bottom:8px}}
-.recommendations .rec-title{{font-weight:500;font-size:13px;display:block;margin-bottom:6px}}
+.recommendations .rec-head{{display:flex;justify-content:space-between;
+align-items:flex-start;gap:8px;margin-bottom:6px}}
+.recommendations .rec-title{{font-weight:600;font-size:13px}}
+.recommendations .rec-prio{{display:inline-block;white-space:nowrap;color:#fff;
+border-radius:10px;padding:2px 8px;font-size:10px;font-weight:bold}}
+.recommendations .rec-tags{{margin-bottom:6px}}
+.recommendations .rec-cat{{display:inline-block;background:#eef2ff;color:#3538cd;
+border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6px}}
+.recommendations .rec-meta{{font-size:10px;color:#667085;margin-right:10px}}
 .recommendations .rec-detail{{font-size:12px;color:#52525b;margin:0}}
+.recommendations .rec-steps{{margin:6px 0 0 0;padding-left:18px;font-size:11px;color:#475467}}
+.recommendations .rec-legal{{font-size:10px;color:#667085;margin:6px 0 0 0;font-style:italic}}
 </style></head><body>
 <h1>Rapport d'audit de fairness — AuditIQ</h1>
 <p class="note">{_NOT_A_CERTIFICATE}</p>
 <table class="kv">
 <tr><th>Audit</th><td>{_e(audit.code or audit.id)}</td></tr>
 <tr><th>Titre</th><td>{_e(audit.title)}</td></tr>
-<tr><th>Module</th><td>{_e(audit.module)}</td></tr>
+<tr><th>Module</th><td>{_e(module_label(audit.module))}</td></tr>
 <tr><th>Statut</th><td>{_e(status_label(audit.status))}</td></tr>
 <tr><th>Verdict</th><td><span class="badge">{_e(label)}</span></td></tr>
 <tr><th>Score de risque</th><td>{_e(risk)}/100</td></tr>

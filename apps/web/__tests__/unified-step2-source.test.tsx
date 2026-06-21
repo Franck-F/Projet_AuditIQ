@@ -24,6 +24,14 @@ describe('Unified Step2Source', () => {
     expect(screen.getByText(/Importez votre jeu de données/i)).toBeInTheDocument();
   });
 
+  it('M1/M2: upload card accepts CSV and Excel files', () => {
+    render(<WizardProvider totalSteps={5}><Harness initial={{ audit_type: 'tabular-known' }} dataset={null} analysis={null} analysisError={null} onUpload={vi.fn()} busy={false} /></WizardProvider>);
+    expect(screen.getByText(/Format CSV ou Excel \(\.xlsx\)/i)).toBeInTheDocument();
+    const input = screen.getByTestId('csv-input') as HTMLInputElement;
+    expect(input.accept).toContain('.xlsx');
+    expect(input.accept).toContain('.csv');
+  });
+
   it('M1/M2: shows file summary when dataset selected', () => {
     render(<WizardProvider totalSteps={5}><Harness initial={{ audit_type: 'tabular-unknown' }} dataset={dataset} analysis={null} analysisError={null} onUpload={vi.fn()} busy={false} /></WizardProvider>);
     expect(screen.getByText('x.csv')).toBeInTheDocument();

@@ -3,10 +3,12 @@ from __future__ import annotations
 import asyncio
 import datetime
 import io
+import logging
 import uuid
 from typing import cast
 
 import pandas as pd
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -34,9 +36,10 @@ from app.interpretation.base import LLMProvider
 from app.interpretation.m1 import interpret_m1
 from app.interpretation.m2 import interpret_m2
 from app.interpretation.m3 import interpret_m3
-from app.models import Audit, AuditResult, Dataset
+from app.models import Audit, AuditResult, Dataset, Report
 from app.schemas.audit import (
     AuditCreate,
+    AuditListItem,
     AuditOut,
     CategoryStatOut,
     ClusterStatOut,
@@ -55,6 +58,8 @@ from app.schemas.audit import (
 from app.services.dataset_service import get_dataset
 
 _BANK_VERSION = "v1"
+
+_logger = logging.getLogger(__name__)
 
 
 def _canonical_scalar(value: str, series: pd.Series) -> str:
@@ -319,6 +324,7 @@ def _audit_out(
         privileged_value=audit.privileged_value,
         created_at=audit.created_at,
         completed_at=audit.completed_at,
+        archived_at=audit.archived_at,
         error=audit.error,
         metrics=metrics,
         interpretation=interpretation,
@@ -509,7 +515,9 @@ async def compute_m1_audit(
     )
 
     metrics_out = _to_metrics_out(result)
-    interpretation = await interpret_m1(result, provider=llm_provider)
+    interpretation = await interpret_m1(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,
@@ -569,7 +577,9 @@ async def compute_m2_audit(
 
     result = run_m2(df, m2_cfg)
     metrics_out = _to_m2_metrics_out(result)
-    interpretation = await interpret_m2(result, provider=llm_provider)
+    interpretation = await interpret_m2(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,
@@ -654,7 +664,9 @@ async def compute_m3_audit(
 
     result = run_m3(M3Responses(records=tuple(records)), M3Config(lang=lang))
     metrics_out = _to_m3_metrics_out(result)
-    interpretation = await interpret_m3(result, provider=llm_provider)
+    interpretation = await interpret_m3(
+        result, provider=llm_provider, sector=body.sector
+    )
     session.add(
         AuditResult(
             audit_id=audit.id,
@@ -702,6 +714,148 @@ async def get_audit(
         else None
     )
     return _audit_out(audit, metrics, interpretation, pre_check)
+
+
+async def _require_org_audit(
+    session: AsyncSession, audit_id: uuid.UUID, *, org_id: uuid.UUID
+) -> Audit:
+    """Fetch an audit scoped to ``org_id`` or raise NotFoundError (404).
+
+    Used as the org-membership guard for archive / delete: an audit that is
+    not in the caller's org is reported as absent (404), never leaked.
+    """
+    audit = (
+        await session.execute(
+            select(Audit).where(Audit.id == audit_id, Audit.org_id == org_id)
+        )
+    ).scalar_one_or_none()
+    if audit is None:
+        raise NotFoundError("Audit introuvable.")
+    return audit
+
+
+async def list_audits(
+    session: AsyncSession, *, org_id: uuid.UUID, archived: bool
+) -> list[AuditListItem]:
+    """List the org's audits (active or archived), newest first.
+
+    ``archived=False`` → ``archived_at IS NULL`` (actifs) ; ``archived=True``
+    → ``archived_at IS NOT NULL`` (archivés). Joins the AuditResult (left) to
+    surface verdict + risk_score, matching the dashboard's recent-audits shape.
+    """
+    archived_filter = (
+        Audit.archived_at.is_not(None) if archived else Audit.archived_at.is_(None)
+    )
+    rows = (
+        await session.execute(
+            select(Audit, AuditResult)
+            .join(
+                AuditResult,
+                AuditResult.audit_id == Audit.id,
+                isouter=True,
+            )
+            .where(Audit.org_id == org_id, archived_filter)
+            .order_by(Audit.created_at.desc())
+        )
+    ).all()
+    return [
+        AuditListItem(
+            id=audit.id,
+            code=audit.code,
+            title=audit.title,
+            module=audit.module,
+            status=audit.status,
+            verdict=cast(Verdict, result.verdict) if result is not None else None,
+            risk_score=result.risk_score if result is not None else None,
+            created_at=audit.created_at,
+            archived_at=audit.archived_at,
+        )
+        for audit, result in rows
+    ]
+
+
+async def set_audit_archived(
+    session: AsyncSession,
+    audit_id: uuid.UUID,
+    *,
+    org_id: uuid.UUID,
+    archived: bool,
+) -> AuditOut:
+    """Archive (``archived_at = now()``) or unarchive (``NULL``) an audit.
+
+    Non-destructive. Org-membership guard: 404 if the audit is not in the org.
+    Returns the up-to-date AuditOut (header fields only — no metrics).
+    """
+    audit = await _require_org_audit(session, audit_id, org_id=org_id)
+    audit.archived_at = (
+        datetime.datetime.now(tz=datetime.timezone.utc) if archived else None
+    )
+    await session.commit()
+    return _audit_out(audit, None, None, [])
+
+
+async def delete_audit(
+    session: AsyncSession,
+    audit_id: uuid.UUID,
+    *,
+    org_id: uuid.UUID,
+    report_storage: Storage,
+    dataset_storage: Storage,
+) -> None:
+    """Hard-delete an audit and its dependents (application-level cascade).
+
+    Order respects FKs: report files + rows, then AuditResult, then the Audit,
+    finally the linked Dataset (and its file). Storage deletions are
+    best-effort — a storage failure is logged but never blocks the DB delete.
+    The org-membership guard (404) is the caller's responsibility via the
+    router; we re-check here so the service is safe to call directly.
+    """
+    audit = await _require_org_audit(session, audit_id, org_id=org_id)
+    dataset_id = audit.dataset_id
+
+    # 1. Reports (+ their generated files in the reports bucket).
+    reports = (
+        await session.execute(
+            select(Report).where(Report.audit_id == audit_id)
+        )
+    ).scalars().all()
+    for report in reports:
+        await _safe_remove(report_storage, report.storage_path)
+    await session.execute(
+        sa_delete(Report).where(Report.audit_id == audit_id)
+    )
+
+    # 2. AuditResult rows.
+    await session.execute(
+        sa_delete(AuditResult).where(AuditResult.audit_id == audit_id)
+    )
+
+    # 3. The Audit row itself.
+    await session.execute(sa_delete(Audit).where(Audit.id == audit_id))
+
+    # 4. The linked Dataset (+ its uploaded file), if any.
+    if dataset_id is not None:
+        dataset = (
+            await session.execute(
+                select(Dataset).where(Dataset.id == dataset_id)
+            )
+        ).scalar_one_or_none()
+        if dataset is not None:
+            await _safe_remove(dataset_storage, dataset.storage_path)
+            await session.execute(
+                sa_delete(Dataset).where(Dataset.id == dataset_id)
+            )
+
+    await session.commit()
+
+
+async def _safe_remove(storage: Storage, path: str) -> None:
+    """Best-effort object removal — log and swallow any storage failure so a
+    storage error never aborts the destructive DB delete (spec)."""
+    try:
+        await storage.remove(path)
+    except Exception:  # noqa: BLE001 — storage failure must not block delete
+        _logger.warning("storage.remove failed for %s", path, exc_info=True)
 
 
 _audit_semaphore: asyncio.Semaphore | None = None

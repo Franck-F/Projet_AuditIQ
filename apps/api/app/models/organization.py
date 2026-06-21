@@ -21,6 +21,11 @@ class Organization(Base):
         Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    siren: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    sector: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    country: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    company_size: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    dpo_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     settings: Mapped[dict[str, object]] = mapped_column(
         JSON().with_variant(JSONB, "postgresql"),
         nullable=False,

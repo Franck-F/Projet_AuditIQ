@@ -79,12 +79,26 @@ const M1_FIXTURE = {
       {
         title: 'Suspendre le déploiement et rééquilibrer le jeu d\'entraînement',
         detail: 'Procéder à un rééchantillonnage stratifié pour atteindre la parité.',
+        rationale: 'Procéder à un rééchantillonnage stratifié pour atteindre la parité.',
         priority: 'high' as const,
+        priority_level: 1,
+        category: 'escalade' as const,
+        owner: 'Direction' as const,
+        horizon: 'immediat' as const,
+        legal_ref: 'AI Act art. 10',
+        steps: ['Geler le déploiement', 'Planifier le rééchantillonnage'],
       },
       {
         title: 'Auditer le lexique d\'évaluation',
         detail: 'Évaluer la pondération des tokens et envisager un re-fine-tuning.',
+        rationale: 'Évaluer la pondération des tokens et envisager un re-fine-tuning.',
         priority: 'medium' as const,
+        priority_level: 2,
+        category: 'usage_outil' as const,
+        owner: 'RH' as const,
+        horizon: 'court_terme' as const,
+        legal_ref: null,
+        steps: [],
       },
     ],
   },
@@ -176,6 +190,28 @@ describe('rapport detail — R5', () => {
       expect(screen.getByText(/auditer le lexique/i)).toBeInTheDocument();
       expect(screen.getByText(/priorité 1/i)).toBeInTheDocument();
       expect(screen.getByText(/priorité 2/i)).toBeInTheDocument();
+    });
+
+    it('renders structured recommendation fields (category, owner, horizon, legal ref, steps)', () => {
+      const { container } = render(<RapportDetailPage />);
+      expect(screen.getByText('Escalade')).toBeInTheDocument();
+      expect(screen.getByText("Usage de l'outil")).toBeInTheDocument();
+      expect(screen.getByText(/Responsable\s*:\s*Direction/)).toBeInTheDocument();
+      expect(screen.getByText('Immédiat')).toBeInTheDocument();
+      expect(screen.getByText('Court terme')).toBeInTheDocument();
+      expect(screen.getByText('Geler le déploiement')).toBeInTheDocument();
+      expect(screen.getByText('Planifier le rééchantillonnage')).toBeInTheDocument();
+      // The legal_ref is rendered inside the recommendations section (scoped to
+      // avoid colliding with the regulatory callouts that also cite AI Act art. 10)
+      const recoSection = container.querySelector('#recommendations')!;
+      expect(recoSection.textContent).toMatch(/Réf\. légale\s*:\s*AI Act art\. 10/);
+    });
+
+    it('renders the full module name in the version row (no raw M1 code)', () => {
+      render(<RapportDetailPage />);
+      expect(
+        screen.getByText(/Module 1 · Caractéristique connue · v1/),
+      ).toBeInTheDocument();
     });
 
     it('renders signature section with report code', () => {

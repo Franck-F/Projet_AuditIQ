@@ -133,7 +133,7 @@ export default function FaqPage() {
                 <FaqItem question="AuditIQ est-il disponible en anglais ?">
                   <p>
                     Interface, documentation et rapports sont en français. La banque de prompts du
-                    module LLM est disponible en français et en anglais. Une version anglaise de la
+                    Module 3 · Assistant conversationnel est disponible en français et en anglais. Une version anglaise de la
                     plateforme est en feuille de route.
                   </p>
                 </FaqItem>
@@ -272,7 +272,7 @@ export default function FaqPage() {
                     feuille de route.
                   </p>
                 </FaqItem>
-                <FaqItem question="Comment fonctionne l'audit LLM (Module 3) ?">
+                <FaqItem question="Comment fonctionne le Module 3 · Assistant conversationnel ?">
                   <p>
                     Le module s&apos;appuie sur une banque versionnée de paires de prompts
                     contrefactuels (français et anglais) couvrant six axes de discrimination. Les

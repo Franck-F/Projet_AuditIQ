@@ -1,5 +1,7 @@
+import io
 import uuid
 
+import openpyxl
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -8,6 +10,23 @@ from app.core.errors import APIError
 from app.integrations.storage import MemoryStorage
 from app.models import Organization, User
 from app.services import dataset_service
+
+
+def _xlsx_bytes(rows: list[list[object]], sheet_title: str = "Feuille1") -> bytes:
+    """Construit un classeur .xlsx en mémoire à partir de lignes."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = sheet_title
+    for row in rows:
+        ws.append(row)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+_XLSX_MIME = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 
 @pytest.fixture
@@ -53,6 +72,112 @@ async def test_create_dataset_rejects_non_csv(ctx):
                 s, store, org_id=org_id, user_id=uid,
                 filename="x.csv", raw=b"\x00\x01not a csv", retention_days=30,
             )
+
+
+async def test_create_dataset_from_xlsx_by_extension(ctx):
+    """Un .xlsx nominal est converti en CSV et suit le même chemin."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    raw = _xlsx_bytes([["genre", "decision"], ["H", "oui"], ["F", "non"]])
+    async with sm() as s:
+        ds = await dataset_service.create_dataset(
+            s, store, org_id=org_id, user_id=uid,
+            filename="data.xlsx", raw=raw, retention_days=30,
+        )
+        assert ds.row_count == 2
+        assert ds.columns == ["genre", "decision"]
+    # Le contenu stocké est du CSV normalisé (séparateur virgule).
+    stored = await store.download(ds.storage_path)
+    assert stored == b"genre,decision\nH,oui\nF,non\n"
+
+
+async def test_create_dataset_from_xlsx_by_mime(ctx):
+    """Détection par type MIME même si l'extension est absente/trompeuse."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    raw = _xlsx_bytes([["a", "b"], [1, 2]])
+    async with sm() as s:
+        ds = await dataset_service.create_dataset(
+            s, store, org_id=org_id, user_id=uid,
+            filename="sans-extension", raw=raw, retention_days=30,
+            content_type=_XLSX_MIME,
+        )
+        assert ds.columns == ["a", "b"]
+        assert ds.row_count == 1
+    stored = await store.download(ds.storage_path)
+    assert stored == b"a,b\n1,2\n"
+
+
+async def test_xlsx_values_with_commas_and_accents(ctx):
+    """Échappement CSV correct des virgules/guillemets + accents préservés."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    raw = _xlsx_bytes(
+        [
+            ["nom", "décision"],
+            ["Dupont, Élise", 'refusé "définitif"'],
+            ["Müller", "accepté"],
+        ]
+    )
+    async with sm() as s:
+        ds = await dataset_service.create_dataset(
+            s, store, org_id=org_id, user_id=uid,
+            filename="accents.xlsx", raw=raw, retention_days=30,
+        )
+        assert ds.columns == ["nom", "décision"]
+        assert ds.row_count == 2
+    stored = (await store.download(ds.storage_path)).decode("utf-8")
+    # La virgule dans la valeur force des guillemets ; les "" sont doublés.
+    assert '"Dupont, Élise"' in stored
+    assert '"refusé ""définitif"""' in stored
+    assert "Müller" in stored
+
+
+async def test_xlsx_empty_workbook_rejected(ctx):
+    """Classeur sans aucune donnée -> message FR clair, pas de stack trace."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    raw = _xlsx_bytes([])  # feuille vide
+    async with sm() as s:
+        with pytest.raises(APIError) as exc:
+            await dataset_service.create_dataset(
+                s, store, org_id=org_id, user_id=uid,
+                filename="vide.xlsx", raw=raw, retention_days=30,
+            )
+    assert "Excel" in str(exc.value.detail)
+    assert exc.value.status == 422
+
+
+async def test_xlsx_headers_only_no_data_rejected(ctx):
+    """En-têtes seules sans ligne de données -> rejet propre."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    raw = _xlsx_bytes([["genre", "decision"]])
+    async with sm() as s:
+        with pytest.raises(APIError) as exc:
+            await dataset_service.create_dataset(
+                s, store, org_id=org_id, user_id=uid,
+                filename="entetes.xlsx", raw=raw, retention_days=30,
+            )
+    assert exc.value.status == 422
+    assert "ligne de données" in str(exc.value.detail)
+
+
+async def test_fake_xlsx_is_rejected(ctx):
+    """Fichier non-xlsx déguisé (extension .xlsx, contenu invalide)."""
+    sm, org_id, uid = ctx
+    store = MemoryStorage()
+    async with sm() as s:
+        with pytest.raises(APIError) as exc:
+            await dataset_service.create_dataset(
+                s, store, org_id=org_id, user_id=uid,
+                filename="faux.xlsx", raw=b"\x00\x01 pas un classeur",
+                retention_days=30,
+            )
+    assert exc.value.status == 422
+    assert "endommagé" in str(exc.value.detail) or "illisible" in str(
+        exc.value.detail
+    )
 
 
 async def test_get_dataset_is_org_scoped(ctx):

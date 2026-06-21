@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { Topbar } from '@/components/app/Topbar';
 import { AuditRunningState } from '@/components/audits/AuditRunningState';
+import { AuditRowActions } from '@/components/audits/AuditRowActions';
 import { Gauge } from '@/components/product/Gauge';
 import { Stoplight } from '@/components/product/Stoplight';
 import { StatusBadge, type StatusTone } from '@/components/product/StatusBadge';
@@ -29,6 +30,8 @@ import {
   type ReportFormat,
 } from '@/lib/api/audits';
 import { useAudit } from '@/lib/query/use-audit';
+import { useMe } from '@/lib/query/use-org';
+import { moduleNaming } from '@/lib/modules';
 import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS, verdictLabel, formatPValue } from '@/lib/verdict';
 import { Scale } from 'lucide-react';
 
@@ -1182,8 +1185,10 @@ function MethodoTab({ audit }: { audit: ReturnType<typeof useAudit>['data'] }) {
 
 export default function AuditResultPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = typeof params?.id === 'string' ? params.id : '';
   const { data, isLoading, isError } = useAudit(id);
+  const { data: me } = useMe();
 
   const [tab, setTab] = React.useState('synthese');
 
@@ -1237,11 +1242,21 @@ export default function AuditResultPage() {
             role="alert"
             className="rounded-md border border-status-fail-border bg-status-fail-bg p-4 text-sm text-status-fail"
           >
-            <strong>L&apos;audit a échoué.</strong>
-            <p className="mt-1">
-              Une erreur est survenue pendant le calcul. Relancez l&apos;audit ou contactez le
-              support si le problème persiste.
-            </p>
+            <strong>L&apos;audit n&apos;a pas pu être réalisé.</strong>
+            {typeof data.error === 'string' && /effectif insuffisant/i.test(data.error) ? (
+              <p className="mt-1">
+                Certains groupes de la caractéristique analysée comptent trop peu de personnes
+                pour un résultat fiable. Cela arrive souvent avec une caractéristique très
+                variée (âge, ancienneté, salaire…) qui crée beaucoup de petits groupes. Choisissez
+                plutôt une caractéristique à quelques catégories (sexe, origine…) et relancez
+                l&apos;audit.
+              </p>
+            ) : (
+              <p className="mt-1">
+                Une erreur est survenue pendant le calcul. Relancez l&apos;audit ou contactez le
+                support si le problème persiste.
+              </p>
+            )}
             {data.error && (
               <details className="mt-2 text-xs">
                 <summary className="cursor-pointer select-none">Détail technique</summary>
@@ -1302,6 +1317,14 @@ export default function AuditResultPage() {
                 Voir les actions
               </Link>
             </Button>
+            <AuditRowActions
+              auditId={data.id}
+              auditTitle={data.title}
+              archived={data.archived_at !== null}
+              role={me?.role}
+              noun="audit"
+              onDeleted={() => router.push('/app/audits')}
+            />
           </>
         }
       />
@@ -1318,6 +1341,29 @@ export default function AuditResultPage() {
                 <li key={w}>{w}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {isM3 && m !== null && 'n_calls_failed' in m && (m.n_calls_failed > 0 || m.warnings.length > 0) && (
+          <div
+            role="note"
+            className="mb-4 rounded-md border border-status-warn-border bg-status-warn-bg p-3 text-sm text-status-warn"
+          >
+            <p className="font-medium">Fiabilité du résultat</p>
+            {m.n_calls_failed > 0 && (
+              <p className="mt-1">
+                {m.n_calls_failed} appel{m.n_calls_failed > 1 ? 's' : ''} au chatbot{' '}
+                {m.n_calls_failed > 1 ? 'ont' : 'a'} échoué. Les écarts mesurés ne portent que sur les appels
+                réussis — à interpréter avec prudence.
+              </p>
+            )}
+            {m.warnings.length > 0 && (
+              <ul className="mt-1 list-disc pl-5">
+                {m.warnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -1377,9 +1423,12 @@ export default function AuditResultPage() {
                     {data.code}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-muted">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-muted"
+                  title={moduleNaming(data.module)?.full ?? data.module}
+                >
                   <Icons.flag size={12} />
-                  {data.module}
+                  {moduleNaming(data.module)?.short ?? data.module}
                 </span>
               </div>
             </div>

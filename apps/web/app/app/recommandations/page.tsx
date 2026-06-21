@@ -14,34 +14,27 @@ import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { RecommendationOut } from '@/lib/api/audits';
 import type { RecentAudit } from '@/lib/api/dashboard';
+import {
+  CATEGORY_LABEL,
+  HORIZON_LABEL,
+  OWNER_LABEL,
+  PRIORITY_LABEL,
+  priorityRank,
+  recoRationale,
+} from '@/components/audits/Recommendations';
 import { useAudit } from '@/lib/query/use-audit';
 import { useDashboard } from '@/lib/query/use-dashboard';
 
-const PRIORITY_MAP: Record<
-  RecommendationOut['priority'],
-  { status: StatusTone; label: string; numColor: string }
-> = {
-  high: {
-    status: 'fail',
-    label: 'Priorité 1',
-    numColor: 'var(--status-fail)',
-  },
-  medium: {
-    status: 'warn',
-    label: 'Priorité 2',
-    numColor: 'var(--status-warn)',
-  },
-  low: {
-    status: 'info',
-    label: 'Priorité 3',
-    numColor: 'var(--status-info)',
-  },
+const PRIORITY_STATUS: Record<1 | 2 | 3, StatusTone> = {
+  1: 'fail',
+  2: 'warn',
+  3: 'info',
 };
 
-const PRIORITY_BG: Record<RecommendationOut['priority'], string> = {
-  high: 'bg-status-fail-bg border-status-fail-border text-status-fail',
-  medium: 'bg-status-warn-bg border-status-warn-border text-status-warn',
-  low: 'bg-status-info-bg border-status-info-border text-status-info',
+const PRIORITY_BG: Record<1 | 2 | 3, string> = {
+  1: 'bg-status-fail-bg border-status-fail-border text-status-fail',
+  2: 'bg-status-warn-bg border-status-warn-border text-status-warn',
+  3: 'bg-status-info-bg border-status-info-border text-status-info',
 };
 
 /* ─── Numbered recommendation card ─────────────────────────────────────── */
@@ -51,8 +44,11 @@ interface RecommendationCardProps {
 }
 
 function RecommendationCard({ reco, index }: RecommendationCardProps) {
-  const { status, label, numColor } = PRIORITY_MAP[reco.priority];
-  const bgClass = PRIORITY_BG[reco.priority];
+  const rank = priorityRank(reco);
+  const status = PRIORITY_STATUS[rank];
+  const label = PRIORITY_LABEL[rank];
+  const bgClass = PRIORITY_BG[rank];
+  const steps = reco.steps ?? [];
 
   return (
     <Card style={{ padding: '20px 22px' }}>
@@ -90,8 +86,47 @@ function RecommendationCard({ reco, index }: RecommendationCardProps) {
               maxWidth: 640,
             }}
           >
-            {reco.detail}
+            {recoRationale(reco)}
           </p>
+
+          {/* Méta : catégorie · responsable · horizon */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {reco.category && (
+              <span className="inline-block rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-[11px] text-fg-secondary">
+                {CATEGORY_LABEL[reco.category]}
+              </span>
+            )}
+            {reco.owner && (
+              <span className="inline-block rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-[11px] text-fg-secondary">
+                Responsable&nbsp;: {OWNER_LABEL[reco.owner]}
+              </span>
+            )}
+            {reco.horizon && (
+              <span className="inline-block rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-[11px] text-fg-secondary">
+                {HORIZON_LABEL[reco.horizon]}
+              </span>
+            )}
+          </div>
+
+          {reco.legal_ref && (
+            <p className="mt-2 text-[12px] text-fg-muted">
+              <span className="font-medium text-fg-secondary">Réf. légale&nbsp;:</span>{' '}
+              {reco.legal_ref}
+            </p>
+          )}
+
+          {steps.length > 0 && (
+            <div className="mt-2.5 flex flex-col gap-1">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-fg-muted">
+                Étapes
+              </span>
+              <ol className="flex list-decimal flex-col gap-0.5 pl-5 text-[13px] text-fg-secondary">
+                {steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -159,8 +194,8 @@ function AuditRecoList({ auditId }: { auditId: string }) {
                 lineHeight: 1.5,
               }}
             >
-              Ces actions visent à réduire les écarts détectés lors du prochain
-              audit.
+              Actions de gouvernance et de documentation, classées par priorité
+              et assorties d&apos;un responsable et d&apos;un horizon.
             </p>
           )}
           {recommendations.length === 0 && (
@@ -181,9 +216,16 @@ function AuditRecoList({ auditId }: { auditId: string }) {
         <InlineNote>Aucune recommandation générée pour cet audit.</InlineNote>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {recommendations.map((reco, i) => (
-            <RecommendationCard key={i} reco={reco} index={i} />
-          ))}
+          {[...recommendations]
+            .map((reco, i) => ({ reco, i }))
+            .sort((a, b) => priorityRank(a.reco) - priorityRank(b.reco))
+            .map(({ reco }, displayIdx) => (
+              <RecommendationCard
+                key={`${reco.title}-${displayIdx}`}
+                reco={reco}
+                index={displayIdx}
+              />
+            ))}
         </div>
       )}
     </>

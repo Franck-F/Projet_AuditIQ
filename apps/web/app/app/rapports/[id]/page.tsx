@@ -17,6 +17,15 @@ import { Button } from '@/components/ui/button';
 import { RegulatoryCallout } from '@/components/rapport/RegulatoryCallout';
 import { useAudit } from '@/lib/query/use-audit';
 import { downloadReport, type M1MetricsOut, type ReportFormat } from '@/lib/api/audits';
+import {
+  CATEGORY_LABEL,
+  HORIZON_LABEL,
+  OWNER_LABEL,
+  PRIORITY_LABEL,
+  priorityRank,
+  recoRationale,
+} from '@/components/audits/Recommendations';
+import { moduleNaming } from '@/lib/modules';
 import { VERDICT_LABELS as CENTRAL_VERDICT_LABELS } from '@/lib/verdict';
 
 /* ─── TOC items (7 sections) ─────────────────────────────────────────── */
@@ -157,23 +166,28 @@ function ReportDownloadButtons({
   );
 }
 
-const PRIORITY_COLORS = {
-  high: {
+const PRIORITY_COLORS: Record<
+  1 | 2 | 3,
+  { bg: string; text: string; border: string; cardBorder?: string }
+> = {
+  1: {
     bg: 'bg-status-fail-bg',
     text: 'text-status-fail',
     border: 'border-status-fail-border',
+    cardBorder: 'var(--status-fail-border)',
   },
-  medium: {
+  2: {
     bg: 'bg-status-warn-bg',
     text: 'text-status-warn',
     border: 'border-status-warn-border',
+    cardBorder: 'var(--status-warn-border)',
   },
-  low: {
+  3: {
     bg: 'bg-status-info-bg',
     text: 'text-status-info',
     border: 'border-status-info-border',
   },
-} as const;
+};
 
 /* ─── Page ────────────────────────────────────────────────────────────── */
 
@@ -560,51 +574,66 @@ export default function RapportDetailPage() {
                 <InlineNote>Aucune recommandation disponible pour cet audit.</InlineNote>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {recos.map((reco, i) => {
-                    const p = reco.priority ?? 'low';
-                    const colorBg =
-                      p === 'high' ? PRIORITY_COLORS.high.bg
-                      : p === 'medium' ? PRIORITY_COLORS.medium.bg
-                      : PRIORITY_COLORS.low.bg;
-                    const colorText =
-                      p === 'high' ? PRIORITY_COLORS.high.text
-                      : p === 'medium' ? PRIORITY_COLORS.medium.text
-                      : PRIORITY_COLORS.low.text;
-                    const colorBorder =
-                      p === 'high' ? PRIORITY_COLORS.high.border
-                      : p === 'medium' ? PRIORITY_COLORS.medium.border
-                      : PRIORITY_COLORS.low.border;
-                    const label = p === 'high' ? 'Priorité 1' : p === 'medium' ? 'Priorité 2' : 'Priorité 3';
-                    return (
-                      <Card
-                        key={reco.title}
-                        style={{
-                          borderColor:
-                            p === 'high'
-                              ? 'var(--status-fail-border)'
-                              : p === 'medium'
-                                ? 'var(--status-warn-border)'
-                                : undefined,
-                        }}
-                      >
-                        <div className="mb-3 flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-[0.06em] ${colorBg} ${colorText} ${colorBorder}`}
-                          >
-                            {label}
-                          </span>
-                          <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-fg-muted">
-                            {p === 'high' ? 'Court terme · ≤ 30 j' : p === 'medium' ? 'Moyen terme · 30–90 j' : 'Permanent'}
-                          </span>
-                          <span className="text-[11px] text-fg-muted">
-                            Reco #{i + 1}
-                          </span>
-                        </div>
-                        <h4 className="mb-2 text-[15px] font-medium text-fg">{reco.title}</h4>
-                        <p className="text-[13px] leading-relaxed text-fg-secondary">{reco.detail}</p>
-                      </Card>
-                    );
-                  })}
+                  {[...recos]
+                    .sort((a, b) => priorityRank(a) - priorityRank(b))
+                    .map((reco, i) => {
+                      const rank = priorityRank(reco);
+                      const colors = PRIORITY_COLORS[rank];
+                      const steps = reco.steps ?? [];
+                      return (
+                        <Card
+                          key={`${reco.title}-${i}`}
+                          style={{ borderColor: colors.cardBorder }}
+                        >
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-[0.06em] ${colors.bg} ${colors.text} ${colors.border}`}
+                            >
+                              {PRIORITY_LABEL[rank]}
+                            </span>
+                            {reco.horizon && (
+                              <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-fg-muted">
+                                {HORIZON_LABEL[reco.horizon]}
+                              </span>
+                            )}
+                            {reco.category && (
+                              <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-[11px] text-fg-muted">
+                                {CATEGORY_LABEL[reco.category]}
+                              </span>
+                            )}
+                            {reco.owner && (
+                              <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-[11px] text-fg-muted">
+                                Responsable&nbsp;: {OWNER_LABEL[reco.owner]}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="mb-2 text-[15px] font-medium text-fg">{reco.title}</h4>
+                          <p className="text-[13px] leading-relaxed text-fg-secondary">
+                            {recoRationale(reco)}
+                          </p>
+                          {reco.legal_ref && (
+                            <p className="mt-2 text-[12px] text-fg-muted">
+                              <span className="font-medium text-fg-secondary">
+                                Réf. légale&nbsp;:
+                              </span>{' '}
+                              {reco.legal_ref}
+                            </p>
+                          )}
+                          {steps.length > 0 && (
+                            <div className="mt-3 flex flex-col gap-1">
+                              <span className="text-[11px] font-medium uppercase tracking-wide text-fg-muted">
+                                Étapes
+                              </span>
+                              <ol className="flex list-decimal flex-col gap-0.5 pl-5 text-[13px] text-fg-secondary">
+                                {steps.map((step, si) => (
+                                  <li key={si}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                        </Card>
+                      );
+                    })}
                 </div>
               )}
             </section>
@@ -642,7 +671,10 @@ export default function RapportDetailPage() {
                           ? new Date(data.completed_at).toLocaleString('fr-FR')
                           : new Date(data.created_at).toLocaleString('fr-FR'),
                       ],
-                      ['Version', `${data.module} · v1`],
+                      [
+                        'Version',
+                        `${moduleNaming(data.module)?.full ?? data.module} · v1`,
+                      ],
                     ].map(([k, v]) => (
                       <tr key={k} className="border-b border-border-subtle last:border-b-0">
                         <td className="px-5 py-3 text-fg-muted">{k}</td>

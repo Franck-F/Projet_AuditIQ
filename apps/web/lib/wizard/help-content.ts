@@ -36,7 +36,7 @@ export const STEP_HELP: Record<HelpKey, HelpEntry> = {
   // Unified wizard (R2)
   'wizard.step1': {
     title: 'Pourquoi définir un contexte ?',
-    body: "Le cadre d'usage détermine les seuils réglementaires appliqués. Un modèle de scoring crédit relève du RGPD et de la directive sur le crédit ; un outil RH relève du droit du travail. AuditIQ adapte automatiquement les métriques et les seuils légaux.",
+    body: "Selon l'outil que vous utilisez et votre secteur, les seuils à respecter et les obligations diffèrent : un logiciel de scoring crédit relève du RGPD et de la directive sur le crédit, un outil de tri de CV relève du droit du travail. Vous êtes ici le déployeur — vous utilisez l'outil sans en être le concepteur. AuditIQ adapte les métriques et les repères réglementaires affichés, vous aide à documenter votre démarche et à savoir quoi faire, mais ne certifie pas votre conformité.",
   },
   'wizard.step1.title': {
     title: 'Titre de l\'audit',
@@ -44,7 +44,7 @@ export const STEP_HELP: Record<HelpKey, HelpEntry> = {
   },
   'wizard.step1.audit_type': {
     title: 'Type d\'audit',
-    body: "Trois choix possibles selon votre artefact : un modèle ML tabulaire avec un attribut sensible déjà identifié, un modèle ML tabulaire pour lequel vous cherchez où le biais peut se cacher, ou un chatbot/LLM accessible via une API REST.",
+    body: "Trois choix possibles selon l'outil que vous utilisez : un logiciel de décision dont vous connaissez la caractéristique sensible à tester, un logiciel de décision dont vous cherchez où le biais peut se cacher, ou un assistant conversationnel / chatbot accessible via une API.",
   },
   'wizard.step1.sector': {
     title: 'Secteur d\'usage',

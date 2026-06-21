@@ -139,65 +139,51 @@ async def test_interpret_m1_no_pairwise_unchanged_shape():
 
 
 @pytest.mark.asyncio
-async def test_interpret_m1_recommendations_parsed_from_valid_json(
+async def test_interpret_m1_recommendations_from_deterministic_skeleton(
     m1_result_pass: M1Result,
 ) -> None:
-    """LLM returns 3 valid recos → all 3 surface in InterpretationOut."""
+    """Le squelette déterministe pilote : le LLM ne peut que reformuler par id.
+
+    Un id inconnu fourni par le LLM est ignoré ; le nombre et les ids du
+    squelette sont préservés.
+    """
+    skeleton = await interpret_m1(m1_result_pass, provider=None)
+    skel_ids = [r.id for r in skeleton.recommendations]
     llm_json = json.dumps(
         {
             "narrative": "n",
             "ai_act_anchors": ["a"],
             "disclaimers": ["d"],
             "recommendations": [
-                {"title": "R1", "detail": "D1.", "priority": "high"},
-                {"title": "R2", "detail": "D2.", "priority": "medium"},
-                {"title": "R3", "detail": "D3.", "priority": "low"},
+                {"id": skel_ids[0], "title": "Titre reformulé", "rationale": "Pourquoi."},
+                {"id": "id_fantome", "title": "Action inventée"},
             ],
         },
         ensure_ascii=False,
     )
     provider = _StubLLM(llm_json)
     out = await interpret_m1(m1_result_pass, provider=provider)
-    assert len(out.recommendations) == 3
-    assert out.recommendations[0].title == "R1"
-    assert out.recommendations[0].priority == "high"
+    assert [r.id for r in out.recommendations] == skel_ids
+    assert out.recommendations[0].title == "Titre reformulé"
+    assert "Action inventée" not in [r.title for r in out.recommendations]
 
 
 @pytest.mark.asyncio
-async def test_interpret_m1_recommendations_dropped_when_malformed(
+async def test_interpret_m1_recommendations_fallback_when_field_absent(
     m1_result_pass: M1Result,
 ) -> None:
-    """LLM returns 1 valid + 1 invalid → only the valid one surfaces."""
-    llm_json = json.dumps(
-        {
-            "narrative": "n",
-            "ai_act_anchors": ["a"],
-            "disclaimers": ["d"],
-            "recommendations": [
-                {"title": "Valid", "detail": "OK.", "priority": "high"},
-                {"title": "No priority", "detail": "OK."},
-            ],
-        },
-        ensure_ascii=False,
-    )
-    provider = _StubLLM(llm_json)
-    out = await interpret_m1(m1_result_pass, provider=provider)
-    assert len(out.recommendations) == 1
-    assert out.recommendations[0].title == "Valid"
-
-
-@pytest.mark.asyncio
-async def test_interpret_m1_recommendations_empty_when_field_absent(
-    m1_result_pass: M1Result,
-) -> None:
-    """LLM omits recommendations field → empty list (audit still valid)."""
+    """LLM omits recommendations → deterministic skeleton kept (never empty)."""
+    skeleton = await interpret_m1(m1_result_pass, provider=None)
     llm_json = json.dumps(
         {"narrative": "n", "ai_act_anchors": ["a"], "disclaimers": ["d"]},
         ensure_ascii=False,
     )
     provider = _StubLLM(llm_json)
     out = await interpret_m1(m1_result_pass, provider=provider)
-    assert out.recommendations == []
+    assert [r.id for r in out.recommendations] == [
+        r.id for r in skeleton.recommendations
+    ]
+    assert len(out.recommendations) >= 1
 
 
 # ---------------------------------------------------------------------------

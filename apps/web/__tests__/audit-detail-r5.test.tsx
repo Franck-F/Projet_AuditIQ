@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 const { useAudit } = vi.hoisted(() => ({ useAudit: vi.fn() }));
 vi.mock('@/lib/query/use-audit', () => ({ useAudit }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'a1' }) }));
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: 'a1' }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+}));
 
 const { downloadReport } = vi.hoisted(() => ({ downloadReport: vi.fn() }));
 vi.mock('@/lib/api/audits', async (orig) => ({
@@ -12,6 +15,8 @@ vi.mock('@/lib/api/audits', async (orig) => ({
   downloadReport,
 }));
 
+vi.mock('@/lib/query/use-org', () => ({ useMe: () => ({ data: undefined }) }));
+vi.mock('@/components/audits/AuditRowActions', () => ({ AuditRowActions: () => null }));
 import AuditResultPage from '@/app/app/audits/[id]/page';
 
 /* ─── M1 fixture ────────────────────────────────────────────────────── */
@@ -186,6 +191,26 @@ async function clickTab(label: string) {
   const tab = screen.getByRole('tab', { name: label });
   await userEvent.click(tab);
 }
+
+/* ─── Module naming in verdict hero ─────────────────────────────────── */
+describe('R5 — module pastille uses canonical naming', () => {
+  it('shows the M1 short pastille « Connue » instead of the raw code', () => {
+    setup(M1_FIXTURE);
+    expect(screen.getByText('Connue')).toBeInTheDocument();
+    // The raw module code must not be rendered as the badge label
+    expect(screen.queryByText(/^M1$/)).not.toBeInTheDocument();
+  });
+
+  it('shows the M2 short pastille « Cachés »', () => {
+    setup(M2_FIXTURE);
+    expect(screen.getByText('Cachés')).toBeInTheDocument();
+  });
+
+  it('shows the M3 short pastille « Chatbot »', () => {
+    setup(M3_FIXTURE);
+    expect(screen.getByText('Chatbot')).toBeInTheDocument();
+  });
+});
 
 /* ─── M1 — RatioBar ─────────────────────────────────────────────────── */
 describe('R5 M1 — RatioBar in Groupes tab', () => {

@@ -21,6 +21,8 @@ interface TopbarProps {
   searchPlaceholder?: string;
   onSearch?: (q: string) => void;
   actions?: React.ReactNode;
+  /** Widen the topbar content to the dense-workspace width (matches `.page.workspace`). */
+  wide?: boolean;
 }
 
 export function Topbar({
@@ -30,11 +32,12 @@ export function Topbar({
   searchPlaceholder = 'Rechercher un audit, une page…',
   onSearch,
   actions,
+  wide = false,
 }: TopbarProps): React.ReactElement {
   const { navOpen, openNav } = useSidebar();
   return (
     <div className="topbar">
-      <div className="topbar-inner">
+      <div className={`topbar-inner${wide ? ' workspace' : ''}`}>
         <button
           type="button"
           className="topbar-burger icon-btn"

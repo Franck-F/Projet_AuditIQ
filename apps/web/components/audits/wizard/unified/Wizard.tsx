@@ -125,6 +125,7 @@ export function Wizard({ onComplete }: WizardProps): React.ReactElement {
           ...(v.ground_truth_column
             ? { ground_truth_column: v.ground_truth_column }
             : {}),
+          ...(v.sector ? { sector: v.sector } : {}),
         });
       } else if (mod === 'M2') {
         if (!dataset) return;

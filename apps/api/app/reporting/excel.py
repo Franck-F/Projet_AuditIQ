@@ -8,8 +8,24 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.reporting.format import p_value_display, status_label, verdict_label
-from app.schemas.audit import AuditOut, M1MetricsOut, M2MetricsOut, M3MetricsOut, RecommendationOut
+from app.reporting.format import (
+    module_label,
+    p_value_display,
+    status_label,
+    verdict_label,
+)
+from app.schemas.audit import (
+    RECOMMENDATION_CATEGORY_LABELS,
+    AuditOut,
+    M1MetricsOut,
+    M2MetricsOut,
+    M3MetricsOut,
+    RecommendationOut,
+)
+
+_HORIZON_LABEL = {
+    "immediat": "Immédiat", "court_terme": "Court terme", "continu": "Continu",
+}
 
 _VERDICT_BADGE_FR = {
     "fail": "🔴 Risque élevé",
@@ -39,17 +55,34 @@ def _rows(ws: Worksheet, rows: Sequence[Sequence[object]]) -> None:
 def _write_recommendations_sheet(
     wb: Workbook, recs: list[RecommendationOut]
 ) -> None:
-    """Liste numérotée simple : l'ordre vaut priorité, sans étiquette."""
+    """Recommandations déployeur : catégorie, priorité graduée, responsable,
+    horizon, référence légale et sous-étapes."""
     if not recs:
         return
     ws = wb.create_sheet("Recommandations")
-    ws.append(["#", "Action", "Détail"])
+    ws.append([
+        "#", "Priorité", "Catégorie", "Action", "Pourquoi (constat)",
+        "Responsable", "Horizon", "Référence légale", "Sous-étapes",
+    ])
     for cell in ws[1]:
         cell.font = Font(bold=True)
     for idx, rec in enumerate(recs, start=1):
-        ws.append([idx, rec.title, rec.detail])
+        ws.append([
+            idx,
+            rec.priority_level,
+            RECOMMENDATION_CATEGORY_LABELS.get(rec.category, rec.category),
+            rec.title,
+            rec.rationale or rec.detail,
+            rec.owner,
+            _HORIZON_LABEL.get(rec.horizon, rec.horizon),
+            rec.legal_ref or "—",
+            " ; ".join(rec.steps) if rec.steps else "—",
+        ])
     ws.append([])
-    ws.append(["Recommandations présentées par ordre de priorité."])
+    ws.append([
+        "Actions à la portée du déployeur de l'outil — par priorité "
+        "(1 = haute)."
+    ])
 
 
 def build_excel_report(audit: AuditOut) -> bytes:
@@ -66,7 +99,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
             [],
             ["Audit", audit.code or str(audit.id)],
             ["Titre", audit.title],
-            ["Module", audit.module],
+            ["Module", module_label(audit.module)],
             ["Statut", status_label(audit.status)],
             ["Verdict", _VERDICT_BADGE_FR.get(str(verdict), str(verdict))],
             ["Score de risque", f"{risk}/100"],
@@ -82,7 +115,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
         _rows(
             detail,
             [
-                ["Module 2 — détection non supervisée"],
+                [module_label("M2")],
                 ["Test du Khi-deux (p-value)", p_value_display(m.p_value)],
                 ["χ²", m.chi2, "ddl", m.dof],
                 ["Taux favorable global", m.global_positive_rate],
@@ -100,7 +133,7 @@ def build_excel_report(audit: AuditOut) -> bytes:
         _rows(
             detail,
             [
-                ["Module 3 — audit LLM/chatbot"],
+                [module_label("M3")],
                 ["Score global", m.global_score],
                 ["Verdict", verdict_label(m.verdict)],
                 ["Paires", m.n_pairs, "Appels échoués", m.n_calls_failed],
@@ -119,12 +152,12 @@ def build_excel_report(audit: AuditOut) -> bytes:
         # section par attribut.
         single_attr = len(m.marginals) == 1
         if single_attr:
-            _rows(detail, [["Module 1 — audit supervisé"]])
+            _rows(detail, [[module_label("M1")]])
         else:
             _rows(
                 detail,
                 [
-                    ["Module 1 — audit supervisé"],
+                    [module_label("M1")],
                     ["Disparate Impact", m.disparate_impact],
                     ["Demographic Parity (écart)", m.demographic_parity_diff],
                     ["Groupe le plus défavorisé", m.worst_group],

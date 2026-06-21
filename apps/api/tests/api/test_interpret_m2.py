@@ -54,16 +54,19 @@ async def test_interpret_m2_uses_provider_then_falls_back_on_error():
     assert out2.provider == "fallback"
 
 
-async def test_interpret_m2_recommendations_parsed_from_valid_json() -> None:
-    """LLM returns 2 valid recos → all 2 surface in InterpretationOut."""
+async def test_interpret_m2_recommendations_from_deterministic_skeleton() -> None:
+    """Le squelette déterministe pilote ; le LLM reformule par id, un id inconnu
+    est ignoré et le squelette n'est jamais vide."""
+    skeleton = await interpret_m2(_result(), provider=None)
+    skel_ids = [r.id for r in skeleton.recommendations]
     llm_json = json.dumps(
         {
             "narrative": "n",
             "ai_act_anchors": ["a"],
             "disclaimers": ["d"],
             "recommendations": [
-                {"title": "R1", "detail": "D1.", "priority": "high"},
-                {"title": "R2", "detail": "D2.", "priority": "medium"},
+                {"id": skel_ids[0], "title": "Reformulé"},
+                {"id": "id_fantome", "title": "Inventée"},
             ],
         },
         ensure_ascii=False,
@@ -77,38 +80,14 @@ async def test_interpret_m2_recommendations_parsed_from_valid_json() -> None:
             return llm_json
 
     out = await interpret_m2(_result(), provider=_StubLLM())
-    assert len(out.recommendations) == 2
+    assert [r.id for r in out.recommendations] == skel_ids
+    assert out.recommendations[0].title == "Reformulé"
+    assert "Inventée" not in [r.title for r in out.recommendations]
 
 
-async def test_interpret_m2_recommendations_dropped_when_malformed() -> None:
-    """LLM returns 1 valid + 1 invalid → only the valid one surfaces."""
-    llm_json = json.dumps(
-        {
-            "narrative": "n",
-            "ai_act_anchors": ["a"],
-            "disclaimers": ["d"],
-            "recommendations": [
-                {"title": "Valid", "detail": "OK.", "priority": "high"},
-                "not a dict",
-            ],
-        },
-        ensure_ascii=False,
-    )
-
-    class _StubLLM:
-        name = "stub"
-        model = "stub-1"
-
-        async def complete(self, prompt: str, *, as_json: bool = False) -> str:
-            return llm_json
-
-    out = await interpret_m2(_result(), provider=_StubLLM())
-    assert len(out.recommendations) == 1
-    assert out.recommendations[0].title == "Valid"
-
-
-async def test_interpret_m2_recommendations_empty_when_field_absent() -> None:
-    """LLM omits recommendations field → empty list (audit still valid)."""
+async def test_interpret_m2_recommendations_fallback_when_field_absent() -> None:
+    """LLM omits recommendations → deterministic skeleton kept (never empty)."""
+    skeleton = await interpret_m2(_result(), provider=None)
     llm_json = json.dumps(
         {"narrative": "n", "ai_act_anchors": ["a"], "disclaimers": ["d"]},
         ensure_ascii=False,
@@ -122,4 +101,7 @@ async def test_interpret_m2_recommendations_empty_when_field_absent() -> None:
             return llm_json
 
     out = await interpret_m2(_result(), provider=_StubLLM())
-    assert out.recommendations == []
+    assert [r.id for r in out.recommendations] == [
+        r.id for r in skeleton.recommendations
+    ]
+    assert len(out.recommendations) >= 1

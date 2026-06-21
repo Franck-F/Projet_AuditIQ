@@ -69,6 +69,9 @@ def test_html_m1_is_wellformed_and_not_a_certificate():
     assert "n'est pas un certificat" in h
     assert h.count("n'est pas un certificat") >= 2
     assert "AI Act" in h and "L.1132-1" in h
+    # Nom canonique du module (déployeur), pas l'ancien « audit supervisé ».
+    assert "Module 1 · Caractéristique connue" in h
+    assert "supervisé" not in h
 
 
 def test_html_m2_renders_clusters():
@@ -76,6 +79,9 @@ def test_html_m2_renders_clusters():
     assert "AUD-2026-002" in h
     assert "Khi-deux" in h or "p-value" in h
     assert "n'est pas un certificat" in h
+    # Nom canonique du module, pas « détection non supervisée ».
+    assert "Module 2 · Biais cachés" in h
+    assert "non supervisée" not in h
 
 
 def test_html_m3_section():
@@ -107,6 +113,9 @@ def test_html_m3_section():
     h = build_report_html(a)
     assert "AUD-2026-031" in h and "origine" in h
     assert "n'est pas un certificat" in h
+    # Nom canonique du module, pas « audit LLM/chatbot ».
+    assert "Module 3 · Assistant conversationnel" in h
+    assert "LLM/chatbot" not in h
 
 
 def _m1_with_eo() -> AuditOut:

@@ -12,3 +12,4 @@ class CurrentUser(BaseModel):
     email: str
     org_id: uuid.UUID
     role: str
+    first_name: str | None = None

@@ -5,10 +5,17 @@ import logging
 from importlib import resources
 
 from app.audit_engine import M2Result
+from app.interpretation._findings import finding_from_m2
 from app.interpretation._json import loads_lenient
-from app.interpretation._recommendations import parse_recommendations
+from app.interpretation._recommendations import (
+    merge_llm_text,
+)
+from app.interpretation._recommendations import (
+    skeleton_json as _skeleton_json,
+)
 from app.interpretation.base import LLMProvider
-from app.schemas.audit import InterpretationOut
+from app.interpretation.recommendations_catalog import build_recommendations
+from app.schemas.audit import InterpretationOut, RecommendationOut
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +70,15 @@ def _metrics_json(result: M2Result) -> str:
     )
 
 
-def _fallback(result: M2Result, *, degraded: bool = False) -> InterpretationOut:
+def _deterministic_recommendations(
+    result: M2Result, sector: str | None
+) -> list[RecommendationOut]:
+    return build_recommendations(finding_from_m2(result, sector))
+
+
+def _fallback(
+    result: M2Result, *, sector: str | None = None, degraded: bool = False
+) -> InterpretationOut:
     verdicts = {
         "fail": "des écarts de traitement significatifs entre groupes de "
         "dossiers ont été détectés",
@@ -92,17 +107,22 @@ def _fallback(result: M2Result, *, degraded: bool = False) -> InterpretationOut:
         disclaimers=list(_DISCLAIMERS),
         provider="fallback",
         model="deterministic",
+        recommendations=_deterministic_recommendations(result, sector),
         degraded=degraded,
     )
 
 
 async def interpret_m2(
-    result: M2Result, *, provider: LLMProvider | None
+    result: M2Result, *, provider: LLMProvider | None, sector: str | None = None
 ) -> InterpretationOut:
     if provider is None:
-        return _fallback(result)
+        return _fallback(result, sector=sector)
+    skeleton = _deterministic_recommendations(result, sector)
     try:
-        prompt = load_prompt_template().format(metrics_json=_metrics_json(result))
+        prompt = load_prompt_template().format(
+            metrics_json=_metrics_json(result),
+            recommendations_skeleton=_skeleton_json(skeleton),
+        )
         raw = await provider.complete(prompt, as_json=True)
         data = loads_lenient(raw)
         return InterpretationOut(
@@ -113,7 +133,9 @@ async def interpret_m2(
             or list(_DISCLAIMERS),
             provider=provider.name,
             model=provider.model,
-            recommendations=parse_recommendations(data.get("recommendations")),
+            recommendations=merge_llm_text(
+                skeleton, data.get("recommendations")
+            ),
         )
     except Exception as exc:  # noqa: BLE001 — any LLM/parse failure → visible fallback
         logger.warning(
@@ -121,4 +143,4 @@ async def interpret_m2(
             "bascule sur le fallback déterministe.",
             getattr(provider, "name", "?"), type(exc).__name__, exc,
         )
-        return _fallback(result, degraded=True)
+        return _fallback(result, sector=sector, degraded=True)

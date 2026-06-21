@@ -39,30 +39,39 @@ class _BoomLLM:
 
 @pytest.mark.asyncio
 async def test_interpret_m1_parses_fenced_json():
-    """Gemini commonly wraps JSON in ```json fences — recos must still surface."""
+    """Gemini commonly wraps JSON in ```json fences — le narratif et la
+    reformulation par id du squelette doivent survivre au fence."""
+    # On appose une reformulation sur la première reco déterministe (par id).
+    skeleton = await interpret_m1(_result(), provider=None)
+    first_id = skeleton.recommendations[0].id
     payload = {
         "narrative": "n", "ai_act_anchors": ["a"], "disclaimers": ["d"],
         "recommendations": [
-            {"title": "R1", "detail": "D1.", "priority": "high"},
-            {"title": "R2", "detail": "D2.", "priority": "medium"},
+            {"id": first_id, "title": "Titre LLM", "rationale": "Pourquoi LLM."},
         ],
     }
     fenced = "```json\n" + json.dumps(payload, ensure_ascii=False) + "\n```"
     out = await interpret_m1(_result(), provider=_StubLLM(fenced))
     assert out.provider == "stub"
     assert out.degraded is False
-    assert len(out.recommendations) == 2
-    assert out.recommendations[0].title == "R1"
+    # Squelette déterministe préservé, première reco reformulée par le LLM.
+    assert [r.id for r in out.recommendations] == [
+        r.id for r in skeleton.recommendations
+    ]
+    assert out.recommendations[0].title == "Titre LLM"
 
 
 @pytest.mark.asyncio
 async def test_interpret_m1_llm_error_is_degraded_and_logged(caplog):
-    """An LLM/parse failure must be a VISIBLE degraded fallback, never silent."""
+    """An LLM/parse failure must be a VISIBLE degraded fallback, never silent.
+
+    Les recommandations déterministes restent présentes (le fallback n'est
+    jamais vide de recos)."""
     with caplog.at_level("WARNING"):
         out = await interpret_m1(_result(), provider=_BoomLLM())
     assert out.provider == "fallback"
     assert out.degraded is True
-    assert out.recommendations == []
+    assert len(out.recommendations) >= 1
     assert any(
         "gemini 503 unavailable" in r.getMessage()
         or "RuntimeError" in r.getMessage()

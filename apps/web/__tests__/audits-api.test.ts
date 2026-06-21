@@ -1,10 +1,25 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const { post, get } = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
-vi.mock('@/lib/api/client', () => ({ api: { post, get } }));
+const { post, get, patch, del } = vi.hoisted(() => ({
+  post: vi.fn(),
+  get: vi.fn(),
+  patch: vi.fn(),
+  del: vi.fn(),
+}));
+vi.mock('@/lib/api/client', () => ({
+  api: { post, get, patch, delete: del },
+}));
 
 import { api } from '@/lib/api/client';
-import { analyzeDataset, createAudit, fetchAudit, uploadDataset } from '@/lib/api/audits';
+import {
+  analyzeDataset,
+  archiveAudit,
+  createAudit,
+  deleteAudit,
+  fetchAudit,
+  listAudits,
+  uploadDataset,
+} from '@/lib/api/audits';
 
 describe('audits api', () => {
   it('uploads a dataset as multipart to /datasets', async () => {
@@ -178,6 +193,43 @@ describe('analyzeDataset', () => {
     expect(mock).toHaveBeenCalledWith('/datasets/abc-123/analyze');
     expect(out.suggested_protected?.column).toBe('sex');
     mock.mockRestore();
+  });
+});
+
+describe('archivage & suppression', () => {
+  it('listAudits GETs /audits with archived=false by default', async () => {
+    get.mockResolvedValueOnce({ data: [{ id: 'a1' }] });
+    const out = await listAudits();
+    expect(out).toEqual([{ id: 'a1' }]);
+    const [url, cfg] = get.mock.calls.at(-1)!;
+    expect(url).toBe('/audits');
+    expect(cfg).toMatchObject({ params: { archived: false } });
+  });
+
+  it('listAudits GETs /audits with archived=true when requested', async () => {
+    get.mockResolvedValueOnce({ data: [] });
+    await listAudits(true);
+    const [, cfg] = get.mock.calls.at(-1)!;
+    expect(cfg).toMatchObject({ params: { archived: true } });
+  });
+
+  it('archiveAudit PATCHes /audits/{id} with the archived flag', async () => {
+    patch.mockResolvedValueOnce({ data: { id: 'a1', archived_at: '2026-06-15T00:00:00Z' } });
+    const out = await archiveAudit('a1', true);
+    expect(out.archived_at).toBe('2026-06-15T00:00:00Z');
+    expect(patch).toHaveBeenLastCalledWith('/audits/a1', { archived: true });
+  });
+
+  it('archiveAudit can unarchive (archived: false)', async () => {
+    patch.mockResolvedValueOnce({ data: { id: 'a1', archived_at: null } });
+    await archiveAudit('a1', false);
+    expect(patch).toHaveBeenLastCalledWith('/audits/a1', { archived: false });
+  });
+
+  it('deleteAudit DELETEs /audits/{id}', async () => {
+    del.mockResolvedValueOnce({});
+    await deleteAudit('a1');
+    expect(del).toHaveBeenLastCalledWith('/audits/a1');
   });
 });
 

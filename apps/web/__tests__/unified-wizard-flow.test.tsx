@@ -63,6 +63,7 @@ const auditCreatedM1: audits.AuditOut = {
   privileged_value: null,
   created_at: '2026-06-02T10:00:00Z',
   completed_at: null,
+  archived_at: null,
   metrics: null,
   interpretation: null,
   pre_check: [],
@@ -83,6 +84,7 @@ const auditCreatedM2: audits.AuditOut = {
   privileged_value: null,
   created_at: '2026-06-02T10:00:00Z',
   completed_at: null,
+  archived_at: null,
   metrics: null,
   interpretation: null,
   pre_check: [],
@@ -103,6 +105,7 @@ const auditCreatedM3: audits.AuditOut = {
   privileged_value: null,
   created_at: '2026-06-02T10:00:00Z',
   completed_at: null,
+  archived_at: null,
   metrics: null,
   interpretation: null,
   pre_check: [],
@@ -127,9 +130,12 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     // Step 1: fill title, select audit_type=tabular-known, select sector=credit
     await user.type(screen.getByRole('textbox', { name: /titre/i }), 'Test M1');
     // Use within to target the button that has the exact title for M1
-    const m1Card = screen.getByText("Module 1 — Audit supervisé : j'ai un attribut protégé à tester").closest('button')!;
+    const m1Card = screen.getByText('Une caractéristique sensible à tester').closest('button')!;
     await user.click(m1Card);
-    await user.click(screen.getByRole('button', { name: /Crédit & scoring/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'credit',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: upload CSV
@@ -175,6 +181,8 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
           decision_column: 'approved',
           favorable_value: '1',
           protected_attributes: expect.arrayContaining(['sex']),
+          // Sector chosen in step 1 (Crédit & scoring) maps to the API enum 'credit'
+          sector: 'credit',
         }),
       ),
     );
@@ -192,9 +200,12 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
 
     // Step 1: fill title, select audit_type=tabular-unknown, select sector=hr
     await user.type(screen.getByRole('textbox', { name: /titre/i }), 'Test M2');
-    const m2Card = screen.getByText("Module 2 — Détection non supervisée : je cherche où le biais peut se cacher").closest('button')!;
+    const m2Card = screen.getByText('Un biais à découvrir').closest('button')!;
     await user.click(m2Card);
-    await user.click(screen.getByRole('button', { name: /Ressources humaines/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'hr',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: upload CSV
@@ -249,9 +260,12 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     // Step 1: fill title, select audit_type=llm-api, select sector=other
     await user.type(screen.getByRole('textbox', { name: /titre/i }), 'Test M3');
     await user.click(
-      screen.getByRole('button', { name: /Audit LLM & chatbot/i }),
+      screen.getByRole('button', { name: /Un chatbot à auditer/i }),
     );
-    await user.click(screen.getByRole('button', { name: /Autre usage/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'other',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: configure URL (M3 — no CSV upload)

@@ -19,26 +19,33 @@ Consignes STRICTES :
   (KMeans, scikit-learn, fairlearn) ni de codes bruts (« fail », « warn »,
   « pass », « done ») dans le texte destiné au lecteur.
 - Termine par les limites de l'analyse.
-- Termine en proposant 3 à 5 recommandations actionnables (PAS plus, PAS moins),
-  prioritisées par impact réel :
-  - chaque reco = un objet {{"title": "...", "detail": "...", "priority": "..."}}
-  - title = action courte (5-10 mots), à l'impératif (ex. « Re-collecter
-    les données d'entraînement »)
-  - detail = explication concrète en 1-2 phrases : pourquoi maintenant,
-    quoi faire d'abord, sans jargon
-  - priority ∈ {{"high", "medium", "low"}} :
-    - "high" : action nécessaire pour répondre à un échec/risque AI Act
-    - "medium" : amélioration recommandée mais pas bloquante
-    - "low" : maintenance/veille
-  - Si le verdict est PASS (pas d'écart significatif), garde 1-2 recos
-    « maintien de la veille » (priority="low") — ne pas inventer de
-    problème.
-  - Si FAIL/WARN, privilégier les actions concrètes : qualité de données,
-    monitoring, documentation, choix de métrique.
-- Pour M2, prioriser les recos sur la caractérisation des features qui distinguent
-  les clusters déviants, le contrôle des proxys de variables sensibles, et la
-  mise en place d'alertes sur la déviation par cluster en production.
+## Recommandations — tu RÉDIGES, tu ne décides pas
+
+PERSONA : le lecteur est un **déployeur** au sens de l'AI Act (RH, conformité,
+achats…). Il **n'est PAS** le fournisseur du système d'IA : il UTILISE un outil
+tiers et **ne possède ni le modèle ni ses données d'entraînement**.
+
+INTERDIT ABSOLU — ne propose JAMAIS d'action de fournisseur. Bannis : « ré-
+entraîner », « recalibrer », « modifier / améliorer les données d'entraînement »,
+« ajuster les hyperparamètres », « débiaiser l'algorithme », « corriger le
+modèle ». Ces actions sont HORS de portée d'un déployeur.
+
+Une liste de recommandations DÉTERMINISTE t'est fournie (squelette). Elle fixe
+QUELLES actions apparaissent, leur catégorie, leur priorité et leur référence
+légale. Ton rôle se limite à **reformuler le texte** :
+
+{recommendations_skeleton}
+
+- Pour CHAQUE entrée, renvoie un objet avec le même `id` et, optionnellement, un
+  `title` / `rationale` / `steps` mieux rédigés (les caractéristiques qui
+  distinguent les groupes atypiques peuvent être des proxys de critères
+  protégés — relie-le au constat).
+- Tu ne PEUX PAS ajouter, supprimer ou re-prioriser une recommandation, ni
+  changer sa catégorie ou sa référence légale.
+- Reste dans le registre déployeur : documenter, supervision humaine, dialoguer
+  avec l'éditeur, repositionner l'usage de l'outil, re-tester, escalader.
+- Si tu n'améliores pas une entrée, renvoie-la telle quelle (même `id`).
 - N'invente JAMAIS un défaut qui n'est pas dans les métriques fournies.
 
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
-{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."], "recommendations": [{{"title": "...", "detail": "...", "priority": "high"}}]}}
+{{"narrative": "<texte FR>", "ai_act_anchors": ["..."], "disclaimers": ["..."], "recommendations": [{{"id": "<id du squelette>", "title": "...", "rationale": "...", "steps": ["..."]}}]}}

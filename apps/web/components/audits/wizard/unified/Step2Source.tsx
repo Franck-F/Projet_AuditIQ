@@ -117,12 +117,11 @@ export function Step2Source({
           Importez votre jeu de données
         </h2>
         <p className="text-sm text-fg-secondary">
-          Glissez-déposez un CSV, choisissez un exemple, ou importez depuis une
-          source externe. Après l&apos;import, AuditIQ analyse automatiquement
-          vos colonnes pour suggérer les bons paramètres.
+          Glissez-déposez un fichier CSV ou Excel. Après l&apos;import, AuditIQ
+          analyse automatiquement vos colonnes pour suggérer les bons
+          paramètres.
         </p>
         <DatasetUploadCard
-          module={auditType === 'tabular-unknown' ? 'M2' : 'M1'}
           busy={busy}
           onSelected={(file) => Promise.resolve(onUpload(file))}
         />
