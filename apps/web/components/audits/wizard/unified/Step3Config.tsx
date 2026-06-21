@@ -116,6 +116,11 @@ function Step3ConfigM1({
     if (checked) {
       if (currentArr.length >= MAX_PROTECTED_ATTRIBUTES) return;
       setValue('protected_attributes', [...currentArr, col], { shouldDirty: true });
+      // Une colonne ne peut pas être à la fois attribut protégé et vérité-terrain :
+      // si on coche la colonne actuellement choisie comme vérité-terrain, on la retire.
+      if (getValues('ground_truth_column') === col) {
+        setValue('ground_truth_column', '', { shouldDirty: true });
+      }
     } else {
       setValue('protected_attributes', currentArr.filter((c) => c !== col), { shouldDirty: true });
     }
@@ -323,11 +328,13 @@ function Step3ConfigM1({
                 aria-label="Vérité-terrain"
               >
                 <option value="">— aucune</option>
-                {columns.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
+                {columns
+                  .filter((c) => c !== selectedDecision && !currentSelected.includes(c))
+                  .map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

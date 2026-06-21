@@ -41,6 +41,24 @@ const STEPS = [
 
 const N_NUMS = ['01', '02', '03', '04', '05'];
 
+/** Extrait un message lisible d'une erreur de lancement d'audit (problem+json
+ *  de l'API : `detail` générique + `fields` avec le vrai motif de validation). */
+export function launchErrorMessage(err: unknown): string {
+  const data = (
+    err as { response?: { data?: { detail?: unknown; fields?: Record<string, unknown> } } }
+  )?.response?.data;
+  const fieldMsgs = data?.fields
+    ? Object.values(data.fields)
+        .filter((m): m is string => typeof m === 'string' && m.length > 0)
+        .map((m) => m.replace(/^module M[123]\s*:\s*/i, ''))
+    : [];
+  if (fieldMsgs.length > 0) return fieldMsgs.join(' ');
+  if (typeof data?.detail === 'string' && data.detail !== 'La requête est invalide.') {
+    return data.detail;
+  }
+  return "Le lancement de l'audit a échoué. Vérifiez votre configuration et réessayez.";
+}
+
 /* ─── Vertical stepper rail ──────────────────────────────────────────────── */
 function StepRail() {
   const { currentStep, goTo, totalSteps } = useWizard();
@@ -219,23 +237,6 @@ function StepPanel({
 
   return (
     <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      {submitError && (
-        <div
-          role="alert"
-          style={{
-            marginBottom: 16,
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: '1px solid var(--status-fail-border)',
-            background: 'var(--status-fail-bg)',
-            color: 'var(--status-fail)',
-            fontSize: 13,
-          }}
-        >
-          {submitError}
-        </div>
-      )}
-
       {/* Eyebrow */}
       <div
         className="mono"
@@ -278,6 +279,23 @@ function StepPanel({
         {currentStep === 4 && <Step4Verify values={values} />}
         {currentStep === 5 && <Step5Review values={values} dataset={dataset} />}
       </div>
+
+      {submitError && (
+        <div
+          role="alert"
+          style={{
+            marginTop: 16,
+            padding: '12px 16px',
+            borderRadius: 10,
+            border: '1px solid var(--status-fail-border)',
+            background: 'var(--status-fail-bg)',
+            color: 'var(--status-fail)',
+            fontSize: 13,
+          }}
+        >
+          {submitError}
+        </div>
+      )}
 
       {/* Footer nav */}
       <div
@@ -397,8 +415,8 @@ function WizardInner({ onComplete }: { onComplete: (id: string) => void }) {
         });
       }
       onComplete(audit.id);
-    } catch {
-      setSubmitError("Le lancement de l'audit a échoué. Réessayez.");
+    } catch (err) {
+      setSubmitError(launchErrorMessage(err));
     }
   };
 
