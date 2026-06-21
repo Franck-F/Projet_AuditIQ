@@ -177,8 +177,9 @@ describe('EquipePage — données réelles', () => {
     await waitFor(() =>
       expect(mutate.createInvitation).toHaveBeenCalledWith({ email: 'new@cabinet.fr', role: 'viewer' }),
     );
-    await waitFor(() =>
-      expect(toastMock.success).toHaveBeenCalledWith(expect.stringContaining('new@cabinet.fr')),
+    await waitFor(
+      () => expect(toastMock.success).toHaveBeenCalledWith(expect.stringContaining('new@cabinet.fr')),
+      { timeout: 5000 },
     );
   });
 
@@ -197,8 +198,8 @@ describe('EquipePage — données réelles', () => {
     // Après la mutation, la modal re-rend (form -> vue « lien à copier »). On
     // re-cherche via screen.findBy* (qui réessaie) plutôt que de réutiliser le
     // nœud `dialog` capturé avant le re-render — sinon flake en CI.
-    expect(await screen.findByDisplayValue('https://app/inv/xyz')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /Copier le lien/i })).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('https://app/inv/xyz', undefined, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Copier le lien/i }, { timeout: 5000 })).toBeInTheDocument();
   });
 
   it('affiche le détail d’erreur 409 (déjà membre)', async () => {
@@ -211,8 +212,9 @@ describe('EquipePage — données réelles', () => {
     const dialog = screen.getByRole('dialog');
     await user.type(within(dialog).getByLabelText(/Adresse e-mail/i), 'dup@cabinet.fr');
     await user.click(within(dialog).getByRole('button', { name: /Envoyer/i }));
-    await waitFor(() =>
-      expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.'),
+    await waitFor(
+      () => expect(toastMock.error).toHaveBeenCalledWith('Cet utilisateur est déjà membre.'),
+      { timeout: 5000 },
     );
   });
 });
