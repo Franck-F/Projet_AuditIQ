@@ -1,20 +1,17 @@
-import path from 'node:path';
 import { type Page, test, expect } from '@playwright/test';
 import { waitForAuditDone } from './helpers/poll';
-
-const FIXTURES = path.resolve(__dirname, 'fixtures');
+import { createTabularAudit } from './helpers/wizard';
 
 async function createDoneM1(page: Page): Promise<void> {
-  await page.goto('/app/audits/nouveau');
-  await page.getByRole('button', { name: /audit supervis/i }).click();
-  await page.locator('[data-testid="csv-input"]').setInputFiles(
-    path.join(FIXTURES, 'm1-simple.csv'),
-  );
-  await page.getByLabel(/titre/i).fill('E2E reports');
-  await page.getByLabel(/attribut prot/i).selectOption('genre');
-  await page.getByLabel(/colonne de d/i).selectOption('embauche');
-  await page.getByLabel(/valeur favorable/i).fill('oui');
-  await page.getByRole('button', { name: /lancer|créer/i }).click();
+  await createTabularAudit(page, {
+    module: 'M1',
+    sector: 'hr',
+    title: 'E2E reports',
+    csv: 'm1-simple.csv',
+    decisionColumn: 'embauche',
+    favorableValue: 'oui',
+    protectedAttrs: ['genre'],
+  });
   await page.waitForURL(/\/app\/audits\/[0-9a-f-]{36}/);
   await waitForAuditDone(page);
 }
