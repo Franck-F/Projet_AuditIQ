@@ -40,29 +40,40 @@ export const AUDIT_TYPE_CARDS: ReadonlyArray<CardDef<AuditType>> = [
   },
 ];
 
-export const SECTOR_CARDS: ReadonlyArray<CardDef<Sector>> = [
-  {
-    value: 'credit',
-    title: 'Crédit & scoring financier',
-    description: 'Octroi de prêt, notation, éligibilité',
-    bullets: ['RGPD art. 22 (décision automatisée)', 'Directive sur le crédit'],
-  },
-  {
-    value: 'hr',
-    title: 'Ressources humaines',
-    description: 'Recrutement, tri de CV, promotion',
-    bullets: ['Code du travail L.1132-1', 'AI Act annexe III (RH = système à haut risque)'],
-  },
-  {
-    value: 'insurance',
-    title: 'Assurance',
-    description: 'Tarification, gestion des sinistres',
-    bullets: ['Code des assurances', 'Loi anti-discrimination 2008-496'],
-  },
-  {
-    value: 'other',
-    title: 'Autre usage à fort enjeu',
-    description: 'Santé, justice, accès aux services publics',
-    bullets: ['AI Act art. 6 + annexe III', 'Ancrages spécifiques selon secteur'],
-  },
+/** Groupe d'usage pour le regroupement (`<optgroup>`) de la liste secteur. */
+export type SectorGroup =
+  | 'Haut risque (AI Act Annexe III)'
+  | 'Autres usages réglementés';
+
+export interface SectorOption {
+  value: Sector;
+  label: string;
+  group: SectorGroup;
+}
+
+/**
+ * Liste des 11 secteurs d'usage proposés dans le wizard (étape 1), regroupés
+ * pour la liste déroulante. Chaque secteur pilote, côté API, les références
+ * légales des recommandations (cf. `recommendations_catalog.py`).
+ */
+export const SECTORS: ReadonlyArray<SectorOption> = [
+  // Groupe « Haut risque (AI Act Annexe III) »
+  { value: 'hr', label: 'Ressources humaines / Recrutement', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'credit', label: 'Crédit & scoring financier', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'insurance', label: 'Assurance', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'health', label: 'Santé & médico-social', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'education', label: 'Éducation & formation', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'public_services', label: 'Services publics & accès aux droits', group: 'Haut risque (AI Act Annexe III)' },
+  { value: 'justice', label: 'Justice & sécurité', group: 'Haut risque (AI Act Annexe III)' },
+  // Groupe « Autres usages réglementés »
+  { value: 'housing', label: 'Logement & immobilier', group: 'Autres usages réglementés' },
+  { value: 'marketing', label: 'Marketing & ciblage publicitaire', group: 'Autres usages réglementés' },
+  { value: 'content_moderation', label: 'Modération de contenu', group: 'Autres usages réglementés' },
+  { value: 'other', label: 'Autre usage à fort enjeu', group: 'Autres usages réglementés' },
+];
+
+/** Ordre d'affichage des groupes dans la liste déroulante. */
+export const SECTOR_GROUPS: ReadonlyArray<SectorGroup> = [
+  'Haut risque (AI Act Annexe III)',
+  'Autres usages réglementés',
 ];

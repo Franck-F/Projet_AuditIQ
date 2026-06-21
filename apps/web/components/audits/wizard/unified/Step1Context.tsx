@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 
 import { useWizard } from '@/components/audits/wizard/WizardContext';
-import { AUDIT_TYPE_CARDS, SECTOR_CARDS } from '@/components/audits/wizard/unified/constants';
+import { AUDIT_TYPE_CARDS, SECTORS, SECTOR_GROUPS } from '@/components/audits/wizard/unified/constants';
 import type { AuditType, Sector, UnifiedValues } from '@/components/audits/wizard/unified/types';
 
 export function Step1Context(): React.ReactElement {
@@ -73,30 +73,31 @@ export function Step1Context(): React.ReactElement {
         </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="eyebrow">Secteur d'usage</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {SECTOR_CARDS.map((c) => {
-            const selected = sector === c.value;
-            return (
-              <button
-                key={c.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setValue('sector', c.value as Sector, { shouldValidate: true })}
-                onFocus={() => setHelpKey('wizard.step1.sector')}
-                onBlur={() => setHelpKey('wizard.step1')}
-                className={`flex flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors ${
-                  selected ? 'border-accent bg-accent-soft' : 'border-border bg-surface hover:border-border-strong'
-                }`}
-              >
-                <p className="text-sm font-medium text-fg">{c.title}</p>
-                <p className="text-xs text-fg-muted">{c.description}</p>
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="wz-sector" className="text-sm font-medium text-fg-secondary">Secteur d'usage</label>
+        <select
+          id="wz-sector"
+          value={sector}
+          onChange={(e) => setValue('sector', e.target.value as Sector, { shouldValidate: true })}
+          onFocus={() => setHelpKey('wizard.step1.sector')}
+          onBlur={() => setHelpKey('wizard.step1')}
+          className="rounded-md border border-border-default bg-surface px-3.5 py-2.5 text-sm text-fg"
+          aria-label="Secteur d'usage"
+        >
+          <option value="" disabled>
+            Sélectionnez un secteur…
+          </option>
+          {SECTOR_GROUPS.map((group) => (
+            <optgroup key={group} label={group}>
+              {SECTORS.filter((s) => s.group === group).map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }

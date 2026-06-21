@@ -79,7 +79,14 @@ def test_pass_is_light_documentation_and_retest() -> None:
 # --- Persona déployeur : aucune action de fournisseur ------------------------
 
 @pytest.mark.parametrize("verdict", ["fail", "warn", "pass"])
-@pytest.mark.parametrize("sector", ["hr", "credit", "insurance", "other"])
+@pytest.mark.parametrize(
+    "sector",
+    [
+        "hr", "credit", "insurance", "health", "education",
+        "public_services", "justice", "housing", "marketing",
+        "content_moderation", "other",
+    ],
+)
 def test_no_provider_actions_anywhere(verdict: str, sector: str) -> None:
     recs = build_recommendations(_finding(verdict, sector=sector))
     blob = _all_text(recs)
@@ -109,6 +116,43 @@ def test_insurance_sector_mentions_assurances_or_acpr() -> None:
     recs = build_recommendations(_finding("fail", sector="insurance"))
     blob = _all_text(recs)
     assert "assurance" in blob or "acpr" in blob
+
+
+def test_health_sector_anchors_info_and_supplier_refs() -> None:
+    # Information des personnes : Code de la santé publique + CNIL données santé.
+    from app.interpretation.recommendations_catalog import (
+        _info_legal_ref,
+        _supplier_legal_ref,
+    )
+
+    info = _info_legal_ref("health")
+    assert "Code de la santé publique" in info
+    assert "données de santé" in info
+    supplier = _supplier_legal_ref("health")
+    assert "Annexe III" in supplier
+    assert "HAS/ANSM" in supplier
+    # Présence dans le texte produit (info des personnes = conformité).
+    blob = _all_text(build_recommendations(_finding("fail", sector="health")))
+    assert "santé publique" in blob
+
+
+def test_justice_sector_anchors_and_juridique_owner() -> None:
+    from app.interpretation.recommendations_catalog import (
+        _business_owner,
+        _info_legal_ref,
+        _supplier_legal_ref,
+    )
+
+    info = _info_legal_ref("justice")
+    assert "garanties procédurales" in info
+    assert "Défenseur des droits" in info
+    supplier = _supplier_legal_ref("justice")
+    assert "Annexe III" in supplier
+    assert "justice/sécurité" in supplier
+    # Secteur justice : la supervision métier revient au Juridique.
+    assert _business_owner("justice") == "Juridique"
+    recs = build_recommendations(_finding("fail", sector="justice"))
+    assert any(r.owner == "Juridique" for r in recs)
 
 
 # --- Rationale rattaché au constat -------------------------------------------

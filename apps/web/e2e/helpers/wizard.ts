@@ -15,19 +15,21 @@ import { type Page, expect } from '@playwright/test';
  *   M1 = « Une caractéristique sensible à tester »
  *   M2 = « Un biais à découvrir »
  *   M3 = « Un chatbot à auditer »
- * Secteurs : « Ressources humaines », « Crédit & scoring financier »,
- *            « Assurance », « Autre usage à fort enjeu ».
+ * Le secteur est désormais une LISTE DÉROULANTE (`<select>`) : on le pose via
+ * `selectOption(value)` — la `value` de l'`<option>` est l'enum API (cf.
+ * `SECTORS` dans constants.ts), p. ex. 'hr', 'credit'.
  */
 
 export const FIXTURES = path.resolve(__dirname, '..', 'fixtures');
 
 export type Sector = 'hr' | 'credit' | 'insurance' | 'other';
 
-const SECTOR_TITLE: Record<Sector, RegExp> = {
-  hr: /Ressources humaines/i,
-  credit: /Crédit\s*&\s*scoring financier/i,
-  insurance: /Assurance/i,
-  other: /Autre usage à fort enjeu/i,
+/** Valeur d'`<option>` du `<select>` secteur — identique à l'enum API. */
+const SECTOR_OPTION: Record<Sector, string> = {
+  hr: 'hr',
+  credit: 'credit',
+  insurance: 'insurance',
+  other: 'other',
 };
 
 const TYPE_CARD: Record<'M1' | 'M2' | 'M3', RegExp> = {
@@ -64,8 +66,10 @@ async function fillStep1Context(
   await page.getByRole('textbox', { name: /Titre de l['’]audit/i }).fill(title);
   // Cartes Type d'audit — boutons avec aria-pressed ; on cible par le texte du titre.
   await page.getByRole('button', { name: TYPE_CARD[module] }).click();
-  // Cartes Secteur — boutons ; on cible par le titre du secteur.
-  await page.getByRole('button', { name: SECTOR_TITLE[sector] }).click();
+  // Secteur = liste déroulante (`<select>`) — on pose la valeur d'option (enum API).
+  await page
+    .getByRole('combobox', { name: /secteur/i })
+    .selectOption(SECTOR_OPTION[sector]);
   await clickContinue(page);
 }
 

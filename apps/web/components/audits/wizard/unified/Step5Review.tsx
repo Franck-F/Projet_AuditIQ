@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { SECTOR_CARDS } from '@/components/audits/wizard/unified/constants';
+import { SECTORS } from '@/components/audits/wizard/unified/constants';
 import type { UnifiedValues } from '@/components/audits/wizard/unified/types';
 import type { DatasetOut } from '@/lib/api/audits';
 
@@ -27,7 +27,7 @@ function Step5ReviewM1({
   dataset,
 }: Step5ReviewProps): React.ReactElement {
   const sectorLabel =
-    SECTOR_CARDS.find((c) => c.value === values.sector)?.title ?? values.sector;
+    SECTORS.find((s) => s.value === values.sector)?.label ?? values.sector;
 
   const attrs: string[] = Array.isArray(values.protected_attributes) ? values.protected_attributes : [];
   const hasPairwise = attrs.length >= 2;
@@ -110,7 +110,7 @@ function Step5ReviewM2({
   dataset,
 }: Step5ReviewProps): React.ReactElement {
   const sectorLabel =
-    SECTOR_CARDS.find((c) => c.value === values.sector)?.title ?? values.sector;
+    SECTORS.find((s) => s.value === values.sector)?.label ?? values.sector;
 
   const k = values.k || '5';
   const dev = values.deviation_pp || '20';
@@ -162,7 +162,7 @@ function Step5ReviewM2({
 
 function Step5ReviewM3({ values }: Step5ReviewProps): React.ReactElement {
   const sectorLabel =
-    SECTOR_CARDS.find((c) => c.value === values.sector)?.title ?? values.sector;
+    SECTORS.find((s) => s.value === values.sector)?.label ?? values.sector;
 
   const authStatus = values.auth_header.trim()
     ? 'fourni (masqué)'

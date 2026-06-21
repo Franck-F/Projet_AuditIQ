@@ -21,7 +21,10 @@ from typing import Literal
 
 from app.schemas.audit import RecommendationOut
 
-Sector = Literal["hr", "credit", "insurance", "other"]
+Sector = Literal[
+    "hr", "credit", "insurance", "health", "education", "public_services",
+    "justice", "housing", "marketing", "content_moderation", "other",
+]
 Module = Literal["M1", "M2", "M3"]
 Verdict = Literal["pass", "warn", "fail"]
 
@@ -48,6 +51,13 @@ def sector_label(sector: Sector) -> str:
         "hr": "ressources humaines / recrutement",
         "credit": "crédit / scoring financier",
         "insurance": "assurance",
+        "health": "santé / médico-social",
+        "education": "éducation / formation",
+        "public_services": "services publics / accès aux droits",
+        "justice": "justice / sécurité",
+        "housing": "logement / immobilier",
+        "marketing": "marketing / ciblage publicitaire",
+        "content_moderation": "modération de contenu",
         "other": "usage à fort enjeu",
     }.get(sector, "usage à fort enjeu")
 
@@ -60,6 +70,15 @@ def _info_legal_ref(sector: Sector) -> str:
         "credit": "AI Act Art. 26.7 ; RGPD Art. 22 (décision automatisée) ; "
         "Code de la consommation",
         "insurance": "AI Act Art. 26.7 ; Code des assurances ; ACPR",
+        "health": "AI Act Art. 26.7 ; Code de la santé publique ; "
+        "CNIL (données de santé)",
+        "education": "AI Act Art. 26.7 ; Code de l'éducation ; RGPD",
+        "public_services": "AI Act Art. 26.7 ; Défenseur des droits ; RGPD",
+        "justice": "AI Act Art. 26.7 ; garanties procédurales ; "
+        "Défenseur des droits",
+        "housing": "AI Act Art. 26.7 ; loi 89-462 ; Défenseur des droits",
+        "marketing": "AI Act Art. 50 (transparence) ; RGPD ; CNIL",
+        "content_moderation": "DSA (règlement 2022/2065) ; AI Act Art. 50",
         "other": "AI Act Art. 26.7 ; principe de non-discrimination",
     }.get(sector, "AI Act Art. 26.7")
 
@@ -70,6 +89,18 @@ def _supplier_legal_ref(sector: Sector) -> str:
         "haut risque)",
         "credit": "AI Act Art. 26 ; ACPR (gouvernance des modèles)",
         "insurance": "AI Act Art. 26 ; ACPR ; Code des assurances",
+        "health": "AI Act Art. 26 ; Annexe III (le cas échéant) ; "
+        "HAS/ANSM selon usage",
+        "education": "AI Act Art. 26 ; Annexe III (accès/évaluation = "
+        "haut risque)",
+        "public_services": "AI Act Art. 26 ; Annexe III (accès aux "
+        "prestations = haut risque)",
+        "justice": "AI Act Art. 26 ; Annexe III (justice/sécurité = "
+        "haut risque)",
+        "housing": "AI Act Art. 26 ; loi anti-discrimination 2008-496",
+        "marketing": "AI Act Art. 26 ; RGPD (profilage)",
+        "content_moderation": "AI Act Art. 26 ; DSA (obligations des "
+        "plateformes)",
         "other": "AI Act Art. 26 (obligations du déployeur)",
     }.get(sector, "AI Act Art. 26")
 
@@ -155,10 +186,19 @@ class _RuleSpec:
 
 # Owner par défaut selon le secteur pour la supervision métier.
 def _business_owner(sector: Sector) -> str:
-    return {"hr": "RH", "credit": "Direction",
-            "insurance": "Direction", "other": "Direction"}.get(
-        sector, "Direction"
-    )
+    return {
+        "hr": "RH",
+        "credit": "Direction",
+        "insurance": "Direction",
+        "health": "Direction",
+        "education": "Direction",
+        "public_services": "Direction",
+        "justice": "Juridique",
+        "housing": "Direction",
+        "marketing": "Direction",
+        "content_moderation": "Direction",
+        "other": "Direction",
+    }.get(sector, "Direction")
 
 
 def _doc_rule(

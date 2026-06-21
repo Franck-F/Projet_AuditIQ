@@ -14,7 +14,18 @@ export type DatasetOut = {
 
 /** Secteur d'usage (contexte AI Act du déployeur) — contextualise les
  * recommandations et les références légales côté API. */
-export type Sector = 'hr' | 'credit' | 'insurance' | 'other';
+export type Sector =
+  | 'hr'
+  | 'credit'
+  | 'insurance'
+  | 'health'
+  | 'education'
+  | 'public_services'
+  | 'justice'
+  | 'housing'
+  | 'marketing'
+  | 'content_moderation'
+  | 'other';
 
 export type AuditCreate = {
   dataset_id: string;

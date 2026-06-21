@@ -25,12 +25,18 @@ describe('Unified Step1Context', () => {
     expect(screen.getByText('Un chatbot à auditer')).toBeInTheDocument();
   });
 
-  it('renders 4 sector cards', () => {
+  it('renders the sector dropdown with grouped options', () => {
     render(<WizardProvider totalSteps={5}><Harness /></WizardProvider>);
-    expect(screen.getByText(/Crédit & scoring/i)).toBeInTheDocument();
-    expect(screen.getByText(/Ressources humaines/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Assurance/i)).toBeInTheDocument();
-    expect(screen.getByText(/Autre usage/i)).toBeInTheDocument();
+    const select = screen.getByRole('combobox', { name: /secteur/i });
+    expect(select).toBeInTheDocument();
+    // Placeholder + a few representative options across both groups.
+    expect(screen.getByRole('option', { name: /Sélectionnez un secteur/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Ressources humaines/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Crédit & scoring/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Santé/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Justice/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Modération de contenu/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Autre usage/i })).toBeInTheDocument();
   });
 
   it('clicking an audit type card selects it (visual selected state)', async () => {

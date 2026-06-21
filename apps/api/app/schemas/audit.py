@@ -8,7 +8,10 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, model_validator
 
 Verdict = Literal["pass", "warn", "fail"]
 # Secteur d'usage déclaré dans le wizard (contexte AI Act du déployeur).
-Sector = Literal["hr", "credit", "insurance", "other"]
+Sector = Literal[
+    "hr", "credit", "insurance", "health", "education", "public_services",
+    "justice", "housing", "marketing", "content_moderation", "other",
+]
 
 
 class M2ConfigIn(BaseModel):

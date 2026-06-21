@@ -1,7 +1,18 @@
 import type { TargetIn } from '@/lib/api/audits';
 
 export type AuditType = 'tabular-known' | 'tabular-unknown' | 'llm-api';
-export type Sector = 'credit' | 'hr' | 'insurance' | 'other';
+export type Sector =
+  | 'hr'
+  | 'credit'
+  | 'insurance'
+  | 'health'
+  | 'education'
+  | 'public_services'
+  | 'justice'
+  | 'housing'
+  | 'marketing'
+  | 'content_moderation'
+  | 'other';
 export type WizardLang = 'fr' | 'en';
 
 export interface UnifiedValues {

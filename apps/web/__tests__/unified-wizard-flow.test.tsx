@@ -132,7 +132,10 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     // Use within to target the button that has the exact title for M1
     const m1Card = screen.getByText('Une caractéristique sensible à tester').closest('button')!;
     await user.click(m1Card);
-    await user.click(screen.getByRole('button', { name: /Crédit & scoring/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'credit',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: upload CSV
@@ -199,7 +202,10 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     await user.type(screen.getByRole('textbox', { name: /titre/i }), 'Test M2');
     const m2Card = screen.getByText('Un biais à découvrir').closest('button')!;
     await user.click(m2Card);
-    await user.click(screen.getByRole('button', { name: /Ressources humaines/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'hr',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: upload CSV
@@ -256,7 +262,10 @@ describe('Unified Wizard happy paths', { timeout: 20000 }, () => {
     await user.click(
       screen.getByRole('button', { name: /Un chatbot à auditer/i }),
     );
-    await user.click(screen.getByRole('button', { name: /Autre usage/i }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: /secteur/i }),
+      'other',
+    );
     await user.click(screen.getByRole('button', { name: /Suivant/i }));
 
     // Step 2: configure URL (M3 — no CSV upload)
