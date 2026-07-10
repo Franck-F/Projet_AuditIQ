@@ -29,7 +29,6 @@ services:
     rootDir: apps/api
     previews:
       generation: automatic           # spin up a preview env per PR
-      expireAfterDays: 3
     buildCommand: |
       pip install --quiet uv
       uv sync --no-dev
@@ -47,6 +46,10 @@ services:
       # typically utf-8 already, but pinning is safer).
       - key: PYTHONUTF8
         value: "1"
+      # Pin Python 3.12 — pyproject exige <3.13 ; sinon Render peut prendre 3.13
+      # par défaut et casser `uv sync`. (Voir aussi apps/api/.python-version.)
+      - key: PYTHON_VERSION
+        value: "3.12.7"
       - key: API_ENV
         value: production
       - key: API_HOST
@@ -68,7 +71,6 @@ services:
     rootDir: apps/pdf
     previews:
       generation: automatic
-      expireAfterDays: 3
     buildCommand: pnpm install --frozen-lockfile
     startCommand: node server.mjs
     # The PDF service has no /health endpoint; the / GET returns 404
