@@ -4,6 +4,44 @@
 (Frankfurt, EU souveraineté), **Web** sur Vercel (CDN edge + previews
 PR natifs). Total ~30 min de setup la première fois.
 
+## 0. Ce déploiement — URLs réelles + dépannage
+
+Services réellement déployés :
+
+| Rôle | URL | Détail |
+|---|---|---|
+| **API** (Render) | `https://projet-auditiq.onrender.com` | service `srv-d932uj9kh4rs739d6l7g` |
+| **Web** (Vercel) | `https://projet-audit-iq-pdf.vercel.app` | frontend Next.js |
+| **PDF** (Render) | *(à confirmer / déployer)* | microservice Puppeteer |
+
+### Câblage croisé — valeurs exactes à mettre dans les dashboards
+
+- Vercel → `NEXT_PUBLIC_API_BASE_URL = https://projet-auditiq.onrender.com/api/v1`
+- Render API → `API_CORS_ORIGINS = https://projet-audit-iq-pdf.vercel.app`
+- Render API → `PDF_SERVICE_URL = https://<service-pdf>.onrender.com`
+
+### Gotcha Render ↔ Supabase (cause n°1 d'un service qui ne démarre jamais)
+
+Render n'a **pas d'IPv6 sortant**, or la connexion **directe** Supabase
+`db.<ref>.supabase.co` est **IPv6-only**. Résultat : le `preDeployCommand`
+(`alembic upgrade head`) et l'app **ne peuvent pas** atteindre la base, le
+service reste bloqué "en démarrage" et ne répond jamais (timeout, 0 octet).
+
+**Fix** : utiliser le **pooler Supavisor (IPv4)** en mode *session* pour
+`SUPABASE_DB_URL` :
+
+```
+postgresql+asyncpg://postgres.<ref>:<motdepasse>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+(Supabase Dashboard → Project Settings → Database → **Connection pooling** →
+chaîne "Session pooler". Bien noter le username `postgres.<ref>` et le port
+**5432** — pas 6543, le mode transaction casse les migrations Alembic.)
+
+### Supabase Network Restrictions (si activé)
+
+Autoriser les IP sortantes Render : `74.220.50.0/24` et `74.220.58.0/24`.
+
 ## 1. Render — API + PDF (Infrastructure-as-Code via `render.yaml`)
 
 ### First-time setup
