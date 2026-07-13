@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "AuditIQ — Plateforme SaaS d'audit de fairness IA pour PME FR/UE.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
@@ -11,6 +11,7 @@
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "dev": "pnpm --filter @auditiq/web dev",
+    "dev:all": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "build": "pnpm --filter @auditiq/web build",
     "lint": "pnpm -r --parallel lint",
     "typecheck": "pnpm -r --parallel typecheck",
